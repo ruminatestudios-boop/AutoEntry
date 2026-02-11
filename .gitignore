@@ -1,0 +1,31 @@
+node_modules
+.DS_Store
+
+/.cache
+/build
+/app/build
+/public/build/
+/public/_dev
+/app/public/build
+/prisma/dev.sqlite
+/prisma/dev.sqlite-journal
+database.sqlite
+dev.sqlite
+
+.env
+.env.*
+
+# Google Cloud / Vision service account key (do not commit)
+vision-credentials.json
+auto-entry-487021-f1bfb6dc6f92.json
+autoentry-487112-0f34a1f1eaba.json
+
+
+
+
+
+/extensions/*/dist
+
+# Ignore shopify files created during app dev
+.shopify/*
+.shopify.lock

@@ -1,0 +1,395 @@
+import { useState, useRef, useEffect } from "react";
+import { json, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
+import { AppProvider, Banner } from "@shopify/polaris";
+import enTranslations from "@shopify/polaris/locales/en.json";
+
+import db from "../db.server";
+import { AIService } from "../core/services/ai.service";
+import { PLAN_LIMITS } from "../core/constants";
+import shopify from "../shopify.server";
+import { ImageSearchService } from "../core/services/image-search.service";
+
+// Styles
+import mobileStyles from "../styles/mobile.css?url";
+
+// Components
+import { MobileHeader } from "../components/mobile/MobileHeader";
+import { PricingModal } from "../components/mobile/PricingModal";
+import { Toast } from "../components/mobile/Toast";
+import { CaptureStep } from "../components/mobile/steps/CaptureStep";
+import { AnalyzingStep } from "../components/mobile/steps/AnalyzingStep";
+import { SuccessStep } from "../components/mobile/steps/SuccessStep";
+import { VoiceStep } from "../components/mobile/steps/VoiceStep";
+import { ConfirmStep } from "../components/mobile/steps/ConfirmStep";
+
+// Hooks
+import { useMobileScan } from "../core/hooks/useMobileScan";
+
+const TIPS = [
+    { label: "Step 1: Capture", text: "Snap a clear photo of the product.", icon: <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg> },
+    { label: "Step 2: Voice Variants", text: "Dictate options like 'Sizes S to XL'.", icon: <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg> },
+    { label: "Step 3: Desktop Review", text: "Batch review on your desktop.", icon: <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg> }
+];
+
+export const loader = async ({ params }: LoaderFunctionArgs) => {
+    const { sessionId } = params;
+
+    const scanSession = await db.scanSession.findUnique({
+        where: { id: sessionId },
+    });
+
+    if (!scanSession) {
+        throw new Response("Session not found", { status: 404 });
+    }
+
+    const now = new Date();
+    const expiryTime = new Date(scanSession.expiresAt);
+    const twoHoursAgo = new Date(now.getTime() - (2 * 60 * 60 * 1000));
+
+    if (expiryTime < twoHoursAgo) {
+        throw new Response("Session expired", { status: 404 });
+    }
+
+    const shopSettings = await db.shopSettings.findUnique({
+        where: { shop: scanSession.shop }
+    });
+
+    const plan = shopSettings?.plan || "FREE";
+    const scanCount = shopSettings?.scanCount || 0;
+    const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] || 10;
+
+    return json({
+        sessionId,
+        scanCount,
+        limit,
+        plan,
+        shop: scanSession.shop
+    });
+};
+
+export const links = () => [
+    { rel: "stylesheet", href: mobileStyles },
+];
+
+export const action = async ({ request, params }: ActionFunctionArgs) => {
+    try {
+        const { sessionId: currentSessionId } = params;
+        const formData = await request.formData();
+        const intent = formData.get("intent");
+
+        if (intent === "new_session") {
+            const session = await db.scanSession.findUnique({ where: { id: currentSessionId } });
+            if (!session) return json({ error: "Session not found" }, { status: 404 });
+
+            const newSession = await db.scanSession.create({
+                data: {
+                    shop: session.shop,
+                    expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+                }
+            });
+            return json({ newSessionId: newSession.id });
+        }
+
+        const session = await db.scanSession.findUnique({ where: { id: currentSessionId } });
+        if (!session) return json({ error: "Session not found" }, { status: 404 });
+        const shop = session.shop;
+
+        let settings = await db.shopSettings.findUnique({ where: { shop } });
+        if (!settings) {
+            settings = await db.shopSettings.create({ data: { shop, plan: "FREE" } });
+        }
+
+        // Lazy reset
+        const now = new Date();
+        const cycleStart = new Date(settings.billingCycleStart);
+        if (Math.ceil(Math.abs(now.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24)) > 30) {
+            settings = await db.shopSettings.update({
+                where: { shop },
+                data: { scanCount: 0, billingCycleStart: new Date() }
+            });
+        }
+
+        const limit = PLAN_LIMITS[settings.plan as keyof typeof PLAN_LIMITS] || 10;
+        const totalAvailable = limit + (settings.bonusScans || 0);
+
+        if (settings.scanCount >= totalAvailable) {
+            return json({ error: "Scan limit reached. Please upgrade." }, { status: 403 });
+        }
+
+        // Currency/Country check
+        let currencyCode = settings.currencyCode || "USD";
+        let countryCode = settings.countryCode || "US";
+        if (!settings.currencyCode || settings.currencyCode === "USD") {
+            try {
+                const { admin } = await shopify.unauthenticated.admin(shop);
+                const response = await admin.graphql(`query { shop { currencyCode countryCode } }`);
+                const shopData: any = await response.json();
+                if (shopData.data?.shop?.currencyCode) {
+                    currencyCode = shopData.data.shop.currencyCode;
+                    countryCode = shopData.data.shop.countryCode;
+                    settings = await db.shopSettings.update({
+                        where: { shop },
+                        data: { currencyCode, countryCode }
+                    });
+                }
+            } catch (e) { console.error("Shop context fetch failed", e); }
+        }
+
+        const image = formData.get("image") as string;
+        const isBatchAdd = formData.get("intent") === "batch_add";
+        if (!image) return json({ error: "No image provided" }, { status: 400 });
+
+        let mimeType = "image/jpeg";
+        let base64Data = image;
+        if (image.startsWith("data:")) {
+            const commaIndex = image.indexOf(",");
+            if (commaIndex !== -1) {
+                base64Data = image.substring(commaIndex + 1);
+                const mimeMatch = image.substring(0, commaIndex).match(/data:(.*?);/);
+                if (mimeMatch) mimeType = mimeMatch[1];
+            }
+        }
+
+        console.log(`MOBILE ACTION: START - Session: ${currentSessionId}, Shop: ${shop}`);
+
+        const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+        if (!apiKey) {
+            console.error("MOBILE ACTION ERROR: AI API Key missing");
+            return json({ error: "AI API Key missing" }, { status: 500 });
+        }
+
+        const aiService = new AIService(apiKey);
+        console.log(`MOBILE ACTION: Analyzing image (Base64 length: ${base64Data.length})...`);
+        const scanResult = await aiService.analyzeImage(base64Data, mimeType, currencyCode, countryCode);
+
+        if (!scanResult.success || !scanResult.data) {
+            console.error("MOBILE ACTION ERROR: AI analysis failed:", scanResult.error);
+            return json({ error: scanResult.error || "AI failed to analyze image" }, { status: 500 });
+        }
+        console.log("MOBILE ACTION: AI Analysis Success");
+
+        const aiData = scanResult.data;
+        const generateSKU = (title: string) => {
+            const clean = title.toUpperCase().replace(/[^A-Z0-9]/g, '-').substring(0, 10);
+            return `${clean}-${Date.now().toString().slice(-4)}`;
+        };
+
+        const sku = generateSKU(aiData.title);
+        console.log(`MOBILE ACTION: Generated SKU: ${sku}`);
+
+        // AUTO-IMAGE SEARCH (SerpAPI Google Images)
+        let finalImageUrls = [image];
+        try {
+            const serpApiKey = process.env.SERPAPI_API_KEY || apiKey;
+
+            if (serpApiKey) {
+                console.log(`MOBILE ACTION: Searching for images for "${aiData.title}"...`);
+                const imageSearchService = new ImageSearchService(serpApiKey);
+
+                // Add a local timeout for search to ensure it doesn't hang the whole request
+                const searchTimeout = new Promise<string[]>((resolve) => setTimeout(() => resolve([]), 10000));
+
+                const { query: aiQuery, siteDomain } = await aiService.generateSearchQuery(aiData.title);
+                // Only fetch images when we have an official brand site (exact product, no watermarks)
+                if (!siteDomain) {
+                    console.log(`MOBILE ACTION: No official brand site for "${aiData.title}", skipping web image search.`);
+                } else {
+                    const searchQuery = `site:${siteDomain} ${aiQuery} official product photo white background`;
+                    console.log(`MOBILE ACTION: Search query (official only): ${searchQuery}`);
+
+                    const foundImages = await Promise.race([
+                        imageSearchService.searchImages(searchQuery, 10, { officialDomain: siteDomain }),
+                        searchTimeout
+                    ]);
+
+                    if (foundImages && foundImages.length > 0) {
+                        console.log(`MOBILE ACTION: Found ${foundImages.length} images.`);
+                        finalImageUrls = [...foundImages, image];
+                    } else {
+                        console.log(`MOBILE ACTION: No images found or search timed out.`);
+                    }
+                }
+            }
+        } catch (searchError) {
+            console.warn("MOBILE ACTION: Image search failed, proceeding with original photo only.", searchError);
+        }
+
+        // Ensure all fields are populated for the dashboard form (never leave description/tags empty)
+        const tagsArray = Array.isArray(aiData.tags) && aiData.tags.length > 0
+            ? aiData.tags
+            : [aiData.productType || "General", ...(aiData.title || "Product").split(/\s+/).filter((w: string) => w.length > 2).slice(0, 4)];
+        const descriptionHtml = (aiData.descriptionHtml && aiData.descriptionHtml.trim().length > 20)
+            ? aiData.descriptionHtml.trim()
+            : `<p>${aiData.title || "Product"}</p><ul><li>Details from packaging. Edit as needed.</li></ul>`;
+        const price = (aiData.price != null && String(aiData.price).trim() !== "") ? String(aiData.price).trim() : "";
+        const estimatedWeightGrams = (aiData.estimatedWeight != null && Number(aiData.estimatedWeight) > 0)
+            ? Number(aiData.estimatedWeight)
+            : 200;
+
+        if (isBatchAdd) {
+            // Batch mode: add this product without replacing others in the session
+            await db.scannedProduct.create({
+                data: {
+                    sessionId: currentSessionId!,
+                    title: aiData.title || "Product",
+                    descriptionHtml,
+                    productType: aiData.productType || "General",
+                    tags: tagsArray.join(", "),
+                    estimatedWeight: estimatedWeightGrams,
+                    price,
+                    imageUrls: JSON.stringify(finalImageUrls),
+                    status: "DRAFT",
+                    processed: true,
+                    sku: sku,
+                    inventoryQuantity: 10,
+                    trackInventory: true
+                }
+            });
+            await db.shopSettings.update({
+                where: { shop },
+                data: { scanCount: { increment: 1 } }
+            });
+            const batchCount = await db.scannedProduct.count({ where: { sessionId: currentSessionId! } });
+            console.log(`MOBILE ACTION: Batch add success. Session now has ${batchCount} product(s).`);
+            return json({ success: true, batchAdded: true, batchCount });
+        }
+
+        // Single-product mode: replace any existing product for this session
+        await db.scannedProduct.deleteMany({ where: { sessionId: currentSessionId! } });
+        await db.scannedProduct.create({
+            data: {
+                sessionId: currentSessionId!,
+                title: aiData.title || "Product",
+                descriptionHtml,
+                productType: aiData.productType || "General",
+                tags: tagsArray.join(", "),
+                estimatedWeight: estimatedWeightGrams,
+                price,
+                imageUrls: JSON.stringify(finalImageUrls),
+                status: "DRAFT",
+                processed: true,
+                sku: sku,
+                inventoryQuantity: 10,
+                trackInventory: true
+            }
+        });
+
+        await db.scanSession.update({
+            where: { id: currentSessionId },
+            data: { status: "COMPLETED" }
+        });
+
+        await db.shopSettings.update({
+            where: { shop },
+            data: { scanCount: { increment: 1 } }
+        });
+
+        console.log(`MOBILE ACTION: Success! Returning product: ${aiData.title}`);
+        return json({
+            success: true,
+            isMock: scanResult.isMock,
+            product: {
+                ...aiData,
+                descriptionHtml,
+                tags: tagsArray,
+                price
+            }
+        });
+    } catch (serverError: any) {
+        console.error("MOBILE ACTION CRITICAL FAILURE:", serverError);
+        return json({
+            error: `Server Error: ${serverError.message || "Unknown error occurred"}`
+        }, { status: 500 });
+    }
+};
+
+export default function MobileCapture() {
+    const { sessionId, shop } = useLoaderData<typeof loader>();
+    const [batchMode, setBatchMode] = useState(false);
+    const {
+        step, setStep, imagePreview, error, setError, voiceError, toastMessage,
+        currentTip, setCurrentTip, transcript, setTranscript, isRecording, setIsRecording,
+        parsedVariants, handleCapture, handleAnalyze, handleScanAnother,
+        startRecording, handleSaveVariants, isAnalyzing, isParsingVariants, fetcherData
+    } = useMobileScan({ sessionId: sessionId || "", batchMode });
+
+    const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const galleryInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTip((prev) => (prev + 1) % TIPS.length), 4000);
+        return () => clearInterval(timer);
+    }, [setCurrentTip]);
+
+    const onCaptureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            handleCapture(file);
+            event.target.value = "";
+        }
+    };
+
+    const renderStep = () => {
+        switch (step) {
+            case "analyzing":
+                return <AnalyzingStep imagePreview={imagePreview} error={error} onTryAgain={() => setStep("capture")} />;
+            case "success":
+                return (
+                    <SuccessStep
+                        imagePreview={imagePreview}
+                        fetcherData={fetcherData}
+                        handleScanAnother={handleScanAnother}
+                        onAddVariants={() => setStep("voice")}
+                        transcript={transcript}
+                        setTranscript={setTranscript}
+                        isRecording={isRecording}
+                        startRecording={startRecording}
+                        isParsingVariants={isParsingVariants}
+                        handleSaveVariants={handleSaveVariants}
+                    />
+                );
+            case "voice":
+                return <VoiceStep isRecording={isRecording} setIsRecording={setIsRecording} startRecording={startRecording} voiceError={voiceError} transcript={transcript} setTranscript={setTranscript} onBack={() => setStep("success")} onSave={handleSaveVariants} isSaving={isParsingVariants} sessionId={sessionId as string} />;
+            case "confirm":
+                return <ConfirmStep parsedVariants={parsedVariants} handleScanAnother={handleScanAnother} />;
+            default:
+                return <CaptureStep imagePreview={imagePreview} fileInputRef={fileInputRef} galleryInputRef={galleryInputRef} handleCapture={onCaptureChange} currentTip={currentTip} tips={TIPS} onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} onScanNewProduct={handleScanAnother} batchMode={batchMode} onBatchModeChange={setBatchMode} />;
+        }
+    };
+
+    return (
+        <AppProvider i18n={enTranslations}>
+            <div className="mobile-container">
+                <MobileHeader title="Auto Entry" subtitle="Mobile Product Scanner" />
+
+                {error && step === "capture" && (
+                    <div style={{ marginBottom: "8px", padding: "0 12px" }}>
+                        <Banner tone="critical" onDismiss={() => setError(null)}>{error}</Banner>
+                    </div>
+                )}
+
+                <div style={{ padding: "12px 12px 20px" }}>
+                    <div className="mobile-card">
+                        {renderStep()}
+                    </div>
+                </div>
+
+                <PricingModal isOpen={isPricingModalOpen} onClose={() => setIsPricingModalOpen(false)} shop={shop} />
+                {toastMessage && <Toast message={toastMessage} />}
+
+                <style dangerouslySetInnerHTML={{
+                    __html: `
+                    @keyframes spin { to { transform: rotate(360deg); } }
+                    @keyframes pulse { 0% { transform: scale(1); } 70% { transform: scale(1.05); } 100% { transform: scale(1); } }
+                    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+                    @keyframes toastFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+                    @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+                    @keyframes slideInUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+                `}} />
+            </div>
+        </AppProvider>
+    );
+}

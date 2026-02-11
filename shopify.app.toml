@@ -1,0 +1,22 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+# For production: set application_url and auth.redirect_urls to your real app URL (e.g. from SHOPIFY_APP_URL).
+
+client_id = "34632082dd50358763db380203c1bff6"
+name = "Auto Entry"
+application_url = "https://example.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+
+[webhooks]
+# Matches ApiVersion.January25 in shopify.server.ts (2025-01). Update both when upgrading to 2026-01.
+api_version = "2025-01"
+
+[access_scopes]
+# Minimal scopes for snap-to-stock: products + inventory only (no write_customers).
+scopes = "write_inventory,write_products"
+
+[auth]
+redirect_urls = [ "https://example.com/api/auth" ]
