@@ -1,10 +1,29 @@
-import { Page, Layout, Card, BlockStack, Text, Scrollable } from "@shopify/polaris";
-import { TitleBar } from "@shopify/app-bridge-react";
+import { Layout, Card, BlockStack, Text, Scrollable } from "@shopify/polaris";
+import { Link } from "@remix-run/react";
+import { DashboardPageLayout } from "../components/DashboardPageLayout";
+
+const backToSupportButton = (
+    <Link
+        to="/app/support"
+        aria-label="Back to Support"
+        style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            cursor: "pointer",
+            fontSize: "20px",
+            lineHeight: 1,
+            textDecoration: "none",
+        }}
+    >
+        ×
+    </Link>
+);
 
 export default function TermsOfService() {
     return (
-        <Page>
-            <TitleBar title="Terms of Service" />
+        <DashboardPageLayout title="Terms of Service" subtitle="Terms of Service" headerRight={backToSupportButton}>
             <Layout>
                 <Layout.Section>
                     <Card>
@@ -53,6 +72,6 @@ export default function TermsOfService() {
                     </Card>
                 </Layout.Section>
             </Layout>
-        </Page>
+        </DashboardPageLayout>
     );
 }

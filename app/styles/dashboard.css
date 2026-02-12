@@ -54,13 +54,14 @@
   border-radius: 12px !important;
 }
 
-/* Primary buttons: lime green (match mobile) */
+/* Primary buttons: flat light green, no shadow */
 .dashboard-home .Polaris-Button--variantPrimary.Polaris-Button--toneSuccess,
 .dashboard-home button.Polaris-Button[data-polaris-layer="Button"][data-variant="primary"] {
   background: var(--dashboard-accent) !important;
   color: #1a1a1a !important;
-  border-color: var(--dashboard-accent) !important;
+  border: 1px solid var(--dashboard-accent) !important;
   border-radius: 10px !important;
+  box-shadow: none !important;
 }
 .dashboard-home .Polaris-Button--variantPrimary.Polaris-Button--toneSuccess:hover,
 .dashboard-home button.Polaris-Button[data-polaris-layer="Button"][data-variant="primary"]:hover {
@@ -110,7 +111,28 @@
   border-radius: 8px;
 }
 
-/* Empty state card */
+/* Empty state card – document placeholder image, centered */
 .dashboard-home .Polaris-EmptyState {
   border-radius: var(--dashboard-card-radius);
+  text-align: center;
+}
+.dashboard-home .Polaris-EmptyState .Polaris-EmptyState__ImageContainer,
+.dashboard-home .Polaris-EmptyState .Polaris-EmptyState__Image {
+  width: 150px !important;
+  height: 150px !important;
+  max-width: 150px !important;
+  margin-left: auto;
+  margin-right: auto;
+  object-fit: contain;
+}
+.dashboard-home .Polaris-EmptyState .Polaris-Box {
+  margin-inline: auto;
+}
+.dashboard-home .Polaris-EmptyState .Polaris-Text {
+  text-align: center;
+}
+
+/* Review modal footer: align Save + Review in Shopify to the right (modal is portaled outside .dashboard-home) */
+.Polaris-InlineStack:has(> .Polaris-Box > .review-modal-footer-actions) {
+  justify-content: flex-end !important;
 }

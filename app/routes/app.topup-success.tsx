@@ -1,7 +1,8 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useNavigate } from "@remix-run/react";
-import { Page, Card, BlockStack, Text, Button } from "@shopify/polaris";
+import { Card, BlockStack, Text, Button } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
+import { DashboardPageLayout } from "../components/DashboardPageLayout";
 import db from "../db.server";
 import { useEffect } from "react";
 
@@ -42,7 +43,7 @@ export default function TopUpSuccess() {
     }, [navigate]);
 
     return (
-        <Page>
+        <DashboardPageLayout title="Success" subtitle="Success">
             <div style={{
                 display: "flex",
                 alignItems: "center",
@@ -67,6 +68,6 @@ export default function TopUpSuccess() {
                     </BlockStack>
                 </Card>
             </div>
-        </Page>
+        </DashboardPageLayout>
     );
 }

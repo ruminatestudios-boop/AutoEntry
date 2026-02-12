@@ -305,7 +305,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 };
 
 export default function MobileCapture() {
-    const { sessionId, shop } = useLoaderData<typeof loader>();
+    const { sessionId, shop, scanCount, limit } = useLoaderData<typeof loader>();
     const [batchMode, setBatchMode] = useState(false);
     const {
         step, setStep, imagePreview, error, setError, voiceError, toastMessage,
@@ -318,6 +318,14 @@ export default function MobileCapture() {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
+
+    // Paywall: show when already at limit on load, or when a scan returns limit error
+    useEffect(() => {
+        if (scanCount >= limit) setIsPricingModalOpen(true);
+    }, [scanCount, limit]);
+    useEffect(() => {
+        if (error && /limit|upgrade/i.test(error)) setIsPricingModalOpen(true);
+    }, [error]);
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTip((prev) => (prev + 1) % TIPS.length), 4000);

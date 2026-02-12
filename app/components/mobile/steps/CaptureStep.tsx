@@ -86,9 +86,6 @@ export function CaptureStep({
                             Batch
                         </button>
                     </div>
-                    <p style={{ margin: 0, fontSize: "12px", color: "var(--mobile-text-muted)", lineHeight: 1.35 }}>
-                        {batchMode ? "Each photo → separate product. Review all on desktop." : "One product per scan with full review flow."}
-                    </p>
                 </div>
             )}
             {!imagePreview && (

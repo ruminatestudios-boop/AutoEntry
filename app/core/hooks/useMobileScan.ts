@@ -67,8 +67,20 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
         if (isSubmitting && fetcher.state === "idle") {
             setIsSubmitting(false);
             if (fetcher.data?.error) {
-                setError(fetcher.data.error);
-                // Keep step as "analyzing" to show the error UI we built in AnalyzingStep
+                const msg = fetcher.data.error;
+                const isLimitError = /limit|upgrade/i.test(msg);
+                if (isLimitError) {
+                    setError(msg);
+                    setStep("analyzing");
+                    setImagePreview(null);
+                    capturedFileRef.current = null;
+                } else {
+                    setError(msg);
+                    setStep("analyzing");
+                    setImagePreview(null);
+                    capturedFileRef.current = null;
+                    showToast(msg.length > 60 ? "Scan failed. Try a clearer photo or check your connection." : msg);
+                }
             } else if (fetcher.data?.batchAdded && fetcher.data?.success) {
                 setError(null);
                 setStep("capture");
@@ -78,7 +90,9 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
                 showToast(n > 0 ? `Photo ${n} added to batch` : "Photo added to batch");
             } else if (fetcher.data?.success) {
                 setError(null);
-                setStep("success");
+                setStep("capture");
+                setImagePreview(null);
+                capturedFileRef.current = null;
                 showToast("Scan successful! Check your dashboard.");
             } else {
                 // Fallback: If fetcher finished but gave no data (network error, server crash, 500 HTML)
@@ -171,7 +185,7 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
         try {
             const formData = new FormData();
             formData.append("image", imageData);
-            if (batchMode) formData.append("intent", "batch_add");
+            formData.append("intent", "batch_add"); // always add new entry (never replace)
 
             fetcher.submit(formData, {
                 method: "POST",

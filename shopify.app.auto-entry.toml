@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "154110f7c573a30f0342a2f00f530b73"
-name = "auto-entry"
+name = "Auto Entry"
 application_url = "https://example.com"
 embedded = true
 
