@@ -67,11 +67,9 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
         if (isSubmitting && fetcher.state === "idle") {
             setIsSubmitting(false);
             if (fetcher.data?.error) {
-                setError(null);
-                setStep("capture");
-                setImagePreview(null);
-                capturedFileRef.current = null;
-                showToast("Please take a clearer picture.");
+                setError(fetcher.data.error);
+                setStep("analyzing");
+                showToast("Scan failed. See message below.");
             } else if (fetcher.data?.batchAdded && fetcher.data?.success) {
                 setError(null);
                 setStep("capture");

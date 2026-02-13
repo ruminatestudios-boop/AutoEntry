@@ -20,8 +20,20 @@ function getErrorDisplay(error: string): { title: string; hint: string } {
     if (lower.includes("session not found")) {
         return { title: "Session expired", hint: "Refresh the page and scan the QR code again." };
     }
+    if (lower.includes("api key") || lower.includes("api key missing")) {
+        return { title: "Server configuration", hint: "AI is not configured. Please contact the app owner or try again later." };
+    }
+    if (lower.includes("quota") || lower.includes("rate limit") || lower.includes("429")) {
+        return { title: "Service busy", hint: "Too many requests. Wait a moment and try again." };
+    }
     if (lower.includes("server error") || lower.includes("network") || lower.includes("connection")) {
         return { title: "Something went wrong", hint: "Check your connection and try again in a moment." };
+    }
+    if (lower.includes("clearer") || lower.includes("too long") || lower.includes("timeout")) {
+        return { title: "Analysis took too long", hint: "Try a clearer, well-lit photo of the product label or packaging." };
+    }
+    if (lower.includes("safety") || lower.includes("blocked") || lower.includes("content")) {
+        return { title: "Image not accepted", hint: "Try a different photo focused on the product or packaging." };
     }
     if (lower.includes("ai") || lower.includes("analyze") || lower.includes("vision") || lower.includes("failed to analyze")) {
         return { title: "Analysis failed", hint: "Try a clearer, well-lit photo of the product label or packaging." };

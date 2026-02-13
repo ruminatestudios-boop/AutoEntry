@@ -21,16 +21,20 @@ export class AIService {
 
     async analyzeImage(base64Image: string, mimeType: string, currency: string = "USD", country: string = "United States"): Promise<AIScanResult> {
         const timestamp = new Date().toLocaleTimeString();
+        const rawBase64 = base64Image.includes(",") ? base64Image.split(",")[1] : base64Image;
+        if (!rawBase64 || rawBase64.length < 100) {
+            return { success: false, error: "No image data or image too small. Please take a clear photo." };
+        }
         try {
-            console.log(`[${timestamp}] AI_SERVICE: Requesting model: gemini-2.0-flash (Currency: ${currency}, Country: ${country})`);
+            console.log(`[${timestamp}] AI_SERVICE: Requesting model: gemini-2.0-flash (Currency: ${currency}, Country: ${country}, base64 length: ${rawBase64.length})`);
             const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-            // First, run OCR with Google Cloud Vision to get reliable text from the packaging.
+            // First, run OCR with Google Cloud Vision to get reliable text from the packaging (optional).
             let ocrText = "";
             try {
                 const visionClient = await getVisionClient();
                 if (visionClient) {
-                    const imageBuffer = Buffer.from(base64Image.includes(",") ? base64Image.split(",")[1] : base64Image, "base64");
+                    const imageBuffer = Buffer.from(rawBase64, "base64");
                     const [visionResult] = await visionClient.textDetection({
                         image: { content: imageBuffer },
                     });
@@ -38,8 +42,8 @@ export class AIService {
                     console.log(`[${timestamp}] AI_SERVICE: Vision OCR length: ${ocrText.length}`);
                 }
             } catch (ocrError) {
-                console.error(`[${timestamp}] AI_SERVICE: Vision OCR failed`, ocrError);
-                // Continue without OCR; Gemini will still see the image but may be less precise.
+                console.error(`[${timestamp}] AI_SERVICE: Vision OCR failed (continuing with Gemini only):`, (ocrError as Error).message);
+                // Continue without OCR; Gemini will still see the image.
             }
 
             const prompt = `
@@ -83,16 +87,16 @@ export class AIService {
 
             const imagePart = {
                 inlineData: {
-                    data: base64Image.includes(",") ? base64Image.split(",")[1] : base64Image,
-                    mimeType,
+                    data: rawBase64,
+                    mimeType: mimeType || "image/jpeg",
                 },
             };
 
             console.log(`[${timestamp}] AI_SERVICE: Sending request to Gemini...`);
 
-            // Add a timeout to the AI request
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("AI_TIMEOUT")), 25000)
+            const timeoutMs = 35000;
+            const timeoutPromise = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error("AI_TIMEOUT")), timeoutMs)
             );
 
             const result = await Promise.race([
@@ -115,7 +119,16 @@ export class AIService {
             // Sanitizing response text to remove potential markdown code blocks
             text = text.replace(/```json/g, "").replace(/```/g, "").trim();
 
-            const data = JSON.parse(text) as ScannedProduct;
+            let data: ScannedProduct;
+            try {
+                data = JSON.parse(text) as ScannedProduct;
+            } catch (parseErr) {
+                console.error(`[${timestamp}] AI_SERVICE: JSON parse failed:`, parseErr);
+                return {
+                    success: false,
+                    error: "We couldn't read the product details from the image. Try a clearer photo of the label or packaging.",
+                };
+            }
 
             return {
                 success: true,
@@ -123,20 +136,36 @@ export class AIService {
             };
         } catch (error: any) {
             console.error(`[${timestamp}] AI Analysis Error:`, error);
-            const errorMessage = error.message || String(error);
+            const errorMessage = (error?.message || String(error)).toLowerCase();
 
-            if (errorMessage === "AI_TIMEOUT") {
+            if (errorMessage.includes("ai_timeout") || errorMessage.includes("timeout")) {
                 return {
                     success: false,
                     error: "AI took too long to respond. Please try again with a clearer photo.",
                 };
             }
+            if (errorMessage.includes("safety") || errorMessage.includes("blocked") || errorMessage.includes("content")) {
+                return {
+                    success: false,
+                    error: "Image was not accepted (content policy). Try a different photo of the product or packaging.",
+                };
+            }
+            if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("resource_exhausted")) {
+                return {
+                    success: false,
+                    error: "Service is busy. Please wait a moment and try again.",
+                };
+            }
+            if (errorMessage.includes("api key") || errorMessage.includes("invalid_argument") || errorMessage.includes("401")) {
+                return {
+                    success: false,
+                    error: "AI API key missing or invalid. Please contact the app owner.",
+                };
+            }
 
-            // For any other API / safety / quota errors, fail the scan instead of returning fake data.
-            // This ensures you never see misleading dummy products in your dashboard.
             return {
                 success: false,
-                error: errorMessage,
+                error: (error?.message || String(error)).trim() || "Failed to analyze image. Try a clearer, well-lit photo.",
             };
         }
     }
