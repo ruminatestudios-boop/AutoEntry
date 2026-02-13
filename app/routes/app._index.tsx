@@ -77,9 +77,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       })
     ]);
     shopSettings = settingsResult ?? null;
-    recentScans = (recentSessions || [])
+    const rawList = (recentSessions || [])
       .flatMap((session: any) => (session.products || []).map(normalizeProductImageUrls))
       .filter((p: any) => p != null);
+    recentScans = rawList.sort((a: any, b: any) => {
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tb - ta;
+    });
   } catch (dbError) {
     console.error("Dashboard loader: failed to load scan sessions/products:", dbError);
     try {
@@ -322,7 +327,7 @@ export default function Index() {
   const handleParseVariants = () => {
     if (!variantInput.trim()) return;
     parseVariantsFetcher.submit(
-      { transcript: variantInput, sessionId: scannedProduct.id },
+      { transcript: variantInput.trim(), productId: scannedProduct?.id ?? "" },
       { method: "POST", action: "/api/parse-variants" }
     );
   };
@@ -386,7 +391,7 @@ export default function Index() {
 
       if (isFinal && scannedProduct?.id) {
         parseVariantsFetcher.submit(
-          { transcript: full, sessionId: scannedProduct.id },
+          { transcript: full.trim(), productId: scannedProduct.id },
           { method: "POST", action: "/api/parse-variants" }
         );
         shopify.toast.show("Parsing spoken variants…");
@@ -698,33 +703,30 @@ export default function Index() {
         <Layout>
           <Layout.Section>
             <Card>
-              <Box padding="600" data-qr-section style={{ borderLeft: "4px solid " + accentGreen, background: "linear-gradient(135deg, rgba(107, 229, 117, 0.06) 0%, transparent 50%)" }}>
+              <Box padding="600" data-qr-section>
                 <InlineStack align="space-between" blockAlign="center" gap="800" wrap={false}>
-                  <BlockStack gap="400" style={{ flex: "1", maxWidth: "520px" }}>
-                    <Text as="h2" variant="headingLg" fontWeight="bold" style={{ color: "#004c46", fontSize: "22px", lineHeight: 1.3 }}>
-                      <span style={{ color: primaryTeal }}>Intelligent Inventory </span>
-                      <span style={{ color: accentGreen }}>Capturing</span>
+                  <BlockStack gap="400">
+                    <Text as="h2" variant="headingLg" fontWeight="bold" style={{ fontSize: "26px", lineHeight: 1.3 }}>
+                      <span style={{ color: primaryTeal }}>Intelligent Inventory</span>
+                      <span style={{ color: "#004c46" }}> Capturing</span>
                     </Text>
-                    <Text as="p" variant="bodyMd" style={{ color: textDark, fontSize: "15px", maxWidth: "420px" }}>
+                    <Text as="p" variant="bodyMd" style={{ fontSize: "17px", color: primaryTeal }}>
                       <span style={{ color: primaryTeal }}>Automate product entry with AI. </span>
                       <span style={{ color: accentGreen, fontWeight: 600 }}>Fast, accurate, synced to Shopify.</span>
                     </Text>
                     <BlockStack gap="300">
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(107, 229, 117, 0.25)", color: accentGreen, fontWeight: 700, fontSize: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>1</span>
-                        <Text as="span" variant="bodyMd" style={{ color: textDark, fontSize: "15px" }}>Sync your mobile — scan QR to link.</Text>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(107, 229, 117, 0.25)", color: accentGreen, fontWeight: 700, fontSize: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>2</span>
-                        <Text as="span" variant="bodyMd" style={{ color: textDark, fontSize: "15px" }}>Smart capture — photo, AI extracts data.</Text>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(107, 229, 117, 0.25)", color: accentGreen, fontWeight: 700, fontSize: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>3</span>
-                        <Text as="span" variant="bodyMd" style={{ color: textDark, fontSize: "15px" }}>Review in Shopify when ready.</Text>
-                      </div>
+                      <Text as="p" variant="bodyMd" style={{ color: "#1a1a1a", fontSize: "16px" }}>
+                        Sync your mobile — scan QR to link.
+                      </Text>
+                      <Text as="p" variant="bodyMd" style={{ color: "#1a1a1a", fontSize: "16px" }}>
+                        Smart capture — photo, AI extracts data.
+                      </Text>
+                      <Text as="p" variant="bodyMd" style={{ color: "#1a1a1a", fontSize: "16px" }}>
+                        Review in Shopify when ready.
+                      </Text>
                     </BlockStack>
                   </BlockStack>
-                  <Box id="mobile-scan-qr" padding="500" borderRadius="12px" minWidth="220px" style={{ background: "rgba(107, 229, 117, 0.08)", border: "1px solid rgba(107, 229, 117, 0.35)" }}>
+                  <Box id="mobile-scan-qr" padding="400" background="bg-surface-secondary" borderRadius="300" minWidth="200px">
                     <BlockStack gap="300">
                       {atFreeLimit ? (
                         <>
@@ -1579,22 +1581,28 @@ export default function Index() {
                                         </button>
                                       </div>
                                       <InlineStack gap="200" wrap>
-                                        {opt.values.map((val: string, j: number) => (
-                                          <Tag key={j} onRemove={() => {
+                                        {opt.values.map((val: string, j: number) => {
+                                          const qty = opt.quantities && opt.quantities[j];
+                                          const label = qty != null ? `${val} (${qty})` : val;
+                                          return (
+                                            <Tag key={j} onRemove={() => {
                                             const newOptions = [...variantData.options];
                                             const newValues = [...newOptions[i].values];
+                                            const newQuantities = newOptions[i].quantities ? [...newOptions[i].quantities!] : undefined;
                                             newValues.splice(j, 1);
+                                            if (newQuantities) newQuantities.splice(j, 1);
                                             if (newValues.length === 0) {
                                               newOptions.splice(i, 1);
                                             } else {
-                                              newOptions[i] = { ...newOptions[i], values: newValues };
+                                              newOptions[i] = { ...newOptions[i], values: newValues, ...(newQuantities ? { quantities: newQuantities } : {}) };
                                             }
                                             setScannedProduct({
                                               ...scannedProduct,
                                               variants: JSON.stringify({ options: newOptions })
                                             });
-                                          }}>{val}</Tag>
-                                        ))}
+                                          }}>{label}</Tag>
+                                          );
+                                        })}
                                       </InlineStack>
                                     </BlockStack>
                                   </div>

@@ -1,8 +1,10 @@
 interface ToastProps {
     message: string;
+    tone?: "success" | "error";
 }
 
-export function Toast({ message }: ToastProps) {
+export function Toast({ message, tone = "success" }: ToastProps) {
+    const isError = tone === "error";
     return (
         <div
             style={{
@@ -11,14 +13,14 @@ export function Toast({ message }: ToastProps) {
                 left: "16px",
                 right: "16px",
                 maxWidth: "calc(100vw - 32px)",
-                background: "var(--mobile-accent)",
-                color: "#1a1a1a",
+                background: isError ? "#dc2626" : "var(--mobile-accent)",
+                color: isError ? "#fff" : "#1a1a1a",
                 padding: "12px 20px",
                 borderRadius: "10px",
                 fontSize: "14px",
                 fontWeight: "600",
-                boxShadow: "0 8px 24px rgba(107, 229, 117, 0.4)",
-                border: "1px solid rgba(107, 229, 117, 0.5)",
+                boxShadow: isError ? "0 8px 24px rgba(220, 38, 38, 0.35)" : "0 8px 24px rgba(107, 229, 117, 0.4)",
+                border: isError ? "1px solid rgba(220, 38, 38, 0.5)" : "1px solid rgba(107, 229, 117, 0.5)",
                 zIndex: 1000,
                 display: "flex",
                 alignItems: "center",
@@ -27,7 +29,7 @@ export function Toast({ message }: ToastProps) {
                 animation: "toastFadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
             }}
         >
-            <span style={{ color: "#1a1a1a" }}>✓</span>
+            {isError ? <span>!</span> : <span style={{ color: "#1a1a1a" }}>✓</span>}
             {message}
         </div>
     );

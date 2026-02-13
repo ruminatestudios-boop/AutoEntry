@@ -16,6 +16,7 @@ export interface ScannedProduct {
         options: {
             name: string;
             values: string[];
+            quantities?: number[]; // optional per-value inventory, same length as values
         }[];
     };
 }

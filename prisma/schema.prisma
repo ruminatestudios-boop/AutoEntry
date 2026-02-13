@@ -46,6 +46,7 @@ model ScannedProduct {
   id              String      @id @default(uuid())
   sessionId       String
   session         ScanSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt       DateTime    @default(now())
   title           String?
   descriptionHtml String?
   productType     String?

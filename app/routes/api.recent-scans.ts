@@ -15,11 +15,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
             },
             status: { in: ["DRAFT", "PUBLISHED"] }
         },
-        orderBy: {
-            session: {
-                createdAt: "desc"
-            }
-        },
+        orderBy: { createdAt: "desc" },
         take: showAll ? 250 : 20
     });
 

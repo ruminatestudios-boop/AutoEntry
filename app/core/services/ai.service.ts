@@ -1,6 +1,25 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { AIScanResult, ScannedProduct } from "../types/product";
 
+/** Fallback product when AI blocks or fails - we never reject the image, user can edit. */
+function fallbackScannedProduct(descriptiveTitle?: string | null): ScannedProduct {
+    const title = descriptiveTitle?.trim() && descriptiveTitle.length <= 120
+        ? descriptiveTitle
+        : "Item from photo";
+    const desc = descriptiveTitle
+        ? `<p>${descriptiveTitle}. Edit title and description as needed.</p><ul><li>Details from your image</li><li>Edit in dashboard before publishing</li></ul>`
+        : "<p>Item from your photo. Edit title and description as needed.</p><ul><li>Details from your image</li><li>Edit in dashboard before publishing</li></ul>";
+    return {
+        title,
+        descriptionHtml: desc,
+        productType: "General",
+        tags: ["scanned", "custom"],
+        estimatedWeight: 200,
+        price: "0",
+        status: "DRAFT",
+    };
+}
+
 /** Lazy-load Vision client so gRPC native module is only required when OCR runs (avoids startup crash on Alpine/musl). */
 async function getVisionClient(): Promise<{ textDetection: (req: { image: { content: Buffer } }) => Promise<[{ fullTextAnnotation?: { text?: string } }]> } | null> {
     try {
@@ -17,6 +36,25 @@ export class AIService {
 
     constructor(apiKey: string) {
         this.genAI = new GoogleGenerativeAI(apiKey);
+    }
+
+    /** When main analysis fails, ask for one short phrase describing what's in the image (e.g. "Blue toaster on grey surface"). */
+    private async describeImageBriefly(rawBase64: string, mimeType: string): Promise<string | null> {
+        try {
+            const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const prompt = `Look at this image. In one short phrase (2–10 words), describe what you see—e.g. object, color, setting. Examples: "Blue two-slot toaster on grey surface", "Handmade ceramic mug", "Red running shoes". Reply with ONLY that phrase, no quotes or punctuation.`;
+            const result = await Promise.race([
+                model.generateContent([
+                    prompt,
+                    { inlineData: { data: rawBase64, mimeType: mimeType || "image/jpeg" } },
+                ]),
+                new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000)),
+            ]) as any;
+            const text = result?.response?.text?.()?.trim();
+            return text && text.length <= 120 ? text : null;
+        } catch {
+            return null;
+        }
     }
 
     async analyzeImage(base64Image: string, mimeType: string, currency: string = "USD", country: string = "United States", options?: { skipVision?: boolean }): Promise<AIScanResult> {
@@ -49,8 +87,11 @@ export class AIService {
             const prompt = `
         You are a product data extraction engine. You MUST populate every field with useful content so the result can be used directly in a product listing.
 
-        Analyze this image and the OCR TEXT below. Extract factual data from the packaging, labels, barcodes and price stickers.
-        Treat OCR TEXT as the primary source for brand names, product names, and printed details.
+        Analyze this image and the OCR TEXT below. The image can be ANY product: packaged goods, unpackaged items, handmade goods, produce, clothing, electronics, furniture, art, food, accessories, etc. Describe exactly what you see.
+
+        - If there is a brand, logo, or printed text (on packaging, label, tag, or product): extract it with SUPER ACCURACY. Use the exact spelling and wording from OCR or the image. Do NOT guess or approximate brand names.
+        - If there is no brand or label: describe the product from what you see (appearance, material, color, shape, likely use). Invent a clear, descriptive title (e.g. "Handmade Ceramic Mug", "Organic Red Apple").
+        - OCR TEXT is the primary source for any printed text (brand, model, ingredients, price). Use it when present; otherwise rely on visual description.
 
         OCR TEXT:
         """
@@ -58,19 +99,21 @@ export class AIService {
         """
 
         RULES:
-        - Do NOT invent brand names or product names that do not appear in OCR TEXT or clearly on the image.
-        - You MUST fill in every field below. No field may be empty or minimal.
+        - Brand names: use ONLY what appears in OCR or clearly on the image. Exact spelling. If unsure, omit brand from title and put a generic product name.
+        - You MUST fill in every field. No field may be empty or minimal.
+        - Work for every type of product: packaged or unpackaged, famous brand or no brand, physical item only.
+        - NEVER use a generic title like "Scanned Item" or "Product". Always describe what you see (e.g. "Blue two-slot toaster", "Handmade ceramic mug", "Small appliance on grey surface") so the title adds value.
 
         FIELD REQUIREMENTS:
-        1. "title": Full product name (brand + model/product name from OCR or image). Example: "PHILIPS Series 1000 Electric Shaver".
-        2. "descriptionHtml": MUST be a proper product description in HTML. Include:
-           - One short introductory <p> paragraph describing the product (what it is, who it's for).
-           - A <ul> with <li> bullets listing key features, benefits, or specs from the packaging/OCR.
-           Do NOT output only a single <p> with the product name. Minimum: one paragraph + at least 2-3 bullet points.
-        3. "productType": A clear product category suitable for tax and search. Use one of: Electronics, Food & Beverages, Health & Beauty, Clothing & Accessories, Home & Garden, Sports & Outdoors, Toys & Games, Pet Supplies, Office Supplies, or a close match. Must be a single category phrase.
-        4. "tags": MUST be a non-empty array of 3-8 lowercase tags. Include: brand name, product type, and relevant keywords from OCR (e.g. ["philips", "electric", "shaver", "grooming", "series 1000"]). Never return [].
-        5. "estimatedWeight": Number in grams. REQUIRED. If weight is on the packaging (in g or kg), use it (convert kg to grams). Otherwise estimate by product type: e.g. electric shaver 200-400, chocolate bar 40-50, phone 150-200, bottle of shampoo 200-400, t-shirt 150-250. Never use 0.
-        6. "price": REQUIRED - never leave empty. If a price appears in OCR or on a sticker, use that number as a string (e.g. "29.99"). If no price is visible, estimate an average retail price for this product type in ${currency} (${country}): e.g. small electronics often 20-80, food/snacks 2-10, health & beauty 5-30, clothing 15-100. Return the numeric string (e.g. "24.99").
+        1. "title": Full product name. If brand is visible (OCR or logo): "BRAND + Product/Model name" (e.g. "PHILIPS Series 1000 Electric Shaver", "Nike Air Max 90"). If no brand or unclear: describe what you see (e.g. "Blue toaster on grey surface", "Handwoven Cotton Throw"). Never use "Scanned Item".
+        2. "descriptionHtml": MUST be proper HTML. Include:
+           - One short <p> describing what the product is and what you see (materials, colors, key visual details, or copy from packaging if present).
+           - A <ul> with <li> bullets: features, specs, or visual details (from label/OCR or from observation). Minimum 2-3 bullets.
+           Describe what you see; do not output only the product name.
+        3. "productType": One clear category. Use: Electronics, Food & Beverages, Health & Beauty, Clothing & Accessories, Home & Garden, Sports & Outdoors, Toys & Games, Pet Supplies, Office Supplies, Art & Collectibles, or a close match. Single category phrase.
+        4. "tags": Non-empty array of 3-8 lowercase tags: include brand if visible (exact), product type, materials/features (e.g. ["philips", "electric", "shaver"] or ["ceramic", "handmade", "mug", "kitchen"]). Never return [].
+        5. "estimatedWeight": Number in grams. REQUIRED. Use weight from packaging if shown (convert kg to g). Otherwise estimate by what you see (size, product type). Never use 0.
+        6. "price": REQUIRED. Use price from OCR/sticker if visible. Otherwise estimate a reasonable retail price in ${currency} (${country}) for this product type. Return numeric string (e.g. "24.99").
         7. "status": "DRAFT"
 
         Return ONLY a JSON object, no other text:
@@ -126,7 +169,7 @@ export class AIService {
                 console.error(`[${timestamp}] AI_SERVICE: JSON parse failed:`, parseErr);
                 return {
                     success: false,
-                    error: "We couldn't read the product details from the image. Try a clearer photo of the label or packaging.",
+                    error: "We couldn't read the product details from the image. Try a clearer, well-lit photo of the product.",
                 };
             }
 
@@ -138,34 +181,29 @@ export class AIService {
             console.error(`[${timestamp}] AI Analysis Error:`, error);
             const errorMessage = (error?.message || String(error)).toLowerCase();
 
-            if (errorMessage.includes("ai_timeout") || errorMessage.includes("timeout")) {
-                return {
-                    success: false,
-                    error: "AI took too long to respond. Please try again with a clearer photo.",
-                };
-            }
-            if (errorMessage.includes("safety") || errorMessage.includes("blocked") || errorMessage.includes("content")) {
-                return {
-                    success: false,
-                    error: "Image was not accepted (content policy). Try a different photo of the product or packaging.",
-                };
-            }
-            if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("resource_exhausted")) {
-                return {
-                    success: false,
-                    error: "Service is busy. Please wait a moment and try again.",
-                };
-            }
+            // Only reject for unrecoverable errors; otherwise accept image with fallback data
             if (errorMessage.includes("api key") || errorMessage.includes("invalid_argument") || errorMessage.includes("401")) {
                 return {
                     success: false,
                     error: "AI API key missing or invalid. Please contact the app owner.",
                 };
             }
+            // 429/quota: accept image with fallback so user doesn't see "service busy" message
+            if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("resource_exhausted")) {
+                console.log(`[${timestamp}] AI_SERVICE: Rate limited, returning fallback product (image accepted)`);
+                const phrase = await this.describeImageBriefly(rawBase64, mimeType || "image/jpeg");
+                return {
+                    success: true,
+                    data: fallbackScannedProduct(phrase),
+                };
+            }
 
+            // Safety/blocked/content/timeout/parse/other: never reject - return fallback so user can edit
+            console.log(`[${timestamp}] AI_SERVICE: Returning fallback product (image accepted)`);
+            const phrase = await this.describeImageBriefly(rawBase64, mimeType || "image/jpeg");
             return {
-                success: false,
-                error: (error?.message || String(error)).trim() || "Failed to analyze image. Try a clearer, well-lit photo.",
+                success: true,
+                data: fallbackScannedProduct(phrase),
             };
         }
     }
@@ -177,7 +215,7 @@ export class AIService {
             const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
             const prompt = `
-        Parse the following natural language description of product variants (like sizes, colors, materials) into a structured JSON format.
+        Parse the following natural language description of product variants (like sizes, colors, materials, and optional quantities per value) into a structured JSON format.
 
         Input: "${transcript}"
 
@@ -186,22 +224,26 @@ export class AIService {
             "options": [
                 {
                     "name": "Option Name (e.g. Size, Color, Material)",
-                    "values": ["Value1", "Value2", "Value3"]
+                    "values": ["Value1", "Value2", "Value3"],
+                    "quantities": [optional array of numbers, one per value, e.g. [4, 5, 7] when user says "small 4, medium 5, large 7"]
                 }
             ]
         }
 
-        Example:
-        Input: "Available in Small, Medium, Large and Red, Blue colors"
-        Output:
-        {
-            "options": [
-                { "name": "Size", "values": ["Small", "Medium", "Large"] },
-                { "name": "Color", "values": ["Red", "Blue"] }
-            ]
-        }
+        Rules:
+        - Extract every variant value the user mentions. For "small 4, medium 5, large 7" output one option with name "Size" (or "Quantity"), values ["small", "medium", "large"], and quantities [4, 5, 7].
+        - If the user gives numbers after values (e.g. "small 4, medium 5, large 7"), include a "quantities" array with the same length as "values".
+        - Multiple option types: "sizes S M L and colors red, blue" → two options: Size with values [S,M,L], Color with values [red, blue]. Omit quantities if not specified.
+        - Use clear option names: Size, Color, Material, etc. Values must be strings; quantities must be numbers.
 
-        If no clear variants are mentioned, return: { "variants": [] }
+        Examples:
+        Input: "small 4, medium 5, large 7"
+        Output: { "options": [{ "name": "Size", "values": ["small", "medium", "large"], "quantities": [4, 5, 7] }] }
+
+        Input: "Available in Small, Medium, Large and Red, Blue colors"
+        Output: { "options": [{ "name": "Size", "values": ["Small", "Medium", "Large"] }, { "name": "Color", "values": ["Red", "Blue"] }] }
+
+        If no clear variants are mentioned, return: { "options": [] }
         `;
 
             console.log(`[${timestamp}] AI_SERVICE: Sending variant parsing request...`);

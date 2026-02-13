@@ -1,5 +1,7 @@
 # Preview the latest app design in Shopify
 
+**→ For “edit live in Shopify, then push to production”: see [STAGING.md](./STAGING.md).**
+
 ## What the latest design looks like (from your code)
 
 - **Header:** Dark teal bar (#1a514d) with "Auto Entry", subtitle, and on the home page: plan info (e.g. "Free Plan · X of 1,000 scans") and a green progress bar, plus "Plans" / "Upgrade" link.

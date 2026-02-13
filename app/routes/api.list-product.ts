@@ -16,7 +16,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     try {
         const productData = JSON.parse(productJson);
 
-        // Mapping from raw DB data to Core Type
+        const rawVariants = typeof productData.variants === "string" ? JSON.parse(productData.variants) : productData.variants;
+        // Ensure variants.options have full values arrays (no truncation) so all variants are created on Shopify
+        const variants = rawVariants && Array.isArray(rawVariants.options)
+            ? {
+                options: rawVariants.options.map((o: any) => ({
+                    name: o?.name ?? "Option",
+                    values: Array.isArray(o?.values) ? o.values.map((v: any) => String(v)) : [],
+                    ...(Array.isArray(o?.quantities) && o.quantities.length === (o.values?.length ?? 0)
+                        ? { quantities: o.quantities.map((q: any) => Number(q)) }
+                        : {}),
+                })).filter((o: any) => o.values.length > 0),
+            }
+            : undefined;
+
         const scannedProduct: ScannedProduct = {
             title: productData.title,
             descriptionHtml: productData.descriptionHtml,
@@ -30,7 +43,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             sku: productData.sku,
             inventoryQuantity: productData.inventoryQuantity,
             trackInventory: productData.trackInventory,
-            variants: typeof productData.variants === "string" ? JSON.parse(productData.variants) : productData.variants
+            variants
         };
 
         const adapter = new ShopifyProductAdapter(admin, session?.shop);

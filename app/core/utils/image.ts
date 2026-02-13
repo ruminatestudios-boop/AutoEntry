@@ -15,25 +15,9 @@ export async function compressImage(file: File): Promise<string> {
                 img.onload = () => {
                     try {
                         const canvas = document.createElement("canvas");
-                        const MAX_WIDTH = 640;
-                        const MAX_HEIGHT = 640;
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
-                        } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
+                        const SIZE = 512;
+                        canvas.width = SIZE;
+                        canvas.height = SIZE;
 
                         const ctx = canvas.getContext("2d");
                         if (!ctx) {
@@ -41,10 +25,14 @@ export async function compressImage(file: File): Promise<string> {
                             return;
                         }
 
-                        ctx.drawImage(img, 0, 0, width, height);
+                        // Center-crop to square
+                        const s = Math.min(img.width, img.height);
+                        const sx = (img.width - s) / 2;
+                        const sy = (img.height - s) / 2;
+                        ctx.drawImage(img, sx, sy, s, s, 0, 0, SIZE, SIZE);
 
-                        // Use 0.55 quality to keep payload smaller and avoid proxy timeouts (502)
-                        const dataUrl = canvas.toDataURL("image/jpeg", 0.55);
+                        // Use 0.5 quality for smaller payload and more reliable uploads
+                        const dataUrl = canvas.toDataURL("image/jpeg", 0.5);
                         resolve(dataUrl);
                     } catch (e: any) {
                         console.error("Canvas compression error:", e);

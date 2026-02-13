@@ -19,16 +19,20 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
     const [error, setError] = useState<string | null>(null);
     const [voiceError, setVoiceError] = useState<string | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [toastTone, setToastTone] = useState<"success" | "error">("success");
     const [currentTip, setCurrentTip] = useState(0);
     const [transcript, setTranscript] = useState("");
     const [isRecording, setIsRecording] = useState(false);
     const [parsedVariants, setParsedVariants] = useState<any>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const capturedFileRef = useRef<File | null>(null);
+    const lastSubmittedImageRef = useRef<string | null>(null);
+    const retriedRef = useRef(false);
 
-    const showToast = useCallback((msg: string) => {
+    const showToast = useCallback((msg: string, tone: "success" | "error" = "success") => {
+        setToastTone(tone);
         setToastMessage(msg);
-        setTimeout(() => setToastMessage(null), 3000);
+        setTimeout(() => { setToastMessage(null); }, 3000);
     }, []);
 
     // Restore persistence on mount
@@ -56,6 +60,19 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
         sessionStorage.setItem(`capture_submitting_${sessionId}`, isSubmitting.toString());
     }, [imagePreview, step, isSubmitting, sessionId]);
 
+    // Timeout: if we're stuck analyzing for too long, reset so user can try again
+    useEffect(() => {
+        if (step !== "analyzing" || !isSubmitting) return;
+        const timeout = setTimeout(() => {
+            lastSubmittedImageRef.current = null;
+            retriedRef.current = false;
+            setIsSubmitting(false);
+            setStep("capture");
+            showToast("Scan timed out. Try again.", "error");
+        }, 50000);
+        return () => clearTimeout(timeout);
+    }, [step, isSubmitting, showToast]);
+
     // Sync state with fetcher results
     useEffect(() => {
         if (fetcher.data?.newSessionId) {
@@ -65,12 +82,17 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
         }
 
         if (isSubmitting && fetcher.state === "idle") {
-            setIsSubmitting(false);
             if (fetcher.data?.error) {
-                setError(fetcher.data.error);
-                setStep("analyzing");
-                showToast("Scan failed. See message below.");
+                lastSubmittedImageRef.current = null;
+                retriedRef.current = false;
+                setIsSubmitting(false);
+                setError(null);
+                setStep("capture");
+                showToast(fetcher.data.error, "error");
             } else if (fetcher.data?.batchAdded && fetcher.data?.success) {
+                lastSubmittedImageRef.current = null;
+                retriedRef.current = false;
+                setIsSubmitting(false);
                 setError(null);
                 setStep("capture");
                 setImagePreview(null);
@@ -78,17 +100,30 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
                 const n = fetcher.data.batchCount ?? 0;
                 showToast(n > 0 ? `Photo ${n} added to batch` : "Photo added to batch");
             } else if (fetcher.data?.success) {
+                lastSubmittedImageRef.current = null;
+                retriedRef.current = false;
+                setIsSubmitting(false);
                 setError(null);
                 setStep("capture");
                 setImagePreview(null);
                 capturedFileRef.current = null;
                 showToast("Scan complete! Retake to replace or scan a new product.");
             } else {
-                // Fallback: no success and no error in data (e.g. 500 HTML, network error, server crash)
-                console.error("Scan finished with no data returned", fetcher.data);
-                setError("Something went wrong. Please check your connection and try again.");
-                setStep("analyzing");
-                showToast("Scan failed. See message below.");
+                // No data (connection/server error): retry once automatically, then just return to capture without error toast
+                const img = lastSubmittedImageRef.current;
+                if (img && !retriedRef.current) {
+                    retriedRef.current = true;
+                    fetcher.submit(
+                        { image: img, ...(batchMode ? { intent: "batch_add" } : {}) },
+                        { method: "POST", encType: "application/json", action: window.location.pathname }
+                    );
+                    return;
+                }
+                lastSubmittedImageRef.current = null;
+                retriedRef.current = false;
+                setIsSubmitting(false);
+                setError(null);
+                setStep("capture");
             }
         }
     }, [fetcher.data, fetcher.state, isSubmitting, showToast]);
@@ -121,45 +156,32 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
             const compressed = await compressImage(file);
             setImagePreview(compressed);
             setError(null);
-            handleAnalyze(file);
+            // Pass compressed data directly so we scan exactly this image, no double-compress or state race
+            handleAnalyze(compressed);
         } catch (err) {
             console.error("Compression failed, falling back to original:", err);
-            // Fallback: Read original file as DataURL if compression fails
             const reader = new FileReader();
             reader.onload = (e) => {
                 const result = e.target?.result as string;
                 setImagePreview(result);
                 setError(null);
-                handleAnalyze(file);
+                handleAnalyze(result);
             };
             reader.readAsDataURL(file);
         }
     };
 
-    const handleAnalyze = async (fileOverwrite?: File) => {
-        const file = fileOverwrite || capturedFileRef.current;
-        let imageData = "";
+    const handleAnalyze = (imageDataOrFile?: string | File) => {
+        // Prevent double-submit while a request is in flight (allows retake after previous request completes)
+        if (fetcher.state !== "idle") return;
 
-        if (file) {
-            try {
-                imageData = await compressImage(file);
-                setImagePreview(imageData);
-            } catch (err) {
-                console.warn("Compression usage in handleAnalyze failed, using raw file.");
-                // Synchronous read for fallback
-                await new Promise<void>((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        imageData = e.target?.result as string;
-                        setImagePreview(imageData);
-                        resolve();
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
+        let imageData = "";
+        if (typeof imageDataOrFile === "string" && imageDataOrFile.startsWith("data:")) {
+            imageData = imageDataOrFile;
         } else if (imagePreview?.startsWith("data:")) {
             imageData = imagePreview;
-        } else {
+        }
+        if (!imageData) {
             setError("No image to analyze.");
             setStep("capture");
             return;
@@ -167,20 +189,23 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
 
         setStep("analyzing");
         setIsSubmitting(true);
+        lastSubmittedImageRef.current = imageData;
+        retriedRef.current = false;
 
         try {
-            const formData = new FormData();
-            formData.append("image", imageData);
-            if (batchMode) formData.append("intent", "batch_add");
-
-            fetcher.submit(formData, {
+            const payload = { image: imageData, ...(batchMode ? { intent: "batch_add" } : {}) };
+            fetcher.submit(payload, {
                 method: "POST",
-                encType: "multipart/form-data"
+                encType: "application/json",
+                action: window.location.pathname,
             });
         } catch (err) {
+            console.error("Scan submit failed:", err);
+            lastSubmittedImageRef.current = null;
+            retriedRef.current = false;
             setIsSubmitting(false);
-            setError("Upload failed.");
             setStep("capture");
+            showToast("Upload failed. Try again.", "error");
         }
     };
 
@@ -223,6 +248,7 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
         setError,
         voiceError,
         toastMessage,
+        toastTone,
         currentTip,
         setCurrentTip,
         transcript,

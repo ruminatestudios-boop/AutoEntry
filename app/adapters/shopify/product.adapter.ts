@@ -12,7 +12,8 @@ export class ShopifyProductAdapter implements PlatformAdapter {
       shopDomain = shopInfo.myshopifyDomain;
     }
 
-    const hasVariants = product.variants && product.variants.options.length > 0;
+    const hasVariants = product.variants && Array.isArray(product.variants.options) && product.variants.options.length > 0
+      && product.variants.options.some((o: any) => (o.values?.length ?? 0) > 0);
 
     // Step 1: Prepare product input (clean taxonomy for Shopify AI / Magic)
     const productInput: any = {
@@ -27,7 +28,11 @@ export class ShopifyProductAdapter implements PlatformAdapter {
     };
 
     if (hasVariants) {
-      productInput.options = product.variants!.options.map(o => o.name);
+      productInput.productOptions = product.variants!.options.map((o, i) => ({
+        name: o.name,
+        position: i + 1,
+        values: (o.values || []).map((v: string) => ({ name: v })),
+      }));
     }
 
     // Prepare media inputs after ensuring all images are uploaded/available as URLs
@@ -94,8 +99,10 @@ export class ShopifyProductAdapter implements PlatformAdapter {
     const createdProduct = createJson.data.productCreate.product;
 
     if (hasVariants) {
-      // Step 2: Create variants in bulk since we only created the product with options
+      // Step 2: Create variants in bulk. productCreate only creates one default variant (first option value),
+      // so we bulk-create only the remaining combinations to get one variant per value.
       const combinations = this.generateCombinations(product.variants!.options);
+      const combinationsToCreate = combinations.length > 1 ? combinations.slice(1) : [];
 
       const bulkCreateMutation = `#graphql
         mutation productVariantsBulkCreate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
@@ -125,7 +132,7 @@ export class ShopifyProductAdapter implements PlatformAdapter {
           weight: { value: weightKg, unit: "KILOGRAMS" }
         };
       }
-      const variantsInput = combinations.map(combo => ({
+      const variantsInput = combinationsToCreate.map(combo => ({
         optionValues: combo.map((value, index) => ({
           optionName: product.variants!.options[index].name,
           name: value
@@ -137,29 +144,68 @@ export class ShopifyProductAdapter implements PlatformAdapter {
         }
       }));
 
-      const bulkResponse = await this.admin.graphql(bulkCreateMutation, {
-        variables: {
-          productId: createdProduct.id,
-          variants: variantsInput
+      let createdVariants: any[] = createdProduct.variants?.edges?.map((e: any) => e?.node).filter(Boolean) ?? [];
+      if (variantsInput.length > 0) {
+        const bulkResponse = await this.admin.graphql(bulkCreateMutation, {
+          variables: {
+            productId: createdProduct.id,
+            variants: variantsInput
+          }
+        });
+
+        const bulkJson = await bulkResponse.json();
+        const bulkData = bulkJson.data?.productVariantsBulkCreate;
+        if (bulkData?.userErrors?.length > 0) {
+          const msg = bulkData.userErrors.map((e: any) => e.message).join("; ");
+          throw new Error(`Could not create all variants: ${msg}`);
         }
-      });
-
-      const bulkJson = await bulkResponse.json();
-      if (bulkJson.data?.productVariantsBulkCreate?.userErrors?.length > 0) {
-        console.error("Bulk Variant Error:", bulkJson.data.productVariantsBulkCreate.userErrors);
+        const bulkCreated = bulkData?.productVariants ?? [];
+        createdVariants = [...createdVariants, ...bulkCreated];
       }
 
-      // Step 3: Handle inventory if tracked
-      if (product.trackInventory && product.inventoryQuantity) {
-        const inventoryItems = bulkJson.data.productVariantsBulkCreate.productVariants.map((v: any) => v.inventoryItem.id);
-        await this.setInventoryLevels(inventoryItems, product.inventoryQuantity);
+      // Step 2b: Set price (and sku) on the default/first variant — Shopify creates it without our price
+      const defaultVariant = createdVariants[0];
+      if (defaultVariant && (product.price || product.sku)) {
+        const updateMutation = `#graphql
+          mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+            productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+              productVariants { id }
+              userErrors { field message }
+            }
+          }
+        `;
+        const firstCombo = combinations[0];
+        const defaultSku = product.sku && firstCombo ? `${product.sku}-${firstCombo.join("-")}` : undefined;
+        const updateRes = await this.admin.graphql(updateMutation, {
+          variables: {
+            productId: createdProduct.id,
+            variants: [{
+              id: defaultVariant.id,
+              price: product.price || "0.00",
+              ...(defaultSku ? { inventoryItem: { sku: defaultSku } } : {}),
+            }],
+          },
+        });
+        const updateJson = await updateRes.json();
+        const errs = updateJson.data?.productVariantsBulkUpdate?.userErrors;
+        if (errs?.length > 0) {
+          console.error("Failed to set default variant price:", errs);
+        }
       }
 
-      // Clean up the default variant created by Shopify
-      const defaultVariant = createdProduct.variants.edges[0]?.node;
-      if (defaultVariant && createdProduct.variants.edges.length > combinations.length) {
-        // This is tricky, Shopify usually replaces the default variant if we add options, 
-        // but let's be safe.
+      // Step 3: Set inventory per variant (use per-option quantities when single option, else fallback to product.inventoryQuantity)
+      if (createdVariants.length > 0 && (product.trackInventory || product.variants!.options.some((o: any) => (o.quantities?.length ?? 0) > 0))) {
+        const inventoryItemIds = createdVariants.map((v: any) => v.inventoryItem?.id).filter(Boolean);
+        const opts = product.variants!.options;
+        let quantities: number[] | null = null;
+        if (opts.length === 1 && Array.isArray(opts[0].quantities) && opts[0].quantities!.length === opts[0].values.length) {
+          quantities = opts[0].quantities!;
+        }
+        if (quantities && quantities.length === inventoryItemIds.length) {
+          await this.setInventoryLevels(inventoryItemIds, quantities);
+        } else if (product.trackInventory && product.inventoryQuantity != null) {
+          await this.setInventoryLevels(inventoryItemIds, product.inventoryQuantity);
+        }
       }
 
     } else {
@@ -215,9 +261,9 @@ export class ShopifyProductAdapter implements PlatformAdapter {
     };
   }
 
-  private async setInventoryLevels(inventoryItemIds: string[], quantity: number) {
+  /** Set inventory: pass single number to apply to all items, or array of quantities (one per inventory item id). */
+  private async setInventoryLevels(inventoryItemIds: string[], quantityOrQuantities: number | number[]) {
     try {
-      // 1. Get location ID
       const locationQuery = `#graphql
         query {
           locations(first: 1) {
@@ -235,7 +281,6 @@ export class ShopifyProductAdapter implements PlatformAdapter {
 
       if (!locationId) return;
 
-      // 2. Set quantities
       const setQuantityMutation = `#graphql
         mutation inventorySetQuantities($input: InventorySetQuantitiesInput!) {
           inventorySetQuantities(input: $input) {
@@ -247,15 +292,20 @@ export class ShopifyProductAdapter implements PlatformAdapter {
         }
       `;
 
+      const isArray = Array.isArray(quantityOrQuantities);
+      const quantities = inventoryItemIds.map((_, i) =>
+        isArray ? (quantityOrQuantities as number[])[i] ?? 0 : (quantityOrQuantities as number)
+      );
+
       await this.admin.graphql(setQuantityMutation, {
         variables: {
           input: {
             reason: "correction",
             name: "available",
-            quantities: inventoryItemIds.map(id => ({
+            quantities: inventoryItemIds.map((id, i) => ({
               inventoryItemId: id,
               locationId: locationId,
-              quantity: quantity
+              quantity: quantities[i] ?? 0
             }))
           }
         }
@@ -265,7 +315,7 @@ export class ShopifyProductAdapter implements PlatformAdapter {
     }
   }
 
-  private generateCombinations(options: { name: string; values: string[] }[]) {
+  private generateCombinations(options: { name: string; values: string[]; quantities?: number[] }[]) {
     const result: string[][] = [];
     function helper(arr: string[][], current: string[]) {
       if (current.length === arr.length) {

@@ -88,6 +88,7 @@ export function CaptureStep({
                     </div>
                 </div>
             )}
+            <div style={{ marginTop: onBatchModeChange ? "24px" : 0 }} />
             {!imagePreview && (
                 <div style={{ textAlign: "center", marginBottom: "12px", animation: "fadeIn 0.6s ease-out" }}>
                     <Text as="h2" variant="headingLg" fontWeight="bold">
@@ -102,6 +103,7 @@ export function CaptureStep({
             <div style={{
                 position: "relative",
                 width: "100%",
+                aspectRatio: imagePreview ? "1 / 1" : undefined,
                 minHeight: imagePreview ? "280px" : "auto",
                 borderRadius: "12px",
                 overflow: "hidden",
@@ -116,10 +118,11 @@ export function CaptureStep({
                         src={imagePreview}
                         alt="Preview"
                         style={{
+                            position: "absolute",
+                            inset: 0,
                             width: "100%",
                             height: "100%",
-                            objectFit: "contain",
-                            maxHeight: "320px",
+                            objectFit: "cover",
                             animation: "pop 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)"
                         }}
                     />
@@ -232,26 +235,11 @@ export function CaptureStep({
             {imagePreview && (
                 <div style={{ marginTop: "12px" }}>
                     {isAnalyzing ? (
-                        <div style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: "10px",
-                            padding: "12px",
-                            background: "rgba(107, 229, 117, 0.15)",
-                            borderRadius: "12px",
-                            border: "1px solid rgba(107, 229, 117, 0.35)"
-                        }}>
-                            <div className="spin-animation" style={{ width: "20px", height: "20px", border: "2px solid rgba(107, 229, 117, 0.4)", borderTop: "2px solid var(--mobile-accent)", borderRadius: "50%", flexShrink: 0 }} />
-                            <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--mobile-text-muted)" }}>
-                                {batchMode ? "Adding to batch…" : "Analyzing…"}
-                            </span>
+                        <div style={{ display: "flex", justifyContent: "center", padding: "8px" }}>
+                            <div className="spin-animation" style={{ width: "24px", height: "24px", border: "2px solid rgba(107, 229, 117, 0.4)", borderTop: "2px solid var(--mobile-accent)", borderRadius: "50%" }} />
                         </div>
                     ) : (
                         <>
-                            <p style={{ margin: "0 0 8px", fontSize: "12px", color: "var(--mobile-text-muted)" }}>
-                                Re-scan same product or start a new one below.
-                            </p>
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="mobile-button-primary"

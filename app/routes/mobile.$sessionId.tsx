@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { json, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useRouteError } from "@remix-run/react";
-import { AppProvider, Banner } from "@shopify/polaris";
+import { AppProvider } from "@shopify/polaris";
 import enTranslations from "@shopify/polaris/locales/en.json";
 
 import db from "../db.server";
@@ -80,10 +80,31 @@ export const links = () => [
 ];
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
+    const { sessionId: currentSessionId } = params;
+
     try {
-        const { sessionId: currentSessionId } = params;
-        const formData = await request.formData();
-        const intent = formData.get("intent");
+        let intent: string | null = null;
+        let imageField: string | File | null = null;
+        let isBatchAdd = false;
+
+        const contentType = request.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+            let body: { intent?: string; image?: string; batch_add?: boolean };
+            try {
+                body = await request.json() as { intent?: string; image?: string; batch_add?: boolean };
+            } catch (parseErr) {
+                console.error("MOBILE ACTION: JSON parse failed", parseErr);
+                return json({ error: "Invalid request. Try taking the photo again." }, { status: 400 });
+            }
+            intent = body.intent ?? null;
+            isBatchAdd = body.intent === "batch_add" || body.batch_add === true;
+            imageField = body.image ?? null;
+        } else {
+            const formData = await request.formData();
+            intent = formData.get("intent") as string | null;
+            isBatchAdd = formData.get("intent") === "batch_add";
+            imageField = formData.get("image") as string | File | null;
+        }
 
         if (intent === "new_session") {
             const session = await db.scanSession.findUnique({ where: { id: currentSessionId } });
@@ -142,21 +163,36 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
                 }
             } catch (e) { console.error("Shop context fetch failed", e); }
         }
-
-        const image = formData.get("image") as string;
-        const isBatchAdd = formData.get("intent") === "batch_add";
-        if (!image) return json({ error: "No image provided" }, { status: 400 });
+        if (!imageField) return json({ error: "No image provided" }, { status: 400 });
 
         let mimeType = "image/jpeg";
-        let base64Data = image;
-        if (image.startsWith("data:")) {
-            const commaIndex = image.indexOf(",");
-            if (commaIndex !== -1) {
+        let base64Data: string;
+        let dataUrlForStorage = "";
+
+        if (typeof imageField === "string") {
+            const image = imageField;
+            if (image.length < 50) return json({ error: "Image data too small. Try taking a new photo." }, { status: 400 });
+            if (image.startsWith("data:")) {
+                const commaIndex = image.indexOf(",");
+                if (commaIndex === -1) return json({ error: "Invalid image format. Try again." }, { status: 400 });
                 base64Data = image.substring(commaIndex + 1);
                 const mimeMatch = image.substring(0, commaIndex).match(/data:(.*?);/);
                 if (mimeMatch) mimeType = mimeMatch[1];
+                dataUrlForStorage = image;
+            } else {
+                base64Data = image;
+                dataUrlForStorage = `data:${mimeType};base64,${image}`;
             }
+        } else if (imageField instanceof File) {
+            const buffer = Buffer.from(await imageField.arrayBuffer());
+            base64Data = buffer.toString("base64");
+            mimeType = imageField.type || "image/jpeg";
+            dataUrlForStorage = `data:${mimeType};base64,${base64Data}`;
+        } else {
+            return json({ error: "Invalid image. Please use the camera or photo library." }, { status: 400 });
         }
+
+        if (!base64Data || base64Data.length < 100) return json({ error: "Image data too small. Please take a clear photo and try again." }, { status: 400 });
 
         console.log(`MOBILE ACTION: Image received (${Math.round((base64Data.length * 3) / 4 / 1024)}KB base64) - Session: ${currentSessionId}, Shop: ${shop}`);
 
@@ -186,7 +222,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         console.log(`MOBILE ACTION: Generated SKU: ${sku}`);
 
         // Use scanned image only on mobile to avoid proxy timeout (502). Image search can add 10s+.
-        const finalImageUrls = [image];
+        const finalImageUrls = [dataUrlForStorage];
 
         // Ensure all fields are populated for the dashboard form (never leave description/tags empty)
         const tagsArray = Array.isArray(aiData.tags) && aiData.tags.length > 0
@@ -273,7 +309,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         const msg = serverError instanceof Error ? serverError.message : String(serverError ?? "Unknown error");
         console.error("MOBILE ACTION CRITICAL FAILURE:", serverError);
         return json({
-            error: `Something went wrong: ${msg}. Please try again or use a clearer photo.`
+            error: "Something went wrong. Please try again."
         }, { status: 500 });
     }
 };
@@ -282,7 +318,7 @@ export default function MobileCapture() {
     const { sessionId, shop } = useLoaderData<typeof loader>();
     const [batchMode, setBatchMode] = useState(false);
     const {
-        step, setStep, imagePreview, error, setError, voiceError, toastMessage,
+        step, setStep, imagePreview, error, setError, voiceError, toastMessage, toastTone,
         currentTip, setCurrentTip, transcript, setTranscript, isRecording, setIsRecording,
         parsedVariants, handleCapture, handleAnalyze, handleScanAnother,
         startRecording, handleSaveVariants, isAnalyzing, isParsingVariants, fetcherData
@@ -324,12 +360,6 @@ export default function MobileCapture() {
             <div className="mobile-container">
                 <MobileHeader title="Auto Entry" subtitle="Mobile Product Scanner" />
 
-                {error && step === "capture" && (
-                    <div style={{ marginBottom: "8px", padding: "0 12px" }}>
-                        <Banner tone="critical" onDismiss={() => setError(null)}>{error}</Banner>
-                    </div>
-                )}
-
                 <div style={{ padding: "12px 12px 20px" }}>
                     <div className="mobile-card">
                         {renderStep()}
@@ -337,7 +367,7 @@ export default function MobileCapture() {
                 </div>
 
                 <PricingModal isOpen={isPricingModalOpen} onClose={() => setIsPricingModalOpen(false)} shop={shop} />
-                {toastMessage && <Toast message={toastMessage} />}
+                {toastMessage && <Toast message={toastMessage} tone={toastTone} />}
 
                 <style dangerouslySetInnerHTML={{
                     __html: `
