@@ -19,31 +19,31 @@ export class AIService {
         this.genAI = new GoogleGenerativeAI(apiKey);
     }
 
-    async analyzeImage(base64Image: string, mimeType: string, currency: string = "USD", country: string = "United States"): Promise<AIScanResult> {
+    async analyzeImage(base64Image: string, mimeType: string, currency: string = "USD", country: string = "United States", options?: { skipVision?: boolean }): Promise<AIScanResult> {
         const timestamp = new Date().toLocaleTimeString();
         const rawBase64 = base64Image.includes(",") ? base64Image.split(",")[1] : base64Image;
         if (!rawBase64 || rawBase64.length < 100) {
             return { success: false, error: "No image data or image too small. Please take a clear photo." };
         }
         try {
-            console.log(`[${timestamp}] AI_SERVICE: Requesting model: gemini-2.0-flash (Currency: ${currency}, Country: ${country}, base64 length: ${rawBase64.length})`);
+            console.log(`[${timestamp}] AI_SERVICE: Requesting model: gemini-2.0-flash (Currency: ${currency}, Country: ${country}, base64 length: ${rawBase64.length}, skipVision: ${options?.skipVision ?? false})`);
             const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-            // First, run OCR with Google Cloud Vision to get reliable text from the packaging (optional).
             let ocrText = "";
-            try {
-                const visionClient = await getVisionClient();
-                if (visionClient) {
-                    const imageBuffer = Buffer.from(rawBase64, "base64");
-                    const [visionResult] = await visionClient.textDetection({
-                        image: { content: imageBuffer },
-                    });
-                    ocrText = visionResult.fullTextAnnotation?.text?.trim() || "";
-                    console.log(`[${timestamp}] AI_SERVICE: Vision OCR length: ${ocrText.length}`);
+            if (!options?.skipVision) {
+                try {
+                    const visionClient = await getVisionClient();
+                    if (visionClient) {
+                        const imageBuffer = Buffer.from(rawBase64, "base64");
+                        const [visionResult] = await visionClient.textDetection({
+                            image: { content: imageBuffer },
+                        });
+                        ocrText = visionResult.fullTextAnnotation?.text?.trim() || "";
+                        console.log(`[${timestamp}] AI_SERVICE: Vision OCR length: ${ocrText.length}`);
+                    }
+                } catch (ocrError) {
+                    console.error(`[${timestamp}] AI_SERVICE: Vision OCR failed (continuing with Gemini only):`, (ocrError as Error).message);
                 }
-            } catch (ocrError) {
-                console.error(`[${timestamp}] AI_SERVICE: Vision OCR failed (continuing with Gemini only):`, (ocrError as Error).message);
-                // Continue without OCR; Gemini will still see the image.
             }
 
             const prompt = `
@@ -94,7 +94,7 @@ export class AIService {
 
             console.log(`[${timestamp}] AI_SERVICE: Sending request to Gemini...`);
 
-            const timeoutMs = 28000;
+            const timeoutMs = 22000;
             const timeoutPromise = new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error("AI_TIMEOUT")), timeoutMs)
             );

@@ -169,7 +169,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
         const aiService = new AIService(apiKey);
         console.log(`MOBILE ACTION: Analyzing image (Base64 length: ${base64Data.length})...`);
-        const scanResult = await aiService.analyzeImage(base64Data, mimeType, currencyCode, countryCode);
+        const scanResult = await aiService.analyzeImage(base64Data, mimeType, currencyCode, countryCode, { skipVision: true });
 
         if (!scanResult.success || !scanResult.data) {
             console.error("MOBILE ACTION ERROR: AI analysis failed:", scanResult.error);

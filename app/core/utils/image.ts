@@ -15,8 +15,8 @@ export async function compressImage(file: File): Promise<string> {
                 img.onload = () => {
                     try {
                         const canvas = document.createElement("canvas");
-                        const MAX_WIDTH = 800;
-                        const MAX_HEIGHT = 800;
+                        const MAX_WIDTH = 640;
+                        const MAX_HEIGHT = 640;
                         let width = img.width;
                         let height = img.height;
 
@@ -43,8 +43,8 @@ export async function compressImage(file: File): Promise<string> {
 
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        // Use 0.6 quality to keep payload smaller and avoid proxy timeouts (502)
-                        const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+                        // Use 0.55 quality to keep payload smaller and avoid proxy timeouts (502)
+                        const dataUrl = canvas.toDataURL("image/jpeg", 0.55);
                         resolve(dataUrl);
                     } catch (e: any) {
                         console.error("Canvas compression error:", e);
