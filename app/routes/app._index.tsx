@@ -123,20 +123,24 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
   }
 
-  // Fetch shop's currency info from Shopify if not in settings or to be sure
+  // Fetch shop's currency code from Shopify (currencySymbol is not in Admin API)
   let currencySymbol = "$";
   try {
     const response = await admin.graphql(`
       query {
         shop {
           currencyCode
-          currencySymbol
         }
       }
     `);
     const shopData: any = await response.json();
-    if (shopData.data?.shop?.currencySymbol) {
-      currencySymbol = shopData.data.shop.currencySymbol;
+    const code = shopData.data?.shop?.currencyCode;
+    if (code) {
+      try {
+        currencySymbol = new Intl.NumberFormat("en-US", { style: "currency", currency: code }).formatToParts(0).find((p) => p.type === "currency")?.value ?? "$";
+      } catch {
+        currencySymbol = code === "USD" ? "$" : code === "EUR" ? "€" : code === "GBP" ? "£" : code + " ";
+      }
     }
   } catch (e) {
     console.error("Failed to fetch shop currency info:", e);
