@@ -160,7 +160,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
             }
         }
 
-        console.log(`MOBILE ACTION: START - Session: ${currentSessionId}, Shop: ${shop}`);
+        console.log(`MOBILE ACTION: Image received (${Math.round((base64Data.length * 3) / 4 / 1024)}KB base64) - Session: ${currentSessionId}, Shop: ${shop}`);
 
         const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
         if (!apiKey) {
