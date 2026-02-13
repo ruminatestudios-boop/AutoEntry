@@ -82,14 +82,11 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
                 setStep("success");
                 showToast("Scan successful! Check your dashboard.");
             } else {
-                // Fallback: If fetcher finished but gave no data (network error, server crash, 500 HTML)
+                // Fallback: no success and no error in data (e.g. 500 HTML, network error, server crash)
                 console.error("Scan finished with no data returned", fetcher.data);
-                // Treat as a soft success: clear errors, show toast, clear photo, show "scan another" state.
-                setError(null);
-                showToast("Scan sent to your dashboard. You can review it on desktop.");
-                setStep("capture");
-                setImagePreview(null);
-                capturedFileRef.current = null;
+                setError("Something went wrong. Please check your connection and try again.");
+                setStep("analyzing");
+                showToast("Scan failed. See message below.");
             }
         }
     }, [fetcher.data, fetcher.state, isSubmitting, showToast]);

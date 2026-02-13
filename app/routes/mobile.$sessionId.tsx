@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { json, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useRouteError } from "@remix-run/react";
 import { AppProvider, Banner } from "@shopify/polaris";
 import enTranslations from "@shopify/polaris/locales/en.json";
 
@@ -34,38 +34,47 @@ const TIPS = [
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
     const { sessionId } = params;
-
-    const scanSession = await db.scanSession.findUnique({
-        where: { id: sessionId },
-    });
-
-    if (!scanSession) {
+    if (!sessionId) {
         throw new Response("Session not found", { status: 404 });
     }
 
-    const now = new Date();
-    const expiryTime = new Date(scanSession.expiresAt);
-    const twoHoursAgo = new Date(now.getTime() - (2 * 60 * 60 * 1000));
+    try {
+        const scanSession = await db.scanSession.findUnique({
+            where: { id: sessionId },
+        });
 
-    if (expiryTime < twoHoursAgo) {
-        throw new Response("Session expired", { status: 404 });
+        if (!scanSession) {
+            throw new Response("Session not found", { status: 404 });
+        }
+
+        const now = new Date();
+        const expiryTime = new Date(scanSession.expiresAt);
+        const twoHoursAgo = new Date(now.getTime() - (2 * 60 * 60 * 1000));
+
+        if (expiryTime < twoHoursAgo) {
+            throw new Response("Session expired", { status: 404 });
+        }
+
+        const shopSettings = await db.shopSettings.findUnique({
+            where: { shop: scanSession.shop }
+        });
+
+        const plan = shopSettings?.plan || "FREE";
+        const scanCount = shopSettings?.scanCount || 0;
+        const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] || 10;
+
+        return json({
+            sessionId,
+            scanCount,
+            limit,
+            plan,
+            shop: scanSession.shop
+        });
+    } catch (e) {
+        if (e instanceof Response) throw e;
+        console.error("Mobile loader failed:", e);
+        throw new Response("Database unavailable. Please try again in a moment.", { status: 503 });
     }
-
-    const shopSettings = await db.shopSettings.findUnique({
-        where: { shop: scanSession.shop }
-    });
-
-    const plan = shopSettings?.plan || "FREE";
-    const scanCount = shopSettings?.scanCount || 0;
-    const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] || 10;
-
-    return json({
-        sessionId,
-        scanCount,
-        limit,
-        plan,
-        shop: scanSession.shop
-    });
 };
 
 export const links = () => [
@@ -296,10 +305,11 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
                 price
             }
         });
-    } catch (serverError: any) {
+    } catch (serverError: unknown) {
+        const msg = serverError instanceof Error ? serverError.message : String(serverError ?? "Unknown error");
         console.error("MOBILE ACTION CRITICAL FAILURE:", serverError);
         return json({
-            error: `Server Error: ${serverError.message || "Unknown error occurred"}`
+            error: `Something went wrong: ${msg}. Please try again or use a clearer photo.`
         }, { status: 500 });
     }
 };
@@ -391,5 +401,22 @@ export default function MobileCapture() {
                 `}} />
             </div>
         </AppProvider>
+    );
+}
+
+export function ErrorBoundary() {
+    const error = useRouteError();
+    const message = error instanceof Error ? error.message : "Something went wrong.";
+    return (
+        <div className="mobile-container" style={{ padding: "24px", textAlign: "center" }}>
+            <div className="mobile-card" style={{ maxWidth: "360px", margin: "0 auto" }}>
+                <div style={{ fontSize: "48px", marginBottom: "12px" }}>⚠️</div>
+                <h2 style={{ margin: "0 0 8px", fontSize: "18px" }}>Scan failed</h2>
+                <p style={{ margin: "0 0 16px", fontSize: "14px", color: "#6b7280" }}>{message}</p>
+                <a href="#" onClick={(e) => { e.preventDefault(); window.location.reload(); }} style={{ display: "inline-block", padding: "12px 20px", background: "#004c46", color: "white", borderRadius: "8px", textDecoration: "none", fontWeight: 600 }}>
+                    Try again
+                </a>
+            </div>
+        </div>
     );
 }
