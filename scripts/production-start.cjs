@@ -2,6 +2,7 @@
 /**
  * Production startup: vision credentials, prisma setup, then server.
  * Used by Fly, Railway, Render, or any Docker/Node host.
+ * (.cjs so require() works when package.json has "type": "module")
  */
 const { spawnSync } = require("child_process");
 const path = require("path");
@@ -11,6 +12,7 @@ const appDir = path.resolve(__dirname, "..");
 const env = { ...process.env, HOST: "0.0.0.0", PORT: process.env.PORT || "3000" };
 
 console.log("[start] DATABASE_URL:", process.env.DATABASE_URL ? "set" : "NOT SET (prisma will fail)");
+console.log("[start] SHOPIFY_APP_URL:", process.env.SHOPIFY_APP_URL ? "set" : "NOT SET (Shopify app will crash - set to your public URL e.g. https://your-app.up.railway.app)");
 console.log("[start] PORT:", env.PORT);
 
 function run(name, cmd) {
@@ -27,7 +29,7 @@ function run(name, cmd) {
   }
 }
 
-run("Vision credentials", "node scripts/write-vision-credentials.js");
+run("Vision credentials", "node scripts/write-vision-credentials.cjs");
 run("Setup (prisma generate + migrate)", "npm run setup");
 console.log("[start] Starting server...");
 run("Server", "npx remix-serve ./build/server/index.js");

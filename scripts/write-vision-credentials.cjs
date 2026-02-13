@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Writes Google Cloud Vision credentials from Fly secret to a file so
+ * Writes Google Cloud Vision credentials from env secret to a file so
  * @google-cloud/vision can use GOOGLE_APPLICATION_CREDENTIALS in production.
  * No-op if GOOGLE_APPLICATION_CREDENTIALS_JSON is not set.
+ * (.cjs so require() works when package.json has "type": "module")
  */
 const fs = require("fs");
 const path = "/tmp/vision-credentials.json";

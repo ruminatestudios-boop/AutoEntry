@@ -35,7 +35,7 @@ Then redeploy or restart the app so the new secret is picked up.
 
 ## 3. What the app does
 
-On startup, `scripts/write-vision-credentials.js` runs. If `GOOGLE_APPLICATION_CREDENTIALS_JSON` is set, it writes the key to `/tmp/vision-credentials.json`. The app already has `GOOGLE_APPLICATION_CREDENTIALS=/tmp/vision-credentials.json` in `fly.toml`, so the Vision client will use it for OCR. No code changes needed.
+On startup, `scripts/write-vision-credentials.cjs` runs. If `GOOGLE_APPLICATION_CREDENTIALS_JSON` is set, it writes the key to `/tmp/vision-credentials.json`. The app already has `GOOGLE_APPLICATION_CREDENTIALS=/tmp/vision-credentials.json` in `fly.toml`, so the Vision client will use it for OCR. No code changes needed.
 
 ---
 

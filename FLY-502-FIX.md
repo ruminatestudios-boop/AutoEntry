@@ -18,7 +18,7 @@ fly machine destroy --app auto-entry --force
 fly deploy --app auto-entry
 ```
 
-Then check https://auto-entry.fly.dev/ and run `fly logs` again. You should now see `[fly-start]` lines and any real startup error (prisma, server crash, etc.).
+Then check https://auto-entry.fly.dev/ and run `fly logs` again. You should now see `[start]` lines and any real startup error (prisma, server crash, etc.).
 
 ---
 
@@ -53,4 +53,4 @@ The app was crashing on Fly because **@google-cloud/vision** uses **gRPC** nativ
 
 4. **Get the actual error**
    - After deploying, run: `fly logs --app auto-entry`
-   - You should see `[fly-start] Vision credentials...`, `[fly-start] Setup...`, then `[fly-start] Starting server...`. The line after the last one that appears is where it failed (e.g. "Setup failed" = prisma/DATABASE_URL; server crash = stack trace).
+   - You should see `[start] Vision credentials...`, `[start] Setup...`, then `[start] Starting server...`. The line after the last one that appears is where it failed (e.g. "Setup failed" = prisma/DATABASE_URL; server crash = stack trace).

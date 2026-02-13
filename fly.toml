@@ -14,7 +14,7 @@ primary_region = 'lhr'
   SCOPES = 'write_inventory,write_products'
   SHOPIFY_API_KEY = '154110f7c573a30f0342a2f00f530b73'
   SHOPIFY_APP_URL = 'https://auto-entry.fly.dev'
-  # Vision OCR: set GOOGLE_APPLICATION_CREDENTIALS_JSON secret; this path is used after write-vision-credentials.js runs
+  # Vision OCR: set GOOGLE_APPLICATION_CREDENTIALS_JSON secret; this path is used after write-vision-credentials.cjs runs
   GOOGLE_APPLICATION_CREDENTIALS = '/tmp/vision-credentials.json'
 
 [processes]

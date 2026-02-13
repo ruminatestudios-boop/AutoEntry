@@ -24,6 +24,8 @@ Use this if you want to switch from Fly.io to Railway to avoid 502 or for a simp
 
 ## 3. Set environment variables
 
+**Required:** The app will not start without `SHOPIFY_APP_URL`. Set it to your Railway public URL (e.g. `https://your-app.up.railway.app`). If you don’t have the URL yet, do a first deploy, then create a **Public Domain** in Settings → Networking, set `SHOPIFY_APP_URL` to that URL, and redeploy.
+
 In the service → **Variables**, add:
 
 | Variable | Value |
@@ -44,6 +46,8 @@ For the first deploy you can set `SHOPIFY_APP_URL` to a placeholder (e.g. `https
 ---
 
 ## 4. Deploy
+
+**Do not set a custom Start Command** in Railway. Leave **Start Command** / **Custom Start** / **Override** empty so the **Dockerfile** `CMD` is used (`npm run docker-start`). If you set it to something like `HOST=0.0.0.0 npm run docker-start`, Railway may treat `host=0.0.0.0` as the executable and fail with "The executable \`host=0.0.0.0\` could not be found."
 
 1. Push your code or trigger **Deploy** in Railway.
 2. Wait for the build to finish. The Dockerfile runs `npm run build` then at runtime `npm run docker-start` (vision credentials → prisma migrate → remix-serve).
@@ -74,9 +78,19 @@ For the first deploy you can set `SHOPIFY_APP_URL` to a placeholder (e.g. `https
 - **No fly.toml** – Railway uses the Dockerfile and dashboard settings.
 - **Volume** – Railway volume at `/data` replaces Fly’s `[[mounts]]`; `DATABASE_URL=file:/data/sqlite.db` is the same.
 - **Secrets** – Set in Railway **Variables** instead of `fly secrets set`.
-- **Logs** – View in the Railway dashboard under your service → **Deployments** → select a deployment → **View Logs**. You’ll see `[start]` lines from `production-start.js`.
+- **Logs** – View in the Railway dashboard under your service → **Deployments** → select a deployment → **View Logs**. You’ll see `[start]` lines from `production-start.cjs`.
 
 If something fails, check the logs for `[start] DATABASE_URL:`, `[start] Setup...`, and `[start] Starting server...` to see which step failed.
+
+---
+
+## Troubleshooting
+
+### "The executable \`host=0.0.0.0\` could not be found"
+
+Railway is using a **custom start command** that begins with `HOST=0.0.0.0`. It runs that without a shell, so the first word is treated as the program name.
+
+**Fix:** In Railway → your **service** → **Settings** (or **Deploy** / **Build**), find **Start Command**, **Custom Start Command**, or **Override Command**. **Clear it** (leave it empty) so Railway uses the **Dockerfile** `CMD` instead: `npm run docker-start`. Then **Redeploy**.
 
 ---
 

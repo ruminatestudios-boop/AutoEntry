@@ -29,7 +29,7 @@ function run(name, cmd) {
   }
 }
 
-run("Vision credentials", "node scripts/write-vision-credentials.js");
+run("Vision credentials", "node scripts/write-vision-credentials.cjs");
 run("Setup (prisma generate + migrate)", "npm run setup");
 console.log("[fly-start] Starting server...");
 run("Server", "npx remix-serve ./build/server/index.js");
