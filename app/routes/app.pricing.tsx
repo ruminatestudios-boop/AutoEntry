@@ -3,19 +3,12 @@ import { BlockStack, Text, InlineGrid, Card, Box } from "@shopify/polaris";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { DashboardPageLayout } from "../components/DashboardPageLayout";
 import { useEffect, useRef } from "react";
-import { useActionData, useLoaderData, useSubmit, useSearchParams } from "@remix-run/react";
+import { useActionData, useLoaderData, useSubmit, useSearchParams, useNavigation } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
 
 const accentGreen = "#6be575";
 const darkTeal = "#004c46";
-
-const greenBoxStyle = {
-  background: "rgba(107, 229, 117, 0.08)",
-  padding: "16px",
-  borderRadius: "12px",
-  border: "1px solid rgba(107, 229, 117, 0.3)",
-} as const;
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -106,12 +99,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       console.error("PRICING ACTION ERROR:", e);
       return json({ error: "Failed to initiate subscription. Please try again." });
     }
+    return null;
   }
   return null;
 };
 
 export default function Pricing() {
   const submit = useSubmit();
+  const navigation = useNavigation();
   const actionData = useActionData<any>();
   const shopify = useAppBridge();
   const { shopSettings } = useLoaderData<typeof loader>();
@@ -119,6 +114,8 @@ export default function Pricing() {
   const hasAutoSubmitted = useRef(false);
 
   const currentPlan = shopSettings?.plan || "FREE";
+  const isSubmitting = navigation.state === "submitting";
+  const submittingPlan = isSubmitting && navigation.formData ? (navigation.formData.get("plan") as string) : null;
 
   useEffect(() => {
     if (actionData?.error) {
@@ -144,9 +141,9 @@ export default function Pricing() {
     {
       name: "Free",
       price: "$0",
-      scans: "1,000 Scans / mo",
+      scans: "5 Scans",
       description: "Test the app",
-      features: ["AI product scanning", "Auto SKU generation", "1,000 monthly scans"],
+      features: ["AI product scanning", "Auto SKU generation", "5 scans"],
       action: currentPlan === "FREE" ? "Current" : "Downgrade",
       value: "FREE",
       disabled: currentPlan === "FREE"
@@ -226,18 +223,16 @@ export default function Pricing() {
                         </span>
                       )}
                     </div>
-                    <div style={greenBoxStyle}>
-                      <BlockStack gap="200">
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "4px" }}>
-                          <Text as="span" variant="bodySm" tone="subdued">Price</Text>
-                          <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{plan.price}</Text>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "4px" }}>
-                          <Text as="span" variant="bodySm" tone="subdued">Scans</Text>
-                          <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{plan.scans}</Text>
-                        </div>
-                      </BlockStack>
-                    </div>
+                    <BlockStack gap="200">
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "4px" }}>
+                        <Text as="span" variant="bodySm" tone="subdued">Price</Text>
+                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{plan.price}</Text>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "4px" }}>
+                        <Text as="span" variant="bodySm" tone="subdued">Scans</Text>
+                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{plan.scans}</Text>
+                      </div>
+                    </BlockStack>
                     <Text as="p" variant="bodySm" tone="subdued" style={{ color: "#1a1a1a", margin: 0 }}>
                       {plan.description}
                     </Text>
@@ -252,7 +247,7 @@ export default function Pricing() {
                     <button
                       type="button"
                       onClick={() => handleUpgrade(plan.value)}
-                      disabled={plan.disabled}
+                      disabled={plan.disabled || (isSubmitting && submittingPlan !== plan.value)}
                       style={{
                         width: "100%",
                         padding: "10px 16px",
@@ -264,9 +259,10 @@ export default function Pricing() {
                         fontWeight: "600",
                         cursor: plan.disabled ? "not-allowed" : "pointer",
                         marginTop: "4px",
+                        opacity: submittingPlan === plan.value ? 0.9 : 1,
                       }}
                     >
-                      {plan.action}
+                      {submittingPlan === plan.value ? "Redirecting to payment…" : plan.action}
                     </button>
                   </BlockStack>
                 </Box>
@@ -278,9 +274,6 @@ export default function Pricing() {
         <BlockStack gap="300">
           <Text as="h2" variant="headingLg" fontWeight="bold" style={{ color: darkTeal }}>
             Scan Top-Ups
-          </Text>
-          <Text as="p" variant="bodyMd" tone="subdued" style={{ color: "#1a1a1a" }}>
-            Need more scans this month? One-time top-ups never expire.
           </Text>
           <InlineGrid columns={3} gap="400">
             {topups.map((topup) => (
@@ -309,21 +302,20 @@ export default function Pricing() {
                         </span>
                       )}
                     </div>
-                    <div style={greenBoxStyle}>
-                      <BlockStack gap="200">
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <Text as="span" variant="bodySm" tone="subdued">Price</Text>
-                          <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{topup.price}</Text>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <Text as="span" variant="bodySm" tone="subdued">Per scan</Text>
-                          <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{topup.perScan}</Text>
-                        </div>
-                      </BlockStack>
-                    </div>
+                    <BlockStack gap="200">
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Text as="span" variant="bodySm" tone="subdued">Price</Text>
+                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{topup.price}</Text>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Text as="span" variant="bodySm" tone="subdued">Per scan</Text>
+                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{topup.perScan}</Text>
+                      </div>
+                    </BlockStack>
                     <button
                       type="button"
                       onClick={() => handleUpgrade(topup.value)}
+                      disabled={isSubmitting && submittingPlan !== topup.value}
                       style={{
                         width: "100%",
                         padding: "10px 16px",
@@ -335,9 +327,10 @@ export default function Pricing() {
                         fontWeight: "600",
                         cursor: "pointer",
                         marginTop: "4px",
+                        opacity: submittingPlan === topup.value ? 0.9 : 1,
                       }}
                     >
-                      Buy Now
+                      {submittingPlan === topup.value ? "Redirecting to payment…" : "Buy Now"}
                     </button>
                   </BlockStack>
                 </Box>

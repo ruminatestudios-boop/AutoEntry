@@ -26,27 +26,20 @@ export default function SupportPage() {
                                 <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
                                     Contact Us
                                 </Text>
-                                <div style={{
-                                    background: "rgba(107, 229, 117, 0.08)",
-                                    padding: "20px",
-                                    borderRadius: "12px",
-                                    border: "1px solid rgba(107, 229, 117, 0.3)"
-                                }}>
-                                    <BlockStack gap="300">
-                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                                            <Text as="span" variant="bodyMd" tone="subdued">Email Support</Text>
-                                            <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>infoautoentry@gmail.com</Text>
-                                        </div>
-                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                                            <Text as="span" variant="bodyMd" tone="subdued">Operating Hours</Text>
-                                            <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>Mon-Fri, 9AM-5PM EST</Text>
-                                        </div>
-                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                                            <Text as="span" variant="bodyMd" tone="subdued">Typical Response</Text>
-                                            <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>&lt; 12 hours</Text>
-                                        </div>
-                                    </BlockStack>
-                                </div>
+                                <BlockStack gap="300">
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                                        <Text as="span" variant="bodyMd" tone="subdued">Email Support</Text>
+                                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>infoautoentry@gmail.com</Text>
+                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                                        <Text as="span" variant="bodyMd" tone="subdued">Operating Hours</Text>
+                                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>Mon-Fri, 9AM-5PM EST</Text>
+                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                                        <Text as="span" variant="bodyMd" tone="subdued">Typical Response</Text>
+                                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>&lt; 12 hours</Text>
+                                    </div>
+                                </BlockStack>
                                 <Text as="p" variant="bodyMd" tone="subdued" style={{ color: "#1a1a1a" }}>
                                     We're dedicated to helping you scale your business with speed and accuracy.
                                     <br />

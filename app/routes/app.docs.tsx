@@ -37,9 +37,9 @@ export default function DocumentationPage() {
                     What is Auto Entry?
                   </Text>
                   <Text as="p" variant="bodyMd" style={{ color: "#1a1a1a" }}>
-                    Auto Entry is an AI-powered product listing assistant designed to help Shopify merchants add inventory with lightning speed. By combining advanced computer vision with Shopify's robust API, we eliminate the manual data entry that slows down your business.
+                    Auto Entry is an AI-powered product listing assistant designed to help Shopify merchants add inventory with lightning speed. We help eliminate the manual data entry that slows down your business.
                   </Text>
-                  <Text as="p" variant="bodyMd" tone="subdued" style={{ color: "#1a1a1a" }}>
+                  <Text as="p" variant="bodyMd" style={{ color: "#1a1a1a" }}>
                     Whether you're scanning in a warehouse, a retail store, or at home, Auto Entry captures product details directly from packaging and barcodes using nothing but your mobile phone's camera.
                   </Text>
                 </BlockStack>
@@ -57,7 +57,7 @@ export default function DocumentationPage() {
                   <BlockStack gap="400">
                     <BlockStack gap="200">
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <Badge tone="info">Step 1</Badge>
+                          <Badge tone="success">Step 1</Badge>
                           <Text as="h3" variant="headingSm" fontWeight="bold" style={{ color: darkTeal }}>
                             Initiate & Scan
                           </Text>
@@ -74,7 +74,7 @@ export default function DocumentationPage() {
 
                     <BlockStack gap="200">
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <Badge tone="info">Step 2</Badge>
+                          <Badge tone="success">Step 2</Badge>
                           <Text as="h3" variant="headingSm" fontWeight="bold" style={{ color: darkTeal }}>
                             AI Data Extraction & Parsing
                           </Text>
@@ -91,7 +91,7 @@ export default function DocumentationPage() {
 
                     <BlockStack gap="200">
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <Badge tone="info">Step 3</Badge>
+                          <Badge tone="success">Step 3</Badge>
                           <Text as="h3" variant="headingSm" fontWeight="bold" style={{ color: darkTeal }}>
                             Review & Refine
                           </Text>
@@ -108,7 +108,7 @@ export default function DocumentationPage() {
 
                     <BlockStack gap="200">
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <Badge tone="info">Step 4</Badge>
+                          <Badge tone="success">Step 4</Badge>
                           <Text as="h3" variant="headingSm" fontWeight="bold" style={{ color: darkTeal }}>
                             Sync to Shopify
                           </Text>
@@ -191,18 +191,16 @@ export default function DocumentationPage() {
                   <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
                     Quick Contacts
                   </Text>
-                  <div style={greenBoxStyle}>
-                    <BlockStack gap="300">
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                        <Text as="span" variant="bodyMd" tone="subdued">Support Email</Text>
-                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>infoautoentry@gmail.com</Text>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                        <Text as="span" variant="bodyMd" tone="subdued">Response Time</Text>
-                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>&lt; 12 Hours</Text>
-                      </div>
-                    </BlockStack>
-                  </div>
+                  <BlockStack gap="300">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                      <Text as="span" variant="bodyMd" tone="subdued">Support Email</Text>
+                      <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>infoautoentry@gmail.com</Text>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                      <Text as="span" variant="bodyMd" tone="subdued">Response Time</Text>
+                      <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>&lt; 12 Hours</Text>
+                    </div>
+                  </BlockStack>
                 </BlockStack>
               </Box>
             </Card>
@@ -213,24 +211,22 @@ export default function DocumentationPage() {
                   <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
                     API Status
                   </Text>
-                  <div style={greenBoxStyle}>
-                    <BlockStack gap="300">
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Text as="span" variant="bodyMd" tone="subdued">Shopify API</Text>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <div style={{ width: "8px", height: "8px", background: accentGreen, borderRadius: "50%" }} />
-                          <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>2025-01</Text>
-                        </div>
+                  <BlockStack gap="300">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <Text as="span" variant="bodyMd" tone="subdued">Shopify API</Text>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <div style={{ width: "8px", height: "8px", background: accentGreen, borderRadius: "50%" }} />
+                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>2025-01</Text>
                       </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Text as="span" variant="bodyMd" tone="subdued">Gemini AI Engine</Text>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <div style={{ width: "8px", height: "8px", background: accentGreen, borderRadius: "50%" }} />
-                          <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>Active</Text>
-                        </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <Text as="span" variant="bodyMd" tone="subdued">Gemini AI Engine</Text>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <div style={{ width: "8px", height: "8px", background: accentGreen, borderRadius: "50%" }} />
+                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>Active</Text>
                       </div>
-                    </BlockStack>
-                  </div>
+                    </div>
+                  </BlockStack>
                 </BlockStack>
               </Box>
             </Card>

@@ -93,33 +93,24 @@ export default function SettingsPage() {
                   Notifications
                 </Text>
                 <fetcher.Form method="post">
-                  <div
-                    style={{
-                      background: "rgba(107, 229, 117, 0.08)",
-                      padding: "20px",
-                      borderRadius: "12px",
-                      border: "1px solid rgba(107, 229, 117, 0.3)",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    <BlockStack gap="300">
-                      <TextField
-                        label="Notification Email"
-                        name="notificationEmail"
-                        placeholder="example@email.com"
-                        value={email}
-                        onChange={(value) => setEmail(value)}
-                        autoComplete="email"
-                        helpText="We will use this email for important updates regarding your scans."
-                      />
-                    </BlockStack>
-                  </div>
+                  <BlockStack gap="300">
+                    <TextField
+                      label="Notification Email"
+                      name="notificationEmail"
+                      placeholder="example@email.com"
+                      value={email}
+                      onChange={(value) => setEmail(value)}
+                      autoComplete="email"
+                      helpText="We will use this email for important updates regarding your scans."
+                    />
+                  </BlockStack>
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
                       gap: "12px",
                       flexWrap: "wrap",
+                      marginTop: "24px",
                     }}
                   >
                     <button
@@ -178,63 +169,54 @@ export default function SettingsPage() {
                   <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
                     Usage & Plan
                   </Text>
-                  <Badge tone={planName === "FREE" ? "info" : "success"}>{planName.toUpperCase()}</Badge>
+                  <Badge tone="success">{planName.toUpperCase()}</Badge>
                 </div>
-                <div
-                  style={{
-                    background: "rgba(107, 229, 117, 0.08)",
-                    padding: "20px",
-                    borderRadius: "12px",
-                    border: "1px solid rgba(107, 229, 117, 0.3)",
-                  }}
-                >
-                  <BlockStack gap="300">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                      <Text as="span" variant="bodyMd" tone="subdued">
-                        Monthly Scans
-                      </Text>
-                      <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>
-                        {scanCount} / {scanLimit}
-                      </Text>
-                    </div>
+                <BlockStack gap="300">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                    <Text as="span" variant="bodyMd" tone="subdued">
+                      Monthly Scans
+                    </Text>
+                    <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>
+                      {scanCount} / {scanLimit}
+                    </Text>
+                  </div>
+                  <div
+                    style={{
+                      height: "8px",
+                      background: "#e5e7eb",
+                      borderRadius: "4px",
+                      overflow: "hidden",
+                    }}
+                  >
                     <div
                       style={{
-                        height: "8px",
-                        background: "#e5e7eb",
+                        width: `${usagePercent}%`,
+                        height: "100%",
+                        background: accentGreen,
                         borderRadius: "4px",
-                        overflow: "hidden",
+                        transition: "width 0.5s ease-out",
                       }}
-                    >
+                    />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Text as="span" variant="bodyMd" tone="subdued">
+                      System Status
+                    </Text>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <div
                         style={{
-                          width: `${usagePercent}%`,
-                          height: "100%",
+                          width: "8px",
+                          height: "8px",
                           background: accentGreen,
-                          borderRadius: "4px",
-                          transition: "width 0.5s ease-out",
+                          borderRadius: "50%",
                         }}
                       />
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Text as="span" variant="bodyMd" tone="subdued">
-                        System Status
+                      <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>
+                        Active
                       </Text>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <div
-                          style={{
-                            width: "8px",
-                            height: "8px",
-                            background: accentGreen,
-                            borderRadius: "50%",
-                          }}
-                        />
-                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>
-                          Active
-                        </Text>
-                      </div>
                     </div>
-                  </BlockStack>
-                </div>
+                  </div>
+                </BlockStack>
                 <Text as="p" variant="bodyMd" tone="subdued" style={{ color: "#1a1a1a" }}>
                   You are currently using the <span style={{ fontWeight: "600", color: darkTeal }}>{planName}</span> plan.
                   {bonusScans > 0 ? (

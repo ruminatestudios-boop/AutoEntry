@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { json, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
-import { useFetcher, useLoaderData, useRouteError, useRevalidator } from "@remix-run/react";
+import { useFetcher, useLoaderData, useNavigate, useRouteError, useRevalidator } from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -38,37 +38,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   // Safety check: ensure the model exists on the client (requires server restart after schema changes)
   const shopSettingsModel = (db as any).shopSettings;
 
-  let sessionId: string | null = null;
-
-  try {
-    // Check for an existing active session first to avoid creating duplicates
-    const existingSession = await db.scanSession.findFirst({
-      where: {
-        shop,
-        status: "PENDING",
-        expiresAt: { gt: new Date() }
-      },
-      orderBy: { createdAt: "desc" }
-    });
-
-    if (existingSession) {
-      sessionId = existingSession.id;
-    } else {
-      // Create a new scan session for the QR code
-      const scanSession = await db.scanSession.create({
-        data: {
-          shop,
-          expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minute expiry
-        }
-      });
-      sessionId = scanSession.id;
-    }
-  } catch (error) {
-    console.error("Failed to create/find scan session:", error);
-    // Continue without a session - the UI will handle the null case
-  }
-
-  // Parallelize DB queries for speed (<500ms target)
   let shopSettings: Awaited<ReturnType<typeof db.shopSettings.findUnique>> = null;
   let recentScans: any[] = [];
 
@@ -117,6 +86,40 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       shopSettings = shopSettingsModel ? await shopSettingsModel.findUnique({ where: { shop } }) : null;
     } catch (_) {
       // ignore
+    }
+  }
+
+  // Only create/find scan session if free plan has scans left (otherwise show upgrade modal in UI)
+  let sessionId: string | null = null;
+  const plan = shopSettings?.plan || "FREE";
+  const scanCount = shopSettings?.scanCount ?? 0;
+  const freeLimit = PLAN_LIMITS.FREE;
+  const atFreeLimit = plan === "FREE" && scanCount >= freeLimit;
+
+  if (!atFreeLimit) {
+    try {
+      const existingSession = await db.scanSession.findFirst({
+        where: {
+          shop,
+          status: "PENDING",
+          expiresAt: { gt: new Date() }
+        },
+        orderBy: { createdAt: "desc" }
+      });
+
+      if (existingSession) {
+        sessionId = existingSession.id;
+      } else {
+        const scanSession = await db.scanSession.create({
+          data: {
+            shop,
+            expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minute expiry
+          }
+        });
+        sessionId = scanSession.id;
+      }
+    } catch (error) {
+      console.error("Failed to create/find scan session:", error);
     }
   }
 
@@ -264,7 +267,11 @@ export default function Index() {
   }, [sessionId, pollFetcher.submit, recentScansFetcher.submit]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [scannedProduct, setScannedProduct] = useState<any>(null);
+  const navigate = useNavigate();
+  const atFreeLimit = isFree && scanCount >= freeLimit;
+  const voiceEnabled = plan === "Growth" || plan === "Power";
   const [newImageUrl, setNewImageUrl] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [activeTab, setActiveTab] = useState<'drafts' | 'posted' | 'all'>('drafts');
@@ -318,6 +325,11 @@ export default function Index() {
 
   const handleVoiceVariants = async () => {
     if (typeof window === "undefined") return;
+
+    if (!voiceEnabled) {
+      shopify.toast.show("Voice variants are available on Growth and Power plans. Upgrade to unlock.");
+      return;
+    }
 
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -710,7 +722,19 @@ export default function Index() {
                   </BlockStack>
                   <Box id="mobile-scan-qr" padding="400" background="bg-surface-secondary" borderRadius="300" minWidth="200px">
                     <BlockStack gap="300">
-                      {typeof window !== "undefined" && sessionId ? (
+                      {atFreeLimit ? (
+                        <>
+                          <Text as="p" variant="bodyMd" fontWeight="semibold" style={{ color: textDark }}>
+                            You've used your 5 free scans
+                          </Text>
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            Upgrade your plan to keep scanning.
+                          </Text>
+                          <Button variant="primary" tone="success" onClick={() => setUpgradeModalOpen(true)}>
+                            Upgrade
+                          </Button>
+                        </>
+                      ) : typeof window !== "undefined" && sessionId ? (
                         <>
                           <InlineStack align="center" blockAlign="center" gap="200">
                             <Box background="bg-surface-primary" padding="200" borderRadius="200" borderWidth="025" borderColor="border-secondary">
@@ -724,13 +748,18 @@ export default function Index() {
                           >
                             Copy URL
                           </Button>
+                          <div style={{ textAlign: "center" }}>
+                            <Text as="p" variant="bodySm" tone="subdued">Scan to open</Text>
+                          </div>
                         </>
                       ) : (
-                        <Text as="p" variant="bodySm" tone="subdued">Initializing…</Text>
+                        <>
+                          <Text as="p" variant="bodySm" tone="subdued">Initializing…</Text>
+                          <div style={{ textAlign: "center" }}>
+                            <Text as="p" variant="bodySm" tone="subdued">Scan to open</Text>
+                          </div>
+                        </>
                       )}
-                      <div style={{ textAlign: "center" }}>
-                        <Text as="p" variant="bodySm" tone="subdued">Scan to open</Text>
-                      </div>
                     </BlockStack>
                   </Box>
                 </InlineStack>
@@ -743,87 +772,102 @@ export default function Index() {
           <Layout.Section>
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center" gap="200">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div
+                <div style={{ background: "rgba(0,0,0,0.06)", borderRadius: "10px", padding: "2px", display: "flex" }}>
+                  <button
+                    type="button"
                     onClick={() => setActiveTab('drafts')}
                     style={{
-                      cursor: 'pointer',
-                      padding: '6px 2px',
-                      borderBottom: activeTab === 'drafts' ? "2px solid " + accentGreen : '2px solid transparent',
-                      transition: 'all 0.2s'
+                      background: activeTab === 'drafts' ? "white" : "transparent",
+                      border: "none",
+                      borderRadius: "8px",
+                      padding: "6px 12px",
+                      cursor: "pointer",
+                      boxShadow: activeTab === 'drafts' ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: activeTab === 'drafts' ? textDark : "#64748b"
                     }}
                   >
-                    <Text as="h2" variant="headingSm" fontWeight={activeTab === 'drafts' ? 'bold' : 'medium'} tone={activeTab === 'drafts' ? undefined as any : 'subdued'}>
-                      <span style={{ color: activeTab === 'drafts' ? textDark : undefined }}>To Review ({allScans.filter((s: any) => s.status === 'DRAFT').length})</span>
-                    </Text>
-                  </div>
-                  <div
+                    To Review ({allScans.filter((s: any) => s.status === 'DRAFT').length})
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setActiveTab('posted')}
                     style={{
-                      cursor: 'pointer',
-                      padding: '6px 2px',
-                      borderBottom: activeTab === 'posted' ? "2px solid " + accentGreen : '2px solid transparent',
-                      transition: 'all 0.2s'
+                      background: activeTab === 'posted' ? "white" : "transparent",
+                      border: "none",
+                      borderRadius: "8px",
+                      padding: "6px 12px",
+                      cursor: "pointer",
+                      boxShadow: activeTab === 'posted' ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: activeTab === 'posted' ? textDark : "#64748b"
                     }}
                   >
-                    <Text as="h2" variant="headingSm" fontWeight={activeTab === 'posted' ? 'bold' : 'medium'} tone={activeTab === 'posted' ? undefined as any : 'subdued'}>
-                      <span style={{ color: activeTab === 'posted' ? textDark : undefined }}>Drafts ({allScans.filter((s: any) => s.status === 'PUBLISHED').length})</span>
-                    </Text>
-                  </div>
-                  <div
+                    Drafts ({allScans.filter((s: any) => s.status === 'PUBLISHED').length})
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => {
                       if (recentScansFetcher.state === "submitting") return;
                       setActiveTab("all");
                       recentScansFetcher.submit({ all: "true" }, { method: "GET", action: "/api/recent-scans" });
                       shopify.toast.show("Showing all items");
                     }}
+                    disabled={recentScansFetcher.state === "submitting"}
                     style={{
+                      background: activeTab === 'all' ? "white" : "transparent",
+                      border: "none",
+                      borderRadius: "8px",
+                      padding: "6px 12px",
                       cursor: recentScansFetcher.state === "submitting" ? "default" : "pointer",
-                      padding: '6px 2px',
-                      borderBottom: activeTab === 'all' ? "2px solid " + accentGreen : '2px solid transparent',
-                      transition: 'all 0.2s',
+                      boxShadow: activeTab === 'all' ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: activeTab === 'all' ? textDark : "#64748b",
                       opacity: recentScansFetcher.state === "submitting" ? 0.6 : 1
                     }}
                   >
-                    <Text as="h2" variant="headingSm" fontWeight={activeTab === 'all' ? 'bold' : 'medium'} tone={activeTab === 'all' ? undefined as any : 'subdued'}>
-                      <span style={{ color: activeTab === 'all' ? textDark : undefined }}>{recentScansFetcher.state === "submitting" ? "Loading..." : "View All"}</span>
-                    </Text>
-                  </div>
+                    {recentScansFetcher.state === "submitting" ? "Loading..." : "View All"}
+                  </button>
                 </div>
-                <div className="dashboard-view-toggle" style={{ background: "rgba(0,0,0,0.06)", borderRadius: "10px", padding: "2px", display: "flex" }}>
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      style={{
-                        background: viewMode === 'grid' ? "white" : "transparent",
-                        border: "none",
-                        borderRadius: "8px",
-                        padding: "4px 10px",
-                        cursor: "pointer",
-                        boxShadow: viewMode === 'grid' ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                        fontSize: "12px",
-                        fontWeight: 500,
-                        color: viewMode === 'grid' ? "#1a1a1a" : "#64748b"
-                      }}
-                    >
-                      Grid
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      style={{
-                        background: viewMode === 'list' ? "white" : "transparent",
-                        border: "none",
-                        borderRadius: "8px",
-                        padding: "4px 10px",
-                        cursor: "pointer",
-                        boxShadow: viewMode === 'list' ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                        fontSize: "12px",
-                        fontWeight: 500,
-                        color: viewMode === 'list' ? "#1a1a1a" : "#64748b"
-                      }}
-                    >
-                      List
-                    </button>
-                  </div>
+                <div style={{ background: "rgba(0,0,0,0.06)", borderRadius: "10px", padding: "2px", display: "flex" }}>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    style={{
+                      background: viewMode === 'grid' ? "white" : "transparent",
+                      border: "none",
+                      borderRadius: "8px",
+                      padding: "6px 12px",
+                      cursor: "pointer",
+                      boxShadow: viewMode === 'grid' ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: viewMode === 'grid' ? textDark : "#64748b"
+                    }}
+                  >
+                    Grid
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    style={{
+                      background: viewMode === 'list' ? "white" : "transparent",
+                      border: "none",
+                      borderRadius: "8px",
+                      padding: "6px 12px",
+                      cursor: "pointer",
+                      boxShadow: viewMode === 'list' ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: viewMode === 'list' ? textDark : "#64748b"
+                    }}
+                  >
+                    List
+                  </button>
+                </div>
               </InlineStack>
               {filteredScans.length === 0 ? (
                 <Card>
@@ -840,7 +884,7 @@ export default function Index() {
                       allScans.length === 0
                         ? {
                             content: "Show QR code",
-                            onAction: () => document.getElementById("mobile-scan-qr")?.scrollIntoView({ behavior: "smooth" }),
+                            onAction: () => atFreeLimit ? setUpgradeModalOpen(true) : document.getElementById("mobile-scan-qr")?.scrollIntoView({ behavior: "smooth" }),
                           }
                         : undefined
                     }
@@ -1422,7 +1466,7 @@ export default function Index() {
                         <Text as="h3" variant="headingMd" fontWeight="bold">Variants</Text>
                         <span style={{ background: "rgba(107, 229, 117, 0.25)", color: "#1a514d", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "999px" }}>AI Powered</span>
                       </InlineStack>
-                      <p style={{ margin: 0, fontSize: "11px", color: "#6d7175" }}>Type or use Mic — browser may ask for microphone access. Speak e.g. &quot;Sizes S to XL&quot; or &quot;Colors red, blue&quot;.</p>
+                      <p style={{ margin: 0, fontSize: "11px", color: "#6d7175" }}>{voiceEnabled ? "Type or use Mic — browser may ask for microphone access. Speak e.g. \"Sizes S to XL\" or \"Colors red, blue\"." : "Type variants below. Voice (mic) is available on Growth and Power plans."}</p>
 
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <div style={{ flex: 1 }}>
@@ -1447,16 +1491,17 @@ export default function Index() {
                               height: '36px',
                               borderRadius: '999px',
                               border: '1px solid #d1d5db',
-                              background: isRecordingVariants ? '#fee2e2' : 'white',
+                              background: !voiceEnabled ? '#f3f4f6' : isRecordingVariants ? '#fee2e2' : 'white',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              cursor: 'pointer',
-                              color: isRecordingVariants ? '#d82c0d' : '#6be575',
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                              cursor: voiceEnabled ? 'pointer' : 'not-allowed',
+                              color: !voiceEnabled ? '#9ca3af' : isRecordingVariants ? '#d82c0d' : '#6be575',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                              opacity: voiceEnabled ? 1 : 0.8
                             }}
-                            title={isRecordingVariants ? "Stop recording" : "Allow mic when prompted, then speak variants (e.g. Sizes S to XL)"}
-                            aria-label={isRecordingVariants ? "Stop recording" : "Dictate variants with microphone"}
+                            title={!voiceEnabled ? "Upgrade to Growth or Power to use voice variants" : isRecordingVariants ? "Stop recording" : "Allow mic when prompted, then speak variants (e.g. Sizes S to XL)"}
+                            aria-label={!voiceEnabled ? "Voice variants — upgrade to Growth or Power" : isRecordingVariants ? "Stop recording" : "Dictate variants with microphone"}
                           >
                             <svg
                               viewBox="0 0 24 24"
@@ -1612,6 +1657,29 @@ export default function Index() {
               Note: This will only delete the draft from your Auto Entry workspace. If you have already listed this product to your Shopify store, it will remain there.
             </Text>
           </BlockStack>
+        </Modal.Section>
+      </Modal>
+
+      {/* Upgrade modal when free scan limit reached */}
+      <Modal
+        open={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        title="Upgrade to continue"
+        primaryAction={{
+          content: "View plans",
+          onAction: () => {
+            setUpgradeModalOpen(false);
+            navigate("/app/pricing");
+          },
+        }}
+        secondaryActions={[
+          { content: "Cancel", onAction: () => setUpgradeModalOpen(false) },
+        ]}
+      >
+        <Modal.Section>
+          <Text as="p" variant="bodyMd">
+            You've used your 5 free scans. Upgrade your plan to keep scanning and adding products.
+          </Text>
         </Modal.Section>
       </Modal>
     </DashboardPageLayout>
