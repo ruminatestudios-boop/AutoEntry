@@ -18,7 +18,6 @@ import { PricingModal } from "../components/mobile/PricingModal";
 import { Toast } from "../components/mobile/Toast";
 import { CaptureStep } from "../components/mobile/steps/CaptureStep";
 import { AnalyzingStep } from "../components/mobile/steps/AnalyzingStep";
-import { SuccessStep } from "../components/mobile/steps/SuccessStep";
 import { VoiceStep } from "../components/mobile/steps/VoiceStep";
 import { ConfirmStep } from "../components/mobile/steps/ConfirmStep";
 
@@ -311,23 +310,8 @@ export default function MobileCapture() {
         switch (step) {
             case "analyzing":
                 return <AnalyzingStep imagePreview={imagePreview} error={error} onTryAgain={() => setStep("capture")} />;
-            case "success":
-                return (
-                    <SuccessStep
-                        imagePreview={imagePreview}
-                        fetcherData={fetcherData}
-                        handleScanAnother={handleScanAnother}
-                        onAddVariants={() => setStep("voice")}
-                        transcript={transcript}
-                        setTranscript={setTranscript}
-                        isRecording={isRecording}
-                        startRecording={startRecording}
-                        isParsingVariants={isParsingVariants}
-                        handleSaveVariants={handleSaveVariants}
-                    />
-                );
             case "voice":
-                return <VoiceStep isRecording={isRecording} setIsRecording={setIsRecording} startRecording={startRecording} voiceError={voiceError} transcript={transcript} setTranscript={setTranscript} onBack={() => setStep("success")} onSave={handleSaveVariants} isSaving={isParsingVariants} sessionId={sessionId as string} />;
+                return <VoiceStep isRecording={isRecording} setIsRecording={setIsRecording} startRecording={startRecording} voiceError={voiceError} transcript={transcript} setTranscript={setTranscript} onBack={() => setStep("capture")} onSave={handleSaveVariants} isSaving={isParsingVariants} sessionId={sessionId as string} />;
             case "confirm":
                 return <ConfirmStep parsedVariants={parsedVariants} handleScanAnother={handleScanAnother} />;
             default:

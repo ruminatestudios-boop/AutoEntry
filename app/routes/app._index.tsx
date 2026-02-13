@@ -698,33 +698,33 @@ export default function Index() {
         <Layout>
           <Layout.Section>
             <Card>
-              <Box padding="400" data-qr-section>
-                <InlineStack align="space-between" blockAlign="center" gap="600" wrap={false}>
-                  <BlockStack gap="200">
-                    <Text as="h2" variant="headingMd">
-                      <span style={{ color: primaryTeal }}>Intelligent Inventory</span>
-                      <span style={{ color: "#004c46", fontWeight: 700 }}> Capturing</span>
+              <Box padding="600" data-qr-section style={{ borderLeft: "4px solid " + accentGreen, background: "linear-gradient(135deg, rgba(107, 229, 117, 0.06) 0%, transparent 50%)" }}>
+                <InlineStack align="space-between" blockAlign="center" gap="800" wrap={false}>
+                  <BlockStack gap="400" style={{ flex: "1", maxWidth: "520px" }}>
+                    <Text as="h2" variant="headingLg" fontWeight="bold" style={{ color: "#004c46", fontSize: "22px", lineHeight: 1.3 }}>
+                      <span style={{ color: primaryTeal }}>Intelligent Inventory </span>
+                      <span style={{ color: accentGreen }}>Capturing</span>
                     </Text>
-                    <Text as="p" variant="bodySm" tone="subdued">
+                    <Text as="p" variant="bodyMd" style={{ color: textDark, fontSize: "15px", maxWidth: "420px" }}>
                       <span style={{ color: primaryTeal }}>Automate product entry with AI. </span>
-                      <span style={{ color: accentGreen }}>Fast, accurate, synced to Shopify.</span>
+                      <span style={{ color: accentGreen, fontWeight: 600 }}>Fast, accurate, synced to Shopify.</span>
                     </Text>
-                    <BlockStack gap="100">
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        <span style={{ color: accentGreen, fontWeight: 600 }}>1</span>
-                        <span style={{ color: "#1a1a1a" }}> Sync your mobile — scan QR to link.</span>
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        <span style={{ color: accentGreen, fontWeight: 600 }}>2</span>
-                        <span style={{ color: "#1a1a1a" }}> Smart capture — photo, AI extracts data.</span>
-                      </Text>
-                      <Text as="p" variant="bodySm" tone="subdued">
-                        <span style={{ color: accentGreen, fontWeight: 600 }}>3</span>
-                        <span style={{ color: "#1a1a1a" }}> Review in Shopify when ready.</span>
-                      </Text>
+                    <BlockStack gap="300">
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(107, 229, 117, 0.25)", color: accentGreen, fontWeight: 700, fontSize: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>1</span>
+                        <Text as="span" variant="bodyMd" style={{ color: textDark, fontSize: "15px" }}>Sync your mobile — scan QR to link.</Text>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(107, 229, 117, 0.25)", color: accentGreen, fontWeight: 700, fontSize: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>2</span>
+                        <Text as="span" variant="bodyMd" style={{ color: textDark, fontSize: "15px" }}>Smart capture — photo, AI extracts data.</Text>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(107, 229, 117, 0.25)", color: accentGreen, fontWeight: 700, fontSize: "14px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>3</span>
+                        <Text as="span" variant="bodyMd" style={{ color: textDark, fontSize: "15px" }}>Review in Shopify when ready.</Text>
+                      </div>
                     </BlockStack>
                   </BlockStack>
-                  <Box id="mobile-scan-qr" padding="400" background="bg-surface-secondary" borderRadius="300" minWidth="200px">
+                  <Box id="mobile-scan-qr" padding="500" borderRadius="12px" minWidth="220px" style={{ background: "rgba(107, 229, 117, 0.08)", border: "1px solid rgba(107, 229, 117, 0.35)" }}>
                     <BlockStack gap="300">
                       {atFreeLimit ? (
                         <>

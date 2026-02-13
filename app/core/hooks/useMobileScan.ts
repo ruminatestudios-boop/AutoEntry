@@ -79,8 +79,10 @@ export function useMobileScan({ sessionId, batchMode = false }: UseMobileScanPro
                 showToast(n > 0 ? `Photo ${n} added to batch` : "Photo added to batch");
             } else if (fetcher.data?.success) {
                 setError(null);
-                setStep("success");
-                showToast("Scan successful! Check your dashboard.");
+                setStep("capture");
+                setImagePreview(null);
+                capturedFileRef.current = null;
+                showToast("Scan complete! Retake to replace or scan a new product.");
             } else {
                 // Fallback: no success and no error in data (e.g. 500 HTML, network error, server crash)
                 console.error("Scan finished with no data returned", fetcher.data);
