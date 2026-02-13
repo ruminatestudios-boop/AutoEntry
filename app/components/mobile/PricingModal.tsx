@@ -1,10 +1,5 @@
 import { Text, BlockStack } from "@shopify/polaris";
 
-const getPricingPageUrl = (shop: string, plan?: string) => {
-    const base = `https://${shop}/admin/apps/auto-entry/app/pricing`;
-    return plan ? `${base}?plan=${plan}` : base;
-};
-
 interface PricingModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -13,10 +8,6 @@ interface PricingModalProps {
 
 export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
     if (!isOpen) return null;
-
-    const goToPricing = (plan?: string) => {
-        window.location.href = getPricingPageUrl(shop, plan);
-    };
 
     const plans = [
         {
@@ -83,24 +74,6 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
                     <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--mobile-text-muted)" }}>Choose the perfect plan for your business</p>
                 </div>
 
-                <button
-                    onClick={() => goToPricing()}
-                    style={{
-                        width: "100%",
-                        padding: "14px",
-                        background: "var(--mobile-primary, #004c46)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "12px",
-                        fontWeight: 700,
-                        fontSize: "16px",
-                        cursor: "pointer",
-                        marginBottom: "16px"
-                    }}
-                >
-                    Upgrade — View pricing
-                </button>
-
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     {plans.map((p) => (
                         <div
@@ -165,7 +138,10 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
                                 </div>
 
                                 <button
-                                    onClick={() => goToPricing(p.value)}
+                                    onClick={() => {
+                                        const url = `https://${shop}/admin/apps/auto-entry/app/pricing?plan=${p.value}`;
+                                        window.location.href = url;
+                                    }}
                                     style={{
                                         width: "100%",
                                         padding: "12px",

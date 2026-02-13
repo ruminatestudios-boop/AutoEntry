@@ -12,17 +12,6 @@ import { DashboardPageLayout } from "../components/DashboardPageLayout";
 const accentGreen = "#6be575";
 const darkTeal = "#004c46";
 
-/** Step badge: Popular-tag green (light green bg, dark teal text) */
-const stepBadgeStyle = {
-  background: "#E3F8E3",
-  color: "#264647",
-  fontSize: "12px",
-  fontWeight: 600,
-  padding: "4px 12px",
-  borderRadius: "999px",
-  whiteSpace: "nowrap" as const,
-};
-
 const greenBoxStyle = {
   background: "rgba(107, 229, 117, 0.08)",
   padding: "20px",
@@ -35,7 +24,7 @@ export default function DocumentationPage() {
     <DashboardPageLayout
       title="Documentation"
       headerTitle="Documentation"
-      subtitle="Learn how to use Auto Entry and get the most out of your scans"
+      subtitle="Learn how to use Auto Entry and get the most out of your scans."
     >
       <BlockStack gap="600">
         <InlineGrid columns={["twoThirds", "oneThird"]} gap="400">
@@ -48,7 +37,10 @@ export default function DocumentationPage() {
                     What is Auto Entry?
                   </Text>
                   <Text as="p" variant="bodyMd" style={{ color: "#1a1a1a" }}>
-                    Auto Entry is an AI tool that helps you add products to your Shopify store super fast. Instead of typing in all the details yourself (which takes forever), Auto Entry does it for you automatically. This frees up your time to actually sell stuff and grow your business.
+                    Auto Entry is an AI-powered product listing assistant designed to help Shopify merchants add inventory with lightning speed. By combining advanced computer vision with Shopify's robust API, we eliminate the manual data entry that slows down your business.
+                  </Text>
+                  <Text as="p" variant="bodyMd" tone="subdued" style={{ color: "#1a1a1a" }}>
+                    Whether you're scanning in a warehouse, a retail store, or at home, Auto Entry captures product details directly from packaging and barcodes using nothing but your mobile phone's camera.
                   </Text>
                 </BlockStack>
               </Box>
@@ -65,7 +57,7 @@ export default function DocumentationPage() {
                   <BlockStack gap="400">
                     <BlockStack gap="200">
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={stepBadgeStyle}>Step 1</span>
+                          <Badge tone="info">Step 1</Badge>
                           <Text as="h3" variant="headingSm" fontWeight="bold" style={{ color: darkTeal }}>
                             Initiate & Scan
                           </Text>
@@ -82,7 +74,7 @@ export default function DocumentationPage() {
 
                     <BlockStack gap="200">
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={stepBadgeStyle}>Step 2</span>
+                          <Badge tone="info">Step 2</Badge>
                           <Text as="h3" variant="headingSm" fontWeight="bold" style={{ color: darkTeal }}>
                             AI Data Extraction & Parsing
                           </Text>
@@ -99,7 +91,7 @@ export default function DocumentationPage() {
 
                     <BlockStack gap="200">
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={stepBadgeStyle}>Step 3</span>
+                          <Badge tone="info">Step 3</Badge>
                           <Text as="h3" variant="headingSm" fontWeight="bold" style={{ color: darkTeal }}>
                             Review & Refine
                           </Text>
@@ -116,7 +108,7 @@ export default function DocumentationPage() {
 
                     <BlockStack gap="200">
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={stepBadgeStyle}>Step 4</span>
+                          <Badge tone="info">Step 4</Badge>
                           <Text as="h3" variant="headingSm" fontWeight="bold" style={{ color: darkTeal }}>
                             Sync to Shopify
                           </Text>

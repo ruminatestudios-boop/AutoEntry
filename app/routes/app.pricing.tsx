@@ -1,5 +1,5 @@
 import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
-import { BlockStack, Text, InlineGrid } from "@shopify/polaris";
+import { BlockStack, Text, InlineGrid, Card, Box } from "@shopify/polaris";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { DashboardPageLayout } from "../components/DashboardPageLayout";
 import { useEffect, useRef } from "react";
@@ -11,23 +11,10 @@ const accentGreen = "#6be575";
 const darkTeal = "#004c46";
 
 const greenBoxStyle = {
-  background: "rgba(107, 229, 117, 0.1)",
-  padding: "16px 18px",
+  background: "rgba(107, 229, 117, 0.08)",
+  padding: "16px",
   borderRadius: "12px",
-  border: "1px solid rgba(107, 229, 117, 0.35)",
-} as const;
-
-const cardBase = {
-  borderRadius: "16px",
-  border: "1px solid #e5e7eb",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-  transition: "box-shadow 0.2s ease, border-color 0.2s ease",
-} as const;
-
-const cardRecommended = {
-  ...cardBase,
-  border: "2px solid rgba(107, 229, 117, 0.5)",
-  boxShadow: "0 4px 20px rgba(0, 76, 70, 0.08)",
+  border: "1px solid rgba(107, 229, 117, 0.3)",
 } as const;
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -42,7 +29,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const shop = session.shop;
   const formData = await request.formData();
   const plan = formData.get("plan") as any;
-  const isTest = true;
+  const isTest = process.env.NODE_ENV !== "production";
 
   if (plan === "FREE") {
     const billingCheck = await billing.check({
@@ -107,7 +94,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     } catch (e: any) {
       if (e instanceof Response) throw e;
 
-      if (request.url.includes("localhost") || process.env.NODE_ENV === "development") {
+      if (process.env.NODE_ENV === "development") {
         await db.shopSettings.upsert({
           where: { shop },
           update: { plan },
@@ -157,9 +144,9 @@ export default function Pricing() {
     {
       name: "Free",
       price: "$0",
-      scans: "5 FREE Scans",
+      scans: "1,000 Scans / mo",
       description: "Test the app",
-      features: ["AI product scanning", "Auto SKU generation", "5 free scans"],
+      features: ["AI product scanning", "Auto SKU generation", "1,000 monthly scans"],
       action: currentPlan === "FREE" ? "Current" : "Downgrade",
       value: "FREE",
       disabled: currentPlan === "FREE"
@@ -183,6 +170,7 @@ export default function Pricing() {
       action: currentPlan === "Growth" ? "Current" : "Upgrade",
       value: "Growth",
       disabled: currentPlan === "Growth",
+      popular: true
     },
     {
       name: "Power",
@@ -206,7 +194,7 @@ export default function Pricing() {
     <DashboardPageLayout
       title="Pricing"
       headerTitle="Pricing"
-      subtitle="Choose a plan that fits your store"
+      subtitle="Choose a plan that fits your store."
     >
       <BlockStack gap="600">
         <BlockStack gap="300">
@@ -214,101 +202,76 @@ export default function Pricing() {
             Plans
           </Text>
           <InlineGrid columns={4} gap="400">
-            {plans.map((plan) => {
-              const isRecommended = plan.name === "Growth";
-              return (
-                <div
-                  key={plan.name}
-                  className="pricing-plan-card"
-                  style={{
-                    ...(isRecommended ? cardRecommended : cardBase),
-                    background: "white",
-                    padding: "24px",
-                    minHeight: "320px",
-                    display: "flex",
-                    flexDirection: "column",
-                    position: "relative",
-                  }}
-                >
-                  {isRecommended && (
-                    <div style={{
-                      position: "absolute",
-                      top: 0,
-                      left: "50%",
-                      transform: "translate(-50%, -50%)",
-                      background: darkTeal,
-                      color: "white",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      padding: "6px 14px",
-                      borderRadius: "999px",
-                      letterSpacing: "0.03em",
-                      whiteSpace: "nowrap",
-                    }}>
-                      Recommended
-                    </div>
-                  )}
+            {plans.map((plan) => (
+              <Card key={plan.name}>
+                <Box padding="400">
                   <BlockStack gap="300">
-                    <div style={{ marginTop: isRecommended ? "8px" : 0 }}>
-                      <Text as="h3" variant="headingLg" fontWeight="bold" style={{ color: darkTeal, margin: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                      <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
                         {plan.name}
                       </Text>
+                      {plan.popular && (
+                        <span
+                          style={{
+                            background: "rgba(107, 229, 117, 0.25)",
+                            color: darkTeal,
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            padding: "2px 8px",
+                            borderRadius: "100px",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Popular
+                        </span>
+                      )}
                     </div>
                     <div style={greenBoxStyle}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "4px" }}>
-                        <Text as="span" variant="bodySm" tone="subdued" style={{ color: "#64748b" }}>Price</Text>
-                        <Text as="span" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>{plan.price}</Text>
-                      </div>
+                      <BlockStack gap="200">
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "4px" }}>
+                          <Text as="span" variant="bodySm" tone="subdued">Price</Text>
+                          <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{plan.price}</Text>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "4px" }}>
+                          <Text as="span" variant="bodySm" tone="subdued">Scans</Text>
+                          <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{plan.scans}</Text>
+                        </div>
+                      </BlockStack>
                     </div>
-                    <Text as="p" variant="bodyMd" style={{ color: "#475569", margin: 0, fontWeight: 500 }}>
+                    <Text as="p" variant="bodySm" tone="subdued" style={{ color: "#1a1a1a", margin: 0 }}>
                       {plan.description}
                     </Text>
-                    <BlockStack gap="200">
+                    <BlockStack gap="100">
                       {plan.features.slice(0, 3).map((f, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{
-                            width: "18px",
-                            height: "18px",
-                            borderRadius: "50%",
-                            background: "rgba(107, 229, 117, 0.25)",
-                            flexShrink: 0,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}>
-                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none" style={{ flexShrink: 0 }}>
-                              <path d="M1 4l2.5 2.5L9 1" stroke={darkTeal} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </span>
-                          <Text as="span" variant="bodySm" style={{ color: "#1e293b" }}>{f}</Text>
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <div style={{ width: "4px", height: "4px", background: darkTeal, borderRadius: "50%" }} />
+                          <Text as="span" variant="bodySm" tone="subdued">{f}</Text>
                         </div>
                       ))}
                     </BlockStack>
-                    <div style={{ marginTop: "auto", paddingTop: "8px" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleUpgrade(plan.value)}
-                        disabled={plan.disabled}
-                        className="pricing-card-btn"
-                        style={{
-                          width: "100%",
-                          padding: "12px 20px",
-                          background: plan.disabled ? "#f1f5f9" : darkTeal,
-                          color: plan.disabled ? "#94a3b8" : "white",
-                          border: plan.disabled ? "1px solid #e2e8f0" : "none",
-                          borderRadius: "12px",
-                          fontSize: "14px",
-                          fontWeight: 600,
-                          cursor: plan.disabled ? "not-allowed" : "pointer",
-                        }}
-                      >
-                        {plan.action}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUpgrade(plan.value)}
+                      disabled={plan.disabled}
+                      style={{
+                        width: "100%",
+                        padding: "10px 16px",
+                        background: plan.disabled ? "#e5e7eb" : darkTeal,
+                        color: plan.disabled ? "#6b7280" : "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: plan.disabled ? "not-allowed" : "pointer",
+                        marginTop: "4px",
+                      }}
+                    >
+                      {plan.action}
+                    </button>
                   </BlockStack>
-                </div>
-              );
-            })}
+                </Box>
+              </Card>
+            ))}
           </InlineGrid>
         </BlockStack>
 
@@ -317,79 +280,68 @@ export default function Pricing() {
             Scan Top-Ups
           </Text>
           <Text as="p" variant="bodyMd" tone="subdued" style={{ color: "#1a1a1a" }}>
-            Need more scans this month?
+            Need more scans this month? One-time top-ups never expire.
           </Text>
           <InlineGrid columns={3} gap="400">
             {topups.map((topup) => (
-              <div
-                key={topup.value}
-                className="pricing-plan-card"
-                style={{
-                  ...cardBase,
-                  background: "white",
-                  padding: "24px",
-                  minHeight: "260px",
-                  display: "flex",
-                  flexDirection: "column",
-                  position: "relative",
-                }}
-              >
-                <div style={{ position: "relative", marginBottom: "4px" }}>
-                  <Text as="h3" variant="headingLg" fontWeight="bold" style={{ color: darkTeal, margin: 0 }}>
-                    {topup.scans} Scans
-                  </Text>
-                  {topup.popular && (
-                    <span
+              <Card key={topup.value}>
+                <Box padding="400">
+                  <BlockStack gap="300">
+                    <div style={{ position: "relative" }}>
+                      <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
+                        {topup.scans} Scans
+                      </Text>
+                      {topup.popular && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: "-2px",
+                            right: 0,
+                            background: darkTeal,
+                            color: "white",
+                            fontSize: "10px",
+                            fontWeight: "600",
+                            padding: "2px 8px",
+                            borderRadius: "100px",
+                          }}
+                        >
+                          Best Value
+                        </span>
+                      )}
+                    </div>
+                    <div style={greenBoxStyle}>
+                      <BlockStack gap="200">
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <Text as="span" variant="bodySm" tone="subdued">Price</Text>
+                          <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{topup.price}</Text>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <Text as="span" variant="bodySm" tone="subdued">Per scan</Text>
+                          <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{topup.perScan}</Text>
+                        </div>
+                      </BlockStack>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUpgrade(topup.value)}
                       style={{
-                        position: "absolute",
-                        top: "-4px",
-                        right: 0,
+                        width: "100%",
+                        padding: "10px 16px",
                         background: darkTeal,
                         color: "white",
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        padding: "4px 10px",
-                        borderRadius: "999px",
-                        letterSpacing: "0.02em",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        marginTop: "4px",
                       }}
                     >
-                      Best Value
-                    </span>
-                  )}
-                </div>
-                <div style={greenBoxStyle}>
-                  <BlockStack gap="200">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Text as="span" variant="bodySm" tone="subdued" style={{ color: "#64748b" }}>Price</Text>
-                      <Text as="span" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>{topup.price}</Text>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Text as="span" variant="bodySm" tone="subdued" style={{ color: "#64748b" }}>Per scan</Text>
-                      <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{topup.perScan}</Text>
-                    </div>
+                      Buy Now
+                    </button>
                   </BlockStack>
-                </div>
-                <div style={{ marginTop: "auto", paddingTop: "16px" }}>
-                  <button
-                    type="button"
-                    onClick={() => handleUpgrade(topup.value)}
-                    className="pricing-card-btn"
-                    style={{
-                      width: "100%",
-                      padding: "12px 20px",
-                      background: darkTeal,
-                      color: "white",
-                      border: "none",
-                      borderRadius: "12px",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Buy Now
-                  </button>
-                </div>
-              </div>
+                </Box>
+              </Card>
             ))}
           </InlineGrid>
         </BlockStack>

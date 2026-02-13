@@ -16,7 +16,7 @@ export default function SupportPage() {
         <DashboardPageLayout
             title="Support"
             headerTitle="Support & Help"
-            subtitle="Need help with Auto Entry? We're here for you"
+            subtitle="Need help with Auto Entry? We're here for you."
         >
             <BlockStack gap="600">
                 <InlineGrid columns={['twoThirds', 'oneThird']} gap="400">

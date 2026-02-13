@@ -8,7 +8,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   console.log(`Received ${topic} webhook for ${shop}`);
 
   // Webhook requests can trigger multiple times and after an app has already been uninstalled.
-  // Delete all app data so the app reliably and completely uninstalls (no code/data left behind).
+  // If this webhook already ran, the session may have been deleted previously.
+  if (session) {
+    await db.session.deleteMany({ where: { shop } });
+  }
+
+  // Delete all app data for this shop (full cleanup on uninstall).
   if (shop) {
     const sessions = await db.scanSession.findMany({ where: { shop }, select: { id: true } });
     const sessionIds = sessions.map((s) => s.id);
@@ -17,7 +22,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
     await db.scanSession.deleteMany({ where: { shop } });
     await db.shopSettings.deleteMany({ where: { shop } });
-    await db.session.deleteMany({ where: { shop } });
+    console.log(`Deleted all app data for shop: ${shop}`);
   }
 
   return new Response();

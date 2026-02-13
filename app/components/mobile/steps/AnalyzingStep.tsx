@@ -34,6 +34,7 @@ export function AnalyzingStep({ imagePreview, error, onTryAgain }: AnalyzingStep
         <BlockStack gap="400">
             <div style={{ textAlign: "center", animation: "fadeIn 0.6s ease-out" }}>
                 <Text as="h2" variant="headingLg" fontWeight="bold"><span style={{ fontSize: "18px" }}>AI Analysis</span></Text>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--mobile-text-muted)" }}>Identifying your product...</p>
             </div>
 
             <div style={{

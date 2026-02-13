@@ -3,7 +3,7 @@
 
 client_id = "34632082dd50358763db380203c1bff6"
 name = "Auto Entry"
-application_url = "https://example.com"
+application_url = "https://auto-entry.fly.dev"
 embedded = true
 
 [build]
@@ -19,4 +19,6 @@ api_version = "2025-01"
 scopes = "write_inventory,write_products"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+# Must match application_url origin (replace before launch).
+redirect_urls = [ "https://auto-entry.fly.dev/api/auth" ]
+

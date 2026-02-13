@@ -20,17 +20,6 @@ import db from "../db.server";
 const accentGreen = "#6be575";
 const darkTeal = "#004c46";
 
-/** FREE plan badge: same style as Step 1–4 pills (light green bg, dark teal text) */
-const freeBadgeStyle = {
-  background: "#E3F8E3",
-  color: "#264647",
-  fontSize: "12px",
-  fontWeight: 600,
-  padding: "4px 12px",
-  borderRadius: "999px",
-  whiteSpace: "nowrap" as const,
-};
-
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
@@ -93,7 +82,7 @@ export default function SettingsPage() {
     <DashboardPageLayout
       title="Settings"
       headerTitle="Settings"
-      subtitle="Manage your app preferences and notifications"
+      subtitle="Manage your app preferences and notifications."
     >
       <BlockStack gap="600">
         <InlineGrid columns={["twoThirds", "oneThird"]} gap="400">
@@ -121,6 +110,7 @@ export default function SettingsPage() {
                         value={email}
                         onChange={(value) => setEmail(value)}
                         autoComplete="email"
+                        helpText="We will use this email for important updates regarding your scans."
                       />
                     </BlockStack>
                   </div>
@@ -188,11 +178,7 @@ export default function SettingsPage() {
                   <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
                     Usage & Plan
                   </Text>
-                  {planName === "FREE" ? (
-                  <span style={freeBadgeStyle}>FREE</span>
-                ) : (
-                  <Badge tone="success">{planName.toUpperCase()}</Badge>
-                )}
+                  <Badge tone={planName === "FREE" ? "info" : "success"}>{planName.toUpperCase()}</Badge>
                 </div>
                 <div
                   style={{
@@ -257,7 +243,7 @@ export default function SettingsPage() {
                     <>
                       <br />
                       <Link url="/app/pricing">
-                        <span style={{ fontWeight: "500", color: "#1a1a1a", textDecoration: "underline", textDecorationColor: "#1a1a1a" }}>Upgrade to increase your monthly limit.</span>
+                        <span style={{ fontWeight: "500", color: "#1a1a1a" }}>Upgrade to increase your monthly limit.</span>
                       </Link>
                     </>
                   )}

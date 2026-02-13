@@ -111,25 +111,9 @@
   border-radius: 8px;
 }
 
-/* Empty state card – document placeholder image, centered */
+/* Empty state card */
 .dashboard-home .Polaris-EmptyState {
   border-radius: var(--dashboard-card-radius);
-  text-align: center;
-}
-.dashboard-home .Polaris-EmptyState .Polaris-EmptyState__ImageContainer,
-.dashboard-home .Polaris-EmptyState .Polaris-EmptyState__Image {
-  width: 150px !important;
-  height: 150px !important;
-  max-width: 150px !important;
-  margin-left: auto;
-  margin-right: auto;
-  object-fit: contain;
-}
-.dashboard-home .Polaris-EmptyState .Polaris-Box {
-  margin-inline: auto;
-}
-.dashboard-home .Polaris-EmptyState .Polaris-Text {
-  text-align: center;
 }
 
 /* Review modal footer: align Save + Review in Shopify to the right (modal is portaled outside .dashboard-home) */

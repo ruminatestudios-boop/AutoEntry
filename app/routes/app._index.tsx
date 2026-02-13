@@ -223,8 +223,6 @@ export default function Index() {
   const scanCount = shopSettings?.scanCount || 0;
   const isFree = plan === "FREE";
   const freeLimit = PLAN_LIMITS.FREE;
-  /** Voice variants (mic) only on Growth and Power plans */
-  const canUseVoiceVariants = plan === "Growth" || plan === "Power";
 
   const productId = fetcher.data?.product?.id.replace(
     "gid://shopify/Product/",
@@ -244,22 +242,6 @@ export default function Index() {
 
 
 
-  // Fetch latest scans immediately on mount so new scans show without refresh
-  useEffect(() => {
-    recentScansFetcher.submit(null, { method: "GET", action: "/api/recent-scans" });
-  }, []);
-
-  // Refetch when user returns to the tab (e.g. after scanning on phone) so new items show right away
-  useEffect(() => {
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        recentScansFetcher.submit(null, { method: "GET", action: "/api/recent-scans" });
-      }
-    };
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
-  }, [recentScansFetcher.submit]);
-
   // Polling for results
   useEffect(() => {
     if (!sessionId && !recentScansFetcher.submit) return;
@@ -273,7 +255,7 @@ export default function Index() {
     // Global background polling for ALL scans (in case one session is missed or new ones arrive)
     const globalInterval = setInterval(() => {
       recentScansFetcher.submit(null, { method: "GET", action: "/api/recent-scans" });
-    }, 4000); // Check every 4s so new scans show without refresh
+    }, 5000); // Check every 5s for broad updates
 
     return () => {
       clearInterval(interval);
@@ -696,42 +678,36 @@ export default function Index() {
           }
         `}</style>
 
-        {/* Hero: clean homepage strip — headline, one line, QR CTA (AirAsia-inspired) */}
+        {/* Hero: AirAsia-style — white card, green CTA, QR right */}
         <Layout>
           <Layout.Section>
             <Card>
-              <Box padding="500" data-qr-section>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "32px", flexWrap: "wrap" }}>
-                  <div style={{ flex: "1 1 280px", minWidth: 0, borderLeft: "4px solid " + primaryTeal, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                    <Text as="p" style={{ margin: 0, fontSize: "12px", fontWeight: 700, letterSpacing: "0.06em", color: primaryTeal, textTransform: "uppercase" }}>
-                      Get started
+              <Box padding="400" data-qr-section>
+                <InlineStack align="space-between" blockAlign="center" gap="600" wrap={false}>
+                  <BlockStack gap="200">
+                    <Text as="h2" variant="headingMd">
+                      <span style={{ color: primaryTeal }}>Intelligent Inventory</span>
+                      <span style={{ color: "#004c46", fontWeight: 700 }}> Capturing</span>
                     </Text>
-                    <div>
-                      <Text as="h2" style={{ margin: 0, fontSize: "26px", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.25, color: "#0f172a" }}>
-                        Intelligent Inventory Capturing
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      <span style={{ color: primaryTeal }}>Automate product entry with AI. </span>
+                      <span style={{ color: accentGreen }}>Fast, accurate, synced to Shopify.</span>
+                    </Text>
+                    <BlockStack gap="100">
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        <span style={{ color: accentGreen, fontWeight: 600 }}>1</span>
+                        <span style={{ color: "#1a1a1a" }}> Sync your mobile — scan QR to link.</span>
                       </Text>
-                      <Text as="p" style={{ margin: "10px 0 0", fontSize: "17px", color: "#475569", lineHeight: 1.5 }}>
-                        Automate product entry with AI. Fast, accurate, synced to Shopify.
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        <span style={{ color: accentGreen, fontWeight: 600 }}>2</span>
+                        <span style={{ color: "#1a1a1a" }}> Smart capture — photo, AI extracts data.</span>
                       </Text>
-                      <Text as="p" style={{ margin: "14px 0 0", fontSize: "14px", color: "#64748b", lineHeight: 1.45 }}>
-                        Scan the QR code with your phone to start adding products.
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        <span style={{ color: accentGreen, fontWeight: 600 }}>3</span>
+                        <span style={{ color: "#1a1a1a" }}> Review in Shopify when ready.</span>
                       </Text>
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 20px", paddingTop: "8px", borderTop: "1px solid #f1f5f9" }}>
-                      <span style={{ fontSize: "13px", color: "#64748b", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: accentGreen }} />
-                        AI reads packaging & labels
-                      </span>
-                      <span style={{ fontSize: "13px", color: "#64748b", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: accentGreen }} />
-                        Syncs straight to Shopify
-                      </span>
-                      <span style={{ fontSize: "13px", color: "#64748b", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: accentGreen }} />
-                        Phone camera only
-                      </span>
-                    </div>
-                  </div>
+                    </BlockStack>
+                  </BlockStack>
                   <Box id="mobile-scan-qr" padding="400" background="bg-surface-secondary" borderRadius="300" minWidth="200px">
                     <BlockStack gap="300">
                       {typeof window !== "undefined" && sessionId ? (
@@ -757,7 +733,7 @@ export default function Index() {
                       </div>
                     </BlockStack>
                   </Box>
-                </div>
+                </InlineStack>
               </Box>
             </Card>
           </Layout.Section>
@@ -767,65 +743,52 @@ export default function Index() {
           <Layout.Section>
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center" gap="200">
-                <div className="dashboard-view-toggle" style={{ background: "rgba(0,0,0,0.06)", borderRadius: "10px", padding: "2px", display: "flex" }}>
-                  <button
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div
                     onClick={() => setActiveTab('drafts')}
-                    type="button"
                     style={{
-                      background: activeTab === 'drafts' ? "white" : "transparent",
-                      border: "none",
-                      borderRadius: "8px",
-                      padding: "4px 12px",
-                      cursor: "pointer",
-                      boxShadow: activeTab === 'drafts' ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      color: activeTab === 'drafts' ? "#1a1a1a" : "#64748b"
+                      cursor: 'pointer',
+                      padding: '6px 2px',
+                      borderBottom: activeTab === 'drafts' ? "2px solid " + accentGreen : '2px solid transparent',
+                      transition: 'all 0.2s'
                     }}
                   >
-                    To Review ({allScans.filter((s: any) => s.status === 'DRAFT').length})
-                  </button>
-                  <button
+                    <Text as="h2" variant="headingSm" fontWeight={activeTab === 'drafts' ? 'bold' : 'medium'} tone={activeTab === 'drafts' ? undefined as any : 'subdued'}>
+                      <span style={{ color: activeTab === 'drafts' ? textDark : undefined }}>To Review ({allScans.filter((s: any) => s.status === 'DRAFT').length})</span>
+                    </Text>
+                  </div>
+                  <div
                     onClick={() => setActiveTab('posted')}
-                    type="button"
                     style={{
-                      background: activeTab === 'posted' ? "white" : "transparent",
-                      border: "none",
-                      borderRadius: "8px",
-                      padding: "4px 12px",
-                      cursor: "pointer",
-                      boxShadow: activeTab === 'posted' ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      color: activeTab === 'posted' ? "#1a1a1a" : "#64748b"
+                      cursor: 'pointer',
+                      padding: '6px 2px',
+                      borderBottom: activeTab === 'posted' ? "2px solid " + accentGreen : '2px solid transparent',
+                      transition: 'all 0.2s'
                     }}
                   >
-                    Drafts ({allScans.filter((s: any) => s.status === 'PUBLISHED').length})
-                  </button>
-                  <button
+                    <Text as="h2" variant="headingSm" fontWeight={activeTab === 'posted' ? 'bold' : 'medium'} tone={activeTab === 'posted' ? undefined as any : 'subdued'}>
+                      <span style={{ color: activeTab === 'posted' ? textDark : undefined }}>Drafts ({allScans.filter((s: any) => s.status === 'PUBLISHED').length})</span>
+                    </Text>
+                  </div>
+                  <div
                     onClick={() => {
                       if (recentScansFetcher.state === "submitting") return;
                       setActiveTab("all");
                       recentScansFetcher.submit({ all: "true" }, { method: "GET", action: "/api/recent-scans" });
                       shopify.toast.show("Showing all items");
                     }}
-                    type="button"
-                    disabled={recentScansFetcher.state === "submitting"}
                     style={{
-                      background: activeTab === 'all' ? "white" : "transparent",
-                      border: "none",
-                      borderRadius: "8px",
-                      padding: "4px 12px",
                       cursor: recentScansFetcher.state === "submitting" ? "default" : "pointer",
-                      boxShadow: activeTab === 'all' ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      color: activeTab === 'all' ? "#1a1a1a" : "#64748b",
+                      padding: '6px 2px',
+                      borderBottom: activeTab === 'all' ? "2px solid " + accentGreen : '2px solid transparent',
+                      transition: 'all 0.2s',
                       opacity: recentScansFetcher.state === "submitting" ? 0.6 : 1
                     }}
                   >
-                    {recentScansFetcher.state === "submitting" ? "Loading..." : "View All"}
-                  </button>
+                    <Text as="h2" variant="headingSm" fontWeight={activeTab === 'all' ? 'bold' : 'medium'} tone={activeTab === 'all' ? undefined as any : 'subdued'}>
+                      <span style={{ color: activeTab === 'all' ? textDark : undefined }}>{recentScansFetcher.state === "submitting" ? "Loading..." : "View All"}</span>
+                    </Text>
+                  </div>
                 </div>
                 <div className="dashboard-view-toggle" style={{ background: "rgba(0,0,0,0.06)", borderRadius: "10px", padding: "2px", display: "flex" }}>
                     <button
@@ -865,8 +828,6 @@ export default function Index() {
               {filteredScans.length === 0 ? (
                 <Card>
                   <EmptyState
-                    image="https://cdn.shopify.com/s/files/1/0564/3957/0639/files/Frame_427321848.png?v=1770912768"
-                    imageContained
                     heading={
                       allScans.length === 0
                         ? "Capture your first product"
@@ -874,6 +835,7 @@ export default function Index() {
                           ? "No draft products to review"
                           : "No products posted yet"
                     }
+                    image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
                     action={
                       allScans.length === 0
                         ? {
@@ -1476,26 +1438,25 @@ export default function Index() {
                             autoComplete="off"
                           />
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title={!canUseVoiceVariants ? "Upgrade to use" : undefined}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <button
                             type="button"
-                            onClick={canUseVoiceVariants ? handleVoiceVariants : () => shopify.toast.show("Upgrade to Growth or Power to use voice variants")}
+                            onClick={handleVoiceVariants}
                             style={{
                               width: '36px',
                               height: '36px',
                               borderRadius: '999px',
                               border: '1px solid #d1d5db',
-                              background: !canUseVoiceVariants ? '#f3f4f6' : isRecordingVariants ? '#fee2e2' : 'white',
+                              background: isRecordingVariants ? '#fee2e2' : 'white',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              cursor: canUseVoiceVariants ? 'pointer' : 'not-allowed',
-                              color: !canUseVoiceVariants ? '#9ca3af' : isRecordingVariants ? '#d82c0d' : '#6be575',
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                              opacity: canUseVoiceVariants ? 1 : 0.8
+                              cursor: 'pointer',
+                              color: isRecordingVariants ? '#d82c0d' : '#6be575',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                             }}
-                            title={!canUseVoiceVariants ? "Upgrade to use" : isRecordingVariants ? "Stop recording" : "Allow mic when prompted, then speak variants (e.g. Sizes S to XL)"}
-                            aria-label={!canUseVoiceVariants ? "Voice variants — upgrade to use" : isRecordingVariants ? "Stop recording" : "Dictate variants with microphone"}
+                            title={isRecordingVariants ? "Stop recording" : "Allow mic when prompted, then speak variants (e.g. Sizes S to XL)"}
+                            aria-label={isRecordingVariants ? "Stop recording" : "Dictate variants with microphone"}
                           >
                             <svg
                               viewBox="0 0 24 24"
@@ -1513,7 +1474,7 @@ export default function Index() {
                               <line x1="8" y1="22" x2="16" y2="22"></line>
                             </svg>
                           </button>
-                          <span style={{ fontSize: '12px', fontWeight: 600, color: canUseVoiceVariants ? '#1a1a1a' : '#9ca3af' }}>Mic</span>
+                          <span style={{ fontSize: '12px', fontWeight: 600, color: '#1a1a1a' }}>Mic</span>
                         </div>
                         <button
                           onClick={handleParseVariants}

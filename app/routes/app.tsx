@@ -20,7 +20,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   try {
     const billingCheck = await billing.check({
       plans: ["Starter", "Growth", "Power"] as const,
-      isTest: true,
+      isTest: process.env.NODE_ENV !== "production",
     });
 
     let activePlan = "FREE";

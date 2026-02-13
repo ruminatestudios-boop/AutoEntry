@@ -1,5 +1,7 @@
-FROM node:18-alpine
-RUN apk add --no-cache openssl
+# Use Debian-based image so @google-cloud/vision (gRPC) native binaries work.
+# Alpine (musl) causes MODULE_NOT_FOUND for gRPC and can crash the process.
+FROM node:20-bookworm-slim
+RUN apt-get update -qq && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 3000
 

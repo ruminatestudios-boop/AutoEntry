@@ -1,14 +1,22 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ImageAnnotatorClient } from "@google-cloud/vision";
 import type { AIScanResult, ScannedProduct } from "../types/product";
+
+/** Lazy-load Vision client so gRPC native module is only required when OCR runs (avoids startup crash on Alpine/musl). */
+async function getVisionClient(): Promise<{ textDetection: (req: { image: { content: Buffer } }) => Promise<[{ fullTextAnnotation?: { text?: string } }]> } | null> {
+    try {
+        const { ImageAnnotatorClient } = await import("@google-cloud/vision");
+        return new ImageAnnotatorClient();
+    } catch (err) {
+        console.error("Vision client load failed (OCR disabled):", (err as Error).message);
+        return null;
+    }
+}
 
 export class AIService {
     private genAI: GoogleGenerativeAI;
-    private visionClient: ImageAnnotatorClient;
 
     constructor(apiKey: string) {
         this.genAI = new GoogleGenerativeAI(apiKey);
-        this.visionClient = new ImageAnnotatorClient();
     }
 
     async analyzeImage(base64Image: string, mimeType: string, currency: string = "USD", country: string = "United States"): Promise<AIScanResult> {
@@ -20,12 +28,15 @@ export class AIService {
             // First, run OCR with Google Cloud Vision to get reliable text from the packaging.
             let ocrText = "";
             try {
-                const imageBuffer = Buffer.from(base64Image.includes(",") ? base64Image.split(",")[1] : base64Image, "base64");
-                const [visionResult] = await this.visionClient.textDetection({
-                    image: { content: imageBuffer },
-                });
-                ocrText = visionResult.fullTextAnnotation?.text?.trim() || "";
-                console.log(`[${timestamp}] AI_SERVICE: Vision OCR length: ${ocrText.length}`);
+                const visionClient = await getVisionClient();
+                if (visionClient) {
+                    const imageBuffer = Buffer.from(base64Image.includes(",") ? base64Image.split(",")[1] : base64Image, "base64");
+                    const [visionResult] = await visionClient.textDetection({
+                        image: { content: imageBuffer },
+                    });
+                    ocrText = visionResult.fullTextAnnotation?.text?.trim() || "";
+                    console.log(`[${timestamp}] AI_SERVICE: Vision OCR length: ${ocrText.length}`);
+                }
             } catch (ocrError) {
                 console.error(`[${timestamp}] AI_SERVICE: Vision OCR failed`, ocrError);
                 // Continue without OCR; Gemini will still see the image but may be less precise.
