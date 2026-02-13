@@ -3,12 +3,11 @@
 
 client_id = "34632082dd50358763db380203c1bff6"
 name = "Auto Entry"
-application_url = "https://auto-entry.fly.dev"
+application_url = "https://auto-entry-app-production-4dda.up.railway.app"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
-include_config_on_deploy = true
 
 [webhooks]
 # Matches ApiVersion.January25 in shopify.server.ts (2025-01). Update both when upgrading to 2026-01.
@@ -20,5 +19,5 @@ scopes = "write_inventory,write_products"
 
 [auth]
 # Must match application_url origin (replace before launch).
-redirect_urls = [ "https://auto-entry.fly.dev/api/auth" ]
+redirect_urls = [ "https://auto-entry-app-production-4dda.up.railway.app/api/auth" ]
 

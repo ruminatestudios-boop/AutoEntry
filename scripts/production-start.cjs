@@ -34,6 +34,8 @@ const env = { ...process.env, HOST: "0.0.0.0", PORT: port };
 
 console.log("[start] DATABASE_URL:", process.env.DATABASE_URL ? "set" : "NOT SET (prisma will fail)");
 console.log("[start] SHOPIFY_APP_URL:", process.env.SHOPIFY_APP_URL ? "set" : "NOT SET (Shopify app will crash - set to your public URL e.g. https://your-app.up.railway.app)");
+console.log("[start] SHOPIFY_API_KEY:", process.env.SHOPIFY_API_KEY ? "set" : "NOT SET (Shopify will crash - add in Railway Variables)");
+console.log("[start] SHOPIFY_API_SECRET:", process.env.SHOPIFY_API_SECRET ? "set" : "NOT SET (Shopify will crash - add in Railway Variables)");
 console.log("[start] PORT:", port, "(listen on 0.0.0.0:" + port + ")");
 
 function run(name, cmd) {
