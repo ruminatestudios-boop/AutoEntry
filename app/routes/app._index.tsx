@@ -835,7 +835,7 @@ export default function Index() {
                           ? "No draft products to review"
                           : "No products posted yet"
                     }
-                    image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+                    image="https://cdn.shopify.com/s/files/1/0564/3957/0639/files/Frame_427321848.png?v=1770912768"
                     action={
                       allScans.length === 0
                         ? {
