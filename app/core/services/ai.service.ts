@@ -94,7 +94,7 @@ export class AIService {
 
             console.log(`[${timestamp}] AI_SERVICE: Sending request to Gemini...`);
 
-            const timeoutMs = 35000;
+            const timeoutMs = 28000;
             const timeoutPromise = new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error("AI_TIMEOUT")), timeoutMs)
             );

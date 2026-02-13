@@ -8,7 +8,6 @@ import db from "../db.server";
 import { AIService } from "../core/services/ai.service";
 import { PLAN_LIMITS } from "../core/constants";
 import shopify from "../shopify.server";
-import { ImageSearchService } from "../core/services/image-search.service";
 
 // Styles
 import mobileStyles from "../styles/mobile.css?url";
@@ -187,42 +186,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         const sku = generateSKU(aiData.title);
         console.log(`MOBILE ACTION: Generated SKU: ${sku}`);
 
-        // AUTO-IMAGE SEARCH (SerpAPI Google Images)
-        let finalImageUrls = [image];
-        try {
-            const serpApiKey = process.env.SERPAPI_API_KEY || apiKey;
-
-            if (serpApiKey) {
-                console.log(`MOBILE ACTION: Searching for images for "${aiData.title}"...`);
-                const imageSearchService = new ImageSearchService(serpApiKey);
-
-                // Add a local timeout for search to ensure it doesn't hang the whole request
-                const searchTimeout = new Promise<string[]>((resolve) => setTimeout(() => resolve([]), 10000));
-
-                const { query: aiQuery, siteDomain } = await aiService.generateSearchQuery(aiData.title);
-                // Only fetch images when we have an official brand site (exact product, no watermarks)
-                if (!siteDomain) {
-                    console.log(`MOBILE ACTION: No official brand site for "${aiData.title}", skipping web image search.`);
-                } else {
-                    const searchQuery = `site:${siteDomain} ${aiQuery} official product photo white background`;
-                    console.log(`MOBILE ACTION: Search query (official only): ${searchQuery}`);
-
-                    const foundImages = await Promise.race([
-                        imageSearchService.searchImages(searchQuery, 10, { officialDomain: siteDomain }),
-                        searchTimeout
-                    ]);
-
-                    if (foundImages && foundImages.length > 0) {
-                        console.log(`MOBILE ACTION: Found ${foundImages.length} images.`);
-                        finalImageUrls = [...foundImages, image];
-                    } else {
-                        console.log(`MOBILE ACTION: No images found or search timed out.`);
-                    }
-                }
-            }
-        } catch (searchError) {
-            console.warn("MOBILE ACTION: Image search failed, proceeding with original photo only.", searchError);
-        }
+        // Use scanned image only on mobile to avoid proxy timeout (502). Image search can add 10s+.
+        const finalImageUrls = [image];
 
         // Ensure all fields are populated for the dashboard form (never leave description/tags empty)
         const tagsArray = Array.isArray(aiData.tags) && aiData.tags.length > 0
