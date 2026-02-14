@@ -13,6 +13,27 @@ automatically_update_urls_on_dev = true
 # Matches ApiVersion.January25 in shopify.server.ts (2025-01). Update both when upgrading to 2026-01.
 api_version = "2025-01"
 
+[[webhooks.subscriptions]]
+uri = "/webhooks/app/uninstalled"
+topics = ["app/uninstalled"]
+
+[[webhooks.subscriptions]]
+uri = "/webhooks/app/scopes_update"
+topics = ["app/scopes_update"]
+
+# Mandatory compliance webhooks (required for App Store)
+[[webhooks.subscriptions]]
+uri = "/webhooks/customers/data_request"
+compliance_topics = ["customers/data_request"]
+
+[[webhooks.subscriptions]]
+uri = "/webhooks/customers/redact"
+compliance_topics = ["customers/redact"]
+
+[[webhooks.subscriptions]]
+uri = "/webhooks/shop/redact"
+compliance_topics = ["shop/redact"]
+
 [access_scopes]
 # Minimal scopes for snap-to-stock: products + inventory only (no write_customers).
 scopes = "write_inventory,write_products"
