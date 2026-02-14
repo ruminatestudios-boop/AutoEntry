@@ -21,17 +21,17 @@ topics = ["app/uninstalled"]
 uri = "/webhooks/app/scopes_update"
 topics = ["app/scopes_update"]
 
-# Mandatory compliance webhooks (required for App Store)
+# Mandatory compliance webhooks (required for App Store) - one subscription per topic so each has its own endpoint
 [[webhooks.subscriptions]]
-uri = "/webhooks/customers/data_request"
+uri = "https://auto-entry-app-production-4dda.up.railway.app/webhooks/customers/data_request"
 compliance_topics = ["customers/data_request"]
 
 [[webhooks.subscriptions]]
-uri = "/webhooks/customers/redact"
+uri = "https://auto-entry-app-production-4dda.up.railway.app/webhooks/customers/redact"
 compliance_topics = ["customers/redact"]
 
 [[webhooks.subscriptions]]
-uri = "/webhooks/shop/redact"
+uri = "https://auto-entry-app-production-4dda.up.railway.app/webhooks/shop/redact"
 compliance_topics = ["shop/redact"]
 
 [access_scopes]
