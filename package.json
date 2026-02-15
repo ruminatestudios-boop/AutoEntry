@@ -1,0 +1,7 @@
+{
+  "name": "auto-entry-monorepo",
+  "private": true,
+  "scripts": {
+    "deploy": "npm run deploy --prefix auto-entry"
+  }
+}
