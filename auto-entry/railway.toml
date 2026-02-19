@@ -5,4 +5,4 @@
 buildCommand = "npm ci && npm run setup && npm run build"
 
 [deploy]
-startCommand = "npm run start"
+startCommand = "node scripts/production-start.cjs"
