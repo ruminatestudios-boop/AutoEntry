@@ -1,0 +1,8 @@
+# Railway build and deploy (Root Directory = auto-entry)
+# https://docs.railway.com/reference/build-and-start-commands
+
+[build]
+buildCommand = "npm ci && npm run setup && npm run build"
+
+[deploy]
+startCommand = "npm run start"

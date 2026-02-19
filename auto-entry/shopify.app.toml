@@ -1,0 +1,44 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+# For production: set application_url and auth.redirect_urls to your real app URL (e.g. from SHOPIFY_APP_URL).
+
+client_id = "34632082dd50358763db380203c1bff6"
+name = "Auto Entry"
+application_url = "https://auto-entry-app-production-4dda.up.railway.app"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+# Matches ApiVersion.January25 in shopify.server.ts (2025-01). Update both when upgrading to 2026-01.
+api_version = "2025-01"
+
+[[webhooks.subscriptions]]
+uri = "/webhooks/app/uninstalled"
+topics = ["app/uninstalled"]
+
+[[webhooks.subscriptions]]
+uri = "/webhooks/app/scopes_update"
+topics = ["app/scopes_update"]
+
+# Mandatory compliance webhooks (required for App Store)
+[[webhooks.subscriptions]]
+uri = "/webhooks/customers/data_request"
+compliance_topics = ["customers/data_request"]
+
+[[webhooks.subscriptions]]
+uri = "/webhooks/customers/redact"
+compliance_topics = ["customers/redact"]
+
+[[webhooks.subscriptions]]
+uri = "/webhooks/shop/redact"
+compliance_topics = ["shop/redact"]
+
+[access_scopes]
+# Minimal scopes for snap-to-stock: products + inventory only (no write_customers).
+scopes = "write_inventory,write_products"
+
+[auth]
+# Must match application_url origin (replace before launch).
+redirect_urls = [ "https://auto-entry-app-production-4dda.up.railway.app/api/auth" ]
+

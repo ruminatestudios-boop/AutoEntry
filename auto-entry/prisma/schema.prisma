@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+model ScanSession {
+  id        String   @id @default(uuid())
+  shop      String
+  status    String   @default("PENDING") // PENDING, COMPLETED, EXPIRED
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  products  ScannedProduct[]
+}
+
+model ScannedProduct {
+  id              String      @id @default(uuid())
+  sessionId       String
+  session         ScanSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt       DateTime    @default(now())
+  title           String?
+  descriptionHtml String?
+  productType     String?
+  tags            String?     // Stored as comma-separated string
+  estimatedWeight Float?
+  price           String?
+  imageUrl        String?
+  imageUrls       String?     // JSON array of strings
+  status          String      @default("DRAFT")
+  processed       Boolean     @default(false)
+  // Inventory fields
+  sku             String?
+  inventoryQuantity Int?      @default(10)
+  trackInventory  Boolean?    @default(true)
+  variants        String?     // JSON: {"options": [{"name": "Size", "values": ["S","M","L"]}]}
+}
+
+model ShopSettings {
+  shop              String   @id
+  plan              String   @default("FREE") // FREE, STARTER, GROWTH, POWER
+  scanCount         Int      @default(0)
+  bonusScans        Int      @default(0) // Top-up scans purchased
+  notificationEmail String?  // Optional email for notifications
+  currencyCode      String   @default("USD")
+  countryCode       String   @default("US")
+  billingCycleStart DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

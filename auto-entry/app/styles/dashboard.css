@@ -1,0 +1,122 @@
+/* Dashboard homepage: same design language as mobile (dark teal header, lime green accent, rounded cards) */
+.dashboard-home {
+  --dashboard-primary: #1a514d;
+  --dashboard-primary-alt: #004c46;
+  --dashboard-accent: #6be575;
+  --dashboard-accent-hover: #5bd366;
+  --dashboard-card-bg: #ffffff;
+  --dashboard-card-radius: 12px;
+  --dashboard-card-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  --dashboard-border: #e5e7eb;
+  --dashboard-text-muted: #6b7280;
+}
+
+/* Dark teal header (mobile-style) */
+.dashboard-home .dashboard-header {
+  background: var(--dashboard-primary);
+  color: white;
+  padding: 20px 24px;
+  margin: 0 calc(-1 * var(--p-frame-offset, 0));
+  margin-bottom: 24px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.dashboard-home .dashboard-header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.dashboard-home .dashboard-header p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  opacity: 0.92;
+  font-weight: 400;
+}
+
+/* Cards: rounded corners, subtle shadow (match mobile cards) */
+.dashboard-home [data-polaris-layer="Card"],
+.dashboard-home .Polaris-Card {
+  border-radius: var(--dashboard-card-radius) !important;
+  box-shadow: var(--dashboard-card-shadow) !important;
+  border: 1px solid var(--dashboard-border) !important;
+}
+
+/* Hero / QR section card */
+.dashboard-home [data-qr-section] {
+  border-radius: var(--dashboard-card-radius);
+}
+
+/* QR box: light background, rounded */
+.dashboard-home #mobile-scan-qr {
+  background: rgba(107, 229, 117, 0.12) !important;
+  border: 1px solid rgba(107, 229, 117, 0.3);
+  border-radius: 12px !important;
+}
+
+/* Primary buttons: flat light green, no shadow */
+.dashboard-home .Polaris-Button--variantPrimary.Polaris-Button--toneSuccess,
+.dashboard-home button.Polaris-Button[data-polaris-layer="Button"][data-variant="primary"] {
+  background: var(--dashboard-accent) !important;
+  color: #1a1a1a !important;
+  border: 1px solid var(--dashboard-accent) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+.dashboard-home .Polaris-Button--variantPrimary.Polaris-Button--toneSuccess:hover,
+.dashboard-home button.Polaris-Button[data-polaris-layer="Button"][data-variant="primary"]:hover {
+  background: var(--dashboard-accent-hover) !important;
+  border-color: var(--dashboard-accent-hover) !important;
+}
+
+/* Tab underline and active state */
+.dashboard-home .dashboard-tab-active {
+  border-bottom-color: var(--dashboard-accent) !important;
+  color: #1a1a1a !important;
+}
+
+/* Plan progress bar fill */
+.dashboard-home .app-index-plan-progress-fill {
+  background: var(--dashboard-primary-alt) !important;
+}
+
+/* Scan cards: border accent on hover */
+.dashboard-home .dashboard-scan-card {
+  border-radius: 12px;
+  border-color: rgba(107, 229, 117, 0.25);
+}
+.dashboard-home .dashboard-scan-card:hover {
+  border-color: rgba(107, 229, 117, 0.45);
+}
+
+/* Review / primary action buttons in list and grid */
+.dashboard-home .dashboard-btn-primary {
+  background: var(--dashboard-accent) !important;
+  color: #1a1a1a !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+}
+.dashboard-home .dashboard-btn-primary:hover {
+  background: var(--dashboard-accent-hover) !important;
+}
+
+/* Grid/List toggle (segmented control style like mobile) */
+.dashboard-home .dashboard-view-toggle {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  padding: 2px;
+}
+.dashboard-home .dashboard-view-toggle button {
+  border-radius: 8px;
+}
+
+/* Empty state card */
+.dashboard-home .Polaris-EmptyState {
+  border-radius: var(--dashboard-card-radius);
+}
+
+/* Review modal footer: align Save + Review in Shopify to the right (modal is portaled outside .dashboard-home) */
+.Polaris-InlineStack:has(> .Polaris-Box > .review-modal-footer-actions) {
+  justify-content: flex-end !important;
+}

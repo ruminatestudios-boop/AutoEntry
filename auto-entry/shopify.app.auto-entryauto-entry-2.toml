@@ -1,0 +1,20 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "1fa307ecdb044aca7d7612aec763b5d5"
+name = "Auto Entry"
+application_url = "https://auto-entry-app-production-4dda.up.railway.app"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+
+[webhooks]
+api_version = "2026-04"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_inventory,write_products"
+
+[auth]
+redirect_urls = [ "https://auto-entry-app-production-4dda.up.railway.app/api/auth" ]
