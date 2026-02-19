@@ -2,6 +2,8 @@
   "name": "auto-entry-monorepo",
   "private": true,
   "scripts": {
+    "build": "cd auto-entry && npm ci && npm run setup && npm run build",
+    "start": "cd auto-entry && npm run start",
     "deploy": "npm run deploy --prefix auto-entry"
   }
 }
