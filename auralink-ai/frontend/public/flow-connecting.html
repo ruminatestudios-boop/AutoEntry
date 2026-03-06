@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="auralink-api-url" content="http://localhost:8000" />
+  <title>Connecting stores | Listing Flow | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .step-segment { width: 8px; height: 4px; border-radius: 2px; background: #e4e4e7; }
+    .step-segment.filled { background: #18181b; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { border: 3px solid #e4e4e7; border-top-color: #18181b; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+      <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0">
+      <span class="w-10 h-10" aria-hidden="true"></span>
+      <span class="invisible text-sm">Next</span>
+    </header>
+
+    <main class="flex-1 px-5 pb-6 overflow-auto flex flex-col items-center">
+      <div class="w-14 h-14 spinner shrink-0 mb-6" id="connecting-spinner"></div>
+      <h1 class="font-serif text-xl font-bold text-zinc-900 mb-1 text-center" id="connecting-title">Connecting stores</h1>
+      <p class="text-center text-sm text-zinc-500 mb-6" id="connecting-subtitle">Authorising your accounts…</p>
+
+      <div class="w-full space-y-3" id="connecting-stores-list"></div>
+
+      <!-- Connect Shopify -->
+      <div class="w-full mt-6 rounded-xl bg-white border border-zinc-200 p-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Add another store</p>
+        <p class="text-sm font-semibold text-zinc-900 mb-2">Connect Shopify</p>
+        <p class="text-xs text-zinc-500 mb-3">Enter your store domain to authorise AuraLink. Use your store name (e.g. fightlore) or myshopify.com domain.</p>
+        <div class="flex gap-2">
+          <input type="text" id="shopify-shop-input" placeholder="your-store.myshopify.com" class="flex-1 min-w-0 text-sm text-zinc-900 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:border-zinc-400" />
+          <button type="button" id="shopify-connect-btn" class="shrink-0 px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-semibold hover:bg-zinc-800 transition-colors">Connect store</button>
+        </div>
+        <p id="shopify-connect-error" class="text-xs text-red-600 mt-2 hidden"></p>
+      </div>
+
+      <div class="rounded-xl bg-zinc-100 border border-zinc-200 p-3 mt-6 w-full">
+        <p class="text-xs text-zinc-600">This usually takes under 10 seconds. Don’t close the app.</p>
+      </div>
+    </main>
+
+    <div class="p-5 pt-4 border-t border-zinc-200 shrink-0 bg-zinc-50">
+      <div class="flex items-center justify-center gap-1 mb-4">
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment"></span>
+        <span class="step-segment"></span>
+        <span class="step-segment"></span>
+      </div>
+      <button type="button" id="connecting-continue-btn" class="hidden w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center">
+        Continue to confirmation
+      </button>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowLeft') return;
+      if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
+      e.preventDefault();
+      history.back();
+    });
+  </script>
+  <script>
+    (function() {
+      var STORAGE_KEY = 'auralink_selected_marketplaces';
+      var CONNECTED_KEY = 'auralink_connected_stores';
+      var meta = {
+        tiktok_shop: { name: 'TikTok Shop', domain: 'tiktok.com', letter: 'T' },
+        amazon: { name: 'Amazon', domain: 'amazon.com', letter: 'A' },
+        shopify: { name: 'Shopify', domain: 'shopify.com', letter: 'S' },
+        ebay: { name: 'eBay', domain: 'ebay.com', letter: 'E' },
+        etsy: { name: 'Etsy', domain: 'etsy.com', letter: 'E' },
+        depop: { name: 'Depop', domain: 'depop.com', letter: 'D' },
+        walmart: { name: 'Walmart', domain: 'walmart.com', letter: 'W' },
+        poshmark: { name: 'Poshmark', domain: 'poshmark.com', letter: 'P' },
+        mercari: { name: 'Mercari', domain: 'mercari.com', letter: 'M' },
+        vinted: { name: 'Vinted', domain: 'vinted.com', letter: 'V' }
+      };
+      function loadSelected() {
+        try {
+          var raw = sessionStorage.getItem(STORAGE_KEY);
+          if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length > 0) return arr; }
+        } catch (e) {}
+        return ['amazon', 'shopify'];
+      }
+      function setAllConnected(ids) {
+        var o = {};
+        ids.forEach(function(id) { o[id] = true; });
+        try { sessionStorage.setItem(CONNECTED_KEY, JSON.stringify(o)); } catch (e) {}
+      }
+      var selected = loadSelected();
+      var n = selected.length;
+      var titleEl = document.getElementById('connecting-title');
+      var subtitleEl = document.getElementById('connecting-subtitle');
+      if (titleEl) titleEl.textContent = n === 1 ? 'Connecting 1 store' : 'Connecting ' + n + ' stores';
+      if (subtitleEl) subtitleEl.textContent = n === 1 ? 'Authorising your account…' : 'Authorising ' + n + ' accounts…';
+      var container = document.getElementById('connecting-stores-list');
+      var statuses = selected.map(function() { return 'waiting'; });
+      function render() {
+        if (!container) return;
+        container.innerHTML = '';
+        selected.forEach(function(id, i) {
+          var m = meta[id];
+          if (!m) return;
+          var st = statuses[i];
+          var row = document.createElement('div');
+          row.className = 'rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between';
+          var logoUrl = 'https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128';
+          var statusText = st === 'done' ? 'Done' : (st === 'connecting' ? 'Connecting…' : 'Waiting…');
+          var statusClass = st === 'done' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-zinc-100 border-zinc-200 text-zinc-600';
+          row.innerHTML = '<div class="flex items-center gap-3">' +
+            '<span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">' +
+              '<img src="' + logoUrl + '" alt="" class="w-6 h-6 object-contain" onerror="this.style.display=\'none\';var n=this.nextElementSibling;n&&n.classList.remove(\'hidden\');" />' +
+              '<span class="text-zinc-600 text-sm font-bold hidden">' + m.letter + '</span></span>' +
+            '<p class="font-semibold text-zinc-900">' + m.name + '</p></div>' +
+            '<span class="text-xs font-semibold px-2.5 py-1 rounded-full border ' + statusClass + '">' + (st === 'done' ? '✓ ' : '') + statusText + '</span>';
+          container.appendChild(row);
+        });
+      }
+      render();
+      var step = 0;
+      var spinnerEl = document.getElementById('connecting-spinner');
+      var continueBtn = document.getElementById('connecting-continue-btn');
+      var interval = setInterval(function() {
+        if (step < selected.length) {
+          statuses[step] = 'done';
+          render();
+          step++;
+        } else {
+          clearInterval(interval);
+          setAllConnected(selected);
+          if (titleEl) titleEl.textContent = 'All set';
+          if (subtitleEl) subtitleEl.textContent = 'Connect Shopify below if needed, then continue.';
+          if (spinnerEl) spinnerEl.style.display = 'none';
+          if (continueBtn) {
+            continueBtn.classList.remove('hidden');
+            continueBtn.addEventListener('click', function() {
+              window.location.href = '/flow-connect-done.html';
+            });
+          }
+        }
+      }, 1400);
+    })();
+
+    (function() {
+      function getApiBase() {
+        var meta = document.querySelector('meta[name="auralink-api-url"]');
+        var url = (meta && meta.getAttribute('content') ? meta.getAttribute('content').trim().replace(/\/$/, '') : '') || (window.AURALINK_CONFIG && window.AURALINK_CONFIG.API_URL) || 'http://localhost:8000';
+        if (!url || url === 'http://localhost:8000' || url.indexOf('localhost') !== -1) {
+          var host = window.location.hostname;
+          if (host && host !== 'localhost' && host !== '127.0.0.1')
+            url = window.location.protocol + '//' + host + ':8000';
+          else
+            url = url || 'http://localhost:8000';
+        }
+        return url;
+      }
+      function normalizeShopDomain(raw) {
+        raw = (raw || '').trim().toLowerCase().split('?')[0].split('#')[0].replace(/\/+$/, '');
+        if (!raw) return '';
+        raw = raw.replace(/^https?:\/\//, '');
+        if (raw.indexOf('/') !== -1) raw = raw.split('/')[0];
+        if (raw.indexOf('.myshopify.com') !== -1) return raw;
+        if (raw.indexOf('.') !== -1) raw = raw.split('.')[0];
+        return raw ? (raw + '.myshopify.com') : '';
+      }
+      var shopInput = document.getElementById('shopify-shop-input');
+      var connectBtn = document.getElementById('shopify-connect-btn');
+      var errorEl = document.getElementById('shopify-connect-error');
+      if (connectBtn && shopInput) {
+        connectBtn.addEventListener('click', function() {
+          var shop = (shopInput.value || '').trim();
+          if (!shop) {
+            if (errorEl) { errorEl.textContent = 'Enter your store domain (e.g. your-store)'; errorEl.classList.remove('hidden'); }
+            return;
+          }
+          if (errorEl) errorEl.classList.add('hidden');
+          var domain = normalizeShopDomain(shop);
+          if (!domain) {
+            if (errorEl) { errorEl.textContent = 'Enter a valid store name or domain (e.g. fightlore or your-store.myshopify.com)'; errorEl.classList.remove('hidden'); }
+            return;
+          }
+          var apiBase = getApiBase();
+          window.location.href = apiBase + '/api/v1/shopify/install?shop=' + encodeURIComponent(domain);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

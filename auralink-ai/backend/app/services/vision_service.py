@@ -1,0 +1,524 @@
+"""
+Vision extraction: MultimodalProcessor with Gemini 2.0 Flash or GPT-4o.
+UCP + schema.org/Product aligned; Fact-Feel-Proof (GEO) copy.
+"""
+import asyncio
+import json
+import re
+import base64
+import logging
+from typing import Optional
+
+from pydantic import ValidationError
+from app.schemas.vision import (
+    VisionExtractionResponse,
+    ExtractionAttributes,
+    ExtractionCopy,
+    ExtractionTags,
+    FactFeelProof,
+)
+from app.config import get_settings
+
+logger = logging.getLogger(__name__)
+
+try:
+    from app.prompts import VLM_SYSTEM_PROMPT, build_user_prompt
+except ImportError:
+    VLM_SYSTEM_PROMPT = None
+    build_user_prompt = None
+
+# Product type → estimated weight (kg) when not visible in image. Never send 0 to Shopify.
+WEIGHT_ESTIMATES_KG = {
+    "dog collar": 0.15,
+    "dog lead": 0.20,
+    "cat collar": 0.05,
+    "t-shirt": 0.20,
+    "hoodie": 0.60,
+    "jeans": 0.70,
+    "dress": 0.35,
+    "jacket": 0.90,
+    "shoes": 0.80,
+    "trainers": 0.90,
+    "headphones": 0.30,
+    "phone": 0.20,
+    "laptop": 1.80,
+    "tablet": 0.50,
+    "smartwatch": 0.05,
+    "camera": 0.40,
+    "mug": 0.35,
+    "book": 0.30,
+    "candle": 0.25,
+    "picture frame": 0.40,
+    "handbag": 0.50,
+    "wallet": 0.10,
+    "sunglasses": 0.03,
+    "watch": 0.15,
+    "jewellery": 0.05,
+}
+
+
+def _weight_estimate_kg(product_type_or_category: Optional[str]) -> Optional[float]:
+    """Return estimated weight in kg for product type, or None for default 0.5."""
+    if not product_type_or_category or not isinstance(product_type_or_category, str):
+        return None
+    key = product_type_or_category.lower().strip()
+    for k, v in WEIGHT_ESTIMATES_KG.items():
+        if k in key or key in k:
+            return v
+    return None
+
+
+def apply_post_extraction(result: VisionExtractionResponse) -> VisionExtractionResponse:
+    """Apply weight estimate when missing; ensure we never leave weight at 0."""
+    att = result.attributes
+    product_type = att.product_type or result.tags.category or ""
+    has_weight = att.weight_grams is not None and att.weight_grams > 0
+    if not has_weight and product_type:
+        est = _weight_estimate_kg(product_type)
+        if est is not None:
+            att.weight_grams = est * 1000  # store in grams
+            att.weight_source = "estimated"
+    if not has_weight and (att.weight_grams is None or att.weight_grams <= 0):
+        att.weight_grams = 500  # default 0.5 kg in grams
+        att.weight_source = "estimated"
+    return result
+
+
+def _decode_base64(image_base64: str) -> tuple[bytes, str]:
+    """Return (raw_bytes, mime_type). Handles data URL prefix."""
+    data = image_base64.strip()
+    mime = "image/jpeg"
+    if data.startswith("data:"):
+        # data:image/jpeg;base64,<payload>
+        match = re.match(r"data:([^;]+);base64,", data)
+        if match:
+            mime = match.group(1).strip()
+        data = data.split(",", 1)[-1]
+    raw = base64.b64decode(data, validate=True)
+    return raw, mime
+
+
+def _float_or_none(val) -> Optional[float]:
+    """Return float or None for price_value, weight_grams, etc."""
+    if val is None:
+        return None
+    if isinstance(val, (int, float)):
+        return float(val)
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return None
+
+
+def _fallback_extraction() -> VisionExtractionResponse:
+    """Return a safe extraction when parsing or validation fails."""
+    return VisionExtractionResponse(
+        attributes=ExtractionAttributes(),
+        extraction_copy=ExtractionCopy(seo_title="Product", description="", bullet_points=[]),
+        tags=ExtractionTags(),
+        confidence_score=0.5,
+    )
+
+
+def get_fallback_extraction() -> VisionExtractionResponse:
+    """Public fallback for route when extraction validation fails."""
+    return _fallback_extraction()
+
+
+def _list_str(val):
+    """Return list of strings or None."""
+    if val is None:
+        return None
+    if isinstance(val, list):
+        return [str(x).strip() for x in val if x is not None and str(x).strip()]
+    return None
+
+
+def _parse_extraction_response(text: str) -> VisionExtractionResponse:
+    """Parse model output into VisionExtractionResponse (legacy or UCP format)."""
+    def _dict(val):
+        return val if isinstance(val, dict) else {}
+
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```\s*$", "", text)
+    text = text.strip()
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return _fallback_extraction()
+    if not isinstance(data, dict):
+        data = {}
+    # UCP format (new) has description_fact_feel_proof, weight_grams, etc.
+    copy_data = _dict(data.get("copy"))
+    if data.get("ucp_version") or copy_data.get("description_fact_feel_proof"):
+        try:
+            return _parse_ucp_extraction_response(data)
+        except (ValidationError, TypeError, ValueError, KeyError) as e:
+            logger.warning("UCP parse fallback: %s", e)
+            return _fallback_extraction()
+    att = _dict(data.get("attributes"))
+    copy_data = _dict(data.get("copy"))
+    tags_data = _dict(data.get("tags"))
+    price_src = att.get("price_source")
+    price_conf = _float_or_none(att.get("price_confidence"))
+    price_val = _float_or_none(att.get("price_value"))
+    price_disp = att.get("price_display")
+    if price_src == "not_found":
+        price_val = None
+        price_disp = None
+    elif price_src == "ai_suggested" and (price_conf is None or price_conf < 0.7):
+        price_val = None
+        price_disp = None
+    try:
+        return VisionExtractionResponse(
+            attributes=ExtractionAttributes(
+                material=att.get("material"),
+                color=att.get("color"),
+                weight=att.get("weight"),
+                dimensions=att.get("dimensions"),
+                brand=att.get("brand"),
+                price_display=price_disp,
+                price_value=price_val,
+                price_source=price_src if price_src in ("found_in_image", "ai_suggested", "not_found") else None,
+                price_confidence=price_conf,
+                detected_colors=_list_str(att.get("detected_colors")),
+                detected_sizes=_list_str(att.get("detected_sizes")),
+                detected_materials=_list_str(att.get("detected_materials")),
+                product_type=att.get("product_type"),
+            ),
+            extraction_copy=ExtractionCopy(
+                seo_title=copy_data.get("seo_title") or "Product",
+                description=copy_data.get("description") or "",
+                bullet_points=copy_data.get("bullet_points") if isinstance(copy_data.get("bullet_points"), list) else [],
+            ),
+            tags=ExtractionTags(
+                category=tags_data.get("category"),
+                search_keywords=tags_data.get("search_keywords") if isinstance(tags_data.get("search_keywords"), list) else [],
+            ),
+            raw_ocr_snippets=data.get("raw_ocr_snippets") if isinstance(data.get("raw_ocr_snippets"), list) else [],
+            confidence_score=float(data.get("confidence_score", 1.0)),
+        )
+    except (ValidationError, TypeError, ValueError) as e:
+        logger.warning("Legacy parse fallback: %s", e)
+        return _fallback_extraction()
+
+
+def _parse_ucp_extraction_response(data: dict) -> VisionExtractionResponse:
+    """Parse UCP/schema.org JSON into VisionExtractionResponse."""
+    def _dict(val):
+        return val if isinstance(val, dict) else {}
+
+    att = _dict(data.get("attributes"))
+    copy_data = _dict(data.get("copy"))
+    ffp = copy_data.get("description_fact_feel_proof") or {}
+    if isinstance(ffp, dict):
+        fact_feel_proof = FactFeelProof(
+            fact=ffp.get("fact"),
+            feel=ffp.get("feel"),
+            proof=ffp.get("proof"),
+        )
+    else:
+        fact_feel_proof = None
+    # Build legacy description from fact+feel+proof for backward compatibility
+    desc_parts = []
+    if fact_feel_proof and fact_feel_proof.fact:
+        desc_parts.append(fact_feel_proof.fact)
+    if fact_feel_proof and fact_feel_proof.feel:
+        desc_parts.append(fact_feel_proof.feel)
+    if fact_feel_proof and fact_feel_proof.proof:
+        desc_parts.append(fact_feel_proof.proof)
+    description = " ".join(desc_parts).strip() if desc_parts else copy_data.get("description") or ""
+
+    weight_val = att.get("weight_grams")
+    if weight_val is not None and not isinstance(weight_val, (int, float)):
+        try:
+            weight_val = float(weight_val)
+        except (TypeError, ValueError):
+            weight_val = None
+
+    price_src = att.get("price_source")
+    price_conf = _float_or_none(att.get("price_confidence"))
+    price_val = _float_or_none(att.get("price_value"))
+    price_disp = att.get("price_display")
+    if price_src == "not_found":
+        price_val = None
+        price_disp = None
+    elif price_src == "ai_suggested" and (price_conf is None or price_conf < 0.7):
+        price_val = None
+        price_disp = None
+
+    return VisionExtractionResponse(
+        attributes=ExtractionAttributes(
+            material=att.get("material"),
+            color=att.get("color"),
+            weight=att.get("weight") or (f"{int(weight_val)}g" if isinstance(weight_val, (int, float)) and weight_val else None),
+            dimensions=att.get("dimensions"),
+            brand=att.get("brand"),
+            price_display=price_disp,
+            price_value=price_val,
+            price_source=price_src if price_src in ("found_in_image", "ai_suggested", "not_found") else None,
+            price_confidence=price_conf,
+            exact_model=att.get("exact_model"),
+            material_composition=att.get("material_composition"),
+            weight_grams=weight_val,
+            weight_source=att.get("weight_source"),
+            condition_score=att.get("condition_score"),
+            detected_colors=_list_str(att.get("detected_colors")),
+            detected_sizes=_list_str(att.get("detected_sizes")),
+            detected_materials=_list_str(att.get("detected_materials")),
+            product_type=att.get("product_type"),
+        ),
+        extraction_copy=ExtractionCopy(
+            seo_title=copy_data.get("seo_title") or "Product",
+            description=description,
+            bullet_points=copy_data.get("bullet_points") if isinstance(copy_data.get("bullet_points"), list) else [],
+            description_fact_feel_proof=fact_feel_proof,
+        ),
+        tags=ExtractionTags(
+            category=_dict(data.get("tags")).get("category"),
+            search_keywords=sk if isinstance(sk := _dict(data.get("tags")).get("search_keywords"), list) else [],
+        ),
+        raw_ocr_snippets=data.get("raw_ocr_snippets") if isinstance(data.get("raw_ocr_snippets"), list) else [],
+        confidence_score=float(data.get("confidence_score", 1.0)),
+        ucp_version=data.get("ucp_version"),
+        schema_context=data.get("schema_context"),
+    )
+
+
+EXTRACTION_SYSTEM = """You are a strict product data extractor. Copy EXACT text from the product image and OCR. Never use generic placeholders like "Product", "Unknown brand", or "Various".
+
+Rules:
+- brand: EXACT brand from logo/label (e.g. Sony, LEGO, Nike). Copy spelling and capitalization. If not visible, use null.
+- seo_title: EXACT product name as printed (e.g. "WH-1000XM5 Wireless Headphones", "Classic Fit Jeans"). Not a generic category.
+- exact_model: Model number, SKU, or style code from label when visible. null otherwise.
+- material_composition: Exact material text from label (e.g. "100% Cotton"). Not "fabric" or "material".
+- When in doubt, use null. Do not guess or substitute generic terms.
+
+Output ONLY valid JSON (no markdown):
+
+{
+  "attributes": {
+    "material": "exact from label or null",
+    "color": "primary color(s) if visible",
+    "weight": "e.g. 200g if visible",
+    "dimensions": "from label if visible",
+    "brand": "exact brand or null",
+    "price_display": "as shown or null",
+    "price_value": number or null,
+    "price_source": "found_in_image if price visible, else not_found",
+    "detected_colors": ["color names from image or description"],
+    "detected_sizes": ["size if visible"] or [],
+    "detected_materials": ["materials from label"],
+    "product_type": "e.g. dog collar, t-shirt"
+  },
+  "copy": {
+    "seo_title": "EXACT product name from package; never generic",
+    "description": "Specs and details from the product",
+    "bullet_points": ["Specific feature from product", "…"]
+  },
+  "tags": {
+    "category": "Specific category",
+    "search_keywords": ["brand", "model", "specific terms from product"]
+  },
+  "raw_ocr_snippets": ["exact snippets used"],
+  "confidence_score": 0.0 to 1.0
+}"""
+
+
+def _get_system_prompt() -> str:
+    """Use UCP VLM prompt when available, else legacy."""
+    if VLM_SYSTEM_PROMPT:
+        return VLM_SYSTEM_PROMPT
+    return EXTRACTION_SYSTEM
+
+
+def _get_user_prompt(ocr_snippets: list[str]) -> str:
+    """Use build_user_prompt when available, else legacy."""
+    if build_user_prompt:
+        return build_user_prompt(ocr_snippets)
+    ocr_block = "\n".join(ocr_snippets) if ocr_snippets else "No OCR text provided."
+    return f"""Extract from this image. Use OCR below as primary source—copy exact strings for brand, product name, model, and price. Do not output "Product" or "Unknown brand"; use null if not readable.
+
+OCR text:
+{ocr_block}
+
+Output ONLY the JSON object (attributes, copy, tags, raw_ocr_snippets, confidence_score)."""
+
+
+def _gemini_extract_sync(
+    image_base64: str,
+    mime_type: str,
+    ocr_snippets: list[str],
+) -> VisionExtractionResponse:
+    """Synchronous Gemini call (MultimodalProcessor). Tries gemini-2.0-flash, then gemini-1.5-flash."""
+    import google.generativeai as genai
+
+    settings = get_settings()
+    genai.configure(api_key=settings.gemini_api_key)
+    raw, _ = _decode_base64(image_base64)
+    image_part = {
+        "mime_type": mime_type or "image/jpeg",
+        "data": raw,
+    }
+    for model_name in ("gemini-2.0-flash", "gemini-1.5-flash"):
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(
+                [_get_system_prompt(), _get_user_prompt(ocr_snippets), image_part],
+                generation_config=genai.GenerationConfig(
+                    temperature=0.1,
+                    max_output_tokens=2048,
+                ),
+            )
+            text = (response.text or "").strip()
+            return _parse_extraction_response(text)
+        except Exception as e:
+            err = str(e).lower()
+            if "not found" in err or "404" in err or "model" in err and "invalid" in err:
+                logger.info("Gemini model %s not available, trying next: %s", model_name, e)
+                continue
+            raise
+    return _fallback_extraction()
+
+
+async def extract_with_gemini(
+    image_base64: str,
+    mime_type: str,
+    ocr_snippets: list[str],
+) -> VisionExtractionResponse:
+    """Use Gemini 2.0 Flash for multimodal extraction."""
+    return await asyncio.to_thread(
+        _gemini_extract_sync, image_base64, mime_type, ocr_snippets
+    )
+
+
+async def extract_with_openai(
+    image_base64: str,
+    mime_type: str,
+    ocr_snippets: list[str],
+) -> VisionExtractionResponse:
+    """Use GPT-4o for multimodal extraction (UCP when prompt available)."""
+    from openai import AsyncOpenAI
+
+    settings = get_settings()
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    raw, mime = _decode_base64(image_base64)
+    b64_for_api = base64.b64encode(raw).decode("utf-8")
+
+    user_content = [
+        {"type": "text", "text": _get_user_prompt(ocr_snippets)},
+        {
+            "type": "image_url",
+            "image_url": {"url": f"data:{mime};base64,{b64_for_api}"},
+        },
+    ]
+
+    response = await client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": _get_system_prompt()},
+            {"role": "user", "content": user_content},
+        ],
+        max_tokens=2048,
+        temperature=0.1,
+    )
+    text = (response.choices[0].message.content or "").strip()
+    return _parse_extraction_response(text)
+
+
+async def run_vision_extraction(
+    image_base64: str,
+    mime_type: str = "image/jpeg",
+    ocr_snippets: Optional[list[str]] = None,
+) -> VisionExtractionResponse:
+    """Run extraction with configured provider (Gemini or OpenAI). Uses UCP prompt when available."""
+    settings = get_settings()
+    snippets = ocr_snippets or []
+    if settings.vision_provider == "openai":
+        return await extract_with_openai(image_base64, mime_type, snippets)
+    return await extract_with_gemini(image_base64, mime_type, snippets)
+
+
+async def get_synthetic_ocr(image_base64: str, mime_type: str = "image/jpeg") -> list[str]:
+    """
+    When Google Cloud Vision is not configured, use the VLM to list all text visible in the image.
+    Gives the main extractor OCR-like input so brand and product name can be exact.
+    """
+    import google.generativeai as genai
+    settings = get_settings()
+    if not settings.gemini_api_key or settings.vision_provider == "openai":
+        return []
+    genai.configure(api_key=settings.gemini_api_key)
+    model = genai.GenerativeModel("gemini-2.0-flash")
+    raw, _ = _decode_base64(image_base64)
+    image_part = {"mime_type": mime_type or "image/jpeg", "data": raw}
+    prompt = """List every word, number, and phrase you can read from this product image. One item per line. Preserve exact spelling and capitalization. Include: brand names, product names, model numbers, labels, packaging text. No explanations—only the list."""
+    try:
+        response = await asyncio.to_thread(
+            lambda: model.generate_content(
+                [prompt, image_part],
+                generation_config=genai.GenerationConfig(temperature=0, max_output_tokens=1024),
+            )
+        )
+        text = (response.text or "").strip()
+        lines = [s.strip() for s in text.splitlines() if s.strip()]
+        return lines[:80]
+    except Exception:
+        return []
+
+
+class MultimodalProcessor:
+    """
+    UCP-aligned processor: product image + optional OCR -> structured extraction.
+    Uses VLM (Gemini 2.0 Flash or GPT-4o) with Universal Commerce Protocol and
+    schema.org/Product output: brand, exact_model, material_composition, weight_grams,
+    dimensions, condition_score, and Fact-Feel-Proof copy.
+    """
+
+    async def process(
+        self,
+        image_base64: str,
+        mime_type: str = "image/jpeg",
+        ocr_snippets: Optional[list[str]] = None,
+    ) -> VisionExtractionResponse:
+        return await run_vision_extraction(
+            image_base64=image_base64,
+            mime_type=mime_type,
+            ocr_snippets=ocr_snippets or None,
+        )
+
+
+def get_dummy_extraction() -> VisionExtractionResponse:
+    """
+    Return a fixed extraction for demo/dummy runs when no Vision API key is configured.
+    Lets you run the full flow: upload → extract → save as draft → list.
+    """
+    return VisionExtractionResponse(
+        attributes=ExtractionAttributes(
+            material="Cotton blend",
+            color="Navy",
+            weight="200g",
+            dimensions="30 x 20 x 5 cm",
+            brand="Demo Brand",
+        ),
+        extraction_copy=ExtractionCopy(
+            seo_title="Demo Product – Sample Listing",
+            description="This is a demo extraction. Add GEMINI_API_KEY or OPENAI_API_KEY in .env to get real AI extraction from your image.",
+            bullet_points=[
+                "Demo bullet 1 – connect Vision API for real extraction",
+                "Demo bullet 2 – then Save as draft will use real data",
+                "Demo bullet 3 – no API key needed to see the flow",
+            ],
+            description_fact_feel_proof=FactFeelProof(
+                fact="Demo mode: no Vision API configured.",
+                feel="You can still run the full flow end-to-end.",
+                proof="Add an API key to get real product extraction from photos.",
+            ),
+        ),
+        tags=ExtractionTags(
+            category="Demo / Sample",
+            search_keywords=["demo", "sample", "dummy run"],
+        ),
+        raw_ocr_snippets=[],
+        confidence_score=0.5,
+    )

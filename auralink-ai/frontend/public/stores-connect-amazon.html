@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connect Amazon | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col px-5 py-8">
+    <header class="shrink-0 pb-4" id="connect-header" style="display: none;">
+      <span class="w-10 h-10 inline-block" aria-hidden="true"></span>
+    </header>
+    <main class="flex-1 flex flex-col" id="connect-main">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-lg font-bold">A</div>
+        <div>
+          <h1 class="font-serif text-xl font-bold text-zinc-900">Connect Amazon</h1>
+          <p class="text-sm text-zinc-500 mt-0.5">AuraLink wants access to your seller account</p>
+        </div>
+      </div>
+
+      <!-- Permissions -->
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Permissions requested</p>
+      <div class="rounded-xl bg-white border border-zinc-200 divide-y divide-zinc-100 overflow-hidden mb-5">
+        <div class="flex items-center gap-3 px-4 py-3">
+          <span class="w-10 h-10 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold shrink-0">B</span>
+          <span class="text-sm font-medium text-zinc-900">View and create product listings</span>
+        </div>
+        <div class="flex items-center gap-3 px-4 py-3">
+          <span class="w-10 h-10 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold shrink-0">$</span>
+          <span class="text-sm font-medium text-zinc-900">Read pricing and inventory data</span>
+        </div>
+        <div class="flex items-center gap-3 px-4 py-3">
+          <span class="w-10 h-10 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold shrink-0">S</span>
+          <span class="text-sm font-medium text-zinc-900">View order and sales data</span>
+        </div>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="rounded-xl bg-zinc-100 border border-zinc-200 p-4 mb-8">
+        <p class="text-sm text-zinc-700">AuraLink never posts without your review. You approve every listing before it goes live.</p>
+      </div>
+
+      <a href="/stores-amazon-detail.html" id="auth-amazon-btn" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline mb-3">
+        Authorise Amazon
+      </a>
+      <a href="/stores-list.html" id="cancel-btn" class="block w-full py-3 rounded-xl border border-zinc-200 text-zinc-600 font-medium text-sm text-center no-underline">
+        Cancel
+      </a>
+    </main>
+  </div>
+  <script>
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowLeft') return;
+      if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
+      e.preventDefault();
+      history.back();
+    });
+  </script>
+  <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var returnTo = params.get('return');
+      var authBtn = document.getElementById('auth-amazon-btn');
+      var cancelBtn = document.getElementById('cancel-btn');
+      var header = document.getElementById('connect-header');
+      var backLink = document.getElementById('connect-back-link');
+      if (returnTo === 'flow-marketplaces') {
+        if (authBtn) authBtn.href = '/flow-marketplaces.html';
+        if (cancelBtn) cancelBtn.href = '/flow-marketplaces.html';
+        if (backLink) { backLink.href = '/flow-marketplaces.html'; backLink.setAttribute('aria-label', 'Back to Choose marketplaces'); }
+        if (header) header.style.display = 'block';
+      } else if (returnTo === 'flow-connect') {
+        if (authBtn) authBtn.href = '/flow-connect.html?connected=amazon';
+        if (cancelBtn) cancelBtn.href = '/flow-connect.html';
+        if (backLink) { backLink.href = '/flow-connect.html'; backLink.setAttribute('aria-label', 'Back to Connect your stores'); }
+        if (header) header.style.display = 'block';
+      }
+    })();
+  </script>
+</body>
+</html>

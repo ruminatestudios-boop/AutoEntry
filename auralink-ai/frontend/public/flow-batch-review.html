@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="auralink-publishing-url" content="http://localhost:8001" />
+  <meta name="auralink-api-url" content="http://localhost:8000" />
+  <title>Review batch | AuraLink AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+    .vercel-card { background: #fff; border: 1px solid #eaeaea; border-radius: 16px; }
+    .section-label { font-size: 13px; font-weight: 500; color: #111; margin-bottom: 8px; display: block; }
+    .section-hint { font-size: 12px; color: #555; margin-top: 4px; margin-bottom: 8px; }
+    .batch-review-card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .batch-review-card:hover { border-color: #d4d4d8; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .batch-review-card:has(.batch-item-cb:checked) {
+      border-color: #111;
+      box-shadow: 0 0 0 2px #111;
+    }
+    .batch-checkbox-wrap {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(0,0,0,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .batch-checkbox-wrap input { width: 10px; height: 10px; }
+    .batch-card-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#fafafa] font-sans text-[#111] antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <header class="shrink-0 border-b border-[#eaeaea] bg-white/80 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
+      <div></div>
+      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#111] justify-self-center">AuraLink</a>
+      <div></div>
+    </header>
+    <main class="flex-1 px-5 pt-6 pb-32 overflow-auto">
+      <h1 class="text-xl font-bold text-[#111] mb-1 text-center" style="letter-spacing: -0.025em;">Review batch</h1>
+      <p class="text-center text-sm text-[#555] mb-5">Tap a card to edit. Select items, then publish to Shopify.</p>
+
+      <div class="vercel-card p-5">
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <span class="section-label mb-0">Listings</span>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="batch-select-all" class="w-3.5 h-3.5 rounded border-[#eaeaea] text-[#111]" />
+            <span class="text-xs font-medium text-[#555]">Select all</span>
+          </label>
+        </div>
+        <div id="batch-review-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+      </div>
+    </main>
+    <footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-[#eaeaea] px-5 py-3 flex flex-col gap-2">
+      <a href="/flow-batch-upload.html" class="w-full text-center text-sm font-semibold text-[#111] bg-white border border-[#eaeaea] rounded-lg px-5 py-2.5 hover:bg-zinc-50 transition-colors">
+        New batch
+      </a>
+      <button type="button" id="batch-publish-btn" class="w-full text-sm font-semibold text-white bg-black border border-black rounded-lg px-5 py-2.5 hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:pointer-events-none">
+        Publish selected to Shopify
+      </button>
+    </footer>
+  </div>
+  <script>
+    (function() {
+      var BATCH_DRAFTS_KEY = 'auralink_batch_drafts';
+      var drafts = [];
+      try {
+        var raw = sessionStorage.getItem(BATCH_DRAFTS_KEY);
+        if (raw) drafts = JSON.parse(raw);
+      } catch (e) {}
+      if (!Array.isArray(drafts) || drafts.length === 0) {
+        window.location.href = '/flow-batch-upload.html';
+        return;
+      }
+
+      var grid = document.getElementById('batch-review-grid');
+      var selectAll = document.getElementById('batch-select-all');
+      var publishBtn = document.getElementById('batch-publish-btn');
+
+      function buildUniversalData(d) {
+        var photos = Array.isArray(d.photos) ? d.photos.filter(Boolean) : [];
+        var priceNum = parseFloat(String(d.price || '0').replace(/[^\d.]/g, '')) || 0;
+        var pricePence = Math.round(priceNum * 100);
+        var weightKgNum = parseFloat(d.weight_kg) || 0.5;
+        if (isNaN(weightKgNum) || weightKgNum <= 0) weightKgNum = 0.5;
+        return {
+          title: (d.title || 'Untitled listing').trim(),
+          description: (d.description || '').trim(),
+          price: pricePence,
+          photos: photos,
+          brand: (d.brand || d.vendor || '').trim(),
+          category: (d.category || '').trim(),
+          tags: Array.isArray(d.tags) ? d.tags : [],
+          quantity: Math.max(1, d.quantity != null ? d.quantity : 1),
+          sku: (d.sku || '').trim(),
+          weight_kg: weightKgNum,
+          condition: d.condition || 'New',
+          meta_title: (d.title || '').trim().slice(0, 70),
+          meta_description: (d.meta_description || '').trim().slice(0, 320),
+          variant_options: Array.isArray(d.variant_options) ? d.variant_options : [],
+          product_type: (d.product_type || d.category || '').trim()
+        };
+      }
+
+      function isFlagged(d) {
+        var photos = Array.isArray(d.photos) ? d.photos.filter(Boolean) : [];
+        var priceNum = parseFloat(String(d.price || '0').replace(/[^\d.]/g, '')) || 0;
+        var title = (d.title || '').trim();
+        return photos.length === 0 || priceNum <= 0 || !title;
+      }
+
+      drafts.forEach(function(d, i) {
+        var card = document.createElement('div');
+        card.className = 'batch-review-card flex flex-col relative' + (isFlagged(d) ? ' flagged' : '');
+        card.setAttribute('data-index', i);
+        var cbWrap = document.createElement('div');
+        cbWrap.className = 'absolute top-1.5 right-1.5 z-10 batch-checkbox-wrap';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'batch-item-cb rounded border-[#eaeaea] text-[#111]';
+        cb.setAttribute('data-index', i);
+        cbWrap.appendChild(cb);
+        var cardBody = document.createElement('button');
+        cardBody.type = 'button';
+        cardBody.className = 'w-full text-left flex flex-col flex-1 min-h-0';
+        var thumb = (d.photos && d.photos[0]) ? d.photos[0] : '';
+        var img = document.createElement('div');
+        img.className = 'w-full aspect-square bg-[#f4f4f5] flex items-center justify-center overflow-hidden rounded-t-[9px]';
+        if (thumb) {
+          var im = document.createElement('img');
+          im.src = thumb.indexOf('data:') === 0 ? thumb : '';
+          im.alt = '';
+          im.className = 'w-full h-full object-cover';
+          if (im.src) img.appendChild(im);
+          else img.innerHTML = '<span class="text-xs text-[#a1a1aa]">No photo</span>';
+        } else {
+          img.innerHTML = '<span class="text-xs text-[#a1a1aa]">No photo</span>';
+        }
+        var info = document.createElement('div');
+        info.className = 'p-1.5 border-t border-[#eaeaea] flex-1 min-w-0';
+        var titleEl = document.createElement('p');
+        titleEl.className = 'batch-card-title text-[11px] font-medium text-[#111] leading-snug';
+        titleEl.textContent = (d.title || 'Untitled').trim() || 'Untitled';
+        var meta = document.createElement('p');
+        meta.className = 'batch-card-status text-[10px] text-[#71717a] mt-0.5';
+        meta.textContent = (d.price ? '£' + d.price : 'No price') + (isFlagged(d) ? ' · Check' : '');
+        info.appendChild(titleEl);
+        info.appendChild(meta);
+        cardBody.appendChild(img);
+        cardBody.appendChild(info);
+        cardBody.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.location.href = '/flow-3.html?batch=1&index=' + i;
+        });
+        card.appendChild(cbWrap);
+        card.appendChild(cardBody);
+        grid.appendChild(card);
+      });
+
+      selectAll.addEventListener('change', function() {
+        var checked = selectAll.checked;
+        grid.querySelectorAll('.batch-item-cb').forEach(function(cb) { cb.checked = checked; });
+      });
+
+      function getSelectedIndexes() {
+        var out = [];
+        grid.querySelectorAll('.batch-item-cb:checked').forEach(function(cb) {
+          var idx = parseInt(cb.getAttribute('data-index'), 10);
+          if (!isNaN(idx)) out.push(idx);
+        });
+        return out;
+      }
+
+      publishBtn.addEventListener('click', function() {
+        var indexes = getSelectedIndexes();
+        if (indexes.length === 0) {
+          alert('Select at least one listing to publish.');
+          return;
+        }
+        var toPublish = indexes.map(function(i) { return drafts[i]; }).filter(Boolean);
+        var invalid = toPublish.filter(function(d) {
+          var photos = Array.isArray(d.photos) ? d.photos.filter(Boolean) : [];
+          var priceNum = parseFloat(String(d.price || '0').replace(/[^\d.]/g, '')) || 0;
+          return photos.length === 0 || priceNum <= 0;
+        });
+        if (invalid.length > 0) {
+          alert('Selected listings must have at least one photo and a price > 0. Edit those first.');
+          return;
+        }
+
+        var pubMeta = document.querySelector('meta[name="auralink-publishing-url"]');
+        var pubUrl = (pubMeta && pubMeta.getAttribute('content')) ? pubMeta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
+        var host = window.location.hostname;
+        if (host && host !== 'localhost' && host !== '127.0.0.1' && (pubUrl.indexOf('localhost') !== -1 || pubUrl.indexOf('127.0.0.1') !== -1)) {
+          pubUrl = window.location.protocol + '//' + host + ':8001';
+        }
+
+        function getToken() {
+          try {
+            var t = sessionStorage.getItem('auralink_jwt');
+            if (t) return Promise.resolve(t);
+          } catch (e) {}
+          return fetch(pubUrl + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; }).then(function(data) {
+            if (data && data.token) { try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {} return data.token; }
+            return null;
+          });
+        }
+
+        publishBtn.disabled = true;
+        publishBtn.textContent = 'Publishing…';
+
+        getToken().then(function(token) {
+          if (!token) {
+            publishBtn.disabled = false;
+            publishBtn.textContent = 'Publish selected to Shopify';
+            window.location.href = '/stores-connect-shopify.html?return=flow-batch-review';
+            return;
+          }
+          var base = pubUrl.replace(/\/$/, '');
+          return fetch(base + '/api/user/connected-stores', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(stores) {
+              if (!stores || !stores.shopify || stores.shopify.status !== 'connected') {
+                publishBtn.disabled = false;
+                publishBtn.textContent = 'Publish selected to Shopify';
+                window.location.href = '/stores-connect-shopify.html?return=flow-batch-review';
+                return null;
+              }
+              return token;
+            });
+        }).then(function(token) {
+          if (!token) return;
+          var base = pubUrl.replace(/\/$/, '');
+          var list = toPublish.map(function(d) { return buildUniversalData(d); });
+          var chain = Promise.resolve();
+          list.forEach(function(universal_data) {
+            chain = chain.then(function() {
+              return fetch(base + '/api/listings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ universal_data: universal_data })
+              }).then(function(r) {
+                if (!r.ok) return r.json().then(function(j) { throw new Error(j.error || r.statusText); });
+                return r.json();
+              }).then(function(res) {
+                var listingId = res.listing_id;
+                if (!listingId) throw new Error('No listing id returned');
+                return fetch(base + '/api/listings/publish', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                  body: JSON.stringify({ listing_id: listingId, platforms: ['shopify'] })
+                }).then(function(r2) {
+                  if (!r2.ok) return r2.json().then(function(j) { throw new Error(j.error || r2.statusText); });
+                  return r2.json();
+                });
+              });
+            });
+          });
+          return chain;
+        }).then(function() {
+          publishBtn.textContent = 'Done';
+          setTimeout(function() { window.location.href = '/flow-success.html'; }, 500);
+        }).catch(function(err) {
+          publishBtn.disabled = false;
+          publishBtn.textContent = 'Publish selected to Shopify';
+          var msg = err.message || 'Publish failed.';
+          if (msg === 'Failed to fetch' || (err && err.name === 'TypeError')) {
+            msg = 'Couldn\'t reach the publishing service. Start it from auralink-ai/publishing: npm run dev.';
+          }
+          alert(msg);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

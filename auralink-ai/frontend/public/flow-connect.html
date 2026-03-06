@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connect your stores | Listing Flow | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .step-segment { width: 8px; height: 4px; border-radius: 2px; background: #e4e4e7; }
+    .step-segment.filled { background: #18181b; }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+      <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0">
+      <span class="w-10 h-10" aria-hidden="true"></span>
+      <span class="invisible text-sm">Next</span>
+    </header>
+
+    <main class="flex-1 px-5 pb-6 overflow-auto">
+      <h1 class="font-serif text-xl font-bold text-zinc-900 mb-2 text-center">Connect your stores</h1>
+      <p class="text-center text-sm text-zinc-500 mb-1">You selected where to list. One click connects all of them — we’ll guide you through each store.</p>
+      <p class="text-center text-xs text-zinc-400 mb-5" id="connect-progress-text"></p>
+
+      <div class="space-y-3" id="connect-cards"></div>
+
+      <p class="text-center text-xs text-zinc-400 mt-4">You can connect or manage more stores anytime in Settings.</p>
+    </main>
+
+    <div class="p-5 pt-4 border-t border-zinc-200 shrink-0 bg-zinc-50">
+      <div class="flex items-center justify-center gap-1 mb-4">
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment"></span>
+      </div>
+      <button type="button" id="connect-primary-btn" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center mb-2">
+        <!-- Filled by JS: "Connect all selected stores" or "Continue to preview" -->
+      </button>
+      <a href="/flow-verifying.html" id="connect-skip-link" class="block text-center text-sm font-medium text-zinc-500 hover:text-zinc-700 no-underline" style="display: none;">Skip for now</a>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowLeft') return;
+      if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
+      e.preventDefault();
+      history.back();
+    });
+  </script>
+  <script>
+    (function() {
+      var STORAGE_KEY = 'auralink_selected_marketplaces';
+      var CONNECTED_KEY = 'auralink_connected_stores';
+
+      var marketplaceMeta = {
+        tiktok_shop: { name: 'TikTok Shop', domain: 'tiktok.com', letter: 'T', connectHref: '/stores-list.html?from=flow-connect' },
+        amazon:       { name: 'Amazon', domain: 'amazon.com', letter: 'A', connectHref: '/stores-connect-amazon.html?return=flow-connect' },
+        shopify:      { name: 'Shopify', domain: 'shopify.com', letter: 'S', connectHref: '/stores-connect-shopify.html?return=flow-connect' },
+        ebay:         { name: 'eBay', domain: 'ebay.com', letter: 'E', connectHref: '/stores-list.html?from=flow-connect' }
+      };
+
+      function loadSelected() {
+        try {
+          var raw = sessionStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            var arr = JSON.parse(raw);
+            if (Array.isArray(arr) && arr.length > 0) return arr;
+          }
+        } catch (e) {}
+        return ['amazon', 'shopify'];
+      }
+
+      function loadConnected() {
+        try {
+          var raw = sessionStorage.getItem(CONNECTED_KEY);
+          if (raw) {
+            var obj = JSON.parse(raw);
+            if (obj && typeof obj === 'object') return obj;
+          }
+        } catch (e) {}
+        return {};
+      }
+
+      function setConnected(id) {
+        var o = loadConnected();
+        o[id] = true;
+        try { sessionStorage.setItem(CONNECTED_KEY, JSON.stringify(o)); } catch (e) {}
+      }
+
+      function getFirstUnconnected(selected, connected) {
+        for (var i = 0; i < selected.length; i++) {
+          if (!connected[selected[i]]) return selected[i];
+        }
+        return null;
+      }
+
+      var selected = loadSelected();
+      var connected = loadConnected();
+
+      var params = new URLSearchParams(window.location.search);
+      var justConnected = params.get('connected');
+      if (justConnected && marketplaceMeta[justConnected]) {
+        setConnected(justConnected);
+        connected = loadConnected();
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      }
+
+      var unconnectedCount = selected.filter(function(id) { return !connected[id]; }).length;
+      var connectedCount = selected.length - unconnectedCount;
+
+      var container = document.getElementById('connect-cards');
+      var progressEl = document.getElementById('connect-progress-text');
+      var primaryBtn = document.getElementById('connect-primary-btn');
+      var skipLink = document.getElementById('connect-skip-link');
+
+      if (container) {
+        selected.forEach(function(id) {
+          var meta = marketplaceMeta[id];
+          if (!meta) return;
+          var isConnected = !!connected[id];
+
+          var card = document.createElement('div');
+          card.className = 'rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between';
+          card.setAttribute('data-marketplace', id);
+
+          var logoUrl = 'https://www.google.com/s2/favicons?domain=' + meta.domain + '&sz=128';
+          card.innerHTML =
+            '<div class="flex items-center gap-3">' +
+              '<span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">' +
+                '<img src="' + logoUrl + '" alt="' + meta.name + '" class="w-6 h-6 object-contain" onerror="this.style.display=\'none\';var s=this.nextElementSibling;s&&s.classList.remove(\'hidden\');" />' +
+                '<span class="text-zinc-600 text-sm font-bold hidden">' + meta.letter + '</span>' +
+              '</span>' +
+              '<div>' +
+                '<p class="font-semibold text-zinc-900">' + meta.name + '</p>' +
+                '<p class="text-xs ' + (isConnected ? 'text-emerald-600' : 'text-zinc-500') + '">' + (isConnected ? 'Connected' : 'Not connected') + '</p>' +
+              '</div>' +
+            '</div>' +
+            (isConnected
+              ? '<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Active</span>'
+              : '<span class="text-xs font-medium text-zinc-400">Pending</span>');
+
+          container.appendChild(card);
+        });
+      }
+
+      if (progressEl) {
+        if (connectedCount > 0 && unconnectedCount > 0) {
+          progressEl.textContent = connectedCount + ' of ' + selected.length + ' connected';
+        } else if (connectedCount === selected.length && selected.length > 0) {
+          progressEl.textContent = 'All connected';
+        } else {
+          progressEl.textContent = '';
+        }
+      }
+
+      if (primaryBtn) {
+        if (unconnectedCount > 0) {
+          primaryBtn.textContent = unconnectedCount === selected.length
+            ? 'Connect all selected stores'
+            : 'Continue connecting (' + unconnectedCount + ' left)';
+          primaryBtn.onclick = function() {
+            var first = getFirstUnconnected(selected, connected);
+            if (first && marketplaceMeta[first]) {
+              window.location.href = marketplaceMeta[first].connectHref;
+            }
+          };
+        } else {
+          primaryBtn.textContent = 'Continue to preview';
+          primaryBtn.onclick = function() {
+            window.location.href = '/flow-verifying.html';
+          };
+        }
+      }
+
+      if (skipLink) {
+        skipLink.style.display = unconnectedCount > 0 ? 'block' : 'none';
+      }
+    })();
+  </script>
+</body>
+</html>

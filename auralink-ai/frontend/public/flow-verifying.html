@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="auralink-publishing-url" content="http://localhost:8001" />
+  <title>Verifying | Listing Flow | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .step-segment { width: 8px; height: 4px; border-radius: 2px; background: #e4e4e7; }
+    .step-segment.filled { background: #18181b; }
+    .modal-backdrop { background: rgba(0,0,0,0.4); }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0">
+      <span class="w-10 h-10" aria-hidden="true"></span>
+      <span class="invisible text-sm">Next</span>
+    </header>
+
+    <main class="flex-1 px-5 pb-6 overflow-auto flex flex-col items-center justify-center">
+      <h1 class="font-serif text-xl font-bold text-zinc-900 mb-2 text-center">Verifying</h1>
+      <p class="text-center text-sm text-zinc-500 mb-6">Confirm your stores and listing before pushing live.</p>
+      <button type="button" id="open-modal-btn" class="py-3 px-6 rounded-2xl bg-zinc-200 text-zinc-600 font-semibold text-[15px] border border-zinc-300">
+        Show confirmation
+      </button>
+    </main>
+
+    <div class="p-5 pt-4 border-t border-zinc-200 shrink-0 bg-zinc-50">
+      <div class="flex items-center justify-center gap-1 mb-4">
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: full review, all fields editable -->
+  <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" aria-modal="true" role="dialog">
+    <div class="bg-white rounded-2xl border border-zinc-200 shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="p-5 border-b border-zinc-100 shrink-0">
+        <h2 class="font-serif text-lg font-bold text-zinc-900">Confirm your listing</h2>
+        <p class="text-xs text-zinc-500 mt-0.5">Review and edit any field, then push live.</p>
+      </div>
+      <div class="flex-1 overflow-y-auto p-5 space-y-4">
+        <!-- Stores -->
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Stores</p>
+          <div id="modal-stores-list" class="flex flex-wrap gap-2"></div>
+        </div>
+        <!-- Shopify: Product information (match Add product in Shopify admin) -->
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Product information</p>
+          <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-3" id="product-details-fields">
+            <div data-field="title">
+              <label for="modal-title" class="block text-xs font-medium text-zinc-600 mb-0.5">Title</label>
+              <input type="text" id="modal-title" class="w-full text-sm font-medium text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Product title" />
+            </div>
+            <div data-field="description">
+              <label for="modal-description" class="block text-xs font-medium text-zinc-600 mb-0.5">Description</label>
+              <textarea id="modal-description" rows="4" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400 resize-none min-h-[6rem] overflow-hidden" placeholder="Full product description" data-auto-resize></textarea>
+            </div>
+            <div data-field="media">
+              <p class="text-xs text-zinc-500">Media: photos from the previous step are included. Upload or change them there.</p>
+            </div>
+            <div data-field="category">
+              <label for="modal-category" class="block text-xs font-medium text-zinc-600 mb-0.5">Category</label>
+              <p class="text-[11px] text-zinc-500 mt-0.5 mb-1">Determines tax rates and adds metafields to improve search, filters, and cross-channel sales.</p>
+              <input type="text" id="modal-category" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Choose a product category" list="modal-category-list" />
+              <datalist id="modal-category-list">
+                <option value="Apparel &amp; accessories" /><option value="Electronics" /><option value="Home &amp; garden" /><option value="Health &amp; beauty" /><option value="Sports &amp; recreation" /><option value="Toys &amp; games" /><option value="Food &amp; beverage" /><option value="Other" />
+              </datalist>
+            </div>
+            <div data-field="tags" id="product-details-tags-row" style="display: none;">
+              <label class="block text-xs font-medium text-zinc-600 mb-1">Tags</label>
+              <div id="modal-tags-wrap-inline" class="flex flex-wrap gap-1.5 mb-1.5"></div>
+              <div class="flex gap-1">
+                <input type="text" id="modal-tag-input-inline" class="flex-1 min-w-0 text-sm px-2 py-1.5 rounded-lg border border-zinc-200 bg-white focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Shape, colour, style, function, etc." />
+                <button type="button" id="modal-tag-add-inline" class="px-2.5 py-1.5 rounded-lg border border-zinc-200 text-zinc-700 text-xs font-medium shrink-0">Add</button>
+              </div>
+              <p class="text-[11px] text-zinc-500 mt-0.5">Up to 13 tags. <span id="modal-etsy-tags-left">13</span> left</p>
+            </div>
+          </div>
+        </div>
+        <!-- Etsy-only: full form sections (shown when only Etsy selected) -->
+        <div id="modal-etsy-sections" class="hidden space-y-4">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Price &amp; Inventory</p>
+            <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-3">
+              <div>
+                <label for="modal-etsy-price" class="block text-xs font-medium text-zinc-600 mb-0.5">Price*</label>
+                <div class="flex items-center gap-1">
+                  <input type="text" id="modal-etsy-price" inputmode="decimal" class="flex-1 max-w-[120px] text-sm font-semibold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="0.00" />
+                  <span class="text-sm text-zinc-600">GBP</span>
+                </div>
+              </div>
+              <div>
+                <label for="modal-etsy-quantity" class="block text-xs font-medium text-zinc-600 mb-0.5">Quantity*</label>
+                <input type="number" id="modal-etsy-quantity" min="0" class="w-full max-w-[120px] text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="0" />
+              </div>
+              <button type="button" id="modal-etsy-add-sku" class="text-xs font-medium text-zinc-700 border border-zinc-200 rounded-lg px-2.5 py-1.5 hover:bg-zinc-100">+ Add SKU</button>
+            </div>
+          </div>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Variations</p>
+            <p class="text-xs text-zinc-500 mb-2">If your item is offered in different colours, sizes, materials, etc.</p>
+            <button type="button" class="text-xs font-medium text-zinc-700 border border-zinc-200 rounded-lg px-2.5 py-1.5 hover:bg-zinc-100">+ Add variations</button>
+          </div>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Details</p>
+            <p class="text-xs text-zinc-500 mb-2">Share specifics to make it easier to find in search.</p>
+            <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-3">
+              <div class="flex items-center justify-between rounded-lg bg-zinc-100 border border-zinc-200 p-2">
+                <span class="text-xs">Physical item · A member of my shop · A finished product</span>
+                <button type="button" class="text-xs font-medium text-zinc-600 hover:text-zinc-900">Change</button>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-zinc-600 mb-0.5">Attributes</label>
+                <input type="text" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Materials, gold solidity, gemstone, colour, etc." />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-zinc-600 mb-0.5">Materials (transparency)</label>
+                <input type="text" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Ingredients, components, etc." />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-zinc-600 mb-0.5">GPSR manufacturer and safety information</label>
+                <button type="button" class="text-xs font-medium text-zinc-600 border border-zinc-200 rounded-lg px-2.5 py-1.5 hover:bg-zinc-100">+ Add info</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Processing &amp; Delivery</p>
+            <p class="text-xs text-zinc-500 mb-2">Delivery profile and order processing schedule.</p>
+            <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-zinc-600 mb-0.5">Processing profile*</label>
+                <div class="flex items-center justify-between rounded border border-zinc-200 p-2 bg-white"><span class="text-xs">Ready to dispatch 1-2 days</span><button type="button" class="text-xs font-medium text-zinc-600">Change profile</button></div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-zinc-600 mb-0.5">Delivery option*</label>
+                <div class="flex gap-1"><button type="button" class="text-xs font-medium text-zinc-600 border border-zinc-200 rounded px-2 py-1.5 hover:bg-zinc-100">+ Create option</button><button type="button" class="text-xs font-medium text-zinc-600 border border-zinc-200 rounded px-2 py-1.5 hover:bg-zinc-100">Select profile</button></div>
+              </div>
+              <button type="button" class="text-xs text-zinc-500 hover:text-zinc-700">Preview postage cost ▼</button>
+            </div>
+          </div>
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Settings</p>
+            <p class="text-xs text-zinc-500 mb-2">Returns, shop section, featuring, Etsy Ads, renewal.</p>
+            <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-zinc-600 mb-0.5">Returns and exchanges*</label>
+                <div class="rounded border border-sky-200 bg-sky-50 p-2 text-xs text-zinc-700">Simple policy 30 days. <button type="button" class="font-medium text-zinc-800 underline">Apply this policy</button></div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-zinc-600 mb-0.5">Shop section</label>
+                <select class="w-full text-sm bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400"><option value="">None</option><option value="Necklaces">Necklaces</option><option value="Bracelets">Bracelets</option></select>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-zinc-600">Feature this listing</span>
+                <button type="button" id="modal-etsy-feature" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-zinc-200 transition-colors"><span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition translate-x-1"></span></button>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-zinc-600">Etsy Ads</span>
+                <button type="button" id="modal-etsy-ads" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-zinc-200 transition-colors"><span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition translate-x-1"></span></button>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-zinc-600 mb-0.5">Renewal options*</label>
+                <div class="space-y-1 text-xs">
+                  <label class="flex items-center gap-2"><input type="radio" name="modal-etsy-renewal" value="automatic" checked class="rounded border-zinc-300"> Automatic — renew for USD 0.20 each time (recommended)</label>
+                  <label class="flex items-center gap-2"><input type="radio" name="modal-etsy-renewal" value="manual" class="rounded border-zinc-300"> Manual — I'll renew myself</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Price (Shopify: Selling price, Compare at, Cost per item, Charge tax) -->
+        <div id="modal-section-price" class="modal-platform-section modal-platform-shopify">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Price</p>
+          <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label for="modal-price" class="block text-xs font-medium text-zinc-600 mb-0.5">Selling price</label>
+                <div class="flex items-center gap-1">
+                  <span class="text-zinc-600 font-medium">£</span>
+                  <input type="text" id="modal-price" inputmode="decimal" class="flex-1 text-sm font-semibold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="0.00" />
+                </div>
+                <p id="modal-price-from-web-hint" class="text-[10px] text-zinc-500 mt-1 hidden">Average across UK retailers</p>
+              </div>
+              <div class="hidden">
+                <label for="modal-compare-at" class="block text-xs font-medium text-zinc-600 mb-0.5">Compare at</label>
+                <div class="flex items-center gap-1">
+                  <span class="text-zinc-600 font-medium">£</span>
+                  <input type="text" id="modal-compare-at" inputmode="decimal" class="flex-1 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="0.00" />
+                </div>
+              </div>
+              <div>
+                <label for="modal-cost-per-item" class="block text-xs font-medium text-zinc-600 mb-0.5">Cost per item</label>
+                <div class="flex items-center gap-1">
+                  <span class="text-zinc-600 font-medium">£</span>
+                  <input type="text" id="modal-cost-per-item" inputmode="decimal" class="flex-1 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="0.00" />
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 hidden">
+              <input type="checkbox" id="modal-charge-tax" checked class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400" />
+              <label for="modal-charge-tax" class="text-xs font-medium text-zinc-600">Charge tax</label>
+            </div>
+          </div>
+        </div>
+        <!-- Inventory (Shopify: Tracked, Quantity, SKU, Barcode, Sell when out of stock) -->
+        <div id="modal-section-inventory" class="modal-platform-section modal-platform-shopify">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Inventory</p>
+          <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-3">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="modal-inventory-tracked" checked class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400" />
+              <label for="modal-inventory-tracked" class="text-xs font-medium text-zinc-600">Inventory tracked</label>
+            </div>
+            <div id="modal-inventory-fields" class="space-y-3">
+              <div>
+                <label for="modal-quantity" class="block text-xs font-medium text-zinc-600 mb-0.5">Quantity</label>
+                <input type="number" id="modal-quantity" min="0" class="w-full max-w-[120px] text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="0" />
+              </div>
+              <div>
+                <label for="modal-sku" class="block text-xs font-medium text-zinc-600 mb-0.5">SKU</label>
+                <input type="text" id="modal-sku" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="SKU" />
+              </div>
+              <div>
+                <label for="modal-barcode" class="block text-xs font-medium text-zinc-600 mb-0.5">Barcode</label>
+                <input type="text" id="modal-barcode" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="UPC, EAN, etc." />
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="modal-sell-out-of-stock" class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400" />
+              <label for="modal-sell-out-of-stock" class="text-xs font-medium text-zinc-600">Sell when out of stock</label>
+            </div>
+          </div>
+        </div>
+        <!-- Shipping (Shopify: Physical product, Weight, Country of origin, HS code) -->
+        <div id="modal-section-shipping" class="modal-platform-section modal-platform-shopify">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Shipping</p>
+          <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-3">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="modal-physical-product" checked class="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400" />
+              <label for="modal-physical-product" class="text-xs font-medium text-zinc-600">Physical product</label>
+            </div>
+            <div>
+              <label for="modal-weight" class="block text-xs font-medium text-zinc-600 mb-0.5">Product weight (kg)</label>
+              <input type="text" id="modal-weight" inputmode="decimal" class="w-full max-w-[120px] text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="0.0" />
+            </div>
+            <div>
+              <label for="modal-country-origin" class="block text-xs font-medium text-zinc-600 mb-0.5">Country of origin</label>
+              <input type="text" id="modal-country-origin" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="e.g. United Kingdom" />
+            </div>
+            <div>
+              <label for="modal-hs-code" class="block text-xs font-medium text-zinc-600 mb-0.5">HS code</label>
+              <input type="text" id="modal-hs-code" class="w-full max-w-[120px] text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Harmonized code" />
+            </div>
+          </div>
+        </div>
+        <!-- Product organization (Shopify: Type, Vendor, Tags) -->
+        <div id="modal-section-organization" class="modal-platform-section modal-platform-shopify">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Product organization</p>
+          <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label for="modal-product-type" class="block text-xs font-medium text-zinc-600 mb-0.5">Type</label>
+                <input type="text" id="modal-product-type" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Product type" />
+              </div>
+              <div>
+                <label for="modal-vendor" class="block text-xs font-medium text-zinc-600 mb-0.5">Vendor</label>
+                <input type="text" id="modal-vendor" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Vendor / brand" />
+              </div>
+            </div>
+            <div data-field="tags">
+              <label class="block text-xs font-medium text-zinc-600 mb-1">Tags</label>
+              <div id="modal-tags-wrap" class="flex flex-wrap gap-1.5 mb-1.5"></div>
+              <div class="flex gap-1">
+                <input type="text" id="modal-tag-input" class="flex-1 min-w-0 text-sm px-2 py-1.5 rounded-lg border border-zinc-200 bg-white focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Add tag…" />
+                <button type="button" id="modal-tag-add" class="px-2.5 py-1.5 rounded-lg border border-zinc-200 text-zinc-700 text-xs font-medium shrink-0">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Search engine listing (Shopify) -->
+        <div id="modal-section-seo" class="modal-platform-section modal-platform-shopify">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Search engine listing</p>
+          <p class="text-[11px] text-zinc-500 mb-2">Add a title and description to see how this product might appear in a search engine listing.</p>
+          <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-4 space-y-3">
+            <div>
+              <label for="modal-seo-title" class="block text-xs font-medium text-zinc-600 mb-0.5">Page title</label>
+              <input type="text" id="modal-seo-title" readonly class="w-full text-sm text-zinc-600 bg-zinc-100 border border-zinc-200 rounded-lg px-3 py-2" placeholder="Uses product title" />
+            </div>
+            <div>
+              <label for="modal-meta-description" class="block text-xs font-medium text-zinc-600 mb-0.5">Meta description</label>
+              <textarea id="modal-meta-description" rows="2" maxlength="320" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400 resize-none" placeholder="Brief description for search engines"></textarea>
+              <p class="text-[11px] text-zinc-500 mt-0.5"><span id="modal-meta-desc-count">0</span>/320</p>
+            </div>
+          </div>
+        </div>
+        <!-- Status (Shopify: Active / Draft) -->
+        <div id="modal-section-status" class="modal-platform-section modal-platform-shopify">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">Status</p>
+          <div id="modal-status-pills" class="flex gap-2">
+            <button type="button" data-status="active" class="modal-status-pill flex-1 px-4 py-2 rounded-lg text-sm font-medium border border-zinc-200 bg-white text-zinc-700">Active</button>
+            <button type="button" data-status="draft" class="modal-status-pill flex-1 px-4 py-2 rounded-lg text-sm font-medium border bg-zinc-900 text-white border-zinc-900">Draft</button>
+          </div>
+          <input type="hidden" id="modal-status" value="draft" />
+        </div>
+        <div class="pt-2">
+          <a href="/landing.html" class="block w-full py-3 rounded-xl border border-zinc-200 text-zinc-600 font-medium text-sm text-center no-underline hover:bg-zinc-50 transition-colors">Scan another item</a>
+        </div>
+      </div>
+      <div class="p-5 border-t border-zinc-100 shrink-0 flex flex-col gap-2">
+        <p class="text-xs text-zinc-500 text-center">Need to connect Shopify? <a href="/flow-marketplaces.html" class="font-medium text-zinc-900 underline">Choose marketplaces</a> → Connect store.</p>
+        <button type="button" id="modal-push-live-btn" class="w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800">
+          Push live
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var DRAFT_KEY = 'auralink_review_draft';
+      var STORAGE_KEY = 'auralink_selected_marketplaces';
+      var CONNECTED_KEY = 'auralink_connected_stores';
+      var marketplaceNames = { tiktok_shop: 'TikTok Shop', amazon: 'Amazon', shopify: 'Shopify', ebay: 'eBay', etsy: 'Etsy', depop: 'Depop', walmart: 'Walmart', poshmark: 'Poshmark', mercari: 'Mercari', vinted: 'Vinted' };
+      var marketplaceDomains = { tiktok_shop: 'tiktok.com', amazon: 'amazon.com', shopify: 'shopify.com', ebay: 'ebay.com', etsy: 'etsy.com', depop: 'depop.com', walmart: 'walmart.com', poshmark: 'poshmark.com', mercari: 'mercari.com', vinted: 'vinted.com' };
+      var CONDITIONS = ['New', 'Like new', 'Good', 'Fair', 'For parts'];
+
+      var storeIdToPlatformKey = { shopify: 'shopify', etsy: 'etsy', ebay: 'ebay', amazon: 'amazon', tiktok_shop: 'tiktok' };
+      var platformDisplayNames = { shopify: 'Shopify', etsy: 'Etsy', tiktok: 'TikTok Shop', ebay: 'eBay', amazon: 'Amazon' };
+
+      function getPublishingUrl() {
+        var meta = document.querySelector('meta[name="auralink-publishing-url"]');
+        var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
+        // When opened from phone/LAN (e.g. 192.168.x.x), use same host with port 8001 so publishing API is reachable
+        var host = window.location.hostname;
+        if (host && host !== 'localhost' && host !== '127.0.0.1' && (url.indexOf('localhost') !== -1 || url.indexOf('127.0.0.1') !== -1)) {
+          url = window.location.protocol + '//' + host + ':8001';
+        }
+        return url;
+      }
+
+      var platformFieldsCache = null;
+      function fetchPlatformFieldsIfNeeded(selected, cb) {
+        if (platformFieldsCache !== null) { if (cb) cb(platformFieldsCache); return; }
+        var url = getPublishingUrl();
+        var apiUrl = url.replace(/\/$/, '') + '/api/listings/platform-fields';
+        fetch(apiUrl).then(function(r) { return r.ok ? r.json() : null; }).then(function(data) {
+          platformFieldsCache = data && typeof data === 'object' ? data : null;
+          if (cb) cb(platformFieldsCache);
+        }).catch(function() {
+          platformFieldsCache = null;
+          if (cb) cb(null);
+        });
+      }
+
+      function buildPlatformFieldSets(selected, platformFields) {
+        var requiredSet = {};
+        var optionalSet = {};
+        var requiredBy = {};
+        if (!platformFields || !selected || selected.length === 0) return { requiredSet: requiredSet, optionalSet: optionalSet, requiredBy: requiredBy };
+        selected.forEach(function(storeId) {
+          var key = storeIdToPlatformKey[storeId];
+          if (!key || !platformFields[key]) return;
+          var req = platformFields[key].required;
+          var opt = platformFields[key].optional;
+          var name = platformDisplayNames[key] || key;
+          if (Array.isArray(req)) {
+            req.forEach(function(f) {
+              requiredSet[f] = true;
+              if (!requiredBy[f]) requiredBy[f] = []; requiredBy[f].push(name);
+            });
+          }
+          if (Array.isArray(opt)) opt.forEach(function(f) { optionalSet[f] = true; });
+        });
+        return { requiredSet: requiredSet, optionalSet: optionalSet, requiredBy: requiredBy };
+      }
+
+      function applyPlatformVisibility(selected, platformFields) {
+        var sets = buildPlatformFieldSets(selected, platformFields);
+        var requiredBy = sets.requiredBy;
+        var optionalSet = sets.optionalSet;
+        var hasPlatformRules = selected && selected.length > 0 && platformFields;
+        var allFieldRows = document.querySelectorAll('#product-details-fields [data-field]');
+        allFieldRows.forEach(function(row) {
+          var field = row.getAttribute('data-field');
+          if (!field) return;
+          var isRequired = !!requiredBy[field];
+          var isOptional = !!optionalSet[field];
+          if (field === 'upc') {
+            isRequired = isRequired || !!requiredBy['ean'];
+            isOptional = isOptional || !!optionalSet['ean'];
+          }
+          var show = !hasPlatformRules || isRequired || isOptional;
+          row.style.display = show ? '' : 'none';
+          var label = row.querySelector('label');
+          var requiredFor = (requiredBy[field] || []).slice();
+          if (field === 'upc' && requiredBy['ean']) requiredFor = requiredFor.concat(requiredBy['ean']);
+          var uniq = requiredFor.filter(function(v, i, a) { return a.indexOf(v) === i; });
+          if (label && uniq.length) {
+            var badge = label.querySelector('.platform-required-badge');
+            var text = 'Required for ' + uniq.join(', ');
+            if (badge) badge.textContent = text;
+            else {
+              badge = document.createElement('span');
+              badge.className = 'platform-required-badge ml-1 text-[10px] font-medium text-amber-600';
+              badge.textContent = text;
+              label.appendChild(badge);
+            }
+          } else if (label) {
+            var oldBadge = label.querySelector('.platform-required-badge');
+            if (oldBadge) oldBadge.remove();
+          }
+        });
+      }
+
+      function applyEtsyView(selected) {
+        var isEtsyOnly = selected.length > 0 && selected.every(function(id) {
+          return id === 'etsy' || storeIdToPlatformKey[id] === 'etsy';
+        });
+        var shopifySections = document.querySelectorAll('.modal-platform-section.modal-platform-shopify');
+        var tagsRowInline = document.getElementById('product-details-tags-row');
+        var etsySections = document.getElementById('modal-etsy-sections');
+        if (isEtsyOnly) {
+          shopifySections.forEach(function(el) { if (el) el.style.display = 'none'; });
+          if (tagsRowInline) tagsRowInline.style.display = '';
+          if (etsySections) { etsySections.classList.remove('hidden'); etsySections.style.display = ''; }
+        } else {
+          shopifySections.forEach(function(el) { if (el) el.style.display = ''; });
+          if (tagsRowInline) tagsRowInline.style.display = 'none';
+          if (etsySections) { etsySections.classList.add('hidden'); etsySections.style.display = 'none'; }
+        }
+      }
+
+      function loadDraft() {
+        try {
+          var raw = sessionStorage.getItem(DRAFT_KEY);
+          if (raw) {
+            var d = JSON.parse(raw);
+            if (d && typeof d === 'object') return d;
+          }
+        } catch (e) {}
+        return {
+          title: '', price: '', description: '', category: '', condition: 'New', tags: [], brand: '', model: '', material: '', weight_kg: '', dimensions: { l: '', w: '', h: '' }, upc: '', sku: '', asin: '', colour: '', extraction: null, photos: [],
+          compare_at: '', cost_per_item: '', charge_tax: true, inventory_tracked: true, quantity: 0, barcode: '', sell_when_out_of_stock: false, physical_product: true, country_of_origin: '', hs_code: '', product_type: '', vendor: '', status: 'draft', meta_description: ''
+        };
+      }
+
+      function saveDraft(draft) {
+        try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch (e) {}
+      }
+
+      function loadSelected() {
+        try {
+          var raw = sessionStorage.getItem(STORAGE_KEY);
+          if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr)) return arr; }
+        } catch (e) {}
+        return [];
+      }
+
+      function loadConnected() {
+        try {
+          var raw = sessionStorage.getItem(CONNECTED_KEY);
+          if (raw) { var o = JSON.parse(raw); if (o && typeof o === 'object') return o; }
+        } catch (e) {}
+        return {};
+      }
+
+      var modal = document.getElementById('confirm-modal');
+      var openBtn = document.getElementById('open-modal-btn');
+      var pushLiveBtn = document.getElementById('modal-push-live-btn');
+      var storesList = document.getElementById('modal-stores-list');
+      var titleInput = document.getElementById('modal-title');
+      var priceInput = document.getElementById('modal-price');
+      var descInput = document.getElementById('modal-description');
+      var categoryInput = document.getElementById('modal-category');
+      var compareAtInput = document.getElementById('modal-compare-at');
+      var costPerItemInput = document.getElementById('modal-cost-per-item');
+      var chargeTaxCheck = document.getElementById('modal-charge-tax');
+      var inventoryTrackedCheck = document.getElementById('modal-inventory-tracked');
+      var quantityInput = document.getElementById('modal-quantity');
+      var skuInput = document.getElementById('modal-sku');
+      var barcodeInput = document.getElementById('modal-barcode');
+      var sellOutOfStockCheck = document.getElementById('modal-sell-out-of-stock');
+      var physicalProductCheck = document.getElementById('modal-physical-product');
+      var weightInput = document.getElementById('modal-weight');
+      var countryOriginInput = document.getElementById('modal-country-origin');
+      var hsCodeInput = document.getElementById('modal-hs-code');
+      var productTypeInput = document.getElementById('modal-product-type');
+      var vendorInput = document.getElementById('modal-vendor');
+      var tagsWrap = document.getElementById('modal-tags-wrap');
+      var tagInput = document.getElementById('modal-tag-input');
+      var tagAddBtn = document.getElementById('modal-tag-add');
+      var seoTitleInput = document.getElementById('modal-seo-title');
+      var metaDescInput = document.getElementById('modal-meta-description');
+      var metaDescCount = document.getElementById('modal-meta-desc-count');
+      var statusHidden = document.getElementById('modal-status');
+      var statusPills = document.getElementById('modal-status-pills');
+
+      var modalTags = [];
+
+      function setStatus(val) {
+        if (statusHidden) statusHidden.value = val || 'draft';
+        if (statusPills) {
+          statusPills.querySelectorAll('.modal-status-pill').forEach(function(btn) {
+            var s = (btn.getAttribute('data-status') || '').trim();
+            var on = s === (val || 'draft');
+            btn.className = 'modal-status-pill flex-1 px-4 py-2 rounded-lg text-sm font-medium border ' + (on ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-white text-zinc-700 border-zinc-200');
+          });
+        }
+      }
+
+      function updateMetaDescCount() {
+        if (metaDescCount && metaDescInput) metaDescCount.textContent = (metaDescInput.value || '').length;
+      }
+
+      function renderModalTags() {
+        if (!tagsWrap) return;
+        var html = '';
+        modalTags.forEach(function(tag, i) {
+          html += '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-200 text-zinc-800 text-xs font-medium">' + tag + ' <button type="button" class="modal-tag-remove text-zinc-500 hover:text-zinc-800" data-i="' + i + '" aria-label="Remove">×</button></span>';
+        });
+        tagsWrap.innerHTML = html;
+        var tagsWrapInline = document.getElementById('modal-tags-wrap-inline');
+        if (tagsWrapInline) tagsWrapInline.innerHTML = html;
+        var tagsLeftEl = document.getElementById('modal-etsy-tags-left');
+        if (tagsLeftEl) tagsLeftEl.textContent = Math.max(0, 13 - modalTags.length);
+        tagsWrap.querySelectorAll('.modal-tag-remove').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var i = parseInt(btn.getAttribute('data-i'), 10);
+            if (!isNaN(i) && i >= 0 && i < modalTags.length) {
+              modalTags.splice(i, 1);
+              renderModalTags();
+            }
+          });
+        });
+        if (tagsWrapInline) {
+          tagsWrapInline.querySelectorAll('.modal-tag-remove').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var i = parseInt(btn.getAttribute('data-i'), 10);
+              if (!isNaN(i) && i >= 0 && i < modalTags.length) {
+                modalTags.splice(i, 1);
+                renderModalTags();
+              }
+            });
+          });
+        }
+      }
+
+      function openModal() {
+        var draft = loadDraft();
+
+        if (titleInput) titleInput.value = (draft.title || '').trim();
+        if (descInput) descInput.value = (draft.description || '').trim();
+        if (descInput) {
+          descInput.style.height = 'auto';
+          descInput.style.height = Math.max(96, descInput.scrollHeight) + 'px';
+        }
+        if (categoryInput) categoryInput.value = (draft.category || '').trim();
+        if (priceInput) priceInput.value = (draft.price != null && draft.price !== '') ? String(draft.price).replace(/^\$|^£/, '').trim() : '';
+        var priceFromWebHint = document.getElementById('modal-price-from-web-hint');
+        if (priceFromWebHint) priceFromWebHint.classList.toggle('hidden', !(draft.extraction && draft.extraction.price_from_web));
+        if (compareAtInput) compareAtInput.value = (draft.compare_at != null && draft.compare_at !== '') ? String(draft.compare_at).replace(/^\$|^£/, '').trim() : '';
+        if (costPerItemInput) costPerItemInput.value = (draft.cost_per_item != null && draft.cost_per_item !== '') ? String(draft.cost_per_item).replace(/^\$|^£/, '').trim() : '';
+        if (chargeTaxCheck) chargeTaxCheck.checked = draft.charge_tax !== false;
+        if (inventoryTrackedCheck) inventoryTrackedCheck.checked = draft.inventory_tracked !== false;
+        if (quantityInput) quantityInput.value = draft.quantity != null ? draft.quantity : '';
+        if (skuInput) skuInput.value = (draft.sku || '').trim();
+        if (barcodeInput) barcodeInput.value = (draft.barcode || '').trim();
+        if (sellOutOfStockCheck) sellOutOfStockCheck.checked = !!draft.sell_when_out_of_stock;
+        if (physicalProductCheck) physicalProductCheck.checked = draft.physical_product !== false;
+        if (weightInput) weightInput.value = (draft.weight_kg != null && draft.weight_kg !== '') ? String(draft.weight_kg).trim() : '';
+        if (countryOriginInput) countryOriginInput.value = (draft.country_of_origin || '').trim();
+        if (hsCodeInput) hsCodeInput.value = (draft.hs_code || '').trim();
+        if (productTypeInput) productTypeInput.value = (draft.product_type || draft.category || '').trim();
+        if (vendorInput) vendorInput.value = (draft.vendor || draft.brand || '').trim();
+        var metaVal = (draft.meta_description || '').trim();
+        if (!metaVal) {
+          var title = (draft.title || '').trim();
+          var desc = (draft.description || '').trim();
+          metaVal = title && desc ? (title + ' – ' + desc) : (desc || title);
+          metaVal = metaVal.slice(0, 320);
+        }
+        if (metaDescInput) metaDescInput.value = metaVal;
+        setStatus(draft.status || 'draft');
+        if (seoTitleInput) seoTitleInput.value = (draft.title || '').trim() || 'Uses product title';
+        updateMetaDescCount();
+
+        modalTags = Array.isArray(draft.tags) ? draft.tags.slice() : [];
+        renderModalTags();
+
+        var selected = loadSelected();
+        var connected = loadConnected();
+        if (storesList) {
+          storesList.innerHTML = '';
+          selected.forEach(function(id) {
+            var span = document.createElement('span');
+            var isConnected = !!connected[id];
+            var name = marketplaceNames[id] || id;
+            var domain = marketplaceDomains[id];
+            var logoUrl = domain ? 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=32' : '';
+            span.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium ' +
+              (isConnected ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-amber-50 border border-amber-200 text-amber-800');
+            span.innerHTML = (logoUrl ? '<img src="' + logoUrl + '" alt="" class="w-3.5 h-3.5 rounded-sm object-contain shrink-0" onerror="this.style.display=\'none\'" />' : '') +
+              (isConnected ? '<span class="shrink-0">✓</span>' : '') + '<span>' + name + '</span>';
+            storesList.appendChild(span);
+          });
+        }
+
+        fetchPlatformFieldsIfNeeded(selected, function(platformFields) {
+          applyPlatformVisibility(selected, platformFields);
+          applyEtsyView(selected);
+        });
+
+        var etsyPriceEl = document.getElementById('modal-etsy-price');
+        var etsyQtyEl = document.getElementById('modal-etsy-quantity');
+        var etsySectionsEl = document.getElementById('modal-etsy-sections');
+        if (etsySectionsEl && !etsySectionsEl.classList.contains('hidden') && etsyPriceEl) etsyPriceEl.value = (draft.price != null && draft.price !== '') ? String(draft.price).replace(/^\$|^£/, '').trim() : '';
+        if (etsySectionsEl && !etsySectionsEl.classList.contains('hidden') && etsyQtyEl) etsyQtyEl.value = draft.quantity != null ? draft.quantity : '';
+
+        if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+      }
+
+      function closeModal() {
+        if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+      }
+
+      function pushLive() {
+        var draft = loadDraft();
+        var etsySectionsEl = document.getElementById('modal-etsy-sections');
+        var isEtsyOnly = etsySectionsEl && !etsySectionsEl.classList.contains('hidden');
+        var etsyPriceEl = document.getElementById('modal-etsy-price');
+        var etsyQtyEl = document.getElementById('modal-etsy-quantity');
+
+        draft.title = (titleInput && titleInput.value) ? titleInput.value.trim() : (draft.title || 'Untitled listing');
+        draft.description = (descInput && descInput.value) ? descInput.value.trim() : (draft.description || '');
+        draft.category = (categoryInput && categoryInput.value) ? categoryInput.value.trim() : (draft.category || '');
+        draft.tags = modalTags.slice();
+
+        if (isEtsyOnly && etsyPriceEl) draft.price = (etsyPriceEl.value || '').trim().replace(/^\$|^£/, '') || (draft.price || '0');
+        else draft.price = (priceInput && priceInput.value) ? priceInput.value.trim().replace(/^\$|^£/, '') : (draft.price || '0');
+
+        if (isEtsyOnly && etsyQtyEl) draft.quantity = etsyQtyEl.value !== '' ? parseInt(etsyQtyEl.value, 10) : 0;
+        else draft.quantity = quantityInput && quantityInput.value !== '' ? parseInt(quantityInput.value, 10) : 0;
+
+        draft.compare_at = (compareAtInput && compareAtInput.value) ? compareAtInput.value.trim().replace(/^\$|^£/, '') : '';
+        draft.cost_per_item = (costPerItemInput && costPerItemInput.value) ? costPerItemInput.value.trim().replace(/^\$|^£/, '') : '';
+        draft.charge_tax = chargeTaxCheck ? chargeTaxCheck.checked : true;
+        draft.inventory_tracked = inventoryTrackedCheck ? inventoryTrackedCheck.checked : true;
+        draft.sku = (skuInput && skuInput.value) ? skuInput.value.trim() : (draft.sku || '');
+        draft.barcode = (barcodeInput && barcodeInput.value) ? barcodeInput.value.trim() : '';
+        draft.sell_when_out_of_stock = sellOutOfStockCheck ? sellOutOfStockCheck.checked : false;
+        draft.physical_product = physicalProductCheck ? physicalProductCheck.checked : true;
+        draft.weight_kg = (weightInput && weightInput.value) ? weightInput.value.trim() : (draft.weight_kg || '');
+        draft.country_of_origin = (countryOriginInput && countryOriginInput.value) ? countryOriginInput.value.trim() : '';
+        draft.hs_code = (hsCodeInput && hsCodeInput.value) ? hsCodeInput.value.trim() : '';
+        draft.product_type = (productTypeInput && productTypeInput.value) ? productTypeInput.value.trim() : (draft.category || '');
+        draft.vendor = (vendorInput && vendorInput.value) ? vendorInput.value.trim() : (draft.brand || '');
+        draft.meta_description = (metaDescInput && metaDescInput.value) ? metaDescInput.value.trim() : '';
+        draft.status = (statusHidden && statusHidden.value) ? statusHidden.value : 'draft';
+        if (!draft.brand && draft.vendor) draft.brand = draft.vendor;
+        saveDraft(draft);
+
+        var photos = Array.isArray(draft.photos) ? draft.photos.filter(Boolean) : [];
+        if (photos.length === 0) {
+          var draftListingRaw = null;
+          try { draftListingRaw = sessionStorage.getItem('auralink_draft_listing'); } catch (e) {}
+          if (draftListingRaw) {
+            var p = JSON.parse(draftListingRaw);
+            if (p && p.imageDataUrl) photos = [p.imageDataUrl];
+          }
+        }
+        if (photos.length === 0) {
+          if (pushLiveBtn) { pushLiveBtn.disabled = false; pushLiveBtn.textContent = 'Push live'; }
+          alert('Add at least one photo to your listing (go back to the media step).');
+          return;
+        }
+
+        var priceNum = parseFloat(String(draft.price).replace(/[^\d.]/g, '')) || 0;
+        var pricePence = Math.round(priceNum * 100);
+
+        var universal_data = {
+          title: draft.title || 'Untitled listing',
+          description: draft.description || '',
+          price: pricePence,
+          photos: photos,
+          brand: draft.brand || draft.vendor || '',
+          category: draft.category || '',
+          tags: draft.tags || [],
+          quantity: draft.quantity != null ? draft.quantity : 0,
+          sku: draft.sku || '',
+          weight_kg: draft.weight_kg ? parseFloat(draft.weight_kg) : undefined,
+          condition: draft.condition || 'New'
+        };
+
+        var pubUrl = getPublishingUrl();
+        pushLiveBtn.disabled = true;
+        pushLiveBtn.textContent = 'Publishing…';
+
+        function getToken() {
+          try {
+            var t = sessionStorage.getItem('auralink_jwt');
+            if (t) return Promise.resolve(t);
+          } catch (e) {}
+          return fetch(pubUrl + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; }).then(function(d) {
+            if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; }
+            return null;
+          });
+        }
+
+        getToken().then(function(token) {
+          if (!token) {
+            pushLiveBtn.disabled = false;
+            pushLiveBtn.textContent = 'Push live';
+            window.location.href = '/stores-connect-shopify.html?return=flow-3';
+            return;
+          }
+          var base = pubUrl.replace(/\/$/, '');
+          // Require user to have logged into their store before we can publish
+          return fetch(base + '/api/user/connected-stores', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          })
+            .then(function(r) { return r.ok ? r.json() : {}; })
+            .then(function(stores) {
+              if (!stores.shopify || stores.shopify.status !== 'connected') {
+                pushLiveBtn.disabled = false;
+                pushLiveBtn.textContent = 'Push live';
+                window.location.href = '/stores-connect-shopify.html?return=flow-3';
+                return null;
+              }
+              return token;
+            });
+        }).then(function(token) {
+          if (!token) return;
+          var base = pubUrl.replace(/\/$/, '');
+          return fetch(base + '/api/listings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ universal_data: universal_data })
+          })
+            .then(function(r) {
+              if (!r.ok) return r.json().then(function(j) { throw new Error(j.error || r.statusText); });
+              return r.json();
+            })
+            .then(function(res) {
+              var listingId = res.listing_id;
+              if (!listingId) throw new Error('No listing id returned');
+              return fetch(base + '/api/listings/publish', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ listing_id: listingId, platforms: ['shopify'] })
+              }).then(function(r2) {
+                if (!r2.ok) return r2.json().then(function(j) { throw new Error(j.error || r2.statusText); });
+                return r2.json();
+              });
+            });
+        })
+          .then(function(result) {
+            if (result === undefined) return;
+            closeModal();
+            window.location.href = '/flow-success.html';
+          })
+          .catch(function(err) {
+            pushLiveBtn.disabled = false;
+            pushLiveBtn.textContent = 'Push live';
+            alert(err.message || 'Publish failed. Try again.');
+          });
+      }
+
+      if (tagAddBtn && tagInput) {
+        tagAddBtn.addEventListener('click', function() {
+          var t = (tagInput.value || '').trim();
+          if (t && modalTags.indexOf(t) === -1) { modalTags.push(t); tagInput.value = ''; renderModalTags(); }
+        });
+        tagInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); tagAddBtn.click(); } });
+      }
+      var tagAddBtnInline = document.getElementById('modal-tag-add-inline');
+      var tagInputInline = document.getElementById('modal-tag-input-inline');
+      if (tagAddBtnInline && tagInputInline) {
+        tagAddBtnInline.addEventListener('click', function() {
+          var t = (tagInputInline.value || '').trim();
+          if (t && modalTags.indexOf(t) === -1) { modalTags.push(t); tagInputInline.value = ''; renderModalTags(); }
+        });
+        tagInputInline.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); tagAddBtnInline.click(); } });
+      }
+
+      if (statusPills) {
+        statusPills.addEventListener('click', function(e) {
+          var btn = e.target.closest('.modal-status-pill');
+          if (btn) { var v = btn.getAttribute('data-status'); if (v) setStatus(v); }
+        });
+      }
+
+      if (metaDescInput) {
+        metaDescInput.addEventListener('input', updateMetaDescCount);
+      }
+
+      if (titleInput && seoTitleInput) {
+        titleInput.addEventListener('input', function() { seoTitleInput.value = (titleInput.value || '').trim() || 'Uses product title'; });
+      }
+
+      if (descInput) {
+        descInput.addEventListener('input', function() {
+          descInput.style.height = 'auto';
+          descInput.style.height = Math.max(96, descInput.scrollHeight) + 'px';
+        });
+      }
+
+      if (openBtn) openBtn.addEventListener('click', openModal);
+      if (pushLiveBtn) pushLiveBtn.addEventListener('click', pushLive);
+      if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+      openModal();
+    })();
+  </script>
+  <script>
+    (function() {
+      document.addEventListener('keydown', function(e) {
+        if (e.key !== 'ArrowLeft') return;
+        if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
+        var confirmModal = document.getElementById('confirm-modal');
+        if (confirmModal && confirmModal.classList.contains('flex')) {
+          e.preventDefault();
+          confirmModal.classList.add('hidden');
+          confirmModal.classList.remove('flex');
+        } else {
+          e.preventDefault();
+          history.back();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

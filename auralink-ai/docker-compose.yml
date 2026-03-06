@@ -1,0 +1,37 @@
+# AuraLink AI - Local development / MVP
+# Usage: from auralink-ai/: docker-compose up -d
+# Backend: http://localhost:8000
+# Redis: localhost:6379
+# Ensure .env exists (copy from .env.example)
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # Celery worker (optional - run manually for sync tasks)
+  # celery:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   command: celery -A app.tasks.sync_tasks worker -l info
+  #   env_file: .env
+  #   environment:
+  #     - REDIS_URL=redis://redis:6379/0
+  #   depends_on:
+  #     - redis
+  #     - backend

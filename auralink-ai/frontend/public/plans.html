@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plans | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .accordion-panel { display: none; }
+    .accordion-item.is-open .accordion-panel { display: block; }
+    .accordion-item.is-open .accordion-chevron { transform: rotate(180deg); }
+    .accordion-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d4d4d8; flex-shrink: 0; }
+    .accordion-item.is-open .accordion-radio { border-color: #18181b; background: #18181b; }
+    .accordion-item.plan-current.is-open .accordion-radio { border-color: #b45309; background: #b45309; }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
+      <a href="settings.html" class="flex items-center gap-2 text-zinc-900 no-underline">
+        <span class="text-lg">←</span>
+        <span class="font-semibold">Settings</span>
+      </a>
+      <h1 class="font-serif text-lg font-bold text-zinc-900">Plans</h1>
+      <span class="w-14"></span>
+    </header>
+
+    <main class="flex-1 px-5 py-4 overflow-auto">
+      <p class="text-sm text-zinc-600 mb-4">You're on <strong>Pro</strong> · renews 1 Apr 2026</p>
+
+      <div class="space-y-3 mb-6">
+        <!-- Free -->
+        <div class="accordion-item rounded-xl bg-white border border-zinc-200 overflow-hidden" data-plan="free">
+          <button type="button" class="accordion-trigger w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-zinc-50 transition-colors">
+            <span class="accordion-radio"></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-zinc-900 leading-tight">Free</p>
+              <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Get started</p>
+            </div>
+            <span class="font-serif text-lg font-bold text-zinc-900 shrink-0">$0/mo</span>
+            <span class="accordion-chevron text-zinc-400 transition-transform shrink-0 ml-1">▼</span>
+          </button>
+          <div class="accordion-panel border-t border-zinc-100 px-5 pb-4 pt-3">
+            <ul class="space-y-2 text-sm text-zinc-700">
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Up to 10 listings/mo</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 2 marketplaces</li>
+              <li class="flex items-center gap-2"><span class="text-zinc-300">○</span> AI brain (limited)</li>
+              <li class="flex items-center gap-2"><span class="text-zinc-300">○</span> Seller memory</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Pro (current) -->
+        <div class="accordion-item plan-current rounded-xl bg-amber-50 border-2 border-amber-200 overflow-hidden relative" data-plan="pro">
+          <span class="absolute top-2.5 right-2.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-200 px-2.5 py-1 rounded z-10">Current</span>
+          <button type="button" class="accordion-trigger w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-amber-100/50 transition-colors pr-24">
+            <span class="accordion-radio"></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-zinc-900 leading-tight">Pro</p>
+              <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Best for active sellers</p>
+            </div>
+            <span class="font-serif text-lg font-bold text-zinc-900 shrink-0">$29/mo</span>
+            <span class="accordion-chevron text-zinc-500 transition-transform shrink-0 ml-1">▼</span>
+          </button>
+          <div class="accordion-panel border-t border-amber-200/50 px-5 pb-4 pt-3">
+            <ul class="space-y-2 text-sm text-zinc-700">
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Unlimited listings</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> All marketplaces</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Full AI brain</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Seller memory</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Weekly digest</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Business -->
+        <div class="accordion-item rounded-xl bg-white border border-zinc-200 overflow-hidden" data-plan="business">
+          <button type="button" class="accordion-trigger w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-zinc-50 transition-colors">
+            <span class="accordion-radio"></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-zinc-900 leading-tight">Business</p>
+              <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Teams & power sellers</p>
+            </div>
+            <span class="font-serif text-lg font-bold text-zinc-900 shrink-0">$79/mo</span>
+            <span class="accordion-chevron text-zinc-400 transition-transform shrink-0 ml-1">▼</span>
+          </button>
+          <div class="accordion-panel border-t border-zinc-100 px-5 pb-4 pt-3">
+            <ul class="space-y-2 text-sm text-zinc-700">
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Everything in Pro</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 3 team members</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Bulk listing (unlimited)</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> API access</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" id="plans-upgrade-btn" class="w-full py-3 rounded-xl border-2 border-zinc-900 bg-zinc-900 text-white font-semibold text-sm hover:bg-zinc-800 transition-colors">
+        Upgrade
+      </button>
+    </main>
+  </div>
+
+  <script>
+    (function() {
+      var items = document.querySelectorAll('.accordion-item');
+      var triggers = document.querySelectorAll('.accordion-trigger');
+      function closeAll() {
+        items.forEach(function(el) { el.classList.remove('is-open'); });
+      }
+      function openItem(item) {
+        closeAll();
+        item.classList.add('is-open');
+      }
+      triggers.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var item = btn.closest('.accordion-item');
+          if (item.classList.contains('is-open')) {
+            closeAll();
+          } else {
+            openItem(item);
+          }
+        });
+      });
+      // Open Pro (current) by default
+      var current = document.querySelector('.accordion-item.plan-current');
+      if (current) openItem(current);
+
+      function getSelectedPlan() {
+        var open = document.querySelector('.accordion-item.is-open');
+        if (open) {
+          var id = open.getAttribute('data-plan');
+          if (id) return id;
+        }
+        return 'pro';
+      }
+
+      var upgradeBtn = document.getElementById('plans-upgrade-btn');
+      if (upgradeBtn) upgradeBtn.addEventListener('click', function() {
+        sessionStorage.setItem('auralink_selected_plan', getSelectedPlan());
+        window.location.href = 'checkout.html';
+      });
+    })();
+  </script>
+</body>
+</html>

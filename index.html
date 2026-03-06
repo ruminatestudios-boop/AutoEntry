@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoEntry — Universal AI Scanning. Infinite Connections.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            accent: { blue: '#18181b', emerald: '#10b981' }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          letterSpacing: { tight: '-0.02em' },
+          animation: { 'marquee': 'marquee 40s linear infinite' },
+          keyframes: {
+            marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
+            fadeUp: { '0%': { opacity: '0', transform: 'translateY(16px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+          },
+        },
+      },
+    };
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .glass-nav {
+        @apply bg-white border-b border-zinc-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)];
+      }
+      .glass-card {
+        @apply bg-white rounded-2xl border border-zinc-100 shadow-[0_2px_12px_rgba(0,0,0,0.06)];
+      }
+      .glass-panel {
+        @apply bg-white rounded-2xl border border-zinc-100 shadow-[0_2px_12px_rgba(0,0,0,0.06)];
+      }
+      .glass-cta {
+        @apply bg-accent-blue backdrop-blur-md border border-accent-blue text-white shadow-[0_0_30px_-5px_rgba(0,0,0,0.2)];
+      }
+      .glass-cta-secondary {
+        @apply bg-white/60 backdrop-blur-md border border-white/80 text-zinc-800 hover:bg-white/80;
+      }
+      .hero-line { opacity: 0; transform: translateY(20px); }
+      .hero-line.animate { animation: fadeUp 0.6s ease-out forwards; }
+      .hero-line.delay-1 { animation-delay: 0.1s; }
+      .hero-line.delay-2 { animation-delay: 0.2s; }
+      .hero-line.delay-3 { animation-delay: 0.35s; }
+      .hero-line.delay-4 { animation-delay: 0.5s; }
+      .card-hover {
+        @apply transition-all duration-300 ease-out;
+      }
+      .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px -8px rgba(0,0,0,0.12);
+      }
+      .connector-card:hover {
+        box-shadow: 0 8px 24px -8px rgba(0,0,0,0.12);
+      }
+      .app-logo { object-fit: contain; }
+      .section-label {
+        @apply text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4;
+      }
+      .feature-icon-box {
+        @apply w-14 h-14 rounded-xl flex items-center justify-center bg-zinc-100 border border-zinc-200/80;
+      }
+      .feature-icon-box svg { @apply text-zinc-500; stroke-width: 1.75; }
+      .pricing-card { @apply bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-zinc-100 overflow-hidden; }
+      .pricing-card-sep { @apply border-b border-zinc-100; }
+      .pricing-tag { @apply text-xs font-semibold text-zinc-700 bg-zinc-200/80 px-2.5 py-1 rounded-md; }
+      .pricing-rating-bar { @apply h-1.5 rounded-full bg-zinc-200 overflow-hidden; }
+      .pricing-rating-fill { @apply h-full rounded-full bg-zinc-900; }
+    }
+    .marquee-logo { height: 28px; width: auto; max-width: 120px; object-fit: contain; vertical-align: middle; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .scan-icon-wrap { overflow: hidden; }
+    .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+      border-radius: 2px;
+      animation: scanSweep 1.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes scanSweep {
+      0%, 100% { top: 0; opacity: 0.6; }
+      50% { top: 100%; opacity: 1; }
+    }
+    .testimonial-carousel { overflow: hidden; touch-action: pan-y pinch-zoom; }
+    .testimonial-track { display: flex; width: 300%; transition: transform 0.35s ease-out; will-change: transform; }
+    .testimonial-slide { flex: 0 0 33.333%; min-width: 0; }
+    .vote-stats-card {
+      @apply bg-white rounded-lg border border-zinc-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden max-w-md mx-auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .vote-stats-cell {
+      @apply py-1.5 px-1 text-center border-r border-zinc-200 last:border-r-0;
+    }
+    .vote-stats-label { @apply text-[9px] font-medium text-zinc-500 uppercase tracking-wider; }
+    .vote-stats-value { @apply text-sm sm:text-base font-bold text-zinc-900 tabular-nums mt-0.5; }
+    .scan-result-card { @apply bg-white rounded-2xl border border-zinc-200 shadow-[0_2px_12px_rgba(0,0,0,0.06)] overflow-hidden; }
+    .scan-result-card-sep { @apply border-b border-zinc-200; }
+    .scan-result-row { @apply flex justify-between items-center py-3 text-sm; }
+    .scan-result-label { @apply font-medium text-zinc-900; }
+    .scan-result-value { @apply text-zinc-600; }
+    .scan-result-tag { @apply text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded border border-zinc-200 bg-zinc-100 text-zinc-700; }
+    body { background: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 40%, #e2e8f0 100%); min-height: 100vh; }
+  </style>
+</head>
+<body class="text-zinc-900 font-sans antialiased overflow-x-hidden">
+  <!-- QR Modal: open on desktop when "Try 5 free scans" is clicked -->
+  <div id="qr-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 backdrop-blur-sm p-4" aria-modal="true" role="dialog">
+    <div class="glass-card max-w-sm w-full p-6 relative">
+      <button type="button" id="qr-modal-close" class="absolute top-4 right-4 text-zinc-500 hover:text-zinc-800 p-1" aria-label="Close">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <h3 class="text-xl font-bold text-zinc-900 mb-3 pr-8">Open scanner on your phone</h3>
+      <p class="text-zinc-800 text-base mb-5 leading-relaxed">Scan this QR code with your phone camera to open the AutoEntry scanner. Your camera will open automatically.</p>
+      <div class="flex justify-center bg-white rounded-xl p-4 min-h-[220px] items-center">
+        <img id="qr-image" alt="QR code to open scanner" class="w-[200px] h-[200px] block hidden" style="image-rendering: pixelated; image-rendering: crisp-edges;" />
+        <canvas id="qr-canvas" width="200" height="200" class="hidden"></canvas>
+      </div>
+      <p class="text-sm font-medium text-zinc-700 mt-5 text-center">Or open this link on your phone:</p>
+      <p id="qr-scan-url" class="text-sm text-accent-blue break-all text-center mt-2 font-medium"></p>
+    </div>
+  </div>
+
+  <!-- Scan view: pricing-section design style (shown when ?mode=scan) -->
+  <div id="scan-view" class="fixed inset-0 z-[80] hidden flex-col bg-[#f8f8f8] text-zinc-900">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-100 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <span class="font-bold text-zinc-900 tracking-tight">AutoEntry Scanner</span>
+      <span id="scan-count-display" class="text-sm text-zinc-500">5 free scans left</span>
+      <div class="flex items-center gap-3">
+        <button type="button" id="scan-view-qr-btn" class="text-sm text-zinc-600 hover:text-zinc-900 hidden md:block">Get QR for phone</button>
+        <a href="?" id="scan-view-back" class="text-sm font-medium text-zinc-600 hover:text-zinc-900">Exit</a>
+      </div>
+    </div>
+    <div id="scan-step-camera" class="flex-1 flex flex-col items-center justify-center p-4 overflow-auto">
+      <p class="section-label text-center mb-4">[ scan ]</p>
+      <div class="w-full max-w-md aspect-[3/4] bg-white rounded-2xl overflow-hidden relative border border-zinc-100 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+        <video id="scan-video" class="w-full h-full object-cover" playsinline muted autoplay></video>
+        <div class="absolute inset-0 flex items-end justify-center p-4">
+          <button type="button" id="scan-capture-btn" class="w-16 h-16 rounded-full bg-white border-4 border-zinc-200 hover:border-zinc-900 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.06)]">Capture</button>
+        </div>
+      </div>
+      <p class="text-zinc-500 text-sm mt-4">Point at a receipt or document</p>
+      <div id="scan-camera-error" class="text-red-600 text-sm mt-2 hidden max-w-md text-center"></div>
+    </div>
+    <div id="scan-step-result" class="flex-1 hidden flex-col p-4 overflow-auto">
+      <div class="max-w-md w-full mx-auto">
+        <div class="scan-result-card">
+          <div class="p-4 scan-result-card-sep flex items-center justify-between">
+            <span class="font-semibold text-zinc-900">AutoEntry</span>
+            <span class="scan-result-tag">Result</span>
+          </div>
+          <div class="p-4 scan-result-card-sep">
+            <h2 class="text-lg font-bold text-zinc-900 mb-2">What we found</h2>
+            <img id="scan-captured-img" alt="Captured" class="w-full rounded-lg border border-zinc-200 mb-3" />
+            <p id="scan-detected-type" class="hidden text-sm text-zinc-600 mb-0"><span class="font-medium text-zinc-900">Document type:</span> <span id="scan-detected-label"></span></p>
+          </div>
+          <div class="p-4 scan-result-card-sep">
+            <div class="scan-result-row">
+              <span class="scan-result-label">Extracted text</span>
+            </div>
+            <div id="scan-ocr-text" class="text-sm text-zinc-600 mt-1 min-h-[60px] max-h-[120px] overflow-y-auto whitespace-pre-wrap"></div>
+          </div>
+          <div class="p-4 scan-result-card-sep">
+            <div class="scan-result-row">
+              <span class="scan-result-label">Suggested for you</span>
+            </div>
+            <p id="scan-suggested-hint" class="text-xs text-zinc-500 mt-1 mb-3">Connect based on what we detected.</p>
+            <div id="scan-suggested-apps" class="flex flex-col gap-2"></div>
+          </div>
+          <div class="p-4 flex items-center justify-between">
+            <p class="text-xs text-zinc-500">Scan another or exit</p>
+            <button type="button" id="scan-done-btn" class="flex items-center gap-2 bg-zinc-900 text-white font-semibold text-sm px-4 py-3 rounded-lg hover:bg-zinc-800 transition-all cursor-pointer">
+              <span>Done — scan another</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
+            </button>
+          </div>
+        </div>
+        <p id="scan-toast" class="text-sm text-emerald-600 hidden text-center mt-3"></p>
+        <p class="text-center text-zinc-500 text-xs mt-3"><a href="?" class="font-medium text-zinc-900 hover:underline">Exit to main page</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation: same design on mobile and desktop -->
+  <header id="main-header" class="fixed top-0 left-0 right-0 z-50 glass-nav">
+    <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
+      <a href="#home" class="text-base sm:text-lg font-bold tracking-tight text-zinc-900 shrink-0">AutoEntry</a>
+      <div class="flex items-center gap-3 sm:gap-6 md:gap-8">
+        <a href="#services" class="text-xs sm:text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors whitespace-nowrap">Features</a>
+        <a href="#connectors" class="text-xs sm:text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors whitespace-nowrap">Connectors</a>
+        <a href="#pricing" class="text-xs sm:text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors whitespace-nowrap">Pricing</a>
+      </div>
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <a href="#pricing" class="text-xs sm:text-sm font-semibold px-3 py-2 sm:px-4 rounded-lg glass-cta-secondary transition-all">See plans</a>
+        <a href="#pricing" class="text-xs sm:text-sm font-semibold px-3 py-2 sm:px-4 rounded-lg glass-cta transition-all inline-flex items-center gap-1.5">
+          Join Waitlist
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-landing">
+    <!-- Hero (Design That: tagline + headline + subhead + CTAs + testimonial) -->
+    <section id="home" class="relative pt-28 pb-20 px-4">
+      <div class="max-w-4xl mx-auto text-center">
+        <p class="section-label hero-line">Universal · Connected · Instant</p>
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-zinc-900 leading-[1.15] mt-2">
+          <span class="hero-line block">Universal Scanning.</span>
+          <span class="hero-line delay-1 block">Infinite Connections.</span>
+        </h1>
+        <p class="hero-line delay-2 mt-6 text-lg sm:text-xl text-zinc-600 max-w-2xl mx-auto leading-relaxed">
+          The one lens for all your data. Snap any product, document, or receipt and sync it to your entire stack—done fast, without the manual entry.
+        </p>
+        <p class="hero-line delay-2 mt-3 text-sm text-zinc-500">Try 5 free scans on your phone—no signup required. Then connect one app to unlock more, or upgrade for unlimited.</p>
+        <div class="hero-line delay-3 mt-10 flex flex-wrap items-center justify-center gap-4">
+          <button type="button" id="try-free-scans-btn" class="inline-flex items-center gap-2 glass-cta font-semibold px-6 py-3.5 rounded-xl hover:shadow-[0_0_36px_-6px_rgba(0,0,0,0.25)] transition-all">
+            <span class="scan-icon-wrap relative inline-flex items-center justify-center w-5 h-5">
+              <i data-lucide="scan" class="w-5 h-5 relative z-[1]"></i>
+              <span class="scan-line"></span>
+            </span>
+            Try 5 free scans
+          </button>
+        </div>
+        <div class="hero-line delay-4 mt-16 max-w-2xl mx-auto">
+          <div id="testimonial-carousel" class="testimonial-carousel" aria-label="Testimonials carousel">
+            <div id="testimonial-track" class="testimonial-track">
+              <div class="testimonial-slide px-1">
+                <blockquote class="glass-panel p-6 sm:p-8 text-left">
+          <p class="text-zinc-700 text-sm sm:text-base leading-relaxed">
+            "AutoEntry cut our data-entry time by more than half. One scan and it’s in our CRM, our sheets, and our tools. No more copy-paste or re-typing."
+          </p>
+          <footer class="mt-4 flex items-center gap-3">
+            <span class="font-semibold text-zinc-900">Sarah Chen</span>
+            <span class="text-zinc-500">Operations, FinFlow</span>
+          </footer>
+                </blockquote>
+              </div>
+              <div class="testimonial-slide px-1">
+                <blockquote class="glass-panel p-6 sm:p-8 text-left">
+                  <p class="text-zinc-700 text-sm sm:text-base leading-relaxed">"We use it for receipts and invoices daily. Scan, sync to Sheets and QuickBooks—done. Saves us hours every week."</p>
+                  <footer class="mt-4 flex items-center gap-3">
+                    <span class="font-semibold text-zinc-900">Marcus Webb</span>
+                    <span class="text-zinc-500">Finance, ScaleOps</span>
+                  </footer>
+                </blockquote>
+              </div>
+              <div class="testimonial-slide px-1">
+                <blockquote class="glass-panel p-6 sm:p-8 text-left">
+                  <p class="text-zinc-700 text-sm sm:text-base leading-relaxed">"Finally one tool that gets data into all our apps without a maze of integrations. The AI extraction is impressively accurate."</p>
+                  <footer class="mt-4 flex items-center gap-3">
+                    <span class="font-semibold text-zinc-900">Priya Sharma</span>
+                    <span class="text-zinc-500">Ops Lead, DataFlow</span>
+                  </footer>
+                </blockquote>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-center gap-2 mt-4" aria-hidden="true">
+            <button type="button" id="testimonial-prev" class="w-8 h-8 rounded-full border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 flex items-center justify-center" aria-label="Previous testimonial"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <button type="button" id="testimonial-next" class="w-8 h-8 rounded-full border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 flex items-center justify-center" aria-label="Next testimonial"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Marquee -->
+    <section class="py-8 overflow-hidden border-y border-white/50 bg-white/30 backdrop-blur-sm" aria-hidden="true">
+      <div class="flex gap-12 items-center whitespace-nowrap w-max animate-marquee">
+        <div class="flex gap-12 items-center">
+          <img src="https://logo.clearbit.com/shopify.com" alt="Shopify" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/intuit.com" alt="QuickBooks" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/xero.com" alt="Xero" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/stripe.com" alt="Stripe" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/notion.so" alt="Notion" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/airtable.com" alt="Airtable" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/salesforce.com" alt="Salesforce" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/hubspot.com" alt="HubSpot" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/google.com" alt="Google" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/slack.com" alt="Slack" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/asana.com" alt="Asana" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/monday.com" alt="Monday" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/zapier.com" alt="Zapier" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/dropbox.com" alt="Dropbox" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/microsoft.com" alt="OneDrive" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/expensify.com" alt="Expensify" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/freshbooks.com" alt="Freshbooks" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/waveapps.com" alt="Wave" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/zoho.com" alt="Zoho" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/squareup.com" alt="Square" class="marquee-logo" />
+        </div>
+        <div class="flex gap-12 items-center" aria-hidden="true">
+          <img src="https://logo.clearbit.com/shopify.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/intuit.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/xero.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/stripe.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/notion.so" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/airtable.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/salesforce.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/hubspot.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/google.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/slack.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/asana.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/monday.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/zapier.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/dropbox.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/microsoft.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/expensify.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/freshbooks.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/waveapps.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/zoho.com" alt="" class="marquee-logo" />
+          <img src="https://logo.clearbit.com/squareup.com" alt="" class="marquee-logo" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Services → Features (Design That: "Three high-impact services") -->
+    <section id="services" class="py-24 px-4 bg-[#f8f8f8]">
+      <div class="max-w-6xl mx-auto">
+        <p class="section-label text-center">[ features ]</p>
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 text-center mb-16">
+          Three ways AutoEntry works for you
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="glass-card card-hover p-8 flex flex-col items-center text-center">
+            <div class="feature-icon-box mb-6">
+              <i data-lucide="scan" class="w-7 h-7 text-zinc-500"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-zinc-900 mb-2">Scan anything</h3>
+            <p class="text-zinc-600 text-sm leading-relaxed">Point your camera at any product, document, or receipt. One tap captures everything—no cropping or multiple apps.</p>
+          </div>
+          <div class="glass-card card-hover p-8 flex flex-col items-center text-center">
+            <div class="feature-icon-box mb-6">
+              <i data-lucide="brain" class="w-7 h-7 text-zinc-500"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-zinc-900 mb-2">AI Extract</h3>
+            <p class="text-zinc-600 text-sm leading-relaxed">Our AI reads, structures, and validates data so it’s ready for any system—no manual cleanup.</p>
+          </div>
+          <div class="glass-card card-hover p-8 flex flex-col items-center text-center">
+            <div class="feature-icon-box mb-6">
+              <i data-lucide="globe" class="w-7 h-7 text-zinc-500"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-zinc-900 mb-2">Sync everywhere</h3>
+            <p class="text-zinc-600 text-sm leading-relaxed">Data flows to your apps, spreadsheets, and tools—instantly. One source of truth across your stack.</p>
+          </div>
+        </div>
+        <p class="mt-10 text-center">
+          <a href="#pricing" class="text-sm font-semibold text-accent-blue hover:underline">See pricing and connectors</a>
+          <i data-lucide="arrow-down" class="w-4 h-4 inline-block ml-1 align-middle"></i>
+        </p>
+      </div>
+    </section>
+
+    <!-- Work → Connectors (Design That: "Expert work...") -->
+    <section id="connectors" class="py-24 px-4 bg-[#f8f8f8]">
+      <div class="max-w-6xl mx-auto">
+        <p class="section-label text-center">[ connectors ]</p>
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 text-center mb-4">
+          Integrations designed around your stack
+        </h2>
+        <p class="text-zinc-600 text-center max-w-xl mx-auto mb-4">
+          Connect your apps right from your phone when you’re ready—no desktop setup. Click a <strong>Coming Soon</strong> card to vote for which connector we build next.
+        </p>
+        <div class="mb-6">
+          <div id="vote-stats-card" class="vote-stats-card">
+            <div class="vote-stats-cell">
+              <div class="vote-stats-label">Total votes</div>
+              <div id="vote-stats-total" class="vote-stats-value">0</div>
+            </div>
+            <div class="vote-stats-cell">
+              <div class="vote-stats-label">Coming soon</div>
+              <div class="vote-stats-value">8</div>
+            </div>
+            <div class="vote-stats-cell">
+              <div class="vote-stats-label">Live</div>
+              <div class="vote-stats-value">3</div>
+            </div>
+            <div class="vote-stats-cell">
+              <div class="vote-stats-label">Top pick</div>
+              <div id="vote-stats-top" class="vote-stats-value text-xs sm:text-sm">—</div>
+            </div>
+          </div>
+          <p class="text-center text-zinc-600 text-lg sm:text-xl mt-2">
+            <span id="connector-count" class="font-bold text-accent-blue tabular-nums">0</span>+ connectors in the pipeline — vote below to shape what we build next.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div class="glass-card connector-card p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 rounded-2xl">
+            <img src="https://logo.clearbit.com/shopify.com" alt="Shopify" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Shopify</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent-emerald/15 text-accent-emerald border border-accent-emerald/30">Active</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 cursor-pointer hover:ring-2 hover:ring-zinc-300 rounded-2xl" data-connector-id="quickbooks" role="button" tabindex="0" aria-label="Vote for QuickBooks">
+            <img src="https://logo.clearbit.com/intuit.com" alt="QuickBooks" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">QuickBooks</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/80 text-zinc-600 border border-white/80">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 cursor-pointer hover:ring-2 hover:ring-zinc-300 rounded-2xl" data-connector-id="xero" role="button" tabindex="0" aria-label="Vote for Xero">
+            <img src="https://logo.clearbit.com/xero.com" alt="Xero" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Xero</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/80 text-zinc-600 border border-white/80">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300">
+            <img src="https://logo.clearbit.com/stripe.com" alt="Stripe" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Stripe</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent-emerald/15 text-accent-emerald border border-accent-emerald/30">Active</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 cursor-pointer hover:ring-2 hover:ring-zinc-300 rounded-2xl" data-connector-id="notion" role="button" tabindex="0" aria-label="Vote for Notion">
+            <img src="https://logo.clearbit.com/notion.so" alt="Notion" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Notion</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/80 text-zinc-600 border border-white/80">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 cursor-pointer hover:ring-2 hover:ring-zinc-300 rounded-2xl" data-connector-id="airtable" role="button" tabindex="0" aria-label="Vote for Airtable">
+            <img src="https://logo.clearbit.com/airtable.com" alt="Airtable" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Airtable</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/80 text-zinc-600 border border-white/80">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 cursor-pointer hover:ring-2 hover:ring-zinc-300 rounded-2xl" data-connector-id="salesforce" role="button" tabindex="0" aria-label="Vote for Salesforce">
+            <img src="https://logo.clearbit.com/salesforce.com" alt="Salesforce" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Salesforce</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/80 text-zinc-600 border border-white/80">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 cursor-pointer hover:ring-2 hover:ring-zinc-300 rounded-2xl" data-connector-id="hubspot" role="button" tabindex="0" aria-label="Vote for HubSpot">
+            <img src="https://logo.clearbit.com/hubspot.com" alt="HubSpot" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">HubSpot</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/80 text-zinc-600 border border-white/80">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300">
+            <img src="https://logo.clearbit.com/google.com" alt="Google Sheets" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Google Sheets</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent-emerald/15 text-accent-emerald border border-accent-emerald/30">Active</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 cursor-pointer hover:ring-2 hover:ring-zinc-300 rounded-2xl" data-connector-id="slack" role="button" tabindex="0" aria-label="Vote for Slack">
+            <img src="https://logo.clearbit.com/slack.com" alt="Slack" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Slack</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/80 text-zinc-600 border border-white/80">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 cursor-pointer hover:ring-2 hover:ring-zinc-300 rounded-2xl" data-connector-id="asana" role="button" tabindex="0" aria-label="Vote for Asana">
+            <img src="https://logo.clearbit.com/asana.com" alt="Asana" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Asana</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/80 text-zinc-600 border border-white/80">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 cursor-pointer hover:ring-2 hover:ring-zinc-300 rounded-2xl" data-connector-id="monday" role="button" tabindex="0" aria-label="Vote for Monday">
+            <img src="https://logo.clearbit.com/monday.com" alt="Monday" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Monday</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/80 text-zinc-600 border border-white/80">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+        </div>
+
+        <!-- Feedback: what to build next -->
+        <div class="mt-8 pt-6 border-t border-white/60">
+          <h3 class="text-lg font-bold text-zinc-900 mb-1">What should we build next?</h3>
+          <p class="text-zinc-600 text-sm mb-2">Suggest an integration or feature. Your feedback is shown below—pin items to keep them at the top.</p>
+          <div class="grid grid-cols-[1fr_auto] gap-2 mb-3 max-w-xl mx-auto items-center">
+            <textarea id="feedback-input" placeholder="e.g. Zapier connector…" class="col-span-1 w-full min-w-0 h-10 rounded-lg border border-zinc-200 bg-white/80 px-3 py-2 text-zinc-800 placeholder-zinc-400 text-sm text-center resize-none focus:outline-none focus:ring-2 focus:ring-zinc-400/50 placeholder:text-center leading-[1.25]" maxlength="500" rows="1"></textarea>
+            <button type="button" id="feedback-submit" class="col-span-1 glass-cta text-white font-semibold h-10 px-4 rounded-lg inline-flex items-center justify-center shrink-0 text-sm">Submit</button>
+          </div>
+          <div class="glass-card p-3 sm:p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-sm font-semibold text-zinc-800">Suggestions & feedback</h4>
+              <span id="feedback-count" class="text-xs text-zinc-500">0 items</span>
+            </div>
+            <ul id="feedback-list" class="space-y-2 max-h-[200px] overflow-y-auto">
+              <!-- Filled by JS -->
+            </ul>
+            <p id="feedback-empty" class="text-sm text-zinc-500 py-2 text-center">No suggestions yet. Be the first to suggest what we should build next.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing (clean card style: title, tag, price, rating bar, arrow) -->
+    <section id="pricing" class="py-24 px-4 bg-[#f8f8f8]">
+      <div class="max-w-6xl mx-auto">
+        <p class="section-label text-center">[ pricing ]</p>
+        <span id="waitlist"></span>
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 text-center mb-4">
+          Pick what you need — we’ll deliver
+        </h2>
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Starter -->
+          <a href="#waitlist" class="pricing-card card-hover flex flex-col text-left block">
+            <div class="p-6 pricing-card-sep flex items-start justify-between gap-3">
+              <h3 class="text-xl font-bold text-zinc-900">Starter</h3>
+              <span class="pricing-tag shrink-0">Offer</span>
+            </div>
+            <div class="p-6 pricing-card-sep">
+              <p class="text-sm text-zinc-500">Try first, then unlock</p>
+              <p class="mt-2 text-4xl font-bold text-zinc-900">Free</p>
+              <p class="mt-1 text-sm text-zinc-500">5 free scans · Connect 1 app for 10 more</p>
+            </div>
+            <div class="p-6 flex items-center justify-between gap-4">
+              <p class="text-sm font-bold text-zinc-900">Get started free</p>
+              <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-400 shrink-0"></i>
+            </div>
+          </a>
+          <!-- Pro -->
+          <a href="#waitlist" class="pricing-card card-hover flex flex-col text-left block ring-2 ring-accent-blue/20">
+            <div class="p-6 pricing-card-sep flex items-start justify-between gap-3">
+              <h3 class="text-xl font-bold text-zinc-900">Pro</h3>
+              <span class="pricing-tag shrink-0 bg-accent-blue/10 text-accent-blue">Popular</span>
+            </div>
+            <div class="p-6 pricing-card-sep">
+              <p class="text-sm text-zinc-500">Billed annually</p>
+              <p class="mt-1 text-xs text-orange-600"><span class="line-through">$36/mo</span></p>
+              <p class="mt-0.5 flex items-baseline gap-1">
+                <span class="text-4xl font-bold text-zinc-900">$29</span>
+                <span class="text-sm font-normal text-zinc-500">/mo</span>
+              </p>
+              <p class="mt-1 text-sm text-zinc-500">Unlimited scans · All connectors</p>
+            </div>
+            <div class="p-6 flex items-center justify-between gap-4">
+              <p class="text-sm font-bold text-zinc-900">Join waitlist</p>
+              <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-400 shrink-0"></i>
+            </div>
+          </a>
+          <!-- Team -->
+          <a href="mailto:hello@autoentry.com?subject=Team%20plan" class="pricing-card card-hover flex flex-col text-left block">
+            <div class="p-6 pricing-card-sep flex items-start justify-between gap-3">
+              <h3 class="text-xl font-bold text-zinc-900">Team</h3>
+              <span class="pricing-tag shrink-0">Custom</span>
+            </div>
+            <div class="p-6 pricing-card-sep">
+              <p class="text-sm text-zinc-500">Contact us</p>
+              <p class="mt-2 text-4xl font-bold text-zinc-900">Custom</p>
+              <p class="mt-1 text-sm text-zinc-500">SSO, audit logs, dedicated support</p>
+            </div>
+            <div class="p-6 flex items-center justify-between gap-4">
+              <p class="text-sm font-bold text-zinc-900">Book a call</p>
+              <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-400 shrink-0"></i>
+            </div>
+          </a>
+        </div>
+        <p class="mt-10 text-center text-zinc-600 text-sm">
+          Have a bigger project or need a custom setup? <a href="mailto:hello@autoentry.com" class="text-accent-blue font-semibold hover:underline">Get in touch</a>.
+        </p>
+      </div>
+    </section>
+
+    <!-- FAQs (Design That: "Got question?") -->
+    <section id="faq" class="py-24 px-4 bg-[#f8f8f8]">
+      <div class="max-w-3xl mx-auto">
+        <p class="section-label text-center">[ faq ]</p>
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 text-center mb-12">
+          Got questions?
+        </h2>
+        <div class="space-y-4">
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              What can I scan with AutoEntry?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">Receipts, invoices, product labels, IDs, and most documents with structured data. We support images and PDFs. Our AI detects the type and extracts the relevant fields automatically.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              Which apps do you connect to?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">We’re adding 200+ connectors: Shopify, QuickBooks, Xero, Stripe, Notion, Airtable, Salesforce, HubSpot, Google Sheets, Slack, and more. You connect them from your phone with one tap—no desktop required. See the Connectors section for current status.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              Is my data secure?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">Yes. Data is encrypted in transit and at rest. We don’t train models on your data. You own your data and can delete it or export it at any time.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              How does the free trial work?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">You get 5 free scans on your phone with no signup. After that, connect one app (e.g. Google Sheets) from your phone to get 10 more free scans. When you’re ready, upgrade to Pro for unlimited scans and all connectors.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              What happens after I join the waitlist?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">You’ll get a link to open the scanner on your phone. Use your 5 free scans, connect an app to unlock more, or upgrade for unlimited. We’re there for setup and any questions.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer: same card-style as rest of page -->
+  <footer class="border-t border-zinc-100 bg-white py-8 px-4">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <span class="text-zinc-500 text-sm">© AutoEntry. Universal Scanning. Infinite Connections.</span>
+      <div class="flex items-center gap-6 text-sm">
+        <a href="mailto:hello@autoentry.com" class="text-zinc-500 hover:text-zinc-800 transition-colors">hello@autoentry.com</a>
+        <a href="#" class="text-zinc-500 hover:text-zinc-800 transition-colors">Privacy</a>
+        <a href="#" class="text-zinc-500 hover:text-zinc-800 transition-colors">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+  <script>
+    // API config: GEMINI_API_KEY = AI doc classification (https://aistudio.google.com/apikey). GOOGLE_VISION_API_KEY = OCR (enable Vision API at https://console.cloud.google.com/apis/library/vision.googleapis.com).
+    window.AUTOENTRY_CONFIG = {
+      GEMINI_API_KEY: 'AIzaSyA3JP3KL-O9Zi1DkS-f0ukaywThATeDwEo',
+      GOOGLE_VISION_API_KEY: ''
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.hero-line').forEach(function(el) { el.classList.add('animate'); });
+      var countEl = document.getElementById('connector-count');
+      var section = document.getElementById('connectors');
+      function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+      function onScroll() {
+        if (!section || !countEl) return;
+        var rect = section.getBoundingClientRect();
+        var viewHeight = window.innerHeight;
+        var start = viewHeight * 0.6;
+        var end = -rect.height * 0.2;
+        var progress = (start - rect.top) / (start - end);
+        var clamped = Math.min(1, Math.max(0, progress));
+        if (clamped > 0) countEl.textContent = Math.round(easeOutQuart(clamped) * 200);
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      // Testimonial carousel: 3 slides, swipe + prev/next, continuous loop
+      (function() {
+        var track = document.getElementById('testimonial-track');
+        var carousel = document.getElementById('testimonial-carousel');
+        var prevBtn = document.getElementById('testimonial-prev');
+        var nextBtn = document.getElementById('testimonial-next');
+        if (!track || !carousel) return;
+        var total = 3;
+        var index = 0;
+        var startX = 0;
+        var dragOffset = 0;
+
+        function updateCarousel(noTransition) {
+          if (noTransition) track.style.transition = 'none';
+          else track.style.transition = '';
+          track.style.transform = 'translateX(' + (-index * 100 + (dragOffset / (carousel.offsetWidth || 1)) * 100) + '%)';
+          if (noTransition) requestAnimationFrame(function() { track.style.transition = ''; });
+        }
+
+        function goPrev() {
+          index = (index - 1 + total) % total;
+          updateCarousel();
+        }
+        function goNext() {
+          index = (index + 1) % total;
+          updateCarousel();
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', goPrev);
+        if (nextBtn) nextBtn.addEventListener('click', goNext);
+
+        carousel.addEventListener('touchstart', function(e) {
+          startX = e.touches[0].clientX;
+          dragOffset = 0;
+        }, { passive: true });
+        carousel.addEventListener('touchmove', function(e) {
+          dragOffset = e.touches[0].clientX - startX;
+          updateCarousel(true);
+        }, { passive: true });
+        carousel.addEventListener('touchend', function() {
+          var w = carousel.offsetWidth;
+          if (dragOffset < -w * 0.15) goNext();
+          else if (dragOffset > w * 0.15) goPrev();
+          dragOffset = 0;
+          updateCarousel();
+        });
+
+        carousel.addEventListener('mousedown', function(e) {
+          startX = e.clientX;
+          dragOffset = 0;
+          carousel.addEventListener('mousemove', onMouseMove);
+          carousel.addEventListener('mouseup', onMouseUp);
+          carousel.addEventListener('mouseleave', onMouseUp);
+        });
+        function onMouseMove(e) {
+          dragOffset = e.clientX - startX;
+          updateCarousel(true);
+        }
+        function onMouseUp() {
+          carousel.removeEventListener('mousemove', onMouseMove);
+          carousel.removeEventListener('mouseup', onMouseUp);
+          carousel.removeEventListener('mouseleave', onMouseUp);
+          var w = carousel.offsetWidth;
+          if (dragOffset < -w * 0.15) goNext();
+          else if (dragOffset > w * 0.15) goPrev();
+          dragOffset = 0;
+          updateCarousel();
+        }
+
+        updateCarousel();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      })();
+
+      // Connector vote counter: click Coming Soon card to vote, persist in localStorage
+      var STORAGE_KEY = 'autoentry_connector_votes';
+      function getVotes() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+      function setVotes(obj) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); } catch (e) {}
+      }
+      var CONNECTOR_NAMES = { quickbooks: 'QuickBooks', xero: 'Xero', notion: 'Notion', airtable: 'Airtable', salesforce: 'Salesforce', hubspot: 'HubSpot', slack: 'Slack', asana: 'Asana', monday: 'Monday' };
+      function updateVoteStatsCard() {
+        var totalEl = document.getElementById('vote-stats-total');
+        var topEl = document.getElementById('vote-stats-top');
+        if (!totalEl || !topEl) return;
+        var votes = getVotes();
+        var total = 0;
+        var topId = null;
+        var topCount = 0;
+        Object.keys(votes).forEach(function(id) {
+          var n = votes[id] || 0;
+          total += n;
+          if (n > topCount) { topCount = n; topId = id; }
+        });
+        totalEl.textContent = total;
+        topEl.textContent = topId && topCount > 0 ? (CONNECTOR_NAMES[topId] || topId) : '—';
+      }
+      function updateVoteDisplay(card) {
+        var id = card.getAttribute('data-connector-id');
+        var countEl = card.querySelector('.connector-vote-count');
+        if (!id || !countEl) return;
+        var votes = getVotes();
+        var n = votes[id] || 0;
+        countEl.setAttribute('data-count', n);
+        countEl.textContent = n === 1 ? '1 vote' : n + ' votes';
+      }
+      document.querySelectorAll('.connector-vote').forEach(function(card) {
+        updateVoteDisplay(card);
+        card.addEventListener('click', function() {
+          var id = card.getAttribute('data-connector-id');
+          if (!id) return;
+          var votes = getVotes();
+          votes[id] = (votes[id] || 0) + 1;
+          setVotes(votes);
+          updateVoteDisplay(card);
+          updateVoteStatsCard();
+        });
+        card.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+          }
+        });
+      });
+      updateVoteStatsCard();
+
+      // Feedback: what to build next (stored in localStorage; pinned items first)
+      var FEEDBACK_KEY = 'autoentry_feedback';
+      function getFeedbackItems() {
+        try {
+          var raw = localStorage.getItem(FEEDBACK_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) { return []; }
+      }
+      function setFeedbackItems(items) {
+        try { localStorage.setItem(FEEDBACK_KEY, JSON.stringify(items)); } catch (e) {}
+      }
+      function renderFeedbackList() {
+        var list = document.getElementById('feedback-list');
+        var empty = document.getElementById('feedback-empty');
+        var countEl = document.getElementById('feedback-count');
+        if (!list) return;
+        var items = getFeedbackItems();
+        var sorted = items.slice().sort(function(a, b) {
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+          return (b.date || 0) - (a.date || 0);
+        });
+        list.innerHTML = '';
+        sorted.forEach(function(item) {
+          var li = document.createElement('li');
+          li.className = 'flex items-start gap-2 p-3 rounded-lg bg-white/60 border border-zinc-200/80';
+          li.setAttribute('data-feedback-id', item.id);
+          var pinBtn = document.createElement('button');
+          pinBtn.type = 'button';
+          pinBtn.className = 'shrink-0 p-1 rounded text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/80';
+          pinBtn.title = item.pinned ? 'Unpin' : 'Pin to top';
+          pinBtn.setAttribute('aria-label', item.pinned ? 'Unpin' : 'Pin to top');
+          pinBtn.innerHTML = item.pinned ? '<i data-lucide="pin" class="w-4 h-4 text-accent-blue"></i>' : '<i data-lucide="pin-off" class="w-4 h-4"></i>';
+          var textSpan = document.createElement('span');
+          textSpan.className = 'flex-1 text-sm text-zinc-800';
+          textSpan.textContent = item.text || '(empty)';
+          li.appendChild(pinBtn);
+          li.appendChild(textSpan);
+          pinBtn.addEventListener('click', function() {
+            var arr = getFeedbackItems();
+            var idx = arr.findIndex(function(x) { return x.id === item.id; });
+            if (idx !== -1) {
+              arr[idx].pinned = !arr[idx].pinned;
+              setFeedbackItems(arr);
+              renderFeedbackList();
+              if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+          });
+          list.appendChild(li);
+        });
+        if (empty) empty.style.display = sorted.length ? 'none' : 'block';
+        if (countEl) countEl.textContent = sorted.length + ' item' + (sorted.length === 1 ? '' : 's');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+      var feedbackInput = document.getElementById('feedback-input');
+      var feedbackSubmit = document.getElementById('feedback-submit');
+      if (feedbackSubmit && feedbackInput) {
+        renderFeedbackList();
+        feedbackSubmit.addEventListener('click', function() {
+          var text = (feedbackInput.value || '').trim();
+          if (!text) return;
+          var items = getFeedbackItems();
+          items.unshift({
+            id: 'fb_' + Date.now(),
+            text: text,
+            pinned: false,
+            date: Date.now()
+          });
+          setFeedbackItems(items);
+          feedbackInput.value = '';
+          renderFeedbackList();
+        });
+      }
+
+      // ----- Scan flow: QR modal (desktop) / redirect (mobile), camera + OCR -----
+      var SCAN_COUNT_KEY = 'autoentry_free_scan_count';
+      var FREE_SCAN_LIMIT = 5;
+      function getScanCount() {
+        var n = parseInt(localStorage.getItem(SCAN_COUNT_KEY), 10);
+        return isNaN(n) ? FREE_SCAN_LIMIT : n;
+      }
+      function setScanCount(n) {
+        localStorage.setItem(SCAN_COUNT_KEY, String(Math.max(0, n)));
+      }
+
+      function isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+      }
+      function getScanUrl() {
+        var base = window.location.origin + window.location.pathname;
+        return base + (base.indexOf('?') !== -1 ? '&' : '?') + 'mode=scan';
+      }
+
+      var qrModal = document.getElementById('qr-modal');
+      var scanView = document.getElementById('scan-view');
+      var mainLanding = document.getElementById('main-landing');
+      var tryFreeScansBtn = document.getElementById('try-free-scans-btn');
+
+      function openQrModal() {
+        var url = getScanUrl();
+        var qrImage = document.getElementById('qr-image');
+        var urlEl = document.getElementById('qr-scan-url');
+        if (urlEl) urlEl.textContent = url;
+        if (typeof QRCode !== 'undefined' && qrImage) {
+          QRCode.toDataURL(url, { width: 200, margin: 2 })
+            .then(function(dataUrl) {
+              qrImage.src = dataUrl;
+              qrImage.classList.remove('hidden');
+            })
+            .catch(function() {
+              qrImage.alt = 'QR code unavailable — use the link below';
+              qrImage.classList.remove('hidden');
+            });
+        }
+        qrModal.classList.remove('hidden');
+        qrModal.classList.add('flex');
+      }
+
+      if (tryFreeScansBtn) {
+        tryFreeScansBtn.addEventListener('click', function() {
+          window.location.href = getScanUrl();
+        });
+      }
+      document.getElementById('qr-modal-close').addEventListener('click', function() {
+        qrModal.classList.add('hidden');
+        qrModal.classList.remove('flex');
+      });
+      var scanViewQrBtn = document.getElementById('scan-view-qr-btn');
+      if (scanViewQrBtn) scanViewQrBtn.addEventListener('click', openQrModal);
+      qrModal.addEventListener('click', function(e) {
+        if (e.target === qrModal) {
+          qrModal.classList.add('hidden');
+          qrModal.classList.remove('flex');
+        }
+      });
+
+      // Scan mode: show scan view, start camera, capture, OCR
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('mode') === 'scan') {
+        mainLanding.style.display = 'none';
+        var mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
+        scanView.classList.remove('hidden');
+        scanView.classList.add('flex');
+        var scanCountEl = document.getElementById('scan-count-display');
+        var video = document.getElementById('scan-video');
+        var stepCamera = document.getElementById('scan-step-camera');
+        var stepResult = document.getElementById('scan-step-result');
+        var captureBtn = document.getElementById('scan-capture-btn');
+        var capturedImg = document.getElementById('scan-captured-img');
+        var ocrTextEl = document.getElementById('scan-ocr-text');
+        var cameraErrorEl = document.getElementById('scan-camera-error');
+        var doneBtn = document.getElementById('scan-done-btn');
+        var detectedTypeEl = document.getElementById('scan-detected-type');
+        var detectedLabelEl = document.getElementById('scan-detected-label');
+        var suggestedAppsEl = document.getElementById('scan-suggested-apps');
+        var toastEl = document.getElementById('scan-toast');
+        var stream = null;
+        var lastExtractedText = '';
+
+        function extractTextFromImage(dataUrl) {
+          var visionKey = (window.AUTOENTRY_CONFIG && window.AUTOENTRY_CONFIG.GOOGLE_VISION_API_KEY) || '';
+          if (visionKey) {
+            var base64 = (dataUrl || '').replace(/^data:image\/\w+;base64,/, '');
+            return fetch('https://vision.googleapis.com/v1/images:annotate?key=' + encodeURIComponent(visionKey), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                requests: [{ image: { content: base64 }, features: [{ type: 'DOCUMENT_TEXT_DETECTION' }] }]
+              })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+              var res = data.responses && data.responses[0];
+              if (res && res.fullTextAnnotation && res.fullTextAnnotation.text) return res.fullTextAnnotation.text.trim();
+              if (res && res.error) throw new Error(res.error.message || 'Vision API error');
+              return '';
+            });
+          }
+          return Tesseract.recognize(dataUrl, 'eng', { logger: function() {} }).then(function(result) { return (result.data.text || '').trim(); });
+        }
+
+        function classifyDocument(ocrText) {
+          var key = (window.AUTOENTRY_CONFIG && window.AUTOENTRY_CONFIG.GEMINI_API_KEY) || '';
+          var text = (ocrText || '').trim().slice(0, 8000);
+          if (!text) return Promise.resolve({ documentType: 'document', suggestedApps: [{ name: 'Google Docs', reason: 'Save this as a document' }] });
+
+          if (key) {
+            var prompt = 'Analyze this extracted document text and respond with ONLY a valid JSON object (no markdown, no code block), no other text. Use this exact shape: {"documentType":"invoice"|"receipt"|"business_card"|"form"|"other","suggestedApps":[{"name":"App Name","reason":"short reason"}]}. Suggest 2-4 apps that fit the document type (e.g. invoice -> QuickBooks, Xero; receipt -> Expensify; always include Google Docs as one option for saving content). Document text:\n\n' + text;
+            return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(key), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 512 } })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+              var out = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) ? data.candidates[0].content.parts[0].text : '';
+              var parsed = null;
+              try {
+                parsed = JSON.parse(out.replace(/^[\s\S]*?(\{[\s\S]*\})[\s\S]*$/, '$1'));
+              } catch (e) {}
+              if (parsed && parsed.suggestedApps && Array.isArray(parsed.suggestedApps)) return parsed;
+              return null;
+            }).catch(function() { return null; });
+          }
+
+          var lower = text.toLowerCase();
+          var documentType = 'document';
+          if (/\binvoice\b|inv\.? no|bill to|amount due|subtotal|tax\s*%|vat\s*number/i.test(lower)) documentType = 'invoice';
+          else if (/\breceipt\b|total\s+paid|change\s+due|register\s+#|pos\s+/i.test(lower) || /\d{1,2}\/\d{1,2}\/\d{2,4}\s+\d+\.\d{2}/.test(lower)) documentType = 'receipt';
+          else if (/\bemail\b.*@|phone\s*:|mobile\s*:|company\s*:|title\s*:/i.test(lower) && text.length < 1500) documentType = 'business_card';
+          else if (/\bform\b|checkbox|signature\s*line|date\s*:\s*\_+/i.test(lower)) documentType = 'form';
+
+          var suggestedApps = [];
+          if (documentType === 'invoice') suggestedApps = [{ name: 'QuickBooks', reason: 'Import invoices and track payments' }, { name: 'Xero', reason: 'Sync invoices to accounting' }, { name: 'Google Docs', reason: 'Save as a document' }];
+          else if (documentType === 'receipt') suggestedApps = [{ name: 'Expensify', reason: 'Expense reports from receipts' }, { name: 'QuickBooks', reason: 'Track expenses' }, { name: 'Google Docs', reason: 'Save as a document' }];
+          else if (documentType === 'business_card') suggestedApps = [{ name: 'Google Contacts', reason: 'Add to contacts' }, { name: 'Salesforce', reason: 'Add lead' }, { name: 'Google Docs', reason: 'Save details' }];
+          else suggestedApps = [{ name: 'Google Docs', reason: 'Save and edit this content' }, { name: 'Notion', reason: 'Add to your workspace' }];
+          return Promise.resolve({ documentType: documentType, suggestedApps: suggestedApps });
+        }
+
+        function renderSuggestedApps(suggestedApps, extractedText) {
+          if (!suggestedAppsEl) return;
+          suggestedAppsEl.innerHTML = '';
+          (suggestedApps || []).forEach(function(app) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'sync-dest-btn w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-900 text-white text-left text-sm transition-all hover:bg-zinc-800';
+            btn.setAttribute('data-app-name', app.name);
+            btn.setAttribute('data-reason', app.reason || '');
+            btn.innerHTML = '<span class="min-w-0 flex-1"><span class="font-semibold text-white block">' + escapeHtml(app.name) + '</span><span class="text-xs text-white/80 block mt-0.5">' + escapeHtml(app.reason || '') + '</span></span><i data-lucide="arrow-right" class="w-5 h-5 text-white shrink-0"></i>';
+            btn.addEventListener('click', function() {
+              if (app.name === 'Google Docs') {
+                lastExtractedText = extractedText || lastExtractedText;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                  navigator.clipboard.writeText(lastExtractedText).then(function() {
+                    window.open('https://docs.google.com/document/create', '_blank');
+                    if (toastEl) {
+                      toastEl.textContent = 'Content copied! Paste (Ctrl+V or Cmd+V) in the new tab to add to your doc.';
+                      toastEl.classList.remove('hidden');
+                      setTimeout(function() { toastEl.classList.add('hidden'); }, 6000);
+                    }
+                    btn.classList.add('bg-emerald-600', 'border-emerald-600', 'text-white');
+                    var reasonSpan = btn.querySelector('.min-w-0.flex-1 span:last-child');
+                    if (reasonSpan) reasonSpan.classList.add('text-emerald-100');
+                    btn.querySelector('span.font-semibold').textContent = 'Copied — open Google Docs ✓';
+                    var icon = btn.querySelector('i[data-lucide]');
+                    if (icon) icon.classList.add('text-white');
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                  }).catch(function() {
+                    if (toastEl) { toastEl.textContent = 'Could not copy. Please copy the text above and paste into Google Docs.'; toastEl.classList.remove('hidden'); }
+                  });
+                } else {
+                  window.open('https://docs.google.com/document/create', '_blank');
+                  if (toastEl) { toastEl.textContent = 'Open the new tab and paste the extracted text above into your doc.'; toastEl.classList.remove('hidden'); }
+                  btn.classList.add('bg-emerald-600', 'border-emerald-600', 'text-white');
+                  btn.querySelector('span.font-semibold').textContent = 'Open Google Docs ✓';
+                }
+              } else {
+                btn.classList.add('bg-emerald-600', 'border-emerald-600', 'text-white');
+                var reasonSpan = btn.querySelector('.min-w-0.flex-1 span:last-child');
+                if (reasonSpan) reasonSpan.classList.add('text-emerald-100');
+                btn.querySelector('span.font-semibold').textContent = app.name + ' ✓';
+                var icon = btn.querySelector('i[data-lucide]');
+                if (icon) icon.classList.add('text-white');
+              }
+              if (typeof lucide !== 'undefined') lucide.createIcons();
+            });
+            suggestedAppsEl.appendChild(btn);
+          });
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+        function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+        function updateScanCountDisplay() {
+          var n = getScanCount();
+          scanCountEl.textContent = n + ' free scan' + (n === 1 ? '' : 's') + ' left';
+        }
+        updateScanCountDisplay();
+
+        function isSecureContext() {
+          return typeof navigator !== 'undefined' && navigator.mediaDevices != null;
+        }
+        function startCamera() {
+          if (cameraErrorEl) {
+            cameraErrorEl.textContent = '';
+            cameraErrorEl.classList.add('hidden');
+          }
+          if (!isSecureContext()) {
+            if (cameraErrorEl) {
+              cameraErrorEl.innerHTML = 'Camera requires a secure context. Open this page from a web server (e.g. <strong>http://localhost:3000</strong>).<br><br>In the project folder run: <code class="bg-zinc-700 px-1.5 py-0.5 rounded text-white text-xs block mt-1">npx serve -l 3000</code> Then visit: <code class="bg-zinc-700 px-1.5 py-0.5 rounded text-white text-xs block mt-1 break-all">http://localhost:3000/?mode=scan</code>';
+              cameraErrorEl.classList.remove('hidden');
+            }
+            return;
+          }
+          var ideal = { width: { ideal: 1280 }, height: { ideal: 720 } };
+          var optsEnv = { video: Object.assign({ facingMode: 'environment' }, ideal), audio: false };
+          navigator.mediaDevices.getUserMedia(optsEnv).then(function(s) {
+            stream = s;
+            video.srcObject = s;
+          }).catch(function() {
+            var optsUser = { video: Object.assign({ facingMode: 'user' }, ideal), audio: false };
+            navigator.mediaDevices.getUserMedia(optsUser).then(function(s) {
+              stream = s;
+              video.srcObject = s;
+            }).catch(function() {
+              if (cameraErrorEl) {
+                cameraErrorEl.textContent = 'Camera access denied or not available. Please allow camera and reload.';
+                cameraErrorEl.classList.remove('hidden');
+              }
+            });
+          });
+        }
+        startCamera();
+
+        captureBtn.addEventListener('click', function() {
+          var count = getScanCount();
+          if (count <= 0) {
+            ocrTextEl.textContent = 'You\'ve used your 5 free scans. Connect an app or upgrade to continue.';
+            stepCamera.classList.add('hidden');
+            stepResult.classList.remove('hidden');
+            stepResult.classList.add('flex');
+            return;
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0);
+          var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          capturedImg.src = dataUrl;
+          if (stream) {
+            stream.getTracks().forEach(function(t) { t.stop(); });
+            stream = null;
+          }
+          stepCamera.classList.add('hidden');
+          stepResult.classList.remove('hidden');
+          stepResult.classList.add('flex');
+          ocrTextEl.textContent = 'Extracting text…';
+          setScanCount(count - 1);
+          updateScanCountDisplay();
+          if (detectedTypeEl) detectedTypeEl.classList.add('hidden');
+          if (suggestedAppsEl) suggestedAppsEl.innerHTML = '';
+          if (toastEl) toastEl.classList.add('hidden');
+
+          extractTextFromImage(dataUrl)
+            .then(function(text) {
+              ocrTextEl.textContent = text || '(No text detected)';
+              lastExtractedText = text;
+              return classifyDocument(text);
+            })
+            .then(function(classification) {
+              if (classification) {
+                var label = classification.documentType.replace(/_/g, ' ');
+                label = label.charAt(0).toUpperCase() + label.slice(1);
+                if (detectedLabelEl) detectedLabelEl.textContent = label + ' detected';
+                if (detectedTypeEl) detectedTypeEl.classList.remove('hidden');
+                renderSuggestedApps(classification.suggestedApps, lastExtractedText);
+              } else {
+                if (detectedLabelEl) detectedLabelEl.textContent = 'Document';
+                if (detectedTypeEl) detectedTypeEl.classList.remove('hidden');
+                renderSuggestedApps([{ name: 'Google Docs', reason: 'Save as a document' }], lastExtractedText);
+              }
+            })
+            .catch(function() {
+              ocrTextEl.textContent = ocrTextEl.textContent || '(OCR failed)';
+              if (detectedLabelEl) detectedLabelEl.textContent = 'Document';
+              if (detectedTypeEl) detectedTypeEl.classList.remove('hidden');
+              renderSuggestedApps([{ name: 'Google Docs', reason: 'Save as a document' }], lastExtractedText);
+            });
+        });
+
+        doneBtn.addEventListener('click', function() {
+          stepResult.classList.add('hidden');
+          stepResult.classList.remove('flex');
+          stepCamera.classList.remove('hidden');
+          capturedImg.src = '';
+          ocrTextEl.textContent = '';
+          lastExtractedText = '';
+          if (detectedTypeEl) detectedTypeEl.classList.add('hidden');
+          if (suggestedAppsEl) suggestedAppsEl.innerHTML = '';
+          if (toastEl) toastEl.classList.add('hidden');
+          startCamera();
+        });
+
+        document.getElementById('scan-view-back').addEventListener('click', function(e) {
+          e.preventDefault();
+          if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
+          window.location.href = window.location.pathname || '/';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

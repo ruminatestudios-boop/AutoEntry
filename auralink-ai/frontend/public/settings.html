@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .toggle { width: 44px; height: 24px; border-radius: 12px; border: 1px solid #e4e4e7; background: #e4e4e7; transition: background 0.2s; }
+    .toggle.on { background: #10b981; border-color: #059669; }
+    .toggle-knob { width: 18px; height: 18px; border-radius: 9px; background: white; border: 1px solid #d4d4d8; margin: 2px; transition: transform 0.2s; }
+    .toggle.on .toggle-knob { transform: translateX(20px); }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
+      <span class="w-10 h-10" aria-hidden="true"></span>
+      <h1 class="font-serif text-lg font-bold text-zinc-900">Settings</h1>
+      <span class="w-14"></span>
+    </header>
+
+    <main class="flex-1 px-5 py-4 overflow-auto">
+      <!-- Profile -->
+      <div class="rounded-xl bg-white border border-zinc-200 p-4 flex items-center gap-4 mb-6">
+        <div class="w-12 h-12 rounded-full bg-zinc-200 border border-zinc-300 flex items-center justify-center text-lg font-semibold text-zinc-600">J</div>
+        <div class="min-w-0 flex-1">
+          <p class="font-semibold text-zinc-900">James Wilson</p>
+          <p class="text-xs text-zinc-500 mt-0.5">Pro plan · 84 listings</p>
+        </div>
+      </div>
+
+      <!-- AI Preferences -->
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">AI Preferences</p>
+      <div class="rounded-xl bg-white border border-zinc-200 divide-y divide-zinc-100 overflow-hidden mb-6">
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm font-medium text-zinc-900">Use AI pricing suggestions</span>
+          <button type="button" id="setting-ai-pricing" class="toggle on" data-setting="ai_pricing" aria-label="Toggle"><span class="toggle-knob block"></span></button>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm font-medium text-zinc-900">Auto-fix descriptions</span>
+          <button type="button" id="setting-auto-fix-descriptions" class="toggle on" data-setting="auto_fix_descriptions" aria-label="Toggle"><span class="toggle-knob block"></span></button>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm font-medium text-zinc-900">Learn from my sales</span>
+          <button type="button" id="setting-learn-from-sales" class="toggle on" data-setting="learn_from_sales" aria-label="Toggle"><span class="toggle-knob block"></span></button>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Notifications</p>
+      <div class="rounded-xl bg-white border border-zinc-200 divide-y divide-zinc-100 overflow-hidden mb-6">
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm font-medium text-zinc-900">Sales & listings</span>
+          <button type="button" id="setting-notif-sales" class="toggle on" data-setting="notif_sales" aria-label="Toggle"><span class="toggle-knob block"></span></button>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm font-medium text-zinc-900">AI insights</span>
+          <button type="button" id="setting-notif-ai-insights" class="toggle on" data-setting="notif_ai_insights" aria-label="Toggle"><span class="toggle-knob block"></span></button>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm font-medium text-zinc-900">Marketing</span>
+          <button type="button" id="setting-notif-marketing" class="toggle" data-setting="notif_marketing" aria-label="Toggle"><span class="toggle-knob block"></span></button>
+        </div>
+      </div>
+
+      <!-- Account -->
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Account</p>
+      <div class="rounded-xl bg-white border border-zinc-200 divide-y divide-zinc-100 overflow-hidden mb-6">
+        <a href="edit-profile.html" class="flex items-center justify-between px-4 py-3 text-zinc-900 no-underline hover:bg-zinc-50 transition-colors">
+          <span class="text-sm font-medium">Edit profile</span>
+          <span class="text-zinc-400">›</span>
+        </a>
+        <a href="plans.html" class="flex items-center justify-between px-4 py-3 text-zinc-900 no-underline hover:bg-zinc-50 transition-colors">
+          <span class="text-sm font-medium">Plans</span>
+          <span class="text-zinc-400">›</span>
+        </a>
+        <a href="billing.html" class="flex items-center justify-between px-4 py-3 text-zinc-900 no-underline hover:bg-zinc-50 transition-colors">
+          <span class="text-sm font-medium">Billing</span>
+          <span class="text-zinc-400">›</span>
+        </a>
+        <a href="stores-list.html" class="flex items-center justify-between px-4 py-3 text-zinc-900 no-underline hover:bg-zinc-50 transition-colors">
+          <span class="text-sm font-medium">Connected stores</span>
+          <span class="text-zinc-400">›</span>
+        </a>
+      </div>
+
+      <!-- Log out -->
+      <a href="auth-login.html" id="settings-logout" class="block w-full py-3 rounded-xl border border-zinc-200 text-zinc-700 font-medium text-sm text-center hover:bg-zinc-100 transition-colors mb-4">
+        Log out
+      </a>
+
+      <!-- Destructive -->
+      <button type="button" class="block w-full py-3 rounded-xl border border-red-200 text-red-600 font-medium text-sm">
+        Delete my brain data
+      </button>
+    </main>
+  </div>
+  <script>
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowLeft') return;
+      if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
+      e.preventDefault();
+      history.back();
+    });
+  </script>
+  <script>
+    (function() {
+      var STORAGE_KEY = 'auralink_settings';
+      var DEFAULTS = {
+        ai_pricing: true,
+        auto_fix_descriptions: true,
+        learn_from_sales: true,
+        notif_sales: true,
+        notif_ai_insights: true,
+        notif_marketing: false
+      };
+      function loadSettings() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) { var o = JSON.parse(raw); if (o && typeof o === 'object') return o; }
+        } catch (e) {}
+        return {};
+      }
+      function saveSettings(settings) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch (e) {}
+      }
+      var settings = loadSettings();
+      function get(key) { return settings[key] !== undefined ? settings[key] : DEFAULTS[key]; }
+      function set(key, value) { settings[key] = value; saveSettings(settings); }
+
+      document.querySelectorAll('.toggle[data-setting]').forEach(function(btn) {
+        var key = btn.getAttribute('data-setting');
+        var isOn = get(key);
+        if (!isOn) btn.classList.remove('on'); else btn.classList.add('on');
+
+        btn.addEventListener('click', function() {
+          var nowOn = btn.classList.toggle('on');
+          set(key, nowOn);
+        });
+      });
+
+      var logoutEl = document.getElementById('settings-logout');
+      if (logoutEl) logoutEl.addEventListener('click', function(e) {
+        try {
+          sessionStorage.removeItem('auralink_review_draft');
+          sessionStorage.removeItem('auralink_selected_marketplaces');
+          sessionStorage.removeItem('auralink_connected_stores');
+          sessionStorage.removeItem('auralink_draft_listing');
+        } catch (err) {}
+      });
+    })();
+  </script>
+</body>
+</html>

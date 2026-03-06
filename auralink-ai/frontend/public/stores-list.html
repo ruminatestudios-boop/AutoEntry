@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stores | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
+      <a href="settings.html" id="back-link" class="flex items-center gap-2 text-zinc-900 no-underline">
+        <span class="text-lg">←</span>
+        <span class="font-semibold">Settings</span>
+      </a>
+      <h1 class="font-serif text-lg font-bold text-zinc-900">Stores</h1>
+      <span class="w-14"></span>
+    </header>
+
+    <main class="flex-1 px-5 py-4 overflow-auto">
+      <!-- Warning -->
+      <div class="rounded-xl bg-white border border-red-200 p-4 mb-5">
+        <p class="text-sm font-medium text-zinc-900">Amazon disconnected</p>
+        <p class="text-xs text-zinc-600 mt-0.5">Your token expired. Reconnect to resume publishing.</p>
+      </div>
+
+      <!-- Store list -->
+      <div class="space-y-3 mb-6">
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-sm font-bold">A</div>
+            <div>
+              <p class="font-semibold text-zinc-900">Amazon</p>
+              <p class="text-xs text-zinc-500">Disconnected · 3 listings paused</p>
+            </div>
+          </div>
+          <a href="/stores-connect-amazon.html" class="text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 text-white no-underline" id="reconnect-amazon-card">Reconnect</a>
+        </div>
+        <a href="#" class="block rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between no-underline">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-sm font-bold">T</div>
+            <div>
+              <p class="font-semibold text-zinc-900">TikTok Shop</p>
+              <p class="text-xs text-zinc-500">Connected</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Active</span>
+        </a>
+        <a href="/stores-connect-shopify.html" id="shopify-card-link" class="block rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between no-underline text-zinc-900 hover:bg-zinc-50 transition-colors">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-sm font-bold">S</div>
+            <div>
+              <p class="font-semibold text-zinc-900">Shopify</p>
+              <p class="text-xs text-zinc-500">Connected</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Active</span>
+        </a>
+      </div>
+
+      <a href="/stores-connect-amazon.html" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline" id="reconnect-btn">
+        Reconnect Amazon
+      </a>
+    </main>
+  </div>
+  <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var from = params.get('from');
+      var backLink = document.getElementById('back-link');
+      var reconnectBtn = document.getElementById('reconnect-btn');
+      var reconnectCard = document.getElementById('reconnect-amazon-card');
+      if (from === 'flow-marketplaces' && backLink) {
+        backLink.href = '/flow-marketplaces.html';
+        var label = backLink.querySelector('.font-semibold');
+        if (label) label.textContent = 'Choose marketplaces';
+      }
+      if (from === 'flow-marketplaces' && reconnectBtn) {
+        reconnectBtn.href = '/stores-connect-amazon.html?return=flow-marketplaces';
+      }
+      if (from === 'flow-connect' && backLink) {
+        backLink.href = '/flow-connect.html';
+        var label = backLink.querySelector('.font-semibold');
+        if (label) label.textContent = 'Connect your stores';
+      }
+      if (from === 'flow-connect' && reconnectBtn) {
+        reconnectBtn.href = '/stores-connect-amazon.html?return=flow-connect';
+      }
+      if (from === 'flow-connect' && reconnectCard) {
+        reconnectCard.href = '/stores-connect-amazon.html?return=flow-connect';
+      }
+      var shopifyCard = document.getElementById('shopify-card-link');
+      if (shopifyCard) {
+        shopifyCard.href = from === 'flow-marketplaces' ? '/stores-connect-shopify.html?return=flow-marketplaces' : (from === 'flow-connect' ? '/stores-connect-shopify.html?return=flow-connect' : '/stores-connect-shopify.html');
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 .DS_Store
 node_modules
+.venv
 .env
 .env.*
 *.sqlite
 *.sqlite-journal
+*.mp4

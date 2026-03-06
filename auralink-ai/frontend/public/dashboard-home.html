@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home | Dashboard | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50">
+      <span class="font-serif text-2xl font-bold text-zinc-900">AuraLink</span>
+      <div class="flex items-center gap-2">
+        <a href="flow-1.html" class="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center text-lg font-bold leading-none no-underline hover:bg-zinc-800 transition-colors" aria-label="Add / Scan new product">+</a>
+        <a href="settings.html" class="w-9 h-9 rounded-full bg-zinc-200 border border-zinc-300 flex items-center justify-center text-sm font-semibold text-zinc-600 no-underline">J</a>
+      </div>
+    </header>
+
+    <main class="flex-1 px-5 pb-24 overflow-auto">
+      <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Home & Dashboard</p>
+
+      <!-- Main card -->
+      <div class="rounded-2xl bg-white border border-zinc-200 overflow-hidden">
+        <!-- AI summary: light, sectioned like Timeblok -->
+        <div class="p-5 border-b border-zinc-100">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Morning, James</p>
+          <p class="text-sm text-zinc-800 mb-5">AI has learned <span class="font-serif font-bold text-zinc-900">47 things</span> about your store</p>
+          <div class="space-y-4 mb-5">
+            <div>
+              <div class="flex justify-between text-xs text-zinc-500 mb-1.5">
+                <span>Pricing IQ</span>
+                <span class="font-medium text-zinc-700">78%</span>
+              </div>
+              <div class="h-2 bg-zinc-200 rounded-full overflow-hidden">
+                <div class="h-full bg-zinc-700 rounded-full transition-all" style="width: 78%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs text-zinc-500 mb-1.5">
+                <span>Category IQ</span>
+                <span class="font-medium text-zinc-700">91%</span>
+              </div>
+              <div class="h-2 bg-zinc-200 rounded-full overflow-hidden">
+                <div class="h-full bg-zinc-700 rounded-full transition-all" style="width: 91%;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex-1 rounded-xl bg-zinc-50 border border-zinc-200 p-3 text-center">
+              <p class="font-serif text-xl font-bold text-zinc-900">84</p>
+              <p class="text-[10px] text-zinc-500 mt-0.5">listed</p>
+            </div>
+            <div class="flex-1 rounded-xl bg-zinc-50 border border-zinc-200 p-3 text-center">
+              <p class="font-serif text-xl font-bold text-zinc-900">67</p>
+              <p class="text-[10px] text-zinc-500 mt-0.5">sold</p>
+            </div>
+            <div class="flex-1 rounded-xl bg-zinc-50 border border-zinc-200 p-3 text-center">
+              <p class="font-serif text-xl font-bold text-zinc-900">2.1d</p>
+              <p class="text-[10px] text-zinc-500 mt-0.5">avg time</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's Insights -->
+        <div class="p-5 pt-4">
+        <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">Today's Insights</p>
+        <div class="space-y-3 mb-6">
+          <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-3 flex gap-3">
+            <span class="w-8 h-8 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-600 text-xs font-bold shrink-0">!</span>
+            <p class="text-sm text-zinc-800">You underprice electronics on eBay by avg $18. That's $108 lost this month.</p>
+          </div>
+          <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-3 flex gap-3">
+            <span class="w-8 h-8 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 text-xs font-bold shrink-0">^</span>
+            <p class="text-sm text-zinc-800">Vintage clothing is your best category. 94% sell rate. List more of this.</p>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <a href="flow-1.html" class="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 no-underline">
+          <span class="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center text-[10px] font-bold">C</span>
+          Scan new product
+          <span class="text-white/70">→</span>
+        </a>
+        <p class="text-center text-xs text-zinc-500 mt-2">Or <a href="flow-1.html" class="font-medium text-zinc-700 underline">list a new item</a> with photo</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

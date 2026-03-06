@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
+      <a href="plans.html" class="flex items-center gap-2 text-zinc-900 no-underline">
+        <span class="text-lg">←</span>
+        <span class="font-semibold">Plans</span>
+      </a>
+      <h1 class="font-serif text-lg font-bold text-zinc-900">Checkout</h1>
+      <span class="w-14"></span>
+    </header>
+
+    <main class="flex-1 px-5 py-4 overflow-auto">
+      <div id="checkout-summary" class="rounded-xl bg-white border border-zinc-200 p-4 mb-6">
+        <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">Selected plan</p>
+        <p id="checkout-plan-name" class="font-serif text-xl font-bold text-zinc-900">Pro</p>
+        <p id="checkout-plan-price" class="text-sm text-zinc-500 mt-0.5">$29/mo</p>
+      </div>
+
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Payment method</p>
+      <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-7 rounded bg-zinc-800 flex items-center justify-center text-white text-[10px] font-bold">VISA</div>
+            <div>
+              <p class="text-sm font-semibold text-zinc-900">•••• 4242</p>
+              <p class="text-xs text-zinc-500">Expires 12/28</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a href="payment-success.html" id="checkout-confirm" class="block w-full py-3.5 rounded-xl bg-zinc-900 text-white font-semibold text-center no-underline hover:bg-zinc-800 transition-colors">
+        Confirm payment
+      </a>
+    </main>
+  </div>
+  <script>
+    (function() {
+      var plan = sessionStorage.getItem('auralink_selected_plan') || 'pro';
+      var plans = { free: { name: 'Free', price: '$0/mo' }, pro: { name: 'Pro', price: '$29/mo' }, business: { name: 'Business', price: '$79/mo' } };
+      var p = plans[plan] || plans.pro;
+      var nameEl = document.getElementById('checkout-plan-name');
+      var priceEl = document.getElementById('checkout-plan-price');
+      if (nameEl) nameEl.textContent = p.name;
+      if (priceEl) priceEl.textContent = p.price;
+      var confirmBtn = document.getElementById('checkout-confirm');
+      if (confirmBtn) confirmBtn.addEventListener('click', function() {
+        sessionStorage.setItem('auralink_plan_after_payment', plan);
+      });
+    })();
+  </script>
+</body>
+</html>

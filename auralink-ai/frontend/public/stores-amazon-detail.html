@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon | Stores | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .toggle { width: 44px; height: 24px; border-radius: 12px; border: 1px solid #e4e4e7; background: #e4e4e7; }
+    .toggle.on { background: #10b981; border-color: #059669; }
+    .toggle-knob { width: 18px; height: 18px; border-radius: 9px; background: white; border: 1px solid #d4d4d8; margin: 2px; transition: transform 0.2s; }
+    .toggle.on .toggle-knob { transform: translateX(20px); }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
+      <a href="/stores-list.html" class="flex items-center gap-2 text-zinc-900 no-underline">
+        <span class="text-lg">←</span>
+        <span class="font-semibold">Stores</span>
+      </a>
+      <h1 class="font-serif text-lg font-bold text-zinc-900">Amazon</h1>
+      <span class="w-14"></span>
+    </header>
+
+    <main class="flex-1 px-5 py-4 overflow-auto">
+      <!-- Status card -->
+      <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-5">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-sm font-bold">A</div>
+          <div>
+            <p class="font-semibold text-zinc-900">Amazon</p>
+            <p class="text-xs text-zinc-500 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Connected · Active
+            </p>
+          </div>
+        </div>
+        <p class="text-xs text-zinc-500">james-seller · Professional</p>
+      </div>
+
+      <!-- Metrics -->
+      <div class="grid grid-cols-3 gap-2 mb-6">
+        <div class="rounded-xl bg-white border border-zinc-200 p-3 text-center">
+          <p class="font-serif text-xl font-bold text-zinc-900">24</p>
+          <p class="text-[11px] text-zinc-500">listings</p>
+        </div>
+        <div class="rounded-xl bg-white border border-zinc-200 p-3 text-center">
+          <p class="font-serif text-xl font-bold text-zinc-900">18</p>
+          <p class="text-[11px] text-zinc-500">sold</p>
+        </div>
+        <div class="rounded-xl bg-white border border-zinc-200 p-3 text-center">
+          <p class="font-serif text-xl font-bold text-zinc-900">$1.2k</p>
+          <p class="text-[11px] text-zinc-500">revenue</p>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Settings</p>
+      <div class="rounded-xl bg-white border border-zinc-200 divide-y divide-zinc-100 overflow-hidden mb-6">
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm font-medium text-zinc-900">Auto-publish to Amazon</span>
+          <button type="button" class="toggle on" aria-label="Toggle"><span class="toggle-knob block"></span></button>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <span class="text-sm font-medium text-zinc-900">Sync price changes</span>
+          <button type="button" class="toggle on" aria-label="Toggle"><span class="toggle-knob block"></span></button>
+        </div>
+        <a href="#" class="flex items-center justify-between px-4 py-3 text-zinc-900 no-underline">
+          <span class="text-sm font-medium">Default shipping template</span>
+          <span class="text-zinc-400">›</span>
+        </a>
+      </div>
+
+      <button type="button" class="block w-full py-3 rounded-xl border border-red-200 text-red-600 font-medium text-sm">
+        Disconnect Amazon
+      </button>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Choose Marketplaces | Listing Flow | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .step-segment { width: 8px; height: 4px; border-radius: 2px; background: #e4e4e7; }
+    .step-segment.filled { background: #18181b; }
+    .marketplace-card[data-coming-soon="true"] {
+      cursor: default;
+      opacity: 0.55;
+      background: #f4f4f5;
+      border-color: #e4e4e7;
+      filter: saturate(0.75);
+    }
+    .marketplace-card[data-coming-soon="true"]:hover { border-color: #e4e4e7; }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+      <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0">
+      <span class="w-10 h-10" aria-hidden="true"></span>
+      <span class="invisible text-sm">Next</span>
+    </header>
+
+    <main class="flex-1 px-5 pb-6 overflow-auto">
+      <h1 class="font-serif text-xl font-bold text-zinc-900 mb-4 text-center">Where to list?</h1>
+
+      <p class="text-center text-sm text-zinc-500 mb-4">Select the platforms for this listing. Next screen: connect all of them in one go.</p>
+
+      <!-- Info card -->
+      <div class="rounded-xl bg-amber-50 border border-amber-200 p-3 mb-5">
+        <p class="text-sm text-zinc-800">TikTok demand ↑34% this week for audio — list there first for fastest sale.</p>
+      </div>
+
+      <!-- Marketplace cards -->
+      <div class="space-y-3" id="marketplace-cards">
+        <div class="marketplace-card rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between cursor-pointer hover:border-zinc-400 transition-colors select-none" data-marketplace="shopify" role="button" tabindex="0">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="Shopify" class="w-6 h-6 object-contain marketplace-logo" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden');" />
+              <span class="text-zinc-600 text-sm font-bold hidden">S</span>
+            </span>
+            <div>
+              <p class="font-semibold text-zinc-900">Shopify</p>
+              <p class="text-xs text-zinc-500">Medium</p>
+              <a href="/stores-connect-shopify.html?return=flow-marketplaces" class="connect-link block text-xs font-medium text-zinc-600 hover:text-zinc-900 mt-0.5 no-underline" onclick="event.stopPropagation()">Connect account</a>
+            </div>
+          </div>
+          <span class="flex items-center gap-2">
+            <span class="text-[10px] font-semibold px-2 py-1 rounded-full bg-orange-500 text-white">HOT</span>
+            <span class="marketplace-check w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-white text-xs flex-shrink-0">✓</span>
+          </span>
+        </div>
+        <div class="marketplace-card rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between cursor-pointer hover:border-zinc-400 transition-colors select-none" data-marketplace="etsy" data-coming-soon="true" role="button" tabindex="0">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=etsy.com&sz=128" alt="Etsy" class="w-6 h-6 object-contain marketplace-logo" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden');" />
+              <span class="text-zinc-600 text-sm font-bold hidden">E</span>
+            </span>
+            <div>
+              <p class="font-semibold text-zinc-900">Etsy</p>
+              <p class="text-xs text-zinc-500">Handmade & vintage</p>
+              <span class="block text-xs font-medium text-zinc-400 mt-0.5">Coming soon</span>
+            </div>
+          </div>
+          <span class="marketplace-check w-6 h-6 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></span>
+        </div>
+        <div class="marketplace-card rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between cursor-pointer hover:border-zinc-400 transition-colors select-none" data-marketplace="ebay" data-coming-soon="true" role="button" tabindex="0">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=ebay.com&sz=128" alt="eBay" class="w-6 h-6 object-contain marketplace-logo" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden');" />
+              <span class="text-zinc-600 text-sm font-bold hidden">E</span>
+            </span>
+            <div>
+              <p class="font-semibold text-zinc-900">eBay</p>
+              <p class="text-xs text-zinc-500">Low demand</p>
+              <span class="block text-xs font-medium text-zinc-400 mt-0.5">Coming soon</span>
+            </div>
+          </div>
+          <span class="marketplace-check w-6 h-6 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></span>
+        </div>
+        <div class="marketplace-card rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between cursor-pointer hover:border-zinc-400 transition-colors select-none" data-marketplace="amazon" data-coming-soon="true" role="button" tabindex="0">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=amazon.com&sz=128" alt="Amazon" class="w-6 h-6 object-contain marketplace-logo" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden');" />
+              <span class="text-zinc-600 text-sm font-bold hidden">A</span>
+            </span>
+            <div>
+              <p class="font-semibold text-zinc-900">Amazon</p>
+              <p class="text-xs text-zinc-500">High demand</p>
+              <span class="block text-xs font-medium text-zinc-400 mt-0.5">Coming soon</span>
+            </div>
+          </div>
+          <span class="marketplace-check w-6 h-6 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></span>
+        </div>
+        <div class="marketplace-card rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between cursor-pointer hover:border-zinc-400 transition-colors select-none" data-marketplace="tiktok_shop" data-coming-soon="true" role="button" tabindex="0">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=tiktok.com&sz=128" alt="TikTok" class="w-6 h-6 object-contain marketplace-logo" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden');" />
+              <span class="text-zinc-600 text-sm font-bold hidden">T</span>
+            </span>
+            <div>
+              <p class="font-semibold text-zinc-900">TikTok Shop</p>
+              <p class="text-xs text-zinc-500">Trending ↑34%</p>
+              <span class="block text-xs font-medium text-zinc-400 mt-0.5">Coming soon</span>
+            </div>
+          </div>
+          <span class="marketplace-check w-6 h-6 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></span>
+        </div>
+        <div class="marketplace-card rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between cursor-pointer hover:border-zinc-400 transition-colors select-none" data-marketplace="depop" data-coming-soon="true" role="button" tabindex="0">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=depop.com&sz=128" alt="Depop" class="w-6 h-6 object-contain marketplace-logo" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden');" />
+              <span class="text-zinc-600 text-sm font-bold hidden">D</span>
+            </span>
+            <div>
+              <p class="font-semibold text-zinc-900">Depop</p>
+              <p class="text-xs text-zinc-500">Fashion & streetwear</p>
+              <span class="block text-xs font-medium text-zinc-400 mt-0.5">Coming soon</span>
+            </div>
+          </div>
+          <span class="marketplace-check w-6 h-6 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></span>
+        </div>
+        <div class="marketplace-card rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between cursor-pointer hover:border-zinc-400 transition-colors select-none" data-marketplace="walmart" data-coming-soon="true" role="button" tabindex="0">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=walmart.com&sz=128" alt="Walmart" class="w-6 h-6 object-contain marketplace-logo" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden');" />
+              <span class="text-zinc-600 text-sm font-bold hidden">W</span>
+            </span>
+            <div>
+              <p class="font-semibold text-zinc-900">Walmart</p>
+              <p class="text-xs text-zinc-500">Marketplace</p>
+              <span class="block text-xs font-medium text-zinc-400 mt-0.5">Coming soon</span>
+            </div>
+          </div>
+          <span class="marketplace-check w-6 h-6 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></span>
+        </div>
+        <div class="marketplace-card rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between cursor-pointer hover:border-zinc-400 transition-colors select-none" data-marketplace="poshmark" data-coming-soon="true" role="button" tabindex="0">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=poshmark.com&sz=128" alt="Poshmark" class="w-6 h-6 object-contain marketplace-logo" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden');" />
+              <span class="text-zinc-600 text-sm font-bold hidden">P</span>
+            </span>
+            <div>
+              <p class="font-semibold text-zinc-900">Poshmark</p>
+              <p class="text-xs text-zinc-500">Fashion resale</p>
+              <span class="block text-xs font-medium text-zinc-400 mt-0.5">Coming soon</span>
+            </div>
+          </div>
+          <span class="marketplace-check w-6 h-6 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></span>
+        </div>
+        <div class="marketplace-card rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between cursor-pointer hover:border-zinc-400 transition-colors select-none" data-marketplace="mercari" data-coming-soon="true" role="button" tabindex="0">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=mercari.com&sz=128" alt="Mercari" class="w-6 h-6 object-contain marketplace-logo" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden');" />
+              <span class="text-zinc-600 text-sm font-bold hidden">M</span>
+            </span>
+            <div>
+              <p class="font-semibold text-zinc-900">Mercari</p>
+              <p class="text-xs text-zinc-500">Buy & sell</p>
+              <span class="block text-xs font-medium text-zinc-400 mt-0.5">Coming soon</span>
+            </div>
+          </div>
+          <span class="marketplace-check w-6 h-6 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></span>
+        </div>
+        <div class="marketplace-card rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between cursor-pointer hover:border-zinc-400 transition-colors select-none" data-marketplace="vinted" data-coming-soon="true" role="button" tabindex="0">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="https://www.google.com/s2/favicons?domain=vinted.com&sz=128" alt="Vinted" class="w-6 h-6 object-contain marketplace-logo" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden');" />
+              <span class="text-zinc-600 text-sm font-bold hidden">V</span>
+            </span>
+            <div>
+              <p class="font-semibold text-zinc-900">Vinted</p>
+              <p class="text-xs text-zinc-500">Pre-loved fashion</p>
+              <span class="block text-xs font-medium text-zinc-400 mt-0.5">Coming soon</span>
+            </div>
+          </div>
+          <span class="marketplace-check w-6 h-6 rounded-full border-2 border-zinc-300 flex items-center justify-center flex-shrink-0"></span>
+        </div>
+      </div>
+
+      <!-- More launching soon -->
+      <div class="mt-6 pt-5 border-t border-zinc-200">
+        <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">More launching soon</p>
+        <p class="text-sm text-zinc-500">BigCommerce, Facebook Marketplace, Instagram Shopping & more — we’re adding integrations so you can list everywhere.</p>
+      </div>
+    </main>
+
+    <div class="p-5 pt-4 border-t border-zinc-200 shrink-0 bg-zinc-50">
+      <div class="flex items-center justify-center gap-1 mb-4">
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment"></span>
+        <span class="step-segment"></span>
+        <span class="step-segment"></span>
+        <span class="step-segment"></span>
+      </div>
+      <button type="button" id="marketplaces-next-btn" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center disabled:opacity-50 disabled:cursor-not-allowed">
+        Connect <span id="marketplaces-selected-count">0</span> selected
+      </button>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowLeft') return;
+      if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
+      e.preventDefault();
+      history.back();
+    });
+  </script>
+  <script>
+    (function() {
+      var STORAGE_KEY = 'auralink_selected_marketplaces';
+      var DEFAULT_SELECTED = ['shopify'];
+
+      function loadSelection() {
+        try {
+          var raw = sessionStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            var arr = JSON.parse(raw);
+            if (Array.isArray(arr) && arr.length > 0) return arr;
+          }
+        } catch (e) {}
+        return DEFAULT_SELECTED.slice();
+      }
+
+      function saveSelection(ids) {
+        try {
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+        } catch (e) {}
+      }
+
+      var selected = loadSelection();
+
+      function getCard(marketplaceId) {
+        return document.querySelector('.marketplace-card[data-marketplace="' + marketplaceId + '"]');
+      }
+
+      function updateCardUi(card, isSelected) {
+        if (!card) return;
+        var check = card.querySelector('.marketplace-check');
+        if (!check) return;
+        if (isSelected) {
+          check.classList.remove('border-2', 'border-zinc-300');
+          check.classList.add('bg-zinc-700', 'text-white');
+          check.textContent = '✓';
+        } else {
+          check.classList.add('border-2', 'border-zinc-300');
+          check.classList.remove('bg-zinc-700', 'text-white');
+          check.textContent = '';
+        }
+      }
+
+      function renderSelection() {
+        var ids = ['shopify', 'etsy', 'ebay', 'amazon', 'tiktok_shop', 'depop', 'walmart', 'poshmark', 'mercari', 'vinted'];
+        var comingSoon = ['etsy', 'ebay', 'amazon', 'tiktok_shop', 'depop', 'walmart', 'poshmark', 'mercari', 'vinted'];
+        var origLen = selected.length;
+        comingSoon.forEach(function(id) {
+          var idx = selected.indexOf(id);
+          if (idx !== -1) selected.splice(idx, 1);
+        });
+        if (selected.length !== origLen) saveSelection(selected);
+        ids.forEach(function(id) {
+          var card = getCard(id);
+          if (card && card.getAttribute('data-coming-soon') === 'true') {
+            updateCardUi(card, false);
+          } else {
+            updateCardUi(getCard(id), selected.indexOf(id) !== -1);
+          }
+        });
+        var btn = document.getElementById('marketplaces-next-btn');
+        var countEl = document.getElementById('marketplaces-selected-count');
+        if (countEl) countEl.textContent = selected.length;
+        if (btn) btn.disabled = selected.length === 0;
+      }
+
+      renderSelection();
+
+      document.getElementById('marketplace-cards').addEventListener('click', function(e) {
+        var card = e.target.closest('.marketplace-card');
+        if (!card) return;
+        if (card.getAttribute('data-coming-soon') === 'true') return;
+        var id = card.getAttribute('data-marketplace');
+        if (!id) return;
+        var idx = selected.indexOf(id);
+        if (idx === -1) selected.push(id);
+        else selected.splice(idx, 1);
+        saveSelection(selected);
+        renderSelection();
+      });
+
+      document.getElementById('marketplaces-next-btn').addEventListener('click', function() {
+        if (selected.length === 0) return;
+        saveSelection(selected);
+        window.location.href = '/flow-connecting.html';
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment successful | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
+      <span class="w-14"></span>
+      <h1 class="font-serif text-lg font-bold text-zinc-900">Payment</h1>
+      <span class="w-14"></span>
+    </header>
+
+    <main class="flex-1 px-5 py-8 flex flex-col items-center justify-center text-center">
+      <div class="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center mb-5 shrink-0">
+        <span class="text-white text-3xl font-bold">✓</span>
+      </div>
+      <h2 class="font-serif text-xl font-bold text-zinc-900 mb-2">Payment successful</h2>
+      <p id="success-message" class="text-sm text-zinc-600 mb-8">You're now on <strong>Pro</strong>. Enjoy your plan.</p>
+      <a href="plans.html" class="block w-full py-3.5 rounded-xl bg-zinc-900 text-white font-semibold text-center no-underline hover:bg-zinc-800 transition-colors mb-3 inline-flex items-center justify-center gap-2">
+        ← Plans
+      </a>
+      <a href="settings.html" class="block w-full py-3 rounded-xl border border-zinc-200 text-zinc-700 font-medium text-sm text-center no-underline hover:bg-zinc-100 transition-colors inline-flex items-center justify-center gap-2">
+        ← Settings
+      </a>
+    </main>
+  </div>
+  <script>
+    (function() {
+      var plan = sessionStorage.getItem('auralink_plan_after_payment') || 'pro';
+      var names = { free: 'Free', pro: 'Pro', business: 'Business' };
+      var name = names[plan] || 'Pro';
+      var el = document.getElementById('success-message');
+      if (el) el.innerHTML = 'You\'re now on <strong>' + name + '</strong>. Enjoy your plan.';
+    })();
+  </script>
+</body>
+</html>

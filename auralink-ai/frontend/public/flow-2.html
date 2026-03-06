@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="auralink-api-url" content="http://localhost:8000" />
+  <title>Processing | Listing Flow | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .vercel-card { background: #fff; border: 1px solid #eaeaea; border-radius: 16px; }
+    .proc-fill { transition: width 0.5s ease-out; }
+    .progress-dot { width: 6px; height: 6px; border-radius: 3px; background: #e4e4e7; transition: all 0.3s; }
+    .progress-dot.done { background: #18181b; }
+    .progress-dot.current { width: 20px; background: #18181b; }
+    .proc-item { transition: color 0.2s; }
+    .proc-item.done { color: #18181b; }
+    .proc-item.pending { color: #a1a1aa; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#fafafa] font-sans text-[#111] antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <header class="shrink-0 border-b border-[#eaeaea] bg-white px-4 h-14 flex items-center justify-center">
+      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#111]">AuraLink</a>
+    </header>
+    <main class="flex-1 px-5 pt-6 pb-6 overflow-auto">
+      <div class="text-center mb-6">
+        <h1 class="font-sans font-semibold text-xl text-zinc-900 mb-1">Reading your product</h1>
+        <p class="text-sm text-zinc-500 mb-8">AI is working its magic…</p>
+      </div>
+      <div class="vercel-card rounded-2xl border border-[#eaeaea] p-6">
+        <div class="h-1 bg-zinc-200 rounded-full overflow-hidden mb-2">
+          <div id="proc-fill" class="proc-fill h-full bg-zinc-900 rounded-full" style="width: 0%;"></div>
+        </div>
+        <p id="proc-pct" class="text-right text-sm font-medium text-zinc-600 mb-6">0%</p>
+        <ul class="space-y-3 text-sm" id="proc-list">
+          <li class="proc-item done flex items-center gap-3" data-step="0"><span class="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center text-white text-[10px] shrink-0">✓</span> OCR — reading labels</li>
+          <li class="proc-item done flex items-center gap-3" data-step="1"><span class="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center text-white text-[10px] shrink-0">✓</span> Object recognition</li>
+          <li class="proc-item done flex items-center gap-3" data-step="2"><span class="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center text-white text-[10px] shrink-0">✓</span> Brand & model identified</li>
+          <li class="proc-item pending flex items-center gap-3" data-step="3"><span class="w-4 h-4 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin shrink-0"></span> Writing title & description</li>
+          <li class="proc-item pending flex items-center gap-3" data-step="4"><span class="w-4 h-4 rounded-full border-2 border-zinc-200 shrink-0"></span> Building SEO tags</li>
+          <li class="proc-item pending flex items-center gap-3" data-step="5"><span class="w-4 h-4 rounded-full border-2 border-zinc-200 shrink-0"></span> Checking your sell history</li>
+          <li class="proc-item pending flex items-center gap-3" data-step="6"><span class="w-4 h-4 rounded-full border-2 border-zinc-200 shrink-0"></span> Recommending price</li>
+        </ul>
+      </div>
+    </main>
+    <div id="proc-error-wrap" class="hidden px-5 pb-6">
+      <p id="proc-error-msg" class="text-sm text-red-600 mb-3"></p>
+      <a href="/landing.html?mode=scan" class="text-sm font-semibold text-[#111] underline">Back to scan</a>
+    </div>
+    <div class="p-5 pt-4 border-t border-[#eaeaea] shrink-0 bg-[#fafafa]">
+      <div class="flex items-center justify-between">
+        <span class="w-10 h-10 shrink-0" aria-hidden="true"></span>
+        <span class="w-10 h-10 shrink-0" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowLeft') return;
+      if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
+      e.preventDefault();
+      history.back();
+    });
+  </script>
+  <script>
+    (function() {
+      var PENDING_SCAN_KEY = 'auralink_pending_scan';
+      var DRAFT_LISTING_KEY = 'auralink_draft_listing';
+      var fillEl = document.getElementById('proc-fill');
+      var pctEl = document.getElementById('proc-pct');
+      var listEl = document.getElementById('proc-list');
+      var cardEl = document.querySelector('.vercel-card');
+      var errorWrap = document.getElementById('proc-error-wrap');
+      var errorMsg = document.getElementById('proc-error-msg');
+      var steps = listEl ? listEl.querySelectorAll('.proc-item') : [];
+      var stepIndex = 3;
+      var extractionDone = false;
+
+      function setPct(value) {
+        var pct = Math.min(100, Math.round(value));
+        if (fillEl) fillEl.style.width = pct + '%';
+        if (pctEl) pctEl.textContent = pct + '%';
+      }
+      function markStepDone(index) {
+        var li = steps[index];
+        if (!li) return;
+        li.classList.remove('pending');
+        li.classList.add('done');
+        var icon = li.querySelector('span');
+        if (icon) {
+          icon.className = 'w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center text-white text-[10px] shrink-0';
+          icon.textContent = '✓';
+        }
+      }
+      function redirectToFlow3() {
+        try { sessionStorage.removeItem(PENDING_SCAN_KEY); } catch (e) {}
+        window.location.href = '/flow-3.html';
+      }
+      function showError(message) {
+        extractionDone = true;
+        if (cardEl) cardEl.classList.add('hidden');
+        if (errorWrap) errorWrap.classList.remove('hidden');
+        if (errorMsg) errorMsg.textContent = message || 'Extraction failed. Try again.';
+      }
+
+      var pending = null;
+      try {
+        var raw = sessionStorage.getItem(PENDING_SCAN_KEY);
+        if (raw) pending = JSON.parse(raw);
+      } catch (e) {}
+      if (!pending || !pending.base64) {
+        window.location.href = '/landing.html?mode=scan';
+        return;
+      }
+
+      var apiUrl = (document.querySelector('meta[name="auralink-api-url"]') && document.querySelector('meta[name="auralink-api-url"]').getAttribute('content')) || 'http://localhost:8000';
+      apiUrl = (apiUrl || '').trim().replace(/\/$/, '') || 'http://localhost:8000';
+
+      var start = Date.now();
+      var duration = 6000;
+      function tick() {
+        if (extractionDone) return;
+        var elapsed = Date.now() - start;
+        var t = Math.min(1, elapsed / duration);
+        var easeOut = 1 - Math.pow(1 - t, 1.5);
+        setPct(easeOut * 100);
+        var nextToReach = 3 + Math.floor(easeOut * 4);
+        while (stepIndex < nextToReach && stepIndex < steps.length) {
+          markStepDone(stepIndex);
+          stepIndex++;
+        }
+        if (t < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+
+      fetch(apiUrl + '/api/v1/vision/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_base64: pending.base64,
+          mime_type: 'image/jpeg',
+          include_ocr: true,
+          skip_web_enrichment: false
+        })
+      })
+        .then(function(r) {
+          if (r.status === 402) {
+            showError('Free scans used. Upgrade to continue.');
+            return null;
+          }
+          if (!r.ok) return r.text().then(function(t) { throw new Error(t || 'Server error'); });
+          return r.json();
+        })
+        .then(function(data) {
+          if (!data || extractionDone) return;
+          extractionDone = true;
+          setPct(100);
+          for (var i = stepIndex; i < steps.length; i++) markStepDone(i);
+          var att = data.attributes || {};
+          var copy = data.extraction_copy || data.copy || {};
+          var tags = data.tags || {};
+          var suggestedPrice = 199;
+          if (att.price_value != null && typeof att.price_value === 'number' && att.price_value > 0) suggestedPrice = att.price_value;
+          else if (att.price_display && typeof att.price_display === 'string') {
+            var match = att.price_display.replace(/[^\d.]/g, '').match(/[\d.]+/);
+            if (match && parseFloat(match[0]) > 0) suggestedPrice = parseFloat(match[0]);
+          }
+          var payload = { extraction: data, suggested_price: suggestedPrice, imageDataUrl: 'data:image/jpeg;base64,' + pending.base64 };
+          try {
+            sessionStorage.removeItem('auralink_review_draft');
+            sessionStorage.setItem(DRAFT_LISTING_KEY, JSON.stringify(payload));
+          } catch (e) {}
+          setTimeout(redirectToFlow3, 500);
+        })
+        .catch(function(err) {
+          if (extractionDone) return;
+          showError(err.message || 'Could not read the image. Try again or use a different photo.');
+        });
+    })();
+  </script>
+</body>
+</html>

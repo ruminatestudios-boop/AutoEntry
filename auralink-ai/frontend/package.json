@@ -1,0 +1,33 @@
+{
+  "name": "auralink-ai-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/inject-api-url.js && next dev --hostname 0.0.0.0",
+    "dev:phone": "node scripts/dev-phone.js",
+    "dev:safe": "node scripts/inject-api-url.js && (test -f .next/server/app/_not-found/page.js || npm run build) && next dev --hostname 0.0.0.0",
+    "dev:clean": "node scripts/inject-api-url.js && (rm -rf .next && next dev --hostname 0.0.0.0)",
+    "phone-test": "node scripts/phone-test.js",
+    "build": "node scripts/inject-api-url.js && next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.0.0",
+    "next": "^15.2.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/node": "^22",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^9",
+    "eslint-config-next": "^15.2.3",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.2.1",
+    "typescript": "~5.6.0"
+  }
+}

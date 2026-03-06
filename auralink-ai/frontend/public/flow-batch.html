@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="auralink-api-url" content="http://localhost:8000" />
+  <title>Extracting | Batch | AuraLink AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+    .vercel-card { background: #fff; border: 1px solid #eaeaea; border-radius: 16px; }
+    .section-label { font-size: 13px; font-weight: 500; color: #111; margin-bottom: 8px; display: block; }
+    .section-hint { font-size: 12px; color: #555; margin-top: 4px; margin-bottom: 8px; }
+    .batch-card { background: #fff; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; transition: box-shadow 0.2s; }
+    .batch-card.done .batch-status { color: #059669; }
+    .batch-card.error .batch-status { color: #dc2626; }
+    .batch-card.processing .batch-status { color: #52525b; }
+    .batch-card .batch-loading-wrap { display: none; }
+    .batch-card.processing .batch-loading-wrap { display: block; }
+    .batch-loading-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(0,0,0,0.15);
+      overflow: hidden;
+      z-index: 2;
+    }
+    .batch-loading-bar-fill {
+      height: 100%;
+      background: #111;
+      animation: batch-loading 1.2s ease-in-out infinite;
+      width: 40%;
+      border-radius: 0 2px 0 0;
+    }
+    @keyframes batch-loading {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#fafafa] font-sans text-[#111] antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <header class="shrink-0 border-b border-[#eaeaea] bg-white/80 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
+      <div></div>
+      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#111] justify-self-center">AuraLink</a>
+      <div></div>
+    </header>
+    <main class="flex-1 px-5 pt-6 pb-6 overflow-auto">
+      <h1 class="text-xl font-bold text-[#111] mb-1 text-center" style="letter-spacing: -0.025em;">Extracting</h1>
+      <p class="text-center text-sm text-[#555] mb-5">All photos are sent at once. Each thumbnail updates as it completes.</p>
+
+      <div class="vercel-card p-5">
+        <span class="section-label">Photos</span>
+        <div id="batch-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-2"></div>
+      </div>
+    </main>
+  </div>
+  <script>
+    (function() {
+      var BATCH_PENDING_KEY = 'auralink_batch_pending';
+      var BATCH_DRAFTS_KEY = 'auralink_batch_drafts';
+      var apiUrl = (document.querySelector('meta[name="auralink-api-url"]') && document.querySelector('meta[name="auralink-api-url"]').getAttribute('content')) || 'http://localhost:8000';
+      apiUrl = (apiUrl || '').trim().replace(/\/$/, '') || 'http://localhost:8000';
+
+      var pending = null;
+      try {
+        var raw = sessionStorage.getItem(BATCH_PENDING_KEY);
+        if (raw) pending = JSON.parse(raw);
+      } catch (e) {}
+      if (!pending || !Array.isArray(pending) || pending.length === 0) {
+        window.location.href = '/flow-batch-upload.html';
+        return;
+      }
+
+      var grid = document.getElementById('batch-grid');
+      var items = pending.map(function(p, i) {
+        var card = document.createElement('div');
+        card.className = 'batch-card';
+        card.setAttribute('data-index', i);
+        var imgWrap = document.createElement('div');
+        imgWrap.className = 'w-full aspect-square bg-[#f4f4f5] flex items-center justify-center overflow-hidden relative';
+        var img = document.createElement('img');
+        img.src = 'data:image/jpeg;base64,' + (p.base64 || '');
+        img.alt = 'Photo ' + (i + 1);
+        img.className = 'w-full h-full object-cover';
+        imgWrap.appendChild(img);
+        var loadingWrap = document.createElement('div');
+        loadingWrap.className = 'batch-loading-wrap absolute inset-x-0 bottom-0';
+        loadingWrap.innerHTML = '<div class="batch-loading-bar"><span class="batch-loading-bar-fill"></span></div>';
+        imgWrap.appendChild(loadingWrap);
+        var info = document.createElement('div');
+        info.className = 'p-1.5 border-t border-[#eaeaea]';
+        var title = document.createElement('p');
+        title.className = 'text-[10px] font-medium text-[#111] truncate';
+        title.textContent = 'Photo ' + (i + 1);
+        var status = document.createElement('p');
+        status.className = 'batch-status text-[10px] text-[#71717a]';
+        status.textContent = 'Waiting';
+        info.appendChild(title);
+        info.appendChild(status);
+        card.appendChild(imgWrap);
+        card.appendChild(info);
+        grid.appendChild(card);
+        return { card: card, statusEl: status, base64: p.base64 };
+      });
+
+      function setStatus(index, state, text) {
+        var item = items[index];
+        if (!item) return;
+        item.card.classList.remove('done', 'error', 'processing');
+        if (state) item.card.classList.add(state);
+        item.statusEl.textContent = text || (state === 'done' ? 'Done' : state === 'error' ? 'Error' : state === 'processing' ? '…' : 'Waiting');
+      }
+
+      function buildDraftFromExtraction(data, imageDataUrl) {
+        var att = data.attributes || {};
+        var copy = data.extraction_copy || data.copy || {};
+        var tags = data.tags || {};
+        var seoTitle = (copy.seo_title || '').trim() || (copy.title || '').trim();
+        var category = (tags.category || att.brand || '').trim();
+        if (att.brand && category && category !== att.brand) category = att.brand + ' › ' + category;
+        else if (!category && att.brand) category = att.brand;
+        var desc = '';
+        if (copy.description_fact_feel_proof && typeof copy.description_fact_feel_proof === 'object') {
+          var f = copy.description_fact_feel_proof;
+          var parts = [];
+          if (f.fact) parts.push(String(f.fact).trim());
+          if (f.feel) parts.push(String(f.feel).trim());
+          if (f.proof) parts.push(String(f.proof).trim());
+          desc = parts.filter(Boolean).join('\n\n');
+        } else if (copy.description) desc = String(copy.description).trim();
+        else if (copy.bullet_points && Array.isArray(copy.bullet_points)) desc = copy.bullet_points.join('\n');
+        var price = '';
+        var priceSource = att.price_source || '';
+        if (priceSource === 'found_in_image' && att.price_value != null) price = String(att.price_value).replace(/^\$|^£/, '');
+        else if (priceSource === 'ai_suggested' && (att.price_confidence == null || att.price_confidence >= 0.7) && att.price_value != null) price = String(att.price_value).replace(/^\$|^£/, '');
+        var weightKg = '';
+        if (att.weight_grams != null && att.weight_grams > 0) weightKg = String(Math.round(att.weight_grams / 1000 * 100) / 100);
+        var keywords = (tags.search_keywords && Array.isArray(tags.search_keywords)) ? tags.search_keywords : [];
+        var metaDesc = (copy.description || '').trim().slice(0, 320);
+        var sizeVals = [];
+        var colorVals = [];
+        if (att.detected_sizes && Array.isArray(att.detected_sizes) && att.detected_sizes.length > 0) sizeVals = att.detected_sizes.map(function(s) { return String(s).trim(); }).filter(Boolean);
+        else if (att.size && typeof att.size === 'string') sizeVals = att.size.split(/[,;\/]/).map(function(s) { return s.trim(); }).filter(Boolean);
+        if (att.detected_colors && Array.isArray(att.detected_colors) && att.detected_colors.length > 0) colorVals = att.detected_colors.map(function(c) { return String(c).trim(); }).filter(Boolean);
+        else if (att.color && typeof att.color === 'string') colorVals = att.color.split(/[,;\/]/).map(function(s) { return s.trim(); }).filter(Boolean);
+        return {
+          title: seoTitle || 'Untitled listing',
+          description: desc,
+          category: category,
+          price: price,
+          compare_at: '',
+          charge_tax: true,
+          inventory_tracked: true,
+          quantity: 1,
+          sku: '',
+          sell_when_out_of_stock: false,
+          physical_product: true,
+          weight_kg: weightKg,
+          product_type: category,
+          vendor: (att.brand || '').trim(),
+          status: 'draft',
+          meta_description: metaDesc,
+          tags: keywords,
+          photos: imageDataUrl ? [imageDataUrl] : [],
+          extraction: data,
+          variant_options: [{ name: 'Size', values: sizeVals }, { name: 'Color', values: colorVals }]
+        };
+      }
+
+      function extractOne(base64) {
+        return fetch(apiUrl + '/api/v1/vision/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image_base64: base64,
+            mime_type: 'image/jpeg',
+            include_ocr: true,
+            skip_web_enrichment: true
+          })
+        }).then(function(r) {
+          if (r.status === 402) throw new Error('Free scans used');
+          if (!r.ok) return r.text().then(function(t) { throw new Error(t || 'Server error'); });
+          return r.json();
+        });
+      }
+
+      var results = new Array(items.length);
+      var settled = 0;
+
+      items.forEach(function(item, index) {
+        setStatus(index, 'processing', '…');
+        var imageDataUrl = 'data:image/jpeg;base64,' + item.base64;
+        extractOne(item.base64)
+          .then(function(data) {
+            if (!data || typeof data !== 'object') throw new Error('Invalid response');
+            results[index] = { draft: buildDraftFromExtraction(data, imageDataUrl) };
+            var copy = data.extraction_copy || data.copy || {};
+            var titleText = (copy.seo_title || '').trim();
+            setStatus(index, 'done', titleText ? titleText.slice(0, 16) + (titleText.length > 16 ? '…' : '') : 'Done');
+          })
+          .catch(function(err) {
+            results[index] = { error: err.message || 'Failed' };
+            setStatus(index, 'error', 'Error');
+          })
+          .finally(function() {
+            settled++;
+            if (settled === items.length) finish();
+          });
+      });
+
+      function finish() {
+        var drafts = [];
+        for (var i = 0; i < results.length; i++) {
+          if (results[i] && results[i].draft) drafts.push(results[i].draft);
+        }
+        try {
+          sessionStorage.removeItem(BATCH_PENDING_KEY);
+          sessionStorage.setItem(BATCH_DRAFTS_KEY, JSON.stringify(drafts));
+        } catch (e) {}
+        window.location.href = '/flow-batch-review.html';
+      }
+    })();
+  </script>
+</body>
+</html>

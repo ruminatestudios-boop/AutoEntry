@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your profile | Brain | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
+      <a href="/brain.html" class="flex items-center gap-2 text-zinc-900 no-underline">
+        <span class="text-lg">←</span>
+        <span class="font-semibold">Brain</span>
+      </a>
+      <h1 class="font-serif text-lg font-bold text-zinc-900">Your profile</h1>
+      <span class="w-14"></span>
+    </header>
+
+    <main class="flex-1 px-5 py-4 pb-24 overflow-auto">
+      <p class="text-sm text-zinc-500 mb-5">Built from 84 listings · 67 sales.</p>
+
+      <!-- Pricing Profile -->
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Pricing Profile</p>
+      <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-6">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-8 h-8 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold">$</span>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">High confidence</span>
+        </div>
+        <ul class="space-y-2 text-sm text-zinc-700">
+          <li><span class="font-semibold text-zinc-900">Sweet spot:</span> $40–$150 (79% of sales)</li>
+          <li><span class="font-semibold text-zinc-900">Avoid above:</span> $300 — buyers don't convert</li>
+          <li>You tend to <span class="font-semibold text-amber-700">underprice -$12</span> on electronics.</li>
+        </ul>
+      </div>
+
+      <!-- Category Strength -->
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Category Strength</p>
+      <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-6">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-8 h-8 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold">B</span>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-zinc-700">Vintage clothing</span>
+              <span class="font-medium text-zinc-900">94%</span>
+            </div>
+            <div class="h-1.5 bg-zinc-200 rounded-full overflow-hidden">
+              <div class="h-full bg-emerald-500 rounded-full" style="width: 94%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-zinc-700">Footwear</span>
+              <span class="font-medium text-zinc-900">88%</span>
+            </div>
+            <div class="h-1.5 bg-zinc-200 rounded-full overflow-hidden">
+              <div class="h-full bg-emerald-500 rounded-full" style="width: 88%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-zinc-700">Electronics</span>
+              <span class="font-medium text-zinc-900">72%</span>
+            </div>
+            <div class="h-1.5 bg-zinc-200 rounded-full overflow-hidden">
+              <div class="h-full bg-amber-500 rounded-full" style="width: 72%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timing Pattern -->
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Timing Pattern</p>
+      <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-6">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="w-8 h-8 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold">T</span>
+        </div>
+        <p class="text-sm text-zinc-700">Items listed Tue–Thu sell 2.3× faster. Your buyers are weekday shoppers.</p>
+      </div>
+
+      <!-- Unlock card -->
+      <div class="rounded-2xl bg-zinc-800 border border-zinc-700 p-4">
+        <p class="text-sm font-semibold text-white mb-1">Buyer profile unlocks at 100 sales</p>
+        <p class="text-xs text-zinc-400 mb-3">AI will learn who buys from you and when.</p>
+        <div class="flex items-center justify-between text-xs text-zinc-400 mb-2">
+          <span>67 / 100</span>
+          <span>33 to go</span>
+        </div>
+        <div class="h-2 bg-zinc-700 rounded-full overflow-hidden">
+          <div class="h-full bg-white rounded-full" style="width: 67%;"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

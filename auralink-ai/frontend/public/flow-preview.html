@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Review before posting | Listing Flow | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .step-segment { width: 8px; height: 4px; border-radius: 2px; background: #e4e4e7; }
+    .step-segment.filled { background: #18181b; }
+    .modal-backdrop { background: rgba(0,0,0,0.4); }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0">
+      <a href="/flow-verifying.html" class="text-sm font-semibold text-zinc-900 underline">Edit</a>
+      <span class="invisible text-sm">Edit</span>
+    </header>
+
+    <main class="flex-1 px-5 pb-6 overflow-auto">
+      <h1 class="font-serif text-xl font-bold text-zinc-900 mb-1 text-center">Review before posting</h1>
+      <p class="text-center text-sm text-zinc-500 mb-4">Tap any field to edit. All changes save automatically.</p>
+
+      <!-- Photos -->
+      <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="preview-photos-thumb" class="w-14 h-14 rounded-xl bg-zinc-100 border border-zinc-200 shrink-0 flex items-center justify-center text-zinc-400 overflow-hidden">
+            <span class="text-2xl">📷</span>
+          </div>
+          <div>
+            <p id="preview-photos-count" class="text-sm font-medium text-zinc-900">1 of 3 photos</p>
+            <button type="button" class="text-xs font-medium text-zinc-500 hover:text-zinc-900 mt-0.5">Edit photos</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editable fields card -->
+      <div class="rounded-2xl bg-white border border-zinc-200 p-5 mb-4 space-y-4">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Title</p>
+            <p id="preview-title" class="text-[15px] font-medium text-zinc-900">Sony WH-1000XM5 Wireless Headphones</p>
+          </div>
+          <button type="button" id="edit-title-btn" class="text-zinc-400 hover:text-zinc-600 shrink-0" aria-label="Edit title">✎</button>
+        </div>
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Description</p>
+            <p id="preview-description" class="text-sm text-zinc-700">Industry-leading noise cancelling with Dual Noise Sensor. LDAC, multipoint, Speak-to-Chat. Up to 30hr battery.</p>
+          </div>
+          <button type="button" id="edit-desc-btn" class="text-zinc-400 hover:text-zinc-600 shrink-0" aria-label="Edit description">✎</button>
+        </div>
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Price</p>
+            <p id="preview-price" class="text-[15px] font-semibold text-zinc-900">$269.00</p>
+            <p class="text-xs text-zinc-500 mt-0.5">AI recommended</p>
+          </div>
+          <button type="button" id="edit-price-btn" class="text-zinc-400 hover:text-zinc-600 shrink-0" aria-label="Edit price">✎</button>
+        </div>
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Category</p>
+          <p id="preview-category" class="text-sm font-medium text-zinc-900">Electronics › Audio › Headphones</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Condition</p>
+          <p id="preview-condition" class="text-sm font-medium text-zinc-900">New – in original box</p>
+        </div>
+      </div>
+
+      <!-- SEO tags -->
+      <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">SEO tags</p>
+        <div id="preview-tags" class="flex flex-wrap gap-2 mb-2"></div>
+        <div class="flex gap-2 flex-wrap items-center">
+          <input type="text" id="preview-tag-input" placeholder="New tag…" class="flex-1 min-w-[120px] text-sm px-3 py-2 rounded-lg border border-zinc-200 bg-zinc-50 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400" />
+          <button type="button" id="preview-tag-add-btn" class="px-3 py-2 rounded-lg border border-zinc-200 bg-white text-zinc-700 font-medium text-sm hover:bg-zinc-50 shrink-0">Add</button>
+        </div>
+      </div>
+
+      <!-- Publishing to -->
+      <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-4">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">Publishing to</p>
+        <div id="preview-publishing-list" class="space-y-3"></div>
+      </div>
+
+      <!-- Sales estimation -->
+      <div class="rounded-xl bg-amber-50 border border-amber-200 p-3 mb-6">
+        <p id="preview-sales-est" class="text-xs text-zinc-800">Est. 1–3 days to sell · Price position: #2 out of 10 · TikTok trending.</p>
+      </div>
+
+      <div class="flex items-center justify-center gap-1 mb-3">
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+      </div>
+      <button type="button" id="open-choose-listing-modal" class="w-full py-3.5 rounded-2xl border-2 border-zinc-300 bg-white text-zinc-800 font-semibold text-[15px] hover:bg-zinc-50 transition-colors" onclick="var m=document.getElementById('modal-choose-listing'); if(m){ m.style.display='flex'; }">
+        Choose how to use your listing
+      </button>
+      <p id="preview-toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-zinc-800 text-white text-sm font-medium hidden z-[60] shadow-lg">Copied to clipboard</p>
+    </main>
+  </div>
+
+  <!-- Choose how to use your listing modal -->
+  <div id="modal-choose-listing" class="fixed inset-0 z-50 items-center justify-center p-4 modal-backdrop" style="display: none;" aria-modal="true" role="dialog" aria-labelledby="modal-choose-listing-title">
+    <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden flex flex-col shadow-xl" onclick="event.stopPropagation()">
+      <div class="p-5 border-b border-zinc-100 flex items-center justify-between gap-3">
+        <h2 id="modal-choose-listing-title" class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 flex-1 text-center">Choose how to use your listing</h2>
+        <button type="button" id="modal-choose-listing-close" class="w-8 h-8 rounded-full border border-zinc-200 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 flex items-center justify-center text-lg leading-none shrink-0" aria-label="Close" onclick="document.getElementById('modal-choose-listing').style.display='none'">×</button>
+      </div>
+      <div class="p-5 flex flex-col gap-3">
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" id="preview-copy-btn" class="py-3 rounded-2xl border-2 border-zinc-200 bg-white text-zinc-800 font-semibold text-sm hover:bg-zinc-50 transition-colors">
+            Copy to clipboard
+          </button>
+          <button type="button" id="preview-download-btn" class="py-3 rounded-2xl border-2 border-zinc-200 bg-white text-zinc-800 font-semibold text-sm hover:bg-zinc-50 transition-colors">
+            Download
+          </button>
+        </div>
+        <p class="text-xs text-zinc-500 text-center -mt-0.5">Paste anywhere — or download as .txt</p>
+        <a href="plans.html" id="preview-publish-btn" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline hover:bg-zinc-800 transition-colors">
+          Connect and publish
+        </a>
+        <p class="text-xs text-zinc-500 text-center -mt-1">Connect your stores and we publish live (Pro)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit title modal -->
+  <div id="modal-title" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop" aria-modal="true" role="dialog">
+    <div class="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="p-5 border-b border-zinc-100">
+        <h2 class="font-serif text-lg font-bold text-zinc-900">Edit title</h2>
+      </div>
+      <div class="p-5 flex-1 overflow-y-auto space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-zinc-500 mb-1">Title</label>
+          <input type="text" id="modal-title-input" class="w-full px-3 py-2 rounded-xl border border-zinc-200 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Product title" />
+        </div>
+        <p class="text-xs text-zinc-500">AI · Title score: 90/100 – good length, key terms present.</p>
+        <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">AI title suggestions</p>
+          <div class="space-y-2" id="modal-title-suggestions">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-sm text-zinc-700 truncate">Sony WH-1000XM5 ANC Headphones – Black</span>
+              <button type="button" class="title-suggestion text-xs font-semibold text-zinc-900 shrink-0" data-title="Sony WH-1000XM5 ANC Headphones – Black">Use →</button>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-sm text-zinc-700 truncate">Sony WH-1000XM5 Wireless BT Headphones</span>
+              <button type="button" class="title-suggestion text-xs font-semibold text-zinc-900 shrink-0" data-title="Sony WH-1000XM5 Wireless BT Headphones">Use →</button>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-sm text-zinc-700 truncate">Sony Noise Cancelling Headphones XM5</span>
+              <button type="button" class="title-suggestion text-xs font-semibold text-zinc-900 shrink-0" data-title="Sony Noise Cancelling Headphones XM5">Use →</button>
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-zinc-500" id="modal-title-chars">41 characters · Within Amazon limit (200 max)</p>
+      </div>
+      <div class="p-5 border-t border-zinc-100 flex gap-2">
+        <button type="button" id="modal-title-cancel" class="flex-1 py-2.5 rounded-xl border border-zinc-200 text-sm font-medium text-zinc-600">Cancel</button>
+        <button type="button" id="modal-title-save" class="flex-1 py-2.5 rounded-xl bg-zinc-900 text-white text-sm font-semibold">Save title</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit description modal -->
+  <div id="modal-desc" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop" aria-modal="true" role="dialog">
+    <div class="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="p-5 border-b border-zinc-100 flex items-center justify-between">
+        <h2 class="font-serif text-lg font-bold text-zinc-900">Edit description</h2>
+        <button type="button" id="modal-desc-save-top" class="text-sm font-semibold text-zinc-900">Save</button>
+      </div>
+      <div class="p-5 flex-1 overflow-y-auto space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-zinc-500 mb-1">Your description</label>
+          <textarea id="modal-desc-input" rows="3" class="w-full px-3 py-2 rounded-xl border border-zinc-200 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 resize-none" placeholder="Product description"></textarea>
+          <p class="text-xs text-zinc-500 mt-1">Word count: <span id="modal-desc-words">0</span> · Score: 85/100</p>
+        </div>
+        <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-3">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-2">AI rewrite suggestion</p>
+          <p class="text-sm text-zinc-700 mb-2" id="modal-desc-ai-text">Industry-leading noise cancelling with Dual Noise Sensor. LDAC, multipoint, Speak-to-Chat. Quick charge, carry case included. Up to 30hr battery.</p>
+          <p class="text-xs text-zinc-500 mb-2">Score: 96/100 – Adds: quick charge, carry case</p>
+          <div class="flex gap-2">
+            <button type="button" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-600">Keep mine</button>
+            <button type="button" id="modal-desc-use-ai" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-zinc-900 text-white">Use AI version</button>
+          </div>
+        </div>
+        <p class="text-xs text-zinc-500">TikTok descriptions under 200 chars for best visibility. Current: <span id="modal-desc-chars">0</span> chars.</p>
+      </div>
+      <div class="p-5 border-t border-zinc-100 flex gap-2">
+        <button type="button" id="modal-desc-cancel" class="flex-1 py-2.5 rounded-xl border border-zinc-200 text-sm font-medium text-zinc-600">Cancel</button>
+        <button type="button" id="modal-desc-save" class="flex-1 py-2.5 rounded-xl bg-zinc-900 text-white text-sm font-semibold">Save description</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit price modal (simple) -->
+  <div id="modal-price" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop" aria-modal="true" role="dialog">
+    <div class="bg-white rounded-2xl w-full max-w-md p-5">
+      <h2 class="font-serif text-lg font-bold text-zinc-900 mb-4">Edit price</h2>
+      <div class="flex items-center gap-1 mb-4">
+        <span class="font-serif text-xl font-bold text-zinc-900">$</span>
+        <input type="text" id="modal-price-input" inputmode="decimal" class="flex-1 text-xl font-semibold text-zinc-900 border-b border-zinc-200 py-2 pl-0 focus:outline-none focus:border-zinc-400" placeholder="0.00" />
+      </div>
+      <p class="text-xs text-zinc-500 mb-4">AI recommended: $<span id="modal-price-ai">0</span></p>
+      <div class="flex gap-2">
+        <button type="button" id="modal-price-cancel" class="flex-1 py-2.5 rounded-xl border border-zinc-200 text-sm font-medium text-zinc-600">Cancel</button>
+        <button type="button" id="modal-price-save" class="flex-1 py-2.5 rounded-xl bg-zinc-900 text-white text-sm font-semibold">Save price</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var DRAFT_KEY = 'auralink_review_draft';
+      var STORAGE_KEY = 'auralink_selected_marketplaces';
+      var names = { tiktok_shop: 'TikTok Shop', amazon: 'Amazon', shopify: 'Shopify', ebay: 'eBay', etsy: 'Etsy', depop: 'Depop', walmart: 'Walmart', poshmark: 'Poshmark', mercari: 'Mercari', vinted: 'Vinted' };
+      var domains = { tiktok_shop: 'tiktok.com', amazon: 'amazon.com', shopify: 'shopify.com', ebay: 'ebay.com', etsy: 'etsy.com', depop: 'depop.com', walmart: 'walmart.com', poshmark: 'poshmark.com', mercari: 'mercari.com', vinted: 'vinted.com' };
+      var hints = { tiktok_shop: 'Trending ↑34% · Best for this item', amazon: 'High demand', shopify: 'Medium demand', ebay: 'Low demand', etsy: 'Handmade & vintage', depop: 'Fashion & streetwear', walmart: 'Marketplace', poshmark: 'Fashion resale', mercari: 'Buy & sell', vinted: 'Pre-loved fashion' };
+
+      function loadDraft() {
+        try {
+          var raw = sessionStorage.getItem(DRAFT_KEY);
+          if (raw) { var d = JSON.parse(raw); if (d && typeof d === 'object') return d; }
+        } catch (e) {}
+        return { title: '', price: '', description: '', category: '', condition: '', tags: [] };
+      }
+      function saveDraft(draft) {
+        try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch (e) {}
+      }
+      function loadSelected() {
+        try {
+          var raw = sessionStorage.getItem(STORAGE_KEY);
+          if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr)) return arr; }
+        } catch (e) {}
+        return ['amazon', 'shopify'];
+      }
+
+      var draft = loadDraft();
+      var selected = loadSelected();
+
+      function fromExtraction(draft) {
+        var ex = draft.extraction;
+        if (!ex || typeof ex !== 'object') return {};
+        var copy = ex.copy || ex.extraction_copy || {};
+        var tags = ex.tags || {};
+        var att = ex.attributes || {};
+        var description = (copy.description || '').trim();
+        if (!description && copy.bullet_points && Array.isArray(copy.bullet_points) && copy.bullet_points.length > 0)
+          description = copy.bullet_points.join(' ');
+        var category = (tags.category || att.brand || '').trim();
+        if (att.brand && category && category !== att.brand) category = att.brand + ' › ' + category;
+        else if (!category && att.brand) category = att.brand;
+        var condition = (att.condition || '').trim() || 'New – in original box';
+        var tagList = (tags.search_keywords && Array.isArray(tags.search_keywords)) ? tags.search_keywords : [];
+        return { description: description, category: category, condition: condition, tags: tagList };
+      }
+
+      var derived = fromExtraction(draft);
+      if (!draft.description && derived.description) draft.description = derived.description;
+      if (!draft.category && derived.category) draft.category = derived.category;
+      if (!draft.condition && derived.condition) draft.condition = derived.condition;
+      if ((!draft.tags || !draft.tags.length) && derived.tags && derived.tags.length) draft.tags = derived.tags;
+
+      var photoCount = (draft.photos && Array.isArray(draft.photos)) ? draft.photos.length : 0;
+      var hasPhoto = photoCount > 0 && draft.photos[0];
+      function listingScoreFromDraft(d) {
+        var score = 50;
+        if (d.title && d.title.length >= 10) score += 15;
+        if (d.title && d.title.length >= 30) score += 5;
+        if (d.description && d.description.length >= 50) score += 10;
+        if (d.description && d.description.length >= 150) score += 5;
+        if (d.price && parseFloat(String(d.price).replace(/^\$/, '')) > 0) score += 5;
+        var t = (d.tags && Array.isArray(d.tags)) ? d.tags : [];
+        if (t.length >= 3) score += 5;
+        if (t.length >= 6) score += 5;
+        if (photoCount >= 1) score += 5;
+        if (photoCount >= 2) score += 5;
+        return Math.min(99, Math.max(0, score));
+      }
+      var listingScore = listingScoreFromDraft(draft);
+      var previousScore = Math.max(0, listingScore - 25);
+
+      var titleEl = document.getElementById('preview-title');
+      var descEl = document.getElementById('preview-description');
+      var priceEl = document.getElementById('preview-price');
+      var categoryEl = document.getElementById('preview-category');
+      var conditionEl = document.getElementById('preview-condition');
+      var tagsEl = document.getElementById('preview-tags');
+      var photosCountEl = document.getElementById('preview-photos-count');
+      var photosThumbEl = document.getElementById('preview-photos-thumb');
+      var salesEstEl = document.getElementById('preview-sales-est');
+
+      if (photosCountEl) photosCountEl.textContent = (photoCount > 0 ? '1 of ' + photoCount : '0') + ' photo' + (photoCount === 1 ? '' : 's');
+      if (photosThumbEl && hasPhoto) {
+        photosThumbEl.innerHTML = '';
+        var img = document.createElement('img');
+        img.src = draft.photos[0];
+        img.alt = draft.title || 'Product';
+        img.className = 'w-full h-full object-cover rounded-xl';
+        photosThumbEl.appendChild(img);
+        photosThumbEl.classList.remove('bg-zinc-100');
+      }
+      if (salesEstEl && selected.length) {
+        var storeNames = selected.map(function(id) { return names[id] || id; }).join(', ');
+        salesEstEl.textContent = 'Publishing to ' + selected.length + ' store' + (selected.length === 1 ? '' : 's') + ': ' + storeNames + '. Est. 1–3 days to sell · Listing score: ' + listingScore + '/100.';
+      } else if (salesEstEl) salesEstEl.textContent = 'Add marketplaces in the flow to see publishing estimate. Listing score: ' + listingScore + '/100.';
+
+      if (titleEl) titleEl.textContent = (draft.title && draft.title.trim()) ? draft.title.trim() : 'Untitled listing';
+      if (descEl) descEl.textContent = (draft.description && draft.description.trim()) ? draft.description.trim() : 'No description.';
+      if (draft.price != null && draft.price !== '' && priceEl) {
+        var p = String(draft.price).replace(/^\$/, '').trim();
+        priceEl.textContent = '$' + (p === '' ? '0' : (p.indexOf('.') !== -1 ? p : p + '.00'));
+      } else if (priceEl) priceEl.textContent = '$0.00';
+      if (categoryEl) categoryEl.textContent = (draft.category && draft.category.trim()) ? draft.category.trim() : '—';
+      if (conditionEl) conditionEl.textContent = (draft.condition && draft.condition.trim()) ? draft.condition.trim() : 'New – in original box';
+      if (tagsEl) {
+        var tagList = (draft.tags && Array.isArray(draft.tags) && draft.tags.length) ? draft.tags : [];
+        tagsEl.innerHTML = '';
+        tagList.forEach(function(t) {
+          var span = document.createElement('span');
+          span.className = 'px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-600 text-xs font-medium border border-zinc-200';
+          span.textContent = t;
+          tagsEl.appendChild(span);
+        });
+      }
+
+      function renderPreviewTags(d) {
+        var el = document.getElementById('preview-tags');
+        if (!el) return;
+        var tagList = (d && d.tags && Array.isArray(d.tags) && d.tags.length) ? d.tags : [];
+        el.innerHTML = '';
+        tagList.forEach(function(t) {
+          var span = document.createElement('span');
+          span.className = 'px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-600 text-xs font-medium border border-zinc-200';
+          span.textContent = t;
+          el.appendChild(span);
+        });
+      }
+
+      var previewTagInput = document.getElementById('preview-tag-input');
+      var previewTagAddBtn = document.getElementById('preview-tag-add-btn');
+      function addPreviewTag() {
+        var val = (previewTagInput && previewTagInput.value) ? String(previewTagInput.value).trim() : '';
+        if (!val) return;
+        var d = loadDraft();
+        if (!d.tags || !Array.isArray(d.tags)) d.tags = [];
+        d.tags.push(val);
+        saveDraft(d);
+        draft.tags = d.tags;
+        if (previewTagInput) previewTagInput.value = '';
+        renderPreviewTags(d);
+      }
+      if (previewTagAddBtn) previewTagAddBtn.addEventListener('click', addPreviewTag);
+      if (previewTagInput) {
+        previewTagInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addPreviewTag(); } });
+      }
+      if (pubList && selected.length) {
+        pubList.innerHTML = '';
+        selected.forEach(function(id) {
+          var div = document.createElement('div');
+          div.className = 'flex items-center justify-between gap-3';
+          var domain = domains[id];
+          var logoUrl = domain ? 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=128' : '';
+          var logoHtml = logoUrl
+            ? '<span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0"><img src="' + logoUrl + '" alt="" class="w-6 h-6 object-contain" onerror="this.style.display=\'none\'" /></span>'
+            : '';
+          div.innerHTML = '<div class="flex items-center gap-3 min-w-0 flex-1">' + logoHtml +
+            '<div class="min-w-0"><p class="text-sm font-medium text-zinc-900">' + (names[id] || id) + '</p><p class="text-xs text-zinc-500">' + (hints[id] || '') + '</p></div></div>' +
+            '<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 shrink-0">On</span>';
+          pubList.appendChild(div);
+        });
+      }
+
+      var publishBtn = document.getElementById('preview-publish-btn');
+      if (publishBtn && selected.length) publishBtn.textContent = 'Connect and publish (' + selected.length + ' store' + (selected.length === 1 ? '' : 's') + ')';
+
+      function getFormattedListingText() {
+        var title = (draft.title && draft.title.trim()) ? draft.title.trim() : 'Untitled listing';
+        var desc = (draft.description && draft.description.trim()) ? draft.description.trim() : '';
+        var p = (draft.price != null && draft.price !== '') ? String(draft.price).replace(/^\$/, '').trim() : '0';
+        var price = '$' + (p === '' ? '0' : (p.indexOf('.') !== -1 ? p : p + '.00'));
+        var category = (draft.category && draft.category.trim()) ? draft.category.trim() : '';
+        var condition = (draft.condition && draft.condition.trim()) ? draft.condition.trim() : '';
+        var tagList = (draft.tags && Array.isArray(draft.tags)) ? draft.tags : [];
+        var photoCount = (draft.photos && Array.isArray(draft.photos)) ? draft.photos.length : 0;
+        var lines = [
+          title,
+          '',
+          'Price: ' + price,
+          'Category: ' + category,
+          'Condition: ' + condition,
+          'Photos: ' + (photoCount > 0 ? photoCount + ' image' + (photoCount === 1 ? '' : 's') : 'None'),
+          '',
+          'Description:',
+          desc,
+          '',
+          'Tags: ' + (tagList.length ? tagList.join(', ') : 'None')
+        ];
+        return lines.join('\n');
+      }
+      var toastEl = document.getElementById('preview-toast');
+      function showToast(msg) {
+        if (!toastEl) return;
+        toastEl.textContent = msg || 'Copied to clipboard';
+        toastEl.classList.remove('hidden');
+        setTimeout(function() { toastEl.classList.add('hidden'); }, 2000);
+      }
+      var copyBtn = document.getElementById('preview-copy-btn');
+      if (copyBtn) copyBtn.addEventListener('click', function() {
+        draft = loadDraft();
+        var text = getFormattedListingText();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function() {
+            showToast('Copied to clipboard');
+            closeModal('modal-choose-listing');
+          }).catch(function() { showToast('Copy failed'); });
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed'; ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand('copy');
+            showToast('Copied to clipboard');
+            closeModal('modal-choose-listing');
+          } catch (e) { showToast('Copy failed'); }
+          document.body.removeChild(ta);
+        }
+      });
+      var downloadBtn = document.getElementById('preview-download-btn');
+      if (downloadBtn) downloadBtn.addEventListener('click', function() {
+        var text = getFormattedListingText();
+        var filename = (draft.title && draft.title.trim()) ? draft.title.trim().replace(/[^a-z0-9]+/gi, '-').slice(0, 50) + '-listing.txt' : 'listing.txt';
+        var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        closeModal('modal-choose-listing');
+      });
+
+      function openModal(id) {
+        var m = document.getElementById(id);
+        if (m) {
+          if (id === 'modal-choose-listing') { m.style.display = 'flex'; } else { m.classList.remove('hidden'); m.classList.add('flex'); }
+        }
+      }
+      function closeModal(id) {
+        var m = document.getElementById(id);
+        if (m) {
+          if (id === 'modal-choose-listing') { m.style.display = 'none'; } else { m.classList.add('hidden'); m.classList.remove('flex'); }
+        }
+      }
+
+      var openChooseBtn = document.getElementById('open-choose-listing-modal');
+      var chooseModal = document.getElementById('modal-choose-listing');
+      var chooseModalClose = document.getElementById('modal-choose-listing-close');
+      if (openChooseBtn) openChooseBtn.addEventListener('click', function() { openModal('modal-choose-listing'); });
+      if (chooseModalClose) chooseModalClose.addEventListener('click', function() { closeModal('modal-choose-listing'); });
+      if (chooseModal) chooseModal.addEventListener('click', function(e) { if (e.target === chooseModal) closeModal('modal-choose-listing'); });
+
+      if (window.location.hash === '#choose') {
+        openModal('modal-choose-listing');
+        if (history.replaceState) history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+
+      document.getElementById('edit-title-btn').onclick = function() {
+        var inp = document.getElementById('modal-title-input');
+        if (inp) inp.value = titleEl ? titleEl.textContent : '';
+        var charsEl = document.getElementById('modal-title-chars');
+        if (charsEl) charsEl.textContent = (inp ? inp.value.length : 0) + ' characters · Within Amazon limit (200 max)';
+        inp && inp.addEventListener('input', function() {
+          if (charsEl) charsEl.textContent = inp.value.length + ' characters · Within Amazon limit (200 max)';
+        });
+        document.querySelectorAll('.title-suggestion').forEach(function(btn) {
+          btn.onclick = function() {
+            var t = btn.getAttribute('data-title');
+            if (t && inp) { inp.value = t; if (charsEl) charsEl.textContent = t.length + ' characters · Within Amazon limit (200 max)'; }
+          };
+        });
+        openModal('modal-title');
+      };
+      document.getElementById('edit-desc-btn').onclick = function() {
+        var inp = document.getElementById('modal-desc-input');
+        if (inp) {
+          inp.value = descEl ? descEl.textContent : '';
+          document.getElementById('modal-desc-words').textContent = inp.value.trim() ? inp.value.trim().split(/\s+/).length : 0;
+          document.getElementById('modal-desc-chars').textContent = inp.value.length;
+        }
+        inp && inp.addEventListener('input', function() {
+          document.getElementById('modal-desc-words').textContent = inp.value.trim() ? inp.value.trim().split(/\s+/).length : 0;
+          document.getElementById('modal-desc-chars').textContent = inp.value.length;
+        });
+        document.getElementById('modal-desc-use-ai').onclick = function() {
+          var aiText = document.getElementById('modal-desc-ai-text');
+          if (aiText && inp) {
+            inp.value = aiText.textContent;
+            document.getElementById('modal-desc-words').textContent = inp.value.trim() ? inp.value.trim().split(/\s+/).length : 0;
+            document.getElementById('modal-desc-chars').textContent = inp.value.length;
+          }
+        };
+        openModal('modal-desc');
+      };
+      document.getElementById('edit-price-btn').onclick = function() {
+        var inp = document.getElementById('modal-price-input');
+        if (inp) inp.value = (priceEl ? priceEl.textContent.replace(/^\$/, '') : '') || (draft.price != null && draft.price !== '' ? String(draft.price).replace(/^\$/, '') : '0');
+        var aiEl = document.getElementById('modal-price-ai');
+        if (aiEl) aiEl.textContent = (draft.price != null && draft.price !== '' ? String(draft.price).replace(/^\$/, '') : '0');
+        openModal('modal-price');
+      };
+
+      document.getElementById('modal-title-cancel').onclick = function() { closeModal('modal-title'); };
+      document.getElementById('modal-title-save').onclick = function() {
+        var inp = document.getElementById('modal-title-input');
+        if (inp && titleEl) {
+          titleEl.textContent = inp.value.trim() || titleEl.textContent;
+          draft.title = titleEl.textContent;
+          saveDraft(draft);
+        }
+        closeModal('modal-title');
+      };
+      document.getElementById('modal-desc-cancel').onclick = function() { closeModal('modal-desc'); };
+      document.getElementById('modal-desc-save').onclick = document.getElementById('modal-desc-save-top').onclick = function() {
+        var inp = document.getElementById('modal-desc-input');
+        if (inp && descEl) {
+          descEl.textContent = inp.value.trim() || descEl.textContent;
+          draft.description = descEl.textContent;
+          saveDraft(draft);
+        }
+        closeModal('modal-desc');
+      };
+      document.getElementById('modal-price-cancel').onclick = function() { closeModal('modal-price'); };
+      document.getElementById('modal-price-save').onclick = function() {
+        var inp = document.getElementById('modal-price-input');
+        if (inp && priceEl) {
+          var p = inp.value.trim().replace(/^\$/, '') || '0';
+          priceEl.textContent = '$' + (p.indexOf('.') !== -1 ? p : p + '.00');
+          draft.price = p;
+          saveDraft(draft);
+        }
+        closeModal('modal-price');
+      };
+
+      ['modal-title', 'modal-desc', 'modal-price'].forEach(function(id) {
+        var m = document.getElementById(id);
+        if (m) m.addEventListener('click', function(e) { if (e.target === m) closeModal(id); });
+      });
+    })();
+  </script>
+</body>
+</html>

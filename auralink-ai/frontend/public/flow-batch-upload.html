@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="auralink-api-url" content="http://localhost:8000" />
+  <title>Batch upload | AuraLink AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+    .vercel-card { background: #fff; border: 1px solid #eaeaea; border-radius: 16px; }
+    .section-label { font-size: 13px; font-weight: 500; color: #111; margin-bottom: 8px; display: block; }
+    .section-hint { font-size: 12px; color: #555; margin-top: 4px; margin-bottom: 8px; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#fafafa] font-sans text-[#111] antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <header class="shrink-0 border-b border-[#eaeaea] bg-white/80 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
+      <div></div>
+      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#111] justify-self-center">AuraLink</a>
+      <div></div>
+    </header>
+    <main class="flex-1 px-5 pt-6 pb-6 overflow-auto">
+      <h1 class="text-xl font-bold text-[#111] mb-1 text-center" style="letter-spacing: -0.025em;">Batch upload</h1>
+      <p class="text-center text-sm text-[#555] mb-6">Upload multiple product photos. We extract details in parallel, then you review and publish.</p>
+
+      <div class="space-y-5">
+        <div class="vercel-card p-5">
+          <span class="section-label">Photos</span>
+          <p class="section-hint">Up to 20 images per batch. All are sent to the AI at once.</p>
+          <div class="rounded-xl border-2 border-dashed border-[#eaeaea] bg-[#fafafa] p-5 min-h-[80px] flex flex-col items-center">
+            <input type="file" id="batch-file-input" accept="image/*" multiple class="hidden" />
+            <button type="button" id="batch-upload-btn" class="w-full text-sm font-semibold text-[#111] border border-[#eaeaea] rounded-lg px-4 py-2.5 bg-white hover:bg-zinc-50 transition-colors">
+              Choose photos
+            </button>
+            <p id="batch-file-count" class="text-xs text-[#555] mt-3 hidden text-center w-full"></p>
+            <button type="button" id="batch-start-btn" class="hidden mt-3 w-full text-sm font-semibold text-[#111] border border-[#eaeaea] rounded-lg px-4 py-2.5 bg-white hover:bg-zinc-50 transition-colors">
+              Start batch
+            </button>
+          </div>
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-amber-600 mt-2">Premium</p>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>
+    (function() {
+      var BATCH_PENDING_KEY = 'auralink_batch_pending';
+      var MAX_IMAGES = 20;
+      var MAX_PX = 720;
+      var input = document.getElementById('batch-file-input');
+      var uploadBtn = document.getElementById('batch-upload-btn');
+      var countEl = document.getElementById('batch-file-count');
+      var startBtn = document.getElementById('batch-start-btn');
+      var pendingImages = [];
+
+      function resizeImage(dataUrl, cb) {
+        var img = new Image();
+        img.onload = function() {
+          var w = img.naturalWidth || img.width;
+          var h = img.naturalHeight || img.height;
+          if (w <= MAX_PX && h <= MAX_PX) {
+            cb(dataUrl.indexOf(',') >= 0 ? dataUrl.split(',')[1] : dataUrl);
+            return;
+          }
+          var scale = MAX_PX / Math.max(w, h);
+          var c = document.createElement('canvas');
+          c.width = Math.round(w * scale);
+          c.height = Math.round(h * scale);
+          var ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          cb(c.toDataURL('image/jpeg', 0.82).split(',')[1]);
+        };
+        img.onerror = function() { cb(dataUrl.indexOf(',') >= 0 ? dataUrl.split(',')[1] : dataUrl); };
+        img.src = dataUrl;
+      }
+
+      uploadBtn.addEventListener('click', function() { input.value = ''; input.click(); });
+
+      input.addEventListener('change', function() {
+        var files = input.files;
+        if (!files || files.length === 0) return;
+        var n = Math.min(files.length, MAX_IMAGES);
+        if (files.length > MAX_IMAGES) {
+          alert('Maximum ' + MAX_IMAGES + ' images per batch. First ' + MAX_IMAGES + ' will be used.');
+        }
+        pendingImages = [];
+        var read = 0;
+        for (var i = 0; i < n; i++) {
+          (function(idx) {
+            var file = files[idx];
+            if (!file.type.match(/^image\//)) { read++; if (read === n) done(); return; }
+            var reader = new FileReader();
+            reader.onload = function() {
+              var dataUrl = reader.result;
+              var base64 = dataUrl.indexOf(',') >= 0 ? dataUrl.split(',')[1] : dataUrl;
+              if (!base64 || base64.length < 100) { read++; if (read === n) done(); return; }
+              resizeImage(dataUrl, function(b64) {
+                pendingImages.push({ base64: b64 });
+                read++;
+                if (read === n) done();
+              });
+            };
+            reader.onerror = function() { read++; if (read === n) done(); };
+            reader.readAsDataURL(file);
+          })(i);
+        }
+        function done() {
+          try {
+            sessionStorage.setItem(BATCH_PENDING_KEY, JSON.stringify(pendingImages));
+            countEl.textContent = pendingImages.length + ' photo' + (pendingImages.length === 1 ? '' : 's') + ' ready';
+            countEl.classList.remove('hidden');
+            startBtn.classList.remove('hidden');
+          } catch (e) {
+            alert('Could not save images (storage limit?). Try fewer photos.');
+          }
+        }
+      });
+
+      startBtn.addEventListener('click', function() {
+        if (pendingImages.length === 0) {
+          alert('Choose photos first.');
+          return;
+        }
+        window.location.href = '/flow-batch.html';
+      });
+    })();
+  </script>
+</body>
+</html>

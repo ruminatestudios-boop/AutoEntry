@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Listings | AuraLink AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50">
+      <span class="font-serif text-2xl font-bold text-zinc-900">AuraLink</span>
+      <div class="w-9 h-9 rounded-full bg-zinc-200 border border-zinc-300 flex items-center justify-center text-sm font-semibold text-zinc-600">J</div>
+    </header>
+
+    <main class="flex-1 px-5 pb-24 overflow-auto">
+      <div class="flex items-center gap-3 mb-4">
+        <h1 class="font-serif text-2xl font-bold text-zinc-900">Listings</h1>
+        <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-zinc-900 text-white">84 TOTAL</span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-2 mb-5">
+        <button type="button" class="px-4 py-2 rounded-full bg-zinc-900 text-white text-sm font-semibold border border-zinc-800">All</button>
+        <button type="button" class="px-4 py-2 rounded-full bg-white border border-zinc-200 text-zinc-700 text-sm font-medium">Live</button>
+        <button type="button" class="px-4 py-2 rounded-full bg-white border border-zinc-200 text-zinc-700 text-sm font-medium">Sold</button>
+        <button type="button" class="px-4 py-2 rounded-full bg-white border border-zinc-200 text-zinc-700 text-sm font-medium">Drafts</button>
+      </div>
+
+      <!-- Listing cards -->
+      <div class="space-y-3">
+        <a href="/listings-detail.html" class="block rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between no-underline">
+          <div class="flex gap-3 min-w-0 flex-1">
+            <div class="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 shrink-0"></div>
+            <div class="min-w-0">
+              <p class="font-semibold text-zinc-900 truncate">Sony WH-1000XM5 Headphones</p>
+              <p class="text-xs text-zinc-500 mt-0.5">$269 · 3 stores</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 shrink-0">Live</span>
+        </a>
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between">
+          <div class="flex gap-3 min-w-0 flex-1">
+            <div class="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 shrink-0"></div>
+            <div class="min-w-0">
+              <p class="font-semibold text-zinc-900 truncate">Levi's 501 Jeans</p>
+              <p class="text-xs text-zinc-500 mt-0.5">Depop</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-600 shrink-0">Sold</span>
+        </div>
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between">
+          <div class="flex gap-3 min-w-0 flex-1">
+            <div class="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 shrink-0"></div>
+            <div class="min-w-0">
+              <p class="font-semibold text-zinc-900 truncate">Nike Air Max 90</p>
+              <p class="text-xs text-zinc-500 mt-0.5">StockX</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-600 shrink-0">Sold</span>
+        </div>
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between">
+          <div class="flex gap-3 min-w-0 flex-1">
+            <div class="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 shrink-0"></div>
+            <div class="min-w-0">
+              <p class="font-semibold text-zinc-900 truncate">Canon EOS R6</p>
+              <p class="text-xs text-zinc-500 mt-0.5">$2,199 · 3 stores</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 shrink-0">Live</span>
+        </div>
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between">
+          <div class="flex gap-3 min-w-0 flex-1">
+            <div class="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 shrink-0"></div>
+            <div class="min-w-0">
+              <p class="font-semibold text-zinc-900 truncate">Zara Wool Blazer</p>
+              <p class="text-xs text-zinc-500 mt-0.5">Vinted</p>
+            </div>
+          </div>
+          <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-600 shrink-0">Sold</span>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
