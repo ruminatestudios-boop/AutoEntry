@@ -1,34 +1,17 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { getEnabledPlatforms } from '../config/platforms.js';
-import { getOrCreateDevUser } from '../db/users.js';
-import { isDevMode, getDevUserId } from '../db/devStore.js';
 
 const authRouter = Router();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
-/** GET dev token for local testing. Creates/gets dev user and returns JWT. No auth required. */
-authRouter.get('/dev-token', async (_req, res) => {
+const DEV_USER_ID = 'dev-local';
+
+/** GET dev token. Always returns a JWT for dev-local; no DB or other deps. */
+authRouter.get('/dev-token', (_req, res) => {
   try {
-    let userId = null;
-    if (isDevMode()) {
-      userId = getDevUserId();
-    } else {
-      try {
-        userId = await getOrCreateDevUser();
-      } catch (e) {
-        console.warn('getOrCreateDevUser failed, falling back to dev user', e.message);
-        userId = getDevUserId();
-      }
-    }
-    if (!userId) {
-      try {
-        userId = await getOrCreateDevUser();
-      } catch (_) {}
-    }
-    if (!userId) userId = getDevUserId();
-    if (!userId) return res.status(500).json({ error: 'Could not get or create dev user (check DB). Set SUPABASE_URL and SUPABASE_SERVICE_KEY in publishing/.env for full flow, or see CONNECT.md.' });
+    const userId = DEV_USER_ID;
     const token = jwt.sign({ sub: userId, userId }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user_id: userId });
   } catch (e) {
