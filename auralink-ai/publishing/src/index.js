@@ -16,9 +16,24 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const allowedOrigins = FRONTEND_URL.includes(',')
   ? FRONTEND_URL.split(',').map((u) => u.trim()).filter(Boolean)
   : [FRONTEND_URL];
-if (process.env.NODE_ENV !== 'production') {
-  allowedOrigins.push(true);
+const allowAllOrigins = process.env.NODE_ENV !== 'production';
+
+function corsHeaders(req, res, next) {
+  const origin = req.headers.origin;
+  const allowOrigin = origin && (allowAllOrigins || allowedOrigins.includes(origin)) ? origin : null;
+  if (allowOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-User-Id');
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
 }
+app.use(corsHeaders);
+
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
