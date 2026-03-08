@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
   <title>Connect Shopify | SyncLyst</title>
@@ -86,8 +87,14 @@
         var meta = document.querySelector('meta[name="auralink-publishing-url"]');
         var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
         var host = window.location.hostname;
-        if (host && host !== 'localhost' && host !== '127.0.0.1' && (url.indexOf('localhost') !== -1 || url.indexOf('127.0.0.1') !== -1))
-          url = window.location.protocol + '//' + host + ':8001';
+        if (host && host !== 'localhost' && host !== '127.0.0.1') {
+          var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
+          if (prodMeta && prodMeta.getAttribute('content') && prodMeta.getAttribute('content').trim()) {
+            url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+          } else {
+            url = window.location.protocol + '//' + host + ':8001';
+          }
+        }
         return url;
       }
       function normalizeShopDomain(raw) {
@@ -184,11 +191,15 @@
           var returnToPath = getReturnToPath();
           if (returnToPath) {
             var pubBase = getPublishingBase();
+            console.log('[Connect Shopify] Publishing API URL:', pubBase);
             connectBtn.disabled = true;
             connectBtn.textContent = 'Connecting…';
-            fetch(pubBase + '/auth/dev-token')
+            var connectAbort = new AbortController();
+            var timeoutId = setTimeout(function() { connectAbort.abort(); }, 15000);
+            fetch(pubBase + '/auth/dev-token', { signal: connectAbort.signal })
               .then(function(r) { return r.ok ? r.json() : null; })
               .then(function(data) {
+                clearTimeout(timeoutId);
                 if (data && data.user_id) {
                   var authUrl = pubBase + '/auth/shopify?shop=' + encodeURIComponent(domain) + '&user_id=' + encodeURIComponent(data.user_id) + '&return_to=' + encodeURIComponent(returnToPath);
                   if (data.token) try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {}
@@ -197,8 +208,12 @@
                   window.location.href = getApiBase() + '/api/v1/shopify/install?shop=' + encodeURIComponent(domain);
                 }
               })
-              .catch(function() {
-                window.location.href = getApiBase() + '/api/v1/shopify/install?shop=' + encodeURIComponent(domain);
+              .catch(function(err) {
+                clearTimeout(timeoutId);
+                var msg = err.name === 'AbortError'
+                  ? 'Connection timed out. The publishing service may be unreachable. If you\'re on synclyst.app, make sure the latest version is deployed (try sync-lyt.vercel.app) and that the publishing API is running.'
+                  : 'Could not reach the publishing service. Try again or use sync-lyt.vercel.app if synclyst.app is not updated.';
+                if (errorEl) { errorEl.textContent = msg; errorEl.classList.remove('hidden'); }
               })
               .finally(function() { connectBtn.disabled = false; connectBtn.textContent = 'Connect store'; });
           } else {

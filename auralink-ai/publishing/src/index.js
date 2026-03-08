@@ -16,6 +16,12 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const allowedOrigins = FRONTEND_URL.includes(',')
   ? FRONTEND_URL.split(',').map((u) => u.trim()).filter(Boolean)
   : [FRONTEND_URL];
+// Ensure production frontend is allowed when running on Cloud Run (in case FRONTEND_URL is unset)
+const isCloudRun = /\.run\.app$/i.test(process.env.APP_URL || '');
+if (isCloudRun) {
+  const prod = ['https://synclyst.app', 'https://www.synclyst.app'];
+  prod.forEach((o) => { if (!allowedOrigins.includes(o)) allowedOrigins.push(o); });
+}
 const allowAllOrigins = process.env.NODE_ENV !== 'production';
 
 function corsHeaders(req, res, next) {
