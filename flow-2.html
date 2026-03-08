@@ -141,9 +141,6 @@
         var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
         apiUrl = (prodBackend && prodBackend.getAttribute('content')) ? prodBackend.getAttribute('content').trim().replace(/\/$/, '') : window.location.origin;
       }
-      if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        apiUrl = window.location.origin;
-      }
 
       var start = Date.now();
       var duration = 6000;
