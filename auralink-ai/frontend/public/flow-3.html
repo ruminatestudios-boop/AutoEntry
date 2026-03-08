@@ -612,6 +612,8 @@
           var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
           if (prodMeta && prodMeta.getAttribute('content') && prodMeta.getAttribute('content').trim()) {
             url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+          } else if (host === 'synclyst.app' || host === 'www.synclyst.app') {
+            url = 'https://synclyst-publishing-299567386855.us-central1.run.app';
           } else {
             url = window.location.protocol + '//' + host + ':8001';
           }
