@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
+  <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
   <title>Processing | Listing Flow | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -134,6 +135,12 @@
 
       var apiUrl = (document.querySelector('meta[name="auralink-api-url"]') && document.querySelector('meta[name="auralink-api-url"]').getAttribute('content')) || 'http://localhost:8000';
       apiUrl = (apiUrl || '').trim().replace(/\/$/, '') || 'http://localhost:8000';
+      // On production, call Cloud Run backend directly (bypasses Vercel proxy / env var)
+      var host = window.location.hostname;
+      if (host && host !== 'localhost' && host !== '127.0.0.1') {
+        var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
+        apiUrl = (prodBackend && prodBackend.getAttribute('content')) ? prodBackend.getAttribute('content').trim().replace(/\/$/, '') : window.location.origin;
+      }
       if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         apiUrl = window.location.origin;
       }

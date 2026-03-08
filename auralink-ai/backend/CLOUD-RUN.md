@@ -43,6 +43,7 @@ In [Cloud Console](https://console.cloud.google.com/run) → your service → **
 Add at least:
 
 - `GEMINI_API_KEY` – from [Google AI Studio](https://aistudio.google.com/apikey)
+- **`CORS_ORIGINS`** = `https://synclyst.app,https://www.synclyst.app` (so the browser can call the API from synclyst.app)
 - Any others your app needs (e.g. `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` if you use them)
 
 Redeploy after adding variables.

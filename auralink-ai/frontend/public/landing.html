@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="auralink-api-url" content="http://localhost:8000" />
+    <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
     <title>SyncLyst - List products. In seconds.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -765,8 +766,10 @@
           var url = (meta && meta.getAttribute('content') ? meta.getAttribute('content').trim().replace(/\/$/, '') : '') || window.AURALINK_CONFIG.API_URL;
           window.AURALINK_CONFIG.API_URL = (url && url !== 'http://localhost:8000') ? url : 'http://localhost:8000';
           var host = window.location.hostname;
-          if (host && host !== 'localhost' && host !== '127.0.0.1' && (!window.AURALINK_CONFIG.API_URL || window.AURALINK_CONFIG.API_URL.indexOf('localhost') !== -1)) {
-            window.AURALINK_CONFIG.API_URL = window.location.protocol + '//' + host + ':8000';
+          // On production, call Cloud Run backend directly (bypasses Vercel proxy / env var)
+          if (host && host !== 'localhost' && host !== '127.0.0.1') {
+            var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
+            window.AURALINK_CONFIG.API_URL = (prodBackend && prodBackend.getAttribute('content')) ? prodBackend.getAttribute('content').trim().replace(/\/$/, '') : (window.location.protocol + '//' + host + ':8000');
           }
         })();
 

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
+  <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
   <!-- Optional: set content to a Shopify login/lookup URL to send users there instead of the connect form (e.g. from Shopify Identity). Leave empty to use the connect form. -->
   <meta name="auralink-shopify-login-url" content="" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -1332,6 +1333,11 @@
         function runExtractionWithBase64(base64) {
           var apiMeta = document.querySelector('meta[name="auralink-api-url"]');
           var apiUrl = (apiMeta && apiMeta.getAttribute('content')) ? apiMeta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8000';
+          var host = window.location.hostname;
+          if (host && host !== 'localhost' && host !== '127.0.0.1') {
+            var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
+            if (prodBackend && prodBackend.getAttribute('content')) apiUrl = prodBackend.getAttribute('content').trim().replace(/\/$/, '');
+          }
           if (btn) { btn.disabled = true; btn.textContent = 'Reading photo…'; }
           fetch(apiUrl + '/api/v1/vision/extract', {
             method: 'POST',
