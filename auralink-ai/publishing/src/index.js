@@ -26,7 +26,8 @@ const allowAllOrigins = process.env.NODE_ENV !== 'production';
 
 function corsHeaders(req, res, next) {
   const origin = req.headers.origin;
-  const allowOrigin = origin && (allowAllOrigins || allowedOrigins.includes(origin)) ? origin : null;
+  const isSynclystProd = origin === 'https://synclyst.app' || origin === 'https://www.synclyst.app';
+  const allowOrigin = origin && (isSynclystProd || allowAllOrigins || allowedOrigins.includes(origin)) ? origin : null;
   if (allowOrigin) {
     res.setHeader('Access-Control-Allow-Origin', allowOrigin);
   }
@@ -43,6 +44,7 @@ app.use(corsHeaders);
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
+    if (origin === 'https://synclyst.app' || origin === 'https://www.synclyst.app') return cb(null, origin);
     if (allowedOrigins[0] === true) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, origin);
     cb(null, false);
@@ -53,6 +55,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.get('/auth/shopify/status', (req, res) => {
+  const configured = !!(process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET);
+  const appUrl = process.env.APP_URL || 'http://localhost:8001';
+  const redirectUri = `${appUrl.replace(/\/$/, '')}/auth/shopify/callback`;
+  res.json({ shopify_configured: configured, redirect_uri: redirectUri });
+});
 app.use('/auth', authRouter);
 app.use('/api/listings', publishRouter);
 app.use('/api/user', storesRouter);

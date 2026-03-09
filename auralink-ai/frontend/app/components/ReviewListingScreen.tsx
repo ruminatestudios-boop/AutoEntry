@@ -584,9 +584,9 @@ export default function ReviewListingScreen() {
                 <button
                   type="button"
                   onClick={addPhoto}
-                  className="w-28 h-28 rounded-lg border-2 border-dashed border-[#ccc] bg-[#fafafa] text-[#999] flex flex-col items-center justify-center gap-1 text-sm hover:border-[#999] hover:text-[#666] transition-colors"
+                  className="w-28 h-28 rounded-xl border-2 border-dashed border-[#d4d4d8] bg-[#fafafa] text-[#52525b] flex flex-col items-center justify-center gap-1 text-sm hover:bg-zinc-100 hover:border-[#a1a1aa] hover:text-[#18181b] transition-colors"
                 >
-                  <span className="text-2xl leading-none">+</span>
+                  <span className="text-2xl font-medium leading-none">+</span>
                   <span className="text-xs">Add more photos</span>
                 </button>
               )}

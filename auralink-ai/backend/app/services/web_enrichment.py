@@ -17,7 +17,7 @@ from app.schemas.vision import (
 logger = logging.getLogger(__name__)
 
 # Minimum length to consider description "substantial" (from web); below this we generate sales-ready copy
-MIN_DESCRIPTION_LENGTH = 250
+MIN_DESCRIPTION_LENGTH = 150
 
 # Generic or placeholder titles we should try to replace with web data
 GENERIC_TITLES = {"product", "generic product", "unknown product", "item", "product name", "nothing", ""}
@@ -43,8 +43,9 @@ Return:
 2. **style_print_or_model**: The print name, style code, season, or SKU when visible on the listing (e.g. "K-Nein Print", "P30JK006", "SS26"). null if not found.
 3. **full_description**: The best product description from the listing — materials, construction, features. Prefer text from the official or authoritative retailer page (e.g. "Shell: 100% Polyester. Lining: 100% Nylon. Made in China."). Ready to use as the listing description.
 4. **bullet_points**: 5–7 short bullet points of key features/specs from the listing.
-5. **average_price_gbp**: Search UK/retailer prices. Return the typical selling price in British Pounds as a number (e.g. 398). null if not found.
-6. **price_range_gbp** (optional): "min-max" in GBP if prices vary; otherwise null.
+5. **average_price_gbp**: For pricing, look at 3–5 separate retailer or marketplace listings for this exact product (or closest match). Compute the average selling price in British Pounds and return that number (e.g. 398). If you find only 1–2 listings, use the average of those. null only if no listings with a price are found.
+6. **price_range_gbp** (optional): "min-max" in GBP from the lowest to highest price you saw across those listings (e.g. "385-420"); null if only one price or not found.
+7. **category** (optional): Product category as on the listing (e.g. "Men's Jackets", "Wireless Earbuds", "Headphones"). null if not found.
 
 Return ONLY a JSON object (no markdown, no explanation):
 {{
@@ -53,10 +54,11 @@ Return ONLY a JSON object (no markdown, no explanation):
   "full_description": "full description from the best listing found",
   "bullet_points": ["feature 1", "feature 2", "…"],
   "average_price_gbp": 398,
-  "price_range_gbp": null
+  "price_range_gbp": null,
+  "category": "Men's Jackets" or null
 }}
 
-If you cannot find this product on any retailer or brand site, return: {{ "exact_product_name": null, "style_print_or_model": null, "full_description": null, "bullet_points": null, "average_price_gbp": null, "price_range_gbp": null }}."""
+If you cannot find this product on any retailer or brand site, return: {{ "exact_product_name": null, "style_print_or_model": null, "full_description": null, "bullet_points": null, "average_price_gbp": null, "price_range_gbp": null, "category": null }}."""
 
 
 def _parse_enrichment_response(text: str) -> Optional[dict]:
@@ -400,17 +402,29 @@ async def enrich_from_web(
     full_desc = enrichment.get("full_description")
     bullets = enrichment.get("bullet_points")
     style_print_or_model = enrichment.get("style_print_or_model")
+    web_category = enrichment.get("category")
+
+    sources = dict(result.sources or {})
 
     if exact_name and isinstance(exact_name, str) and exact_name.strip():
         result.extraction_copy.seo_title = exact_name.strip()[:200]
+        sources["seo_title"] = "web"
     if full_desc and isinstance(full_desc, str) and full_desc.strip():
         result.extraction_copy.description = full_desc.strip()
+        sources["description"] = "web"
     if bullets and isinstance(bullets, list):
         result.extraction_copy.bullet_points = [str(b).strip() for b in bullets[:10] if b]
+        sources["bullet_points"] = "web"
     if style_print_or_model and isinstance(style_print_or_model, str) and style_print_or_model.strip():
         result.attributes.exact_model = style_print_or_model.strip()[:100]
+        sources["exact_model"] = "web"
+    if web_category and isinstance(web_category, str) and web_category.strip():
+        result.tags.category = web_category.strip()[:200]
+        sources["category"] = "web"
 
-    # Average price across retailers (GBP) — pre-fill selling price
+    result.sources = sources
+
+    # Average price across retailers (GBP) — pre-fill as suggestion (price_source remains not_found so UI can show "Suggested price from web")
     avg_gbp = enrichment.get("average_price_gbp")
     if avg_gbp is not None:
         try:
@@ -419,8 +433,12 @@ async def enrich_from_web(
                 result.attributes.price_value = round(val, 2)
                 result.attributes.price_display = f"£{int(round(val))}"
                 result.price_from_web = True
+                # Keep price_source as not_found so UI can show "Suggested price from web" (not from image)
         except (TypeError, ValueError):
             pass
+    price_range = enrichment.get("price_range_gbp")
+    if price_range and isinstance(price_range, str) and price_range.strip():
+        result.price_range_display = price_range.strip()
 
     # Web did not return a substantial description (e.g. product not found or non-famous brand): generate sales-ready copy
     if len((result.extraction_copy.description or "").strip()) < MIN_DESCRIPTION_LENGTH:

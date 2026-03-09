@@ -42,9 +42,9 @@
 
       <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Your store</p>
       <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-4">
-        <label for="shop-input" class="block text-sm font-medium text-zinc-700 mb-2">Store domain</label>
-        <input type="text" id="shop-input" placeholder="e.g. your-store or your-store.myshopify.com" class="w-full text-sm text-zinc-900 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:border-zinc-400" />
-        <p class="text-xs text-zinc-500 mt-2">Enter only your store name or myshopify domain — not a full URL or path (e.g. use <strong>your-store</strong>, not admin/oauth).</p>
+        <label for="shop-input" class="block text-sm font-medium text-zinc-700 mb-2">Store domain or URL</label>
+        <input type="text" id="shop-input" placeholder="e.g. fightlore.store, your-store.myshopify.com, or your-store" class="w-full text-sm text-zinc-900 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:border-zinc-400" />
+        <p class="text-xs text-zinc-500 mt-2">Enter your store URL (e.g. <strong>fightlore.store</strong>), store name (<strong>fightlore</strong>), or myshopify domain. We’ll use the right format for Shopify.</p>
         <p id="shop-login-hint" class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2 hidden"></p>
         <p id="shop-error" class="text-xs text-red-600 mt-2 hidden"></p>
       </div>
@@ -187,7 +187,7 @@
             if (errorEl) { errorEl.textContent = 'Enter a valid store name or domain (e.g. your-store or your-store.myshopify.com)'; errorEl.classList.remove('hidden'); return; }
           }
           if (isInvalidStoreName(domain)) {
-            if (errorEl) { errorEl.textContent = 'Use your store name only (e.g. your-store), not a URL path or "admin".'; errorEl.classList.remove('hidden'); return; }
+            if (errorEl) { errorEl.textContent = 'Use your store name, store URL (e.g. fightlore.store), or myshopify domain — not a path like admin/oauth.'; errorEl.classList.remove('hidden'); return; }
           }
           updateLoginHint();
           var returnToPath = getReturnToPath();

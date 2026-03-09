@@ -40,6 +40,28 @@ export const UNIVERSAL_FIELDS = [
   'metafields', 'variants',
 ];
 
+/** Generic titles that should trigger a quality warning or block publish. */
+const GENERIC_TITLE_BLOCKLIST = new Set([
+  'product', 'generic product', 'unknown product', 'item', 'product name', 'nothing', '',
+]);
+
+/**
+ * Check if listing has low quality / generic title (soft gate for paid use).
+ * @param {object} listing - universal_data or listing object
+ * @returns {{ ok: boolean, warning?: string }}
+ */
+export function checkListingQuality(listing) {
+  const u = listing?.universal_data || listing || {};
+  const title = (u.title || '').toString().trim().toLowerCase();
+  if (!title || GENERIC_TITLE_BLOCKLIST.has(title)) {
+    return { ok: false, warning: 'Please set a specific product title before publishing.' };
+  }
+  if (title.length < 4) {
+    return { ok: false, warning: 'Product title is too short. Please edit before publishing.' };
+  }
+  return { ok: true };
+}
+
 /**
  * Check if a universal listing has all required fields for a given platform.
  * @param {object} listing - Universal listing (or listing.universal_data)

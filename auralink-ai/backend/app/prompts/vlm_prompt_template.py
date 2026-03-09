@@ -19,6 +19,9 @@ VLM_SYSTEM_PROMPT = """You are a strict product data extractor. Your job is to c
 - material_composition: Copy the exact material text from the label (e.g. "100% Cotton", "Stainless Steel", "Merino Wool 180gsm"). Not "fabric" or "metal".
 - dimensions / weight: Use the exact text when printed (e.g. "30×20×5 cm", "200g"); otherwise leave null—do not guess.
 
+## Condition (for resale marketplaces)
+- condition: Infer from the image. Use one of: "new" (with tags, sealed, or clearly unused), "like_new" (minimal wear, no defects), "good" (normal wear), "fair" (visible wear), "for_parts" (non-working or for parts). If packaging/tags suggest new, use "new". If unclear, use null.
+
 ## Price (critical: no hallucinated prices)
 - ONLY return a price if you can see it clearly in the image: visible price tag, visible label with price, or visible barcode that resolves to a known price.
 - If no price is visible in the image, do NOT guess. Set price_value and price_display to null and set "price_source": "not_found".
@@ -43,6 +46,7 @@ VLM_SYSTEM_PROMPT = """You are a strict product data extractor. Your job is to c
     "weight_grams": number or null,
     "dimensions": "exact dimensions from label or null",
     "condition_score": number 0.0–1.0 or null,
+    "condition": "new" | "like_new" | "good" | "fair" | "for_parts" | null,
     "price_display": "price as shown or null",
     "price_value": number or null,
     "price_source": "found_in_image" | "ai_suggested" | "not_found",
@@ -66,7 +70,8 @@ VLM_SYSTEM_PROMPT = """You are a strict product data extractor. Your job is to c
     "search_keywords": ["brand name", "model if any", "specific product terms from label", "category"]
   },
   "raw_ocr_snippets": ["exact text snippets from labels you used"],
-  "confidence_score": 0.0 to 1.0
+  "confidence_score": 0.0 to 1.0,
+  "confidence_per_field": { "brand": "high" | "medium" | "low" | null, "seo_title": "high" | "medium" | "low" | null, "exact_model": "high" | "medium" | "low" | null }
 }
 
 ## Rules
@@ -79,18 +84,21 @@ VLM_SYSTEM_PROMPT = """You are a strict product data extractor. Your job is to c
 
 
 def build_user_prompt(ocr_snippets: list[str]) -> str:
-    """Build the user prompt with optional OCR context."""
-    ocr_block = "\n".join(ocr_snippets) if ocr_snippets else "No OCR text provided."
+    """Build the user prompt with optional OCR context. Line-by-line OCR helps model map brand/title."""
+    if ocr_snippets:
+        ocr_block = "\n".join(f'Line {i+1}: "{s}"' for i, s in enumerate(ocr_snippets[:40]))
+    else:
+        ocr_block = "No OCR text provided."
     return f"""Extract data from this product image. Use the OCR text below as the primary source—copy exact strings from it for brand, product name, model, and specs. Do not output generic terms like "Product" or "Unknown brand"; use null for fields you cannot read.
 
-When OCR is provided: for "brand" use the exact line that clearly is the brand name. For "seo_title" use the exact line that is the product name (or combine 2 lines if one is brand and one is product). Copy those lines character-for-character.
+When OCR is provided: for "brand" use the exact line that clearly is the brand name (often Line 1 or 2). For "seo_title" use the exact line that is the product name (or combine 2 lines if one is brand and one is product). Copy those lines character-for-character.
 
 OCR text (use verbatim for matching):
 {ocr_block}
 
-For seo_title: use the exact product name from the package/label if present in OCR or clearly visible. For brand: use the exact brand name from the logo/label. For exact_model: use any model number, SKU, or style code from the label. For material_composition and dimensions: copy the exact wording from the product when visible.
+For seo_title: use the exact product name from the package/label if present in OCR or clearly visible. For brand: use the exact brand name from the logo/label. For exact_model: use any model number, SKU, or style code from the label. For material_composition and dimensions: copy the exact wording from the product when visible. For condition: use "new" if packaging/tags suggest new, otherwise like_new/good/fair/for_parts or null.
 
-Output ONLY the JSON object (ucp_version, schema_context, attributes, copy with description_fact_feel_proof, tags, raw_ocr_snippets, confidence_score)."""
+Output ONLY the JSON object (ucp_version, schema_context, attributes including condition, copy with description_fact_feel_proof, tags, raw_ocr_snippets, confidence_score, confidence_per_field)."""
 
 
 UCP_ATTRIBUTE_KEYS = [

@@ -16,6 +16,8 @@ from app.schemas.vision import (
     ExtractionCopy,
     ExtractionTags,
     FactFeelProof,
+    InvoiceExtractionResponse,
+    InvoiceLineItem,
 )
 from app.config import get_settings
 
@@ -33,27 +35,62 @@ WEIGHT_ESTIMATES_KG = {
     "dog lead": 0.20,
     "cat collar": 0.05,
     "t-shirt": 0.20,
+    "tshirt": 0.20,
+    "tee": 0.20,
     "hoodie": 0.60,
+    "sweatshirt": 0.60,
+    "sweater": 0.50,
+    "jumper": 0.50,
     "jeans": 0.70,
-    "dress": 0.35,
+    "trousers": 0.60,
+    "pants": 0.60,
+    "shorts": 0.40,
     "jacket": 0.90,
+    "coat": 1.00,
+    "dress": 0.35,
+    "top": 0.25,
+    "blouse": 0.25,
     "shoes": 0.80,
     "trainers": 0.90,
+    "sneakers": 0.90,
+    "boots": 1.00,
     "headphones": 0.30,
+    "earphones": 0.05,
+    "earbuds": 0.05,
     "phone": 0.20,
+    "smartphone": 0.20,
     "laptop": 1.80,
     "tablet": 0.50,
     "smartwatch": 0.05,
+    "watch": 0.15,
     "camera": 0.40,
     "mug": 0.35,
     "book": 0.30,
     "candle": 0.25,
     "picture frame": 0.40,
     "handbag": 0.50,
+    "bag": 0.45,
     "wallet": 0.10,
     "sunglasses": 0.03,
-    "watch": 0.15,
     "jewellery": 0.05,
+    "jewelry": 0.05,
+    "necklace": 0.05,
+    "bracelet": 0.03,
+    "ring": 0.01,
+    "backpack": 0.60,
+    "umbrella": 0.40,
+    "belt": 0.25,
+    "scarf": 0.15,
+    "hat": 0.15,
+    "gloves": 0.10,
+    "socks": 0.05,
+    "underwear": 0.05,
+    "sports": 0.50,
+    "equipment": 0.80,
+    "skincare": 0.20,
+    "cosmetics": 0.15,
+    "bottle": 0.40,
+    "box": 0.30,
 }
 
 
@@ -81,6 +118,139 @@ def apply_post_extraction(result: VisionExtractionResponse) -> VisionExtractionR
     if not has_weight and (att.weight_grams is None or att.weight_grams <= 0):
         att.weight_grams = 500  # default 0.5 kg in grams
         att.weight_source = "estimated"
+    return result
+
+
+# Blocklist: treat as null so OCR or web can fill (no generic output for paid use)
+GENERIC_BRAND_BLOCKLIST = frozenset({
+    "product", "generic", "unknown", "unknown brand", "various", "n/a", "none", "unbranded", "other", ""
+})
+GENERIC_TITLE_BLOCKLIST = frozenset({
+    "product", "generic product", "unknown product", "item", "product name", "nothing", ""
+})
+
+
+def _in_blocklist(s: Optional[str], blocklist: frozenset) -> bool:
+    if not s or not s.strip():
+        return True
+    return s.strip().lower() in blocklist
+
+
+def _ocr_text_contains(ocr_snippets: list[str], value: Optional[str]) -> bool:
+    """True if value appears in OCR text (substring, case-insensitive)."""
+    if not value or not value.strip() or not ocr_snippets:
+        return False
+    combined = " ".join(ocr_snippets).lower()
+    return value.strip().lower() in combined
+
+
+def apply_blocklist_and_ocr_validation(
+    result: VisionExtractionResponse,
+    ocr_snippets: list[str],
+) -> VisionExtractionResponse:
+    """Apply blocklist (null generic brand/title) and OCR-first overwrite when VLM disagrees or is generic."""
+    from app.services.ocr_service import best_brand_and_title_from_ocr
+
+    att = result.attributes
+    copy = result.extraction_copy
+    sources = dict(result.sources or {})
+
+    # Blocklist: clear generic brand/title
+    if _in_blocklist(att.brand, GENERIC_BRAND_BLOCKLIST):
+        att.brand = None
+    if _in_blocklist(copy.seo_title, GENERIC_TITLE_BLOCKLIST):
+        copy.seo_title = "Product"
+
+    brand_cand, title_cand = best_brand_and_title_from_ocr(ocr_snippets)
+
+    # OCR overwrite: prefer OCR when we have a candidate and (current is missing/generic or not in OCR)
+    if brand_cand and (not att.brand or _in_blocklist(att.brand, GENERIC_BRAND_BLOCKLIST) or not _ocr_text_contains(ocr_snippets, att.brand)):
+        att.brand = brand_cand
+        sources["brand"] = "ocr"
+    if title_cand and (copy.seo_title == "Product" or _in_blocklist(copy.seo_title, GENERIC_TITLE_BLOCKLIST) or not _ocr_text_contains(ocr_snippets, copy.seo_title)):
+        copy.seo_title = title_cand
+        sources["seo_title"] = "ocr"
+
+    result.sources = sources if sources else None
+    return result
+
+
+def apply_normalizer(result: VisionExtractionResponse) -> VisionExtractionResponse:
+    """Normalize title and brand once (trim, optional title case for brand)."""
+    att = result.attributes
+    copy = result.extraction_copy
+    if att.brand and isinstance(att.brand, str):
+        att.brand = att.brand.strip()
+        if len(att.brand) > 1 and att.brand.isupper():
+            att.brand = att.brand.title()
+    if copy.seo_title and isinstance(copy.seo_title, str):
+        copy.seo_title = copy.seo_title.strip()[:200]
+    return result
+
+
+def _run_verification_pass_sync(
+    result: VisionExtractionResponse,
+    ocr_snippets: list[str],
+    gemini_api_key: Optional[str],
+) -> Optional[dict]:
+    """Text-only consistency check: given OCR and draft, return corrections for brand, seo_title, exact_model. Returns None on failure."""
+    if not ocr_snippets or not gemini_api_key or not gemini_api_key.strip():
+        return None
+    ocr_block = "\n".join(ocr_snippets[:30])
+    draft = {
+        "brand": result.attributes.brand,
+        "seo_title": result.extraction_copy.seo_title,
+        "exact_model": result.attributes.exact_model,
+    }
+    prompt = f"""Given the OCR text from a product label and the current draft fields, output ONLY a JSON object with the corrected values. Use the EXACT text from the OCR when the draft is wrong or missing. If a field is correct or not in OCR, use null for that key.
+
+OCR text:
+{ocr_block}
+
+Current draft:
+{json.dumps(draft)}
+
+Output ONLY valid JSON (no markdown), e.g. {{ "brand": "exact from OCR or null", "seo_title": "exact from OCR or null", "exact_model": "exact from OCR or null" }}. Only include keys that need correction; use null to mean "no change"."""
+
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=gemini_api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.GenerationConfig(temperature=0, max_output_tokens=512),
+        )
+        text = (response.text or "").strip()
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```\s*$", "", text)
+        data = json.loads(text)
+        if isinstance(data, dict) and (data.get("brand") is not None or data.get("seo_title") is not None or data.get("exact_model") is not None):
+            return data
+    except Exception as e:
+        logger.debug("Verification pass failed: %s", e)
+    return None
+
+
+def apply_verification_pass(
+    result: VisionExtractionResponse,
+    ocr_snippets: list[str],
+    gemini_api_key: Optional[str],
+) -> VisionExtractionResponse:
+    """Optional OCR–draft consistency pass: overwrite brand/title/model when verification suggests correction."""
+    corrections = _run_verification_pass_sync(result, ocr_snippets, gemini_api_key)
+    if not corrections:
+        return result
+    sources = dict(result.sources or {})
+    if corrections.get("brand") is not None and str(corrections["brand"]).strip():
+        result.attributes.brand = str(corrections["brand"]).strip()[:100]
+        sources["brand"] = "ocr"
+    if corrections.get("seo_title") is not None and str(corrections["seo_title"]).strip():
+        result.extraction_copy.seo_title = str(corrections["seo_title"]).strip()[:200]
+        sources["seo_title"] = "ocr"
+    if corrections.get("exact_model") is not None and str(corrections["exact_model"]).strip():
+        result.attributes.exact_model = str(corrections["exact_model"]).strip()[:100]
+        sources["exact_model"] = "ocr"
+    result.sources = sources
     return result
 
 
@@ -240,12 +410,21 @@ def _parse_ucp_extraction_response(data: dict) -> VisionExtractionResponse:
     price_conf = _float_or_none(att.get("price_confidence"))
     price_val = _float_or_none(att.get("price_value"))
     price_disp = att.get("price_display")
-    if price_src == "not_found":
+    # Force null price unless explicitly found in image (no guessed prices)
+    if price_src != "found_in_image":
         price_val = None
         price_disp = None
     elif price_src == "ai_suggested" and (price_conf is None or price_conf < 0.7):
         price_val = None
         price_disp = None
+
+    condition_val = att.get("condition")
+    if condition_val and str(condition_val).lower() not in ("new", "like_new", "good", "fair", "for_parts"):
+        condition_val = None
+
+    conf_per_field = data.get("confidence_per_field")
+    if not isinstance(conf_per_field, dict):
+        conf_per_field = None
 
     return VisionExtractionResponse(
         attributes=ExtractionAttributes(
@@ -263,6 +442,7 @@ def _parse_ucp_extraction_response(data: dict) -> VisionExtractionResponse:
             weight_grams=weight_val,
             weight_source=att.get("weight_source"),
             condition_score=att.get("condition_score"),
+            condition=condition_val,
             detected_colors=_list_str(att.get("detected_colors")),
             detected_sizes=_list_str(att.get("detected_sizes")),
             detected_materials=_list_str(att.get("detected_materials")),
@@ -280,6 +460,7 @@ def _parse_ucp_extraction_response(data: dict) -> VisionExtractionResponse:
         ),
         raw_ocr_snippets=data.get("raw_ocr_snippets") if isinstance(data.get("raw_ocr_snippets"), list) else [],
         confidence_score=float(data.get("confidence_score", 1.0)),
+        confidence_per_field=conf_per_field,
         ucp_version=data.get("ucp_version"),
         schema_context=data.get("schema_context"),
     )
@@ -437,6 +618,145 @@ async def run_vision_extraction(
     if settings.vision_provider == "openai":
         return await extract_with_openai(image_base64, mime_type, snippets)
     return await extract_with_gemini(image_base64, mime_type, snippets)
+
+
+# ---- Invoice / receipt extraction (all-in-one) ---------------------------------
+
+INVOICE_EXTRACTION_SYSTEM = """You are a document data extractor. Extract structured data from invoice or receipt images.
+
+Output ONLY valid JSON (no markdown). Use null for any field you cannot read clearly.
+
+{
+  "extraction_type": "invoice" or "receipt",
+  "vendor_name": "Seller / merchant / company name",
+  "vendor_address": "Full address if visible or null",
+  "document_date": "YYYY-MM-DD if possible, or date as written",
+  "due_date": "Payment due date if visible or null",
+  "invoice_number": "Invoice or receipt number or null",
+  "line_items": [
+    { "description": "Item or service", "quantity": 1, "unit_price": 10.00, "amount": 10.00 }
+  ],
+  "subtotal": number or null,
+  "tax": number or null,
+  "total": number or null,
+  "currency": "GBP" or "USD" etc,
+  "raw_ocr_snippets": ["text snippets you used"],
+  "confidence_score": 0.0 to 1.0
+}
+
+Rules:
+- Copy numbers and names exactly from the document. For amounts, use numeric values only (no currency symbols in numbers).
+- line_items: include every line you can read (description, quantity, unit_price, amount). amount = line total.
+- If only one total is visible, put it in "total". Use subtotal/tax if clearly separated.
+"""
+
+
+def _parse_invoice_json(text: str, doc_type: str) -> InvoiceExtractionResponse:
+    """Parse model output into InvoiceExtractionResponse."""
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```\s*$", "", text)
+    text = text.strip()
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return InvoiceExtractionResponse(
+            extraction_type=doc_type,
+            raw_ocr_snippets=[],
+            confidence_score=0.3,
+        )
+    if not isinstance(data, dict):
+        data = {}
+    items = []
+    for row in data.get("line_items") or []:
+        if isinstance(row, dict):
+            items.append(InvoiceLineItem(
+                description=str(row.get("description") or "").strip(),
+                quantity=_float_or_none(row.get("quantity")) or 1.0,
+                unit_price=_float_or_none(row.get("unit_price")),
+                amount=_float_or_none(row.get("amount")),
+            ))
+        elif isinstance(row, (str, int, float)):
+            items.append(InvoiceLineItem(description=str(row)))
+    return InvoiceExtractionResponse(
+        extraction_type=data.get("extraction_type") or doc_type,
+        vendor_name=data.get("vendor_name"),
+        vendor_address=data.get("vendor_address"),
+        document_date=data.get("document_date"),
+        due_date=data.get("due_date"),
+        invoice_number=data.get("invoice_number"),
+        line_items=items,
+        subtotal=_float_or_none(data.get("subtotal")),
+        tax=_float_or_none(data.get("tax")),
+        total=_float_or_none(data.get("total")),
+        currency=data.get("currency"),
+        raw_ocr_snippets=data.get("raw_ocr_snippets") if isinstance(data.get("raw_ocr_snippets"), list) else [],
+        confidence_score=float(data.get("confidence_score", 0.8)),
+    )
+
+
+async def run_invoice_extraction(
+    image_base64: str,
+    mime_type: str,
+    ocr_snippets: list[str],
+    extraction_type: str = "invoice",
+) -> InvoiceExtractionResponse:
+    """Run invoice/receipt extraction with Gemini or OpenAI."""
+    settings = get_settings()
+    doc_type = "receipt" if extraction_type == "receipt" else "invoice"
+    ocr_block = "\n".join(ocr_snippets[:50]) if ocr_snippets else "No OCR text provided."
+    user_prompt = f"""Extract data from this {doc_type} image. Use the OCR text below when present. Output only the JSON object.
+
+OCR text:
+{ocr_block}
+
+Output ONLY the JSON object with extraction_type, vendor_name, document_date, invoice_number, line_items, subtotal, tax, total, currency, raw_ocr_snippets, confidence_score."""
+
+    if settings.vision_provider == "openai" and settings.openai_api_key:
+        from openai import AsyncOpenAI
+        client = AsyncOpenAI(api_key=settings.openai_api_key)
+        raw, mime = _decode_base64(image_base64)
+        b64_for_api = base64.b64encode(raw).decode("utf-8")
+        response = await client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": INVOICE_EXTRACTION_SYSTEM},
+                {"role": "user", "content": [
+                    {"type": "text", "text": user_prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64_for_api}"}},
+                ]},
+            ],
+            max_tokens=2048,
+            temperature=0.1,
+        )
+        text = (response.choices[0].message.content or "").strip()
+        return _parse_invoice_json(text, doc_type)
+
+    if settings.gemini_api_key:
+        import google.generativeai as genai
+        genai.configure(api_key=settings.gemini_api_key)
+        raw, _ = _decode_base64(image_base64)
+        image_part = {"mime_type": mime_type or "image/jpeg", "data": raw}
+        for model_name in ("gemini-2.0-flash", "gemini-1.5-flash"):
+            try:
+                model = genai.GenerativeModel(model_name)
+                response = await asyncio.to_thread(
+                    lambda: model.generate_content(
+                        [INVOICE_EXTRACTION_SYSTEM, user_prompt, image_part],
+                        generation_config=genai.GenerationConfig(temperature=0.1, max_output_tokens=2048),
+                    )
+                )
+                text = (response.text or "").strip()
+                return _parse_invoice_json(text, doc_type)
+            except Exception as e:
+                if "not found" in str(e).lower() or "404" in str(e).lower():
+                    continue
+                raise
+
+    return InvoiceExtractionResponse(
+        extraction_type=doc_type,
+        raw_ocr_snippets=ocr_snippets[:20],
+        confidence_score=0.3,
+    )
 
 
 async def get_synthetic_ocr(image_base64: str, mime_type: str = "image/jpeg") -> list[str]:

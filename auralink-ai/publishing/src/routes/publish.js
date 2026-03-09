@@ -3,7 +3,7 @@ import { authMiddleware } from '../middleware/auth.js';
 import { getValidToken } from '../auth/tokenManager.js';
 import { getListingById, getListingsByUserId, insertListing, updateListingStatus, insertPublishResults, incrementUserListings, getUserTotalListings } from '../db/listings.js';
 import { publishToShopify, publishToTikTok, publishToEbay, publishToEtsy, publishToAmazon } from '../publish/publishers.js';
-import { validateListingForPlatform, getPlatformFieldsSummary } from '../config/platformFields.js';
+import { validateListingForPlatform, getPlatformFieldsSummary, checkListingQuality } from '../config/platformFields.js';
 import { getEnabledPlatforms, isPlatformEnabled } from '../config/platforms.js';
 
 const publishRouter = Router();
@@ -34,13 +34,19 @@ publishRouter.get('/', authMiddleware, async (req, res) => {
 publishRouter.post('/', authMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
-    const { universal_data } = req.body || {};
+    const { universal_data, confidence_score } = req.body || {};
     if (!universal_data || typeof universal_data !== 'object') {
       return res.status(400).json({ error: 'universal_data object required' });
     }
     const listingId = await insertListing(userId, universal_data);
     if (!listingId) return res.status(500).json({ error: 'Failed to create listing' });
-    res.status(201).json({ listing_id: listingId });
+    const quality = checkListingQuality({ universal_data });
+    const payload = { listing_id: listingId };
+    if (!quality.ok && quality.warning) payload.quality_warning = quality.warning;
+    if (confidence_score != null && Number(confidence_score) < 0.5) {
+      payload.quality_warning = payload.quality_warning || 'Low confidence extraction – please review title and details before publishing.';
+    }
+    res.status(201).json(payload);
   } catch (e) {
     console.error('Create listing error', e);
     res.status(500).json({ error: e.message || 'Server error' });
@@ -70,6 +76,11 @@ publishRouter.post('/publish', authMiddleware, async (req, res) => {
     if (listingRow.user_id !== userId) return res.status(403).json({ error: 'Not your listing' });
 
     const listing = listingRow.universal_data || listingRow;
+    const quality = checkListingQuality(listingRow);
+    if (!quality.ok) {
+      return res.status(400).json({ error: quality.warning || 'Listing quality check failed', code: 'quality_gate' });
+    }
+
     const missing = validateListing(listingRow);
     if (missing.length > 0) {
       return res.status(400).json({ error: 'Missing required fields', fields: missing });

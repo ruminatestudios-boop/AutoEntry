@@ -46,8 +46,12 @@ export async function handleShopifyCallback(code, shop, stateStr) {
   } catch (_) {
     userId = stateStr;
   }
+  // When user installs via Partner Dashboard "Generate link" (Custom app), state may be missing.
+  // Default to dev-local so the token is stored for the same user flow-3 / dev-token uses.
+  if (!userId) {
+    userId = process.env.SHOPIFY_FALLBACK_USER_ID || 'dev-local';
+  }
   const cleanShop = shop.replace(/\.myshopify\.com$/, '') + '.myshopify.com';
-  if (!userId) throw new Error('Missing user state');
   const { data } = await axios.post(
     `https://${cleanShop}/admin/oauth/access_token`,
     {

@@ -1,9 +1,10 @@
 """
 OCR and attribute enrichment: extract label text, map to Material; optional brand DB lookup.
 """
-import os
 import io
 import json
+import os
+import re
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -38,6 +39,22 @@ MATERIAL_PHRASES = [
     "aluminum",
     "brass",
     "copper",
+    "merino",
+    "merino wool",
+    "gore-tex",
+    "gore tex",
+    "recycled polyester",
+    "tri-blend",
+    "triblend",
+    "polycotton",
+    "acrylic",
+    "velvet",
+    "suede",
+    "cork",
+    "zinc",
+    "carbon",
+    "fibre",
+    "fiber",
 ]
 
 
@@ -240,3 +257,26 @@ def enrich_attributes_from_ocr(
     if not brand:
         brand = match_brand_from_text(combined)
     return material, brand
+
+
+# Regex for dimensions in OCR: e.g. "30x20x5 cm", "10 × 20 × 5 cm", "30*20*5cm"
+DIMENSION_PATTERNS = [
+    re.compile(r"(\d+(?:[.,]\d+)?)\s*[x×X*]\s*(\d+(?:[.,]\d+)?)\s*[x×X*]\s*(\d+(?:[.,]\d+)?)\s*(cm|in|inch|mm)\b", re.I),
+    re.compile(r"(\d+(?:[.,]\d+)?)\s*[x×X*]\s*(\d+(?:[.,]\d+)?)\s*(cm|in|inch|mm)\b", re.I),
+]
+
+
+def extract_dimensions_from_ocr(ocr_snippets: list[str]) -> Optional[str]:
+    """Extract dimensions string from OCR (e.g. '30×20×5 cm'). Returns None if not found."""
+    if not ocr_snippets:
+        return None
+    combined = " ".join(ocr_snippets)
+    for pat in DIMENSION_PATTERNS:
+        m = pat.search(combined)
+        if m:
+            groups = m.groups()
+            if len(groups) == 4:
+                return f"{groups[0]}×{groups[1]}×{groups[2]} {groups[3]}"
+            if len(groups) == 3:
+                return f"{groups[0]}×{groups[1]} {groups[2]}"
+    return None

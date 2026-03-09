@@ -13,12 +13,22 @@ import httpx
 from app.auth import optional_verify_clerk
 from app.db import get_supabase, get_scan_usage, increment_free_scan, FREE_SCANS_LIMIT
 from app.schemas.vision import VisionExtractionRequest, VisionExtractionResponse, FetchProductImagesRequest, OptimizeSeoRequest, OptimizeSeoResponse
-from app.services.vision_service import MultimodalProcessor, get_synthetic_ocr, get_dummy_extraction, get_fallback_extraction, apply_post_extraction
+from app.services.vision_service import (
+    MultimodalProcessor,
+    get_synthetic_ocr,
+    get_dummy_extraction,
+    get_fallback_extraction,
+    apply_post_extraction,
+    apply_blocklist_and_ocr_validation,
+    apply_normalizer,
+    apply_verification_pass,
+    run_invoice_extraction,
+)
 from app.services.ocr_service import (
     run_ocr_google,
     run_ocr_tesseract,
     enrich_attributes_from_ocr,
-    best_brand_and_title_from_ocr,
+    extract_dimensions_from_ocr,
 )
 from app.services.web_enrichment import enrich_from_web
 from app.services.product_images import fetch_product_image_urls
@@ -74,12 +84,71 @@ def _resize_image_if_large(image_base64: str, mime: str, max_px: int = 720, max_
 @router.post("/extract")
 async def extract(request: VisionExtractionRequest, _auth: dict = Depends(optional_verify_clerk)):
     """
-    Extract full product profile from one image (UCP + schema.org/Product).
-    Returns JSON: attributes, extraction_copy, tags, raw_ocr_snippets, confidence_score.
-    When no Vision API key is set (demo mode), returns a fixed dummy extraction.
+    Extract from one image. Supports extraction_type: product (listing), invoice, or receipt.
+    Product: returns attributes, extraction_copy, tags (UCP + schema.org/Product).
+    Invoice/Receipt: returns vendor_name, document_date, line_items, total, currency, etc.
     """
     from app.config import get_settings
     settings = get_settings()
+    raw_b64 = request.image_base64
+    mime = request.mime_type or "image/jpeg"
+    extraction_type = (request.extraction_type or "product").strip().lower()
+
+    # Invoice / receipt path
+    if extraction_type in ("invoice", "receipt"):
+        raw_b64 = _resize_image_if_large(raw_b64, mime)
+        ocr_snippets = []
+        raw_bytes = b""
+        if request.include_ocr:
+            try:
+                raw_bytes = _decode_base64(raw_b64)
+            except Exception:
+                pass
+            if raw_bytes:
+                try:
+                    ocr_snippets = await run_ocr_google(raw_bytes)
+                except Exception:
+                    pass
+                if not ocr_snippets:
+                    import asyncio
+                    ocr_snippets = await asyncio.to_thread(run_ocr_tesseract, raw_bytes)
+                if not ocr_snippets:
+                    ocr_snippets = await get_synthetic_ocr(raw_b64, mime)
+        use_dummy = (settings.vision_provider == "gemini" and not bool(settings.gemini_api_key)) or (
+            settings.vision_provider == "openai" and not bool(settings.openai_api_key)
+        )
+        if use_dummy:
+            from app.schemas.vision import InvoiceExtractionResponse, InvoiceLineItem
+            dummy = InvoiceExtractionResponse(
+                extraction_type=extraction_type,
+                vendor_name="Demo Vendor",
+                document_date="2025-01-15",
+                invoice_number="INV-001",
+                line_items=[
+                    InvoiceLineItem(description="Sample item", quantity=1, unit_price=29.99, amount=29.99),
+                ],
+                subtotal=29.99,
+                tax=0,
+                total=29.99,
+                currency="GBP",
+                confidence_score=0.5,
+            )
+            return dummy.model_dump()
+        supabase = get_supabase()
+        user_id = _auth.get("sub") if _auth else None
+        if user_id and supabase:
+            usage = get_scan_usage(supabase, user_id)
+            if not usage["can_scan"]:
+                raise HTTPException(
+                    status_code=402,
+                    detail=f"You've used all {FREE_SCANS_LIMIT} free scans. Upgrade to continue.",
+                )
+        result = await run_invoice_extraction(raw_b64, mime, ocr_snippets, extraction_type)
+        if user_id and supabase:
+            increment_free_scan(supabase, user_id)
+        return result.model_dump()
+
+    # Product path (existing)
     has_gemini = bool(settings.gemini_api_key)
     has_openai = bool(settings.openai_api_key)
     use_dummy = (settings.vision_provider == "gemini" and not has_gemini) or (
@@ -156,7 +225,7 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
             raise HTTPException(status_code=503, detail="Gemini quota exceeded. Try again later or check your Google Cloud quota.")
         raise HTTPException(status_code=500, detail=f"Extraction failed: {err_msg}")
 
-    # Enrich material/brand from OCR if not already set
+    # Enrich material/brand from OCR (material phrases, brands_db) if not already set
     mat, brand = enrich_attributes_from_ocr(
         ocr_snippets,
         current_material=result.attributes.material,
@@ -167,13 +236,25 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
     if brand and not result.attributes.brand:
         result.attributes.brand = brand
 
-    # Prefer OCR-derived brand and title: trust label text over model when we have a clear OCR line
-    generic_titles = {"product", "generic product", "unknown product", "item", "product name", ""}
-    brand_cand, title_cand = best_brand_and_title_from_ocr(ocr_snippets)
-    if brand_cand:
-        result.attributes.brand = brand_cand
-    if title_cand and (not result.extraction_copy.seo_title or result.extraction_copy.seo_title.strip().lower() in generic_titles):
-        result.extraction_copy.seo_title = title_cand
+    # Blocklist generic output + OCR-first overwrite when VLM disagrees or is generic
+    result = apply_blocklist_and_ocr_validation(result, ocr_snippets)
+    result = apply_normalizer(result)
+
+    # Optional verification pass: text-only consistency check (Gemini)
+    if ocr_snippets and settings.gemini_api_key:
+        try:
+            result = apply_verification_pass(result, ocr_snippets, settings.gemini_api_key)
+        except Exception as e:
+            logger.debug("Verification pass skipped: %s", e)
+
+    # Dimensions from OCR when VLM did not extract
+    if not result.attributes.dimensions and ocr_snippets:
+        dims = extract_dimensions_from_ocr(ocr_snippets)
+        if dims:
+            result.attributes.dimensions = dims
+            if result.sources is None:
+                result.sources = {}
+            result.sources["dimensions"] = "ocr"
 
     result.raw_ocr_snippets = ocr_snippets[:20]
 

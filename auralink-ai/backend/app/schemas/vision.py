@@ -1,6 +1,14 @@
-"""Vision API request/response: attributes, copy, tags. UCP + schema.org/Product aligned."""
+"""Vision API request/response: attributes, copy, tags. UCP + schema.org/Product aligned.
+Also supports extraction_type for all-in-one: product | invoice | receipt."""
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
+from enum import Enum
+
+
+class ExtractionType(str, Enum):
+    PRODUCT = "product"
+    INVOICE = "invoice"
+    RECEIPT = "receipt"
 
 
 class ExtractionAttributes(BaseModel):
@@ -21,6 +29,8 @@ class ExtractionAttributes(BaseModel):
     weight_grams: Optional[float] = None
     weight_source: Optional[str] = None  # "from_image" | "estimated"
     condition_score: Optional[float] = Field(None, ge=0, le=1)
+    # Semantic condition for eBay/TikTok/Amazon: new, like_new, good, fair, for_parts
+    condition: Optional[str] = None
     # Pass 1 raw arrays for variant cross-population
     detected_colors: Optional[list[str]] = None
     detected_sizes: Optional[list[str]] = None
@@ -61,9 +71,14 @@ class VisionExtractionResponse(BaseModel):
     tags: ExtractionTags = Field(default_factory=ExtractionTags)
     raw_ocr_snippets: list[str] = Field(default_factory=list, description="Relevant OCR text used")
     confidence_score: float = Field(default=1.0, ge=0, le=1)
+    # Optional per-field confidence: high | medium | low for brand, seo_title, exact_model
+    confidence_per_field: Optional[dict] = Field(None, description="e.g. { \"brand\": \"high\", \"seo_title\": \"medium\" }")
+    # Which fields were corrected from OCR or set from web (for UI badges)
+    sources: Optional[dict] = Field(None, description="e.g. { \"brand\": \"ocr\", \"seo_title\": \"web\" }")
     ucp_version: Optional[str] = Field(None, description="Universal Commerce Protocol version")
     schema_context: Optional[str] = Field(None, description="e.g. https://schema.org/Product")
     price_from_web: Optional[bool] = Field(None, description="True when selling price was set from average across online retailers")
+    price_range_display: Optional[str] = Field(None, description="e.g. '385-420' when average is from multiple listings (GBP)")
 
 
 class VisionExtractionRequest(BaseModel):
@@ -72,6 +87,10 @@ class VisionExtractionRequest(BaseModel):
     mime_type: str = Field(default="image/jpeg")
     include_ocr: bool = Field(default=True, description="Run OCR and merge into attributes/copy")
     skip_web_enrichment: bool = Field(default=False, description="Skip web lookup for faster response (e.g. mobile)")
+    extraction_type: str = Field(
+        default="product",
+        description="Type of document to extract: product (listing), invoice, or receipt",
+    )
 
 
 class FetchProductImagesRequest(BaseModel):
@@ -95,3 +114,30 @@ class OptimizeSeoResponse(BaseModel):
     meta_description: str = Field(..., description="Optimised meta description (max 320 chars)")
     analysis: str = Field(default="", description="Short summary of what was improved")
     improvements: list[str] = Field(default_factory=list, description="Bullet points of improvements")
+
+
+# ---- All-in-one extraction: invoice / receipt ---------------------------------
+
+class InvoiceLineItem(BaseModel):
+    """Single line on an invoice or receipt."""
+    description: str = Field(default="", description="Item or service description")
+    quantity: float = Field(default=1.0)
+    unit_price: Optional[float] = None
+    amount: Optional[float] = None  # line total (quantity * unit_price if not given)
+
+
+class InvoiceExtractionResponse(BaseModel):
+    """Structured extraction from an invoice or receipt image."""
+    extraction_type: str = Field(default="invoice", description="invoice | receipt")
+    vendor_name: Optional[str] = Field(None, description="Seller / merchant / supplier name")
+    vendor_address: Optional[str] = None
+    document_date: Optional[str] = Field(None, description="Date on document (YYYY-MM-DD or as read)")
+    due_date: Optional[str] = None
+    invoice_number: Optional[str] = None
+    line_items: list[InvoiceLineItem] = Field(default_factory=list)
+    subtotal: Optional[float] = None
+    tax: Optional[float] = None
+    total: Optional[float] = None
+    currency: Optional[str] = Field(None, description="e.g. GBP, USD")
+    raw_ocr_snippets: list[str] = Field(default_factory=list)
+    confidence_score: float = Field(default=1.0, ge=0, le=1)

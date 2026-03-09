@@ -6,7 +6,7 @@
     <meta name="auralink-api-url" content="http://localhost:8000" />
     <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
     <title>SyncLyst - List products. In seconds.</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -127,11 +127,11 @@
         }
         .features-benefits-section .feature-benefit-card::before {
             content: '';
-            position: absolute;
+      position: absolute;
             top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
+      left: 0;
+      right: 0;
+      height: 3px;
             background: linear-gradient(90deg, #111 0%, #333 100%);
             opacity: 0;
             transition: opacity 0.25s ease;
@@ -172,7 +172,7 @@
         .comparison-shopify-sync .comparison-sync-bar {
             animation: comparison-sync-pulse 2s ease-in-out infinite;
         }
-    </style>
+  </style>
 </head>
 <body class="min-h-screen bg-white text-black selection:bg-black selection:text-white">
 
@@ -182,7 +182,7 @@
       <div></div>
       <a href="/" class="text-xl font-bold tracking-tight text-[#111]">SyncLyst</a>
       <a href="/flow-batch-upload.html" class="text-xs font-medium text-amber-600 hover:text-amber-700">Batch</a>
-    </div>
+      </div>
     <p id="scan-api-hint" class="hidden text-[10px] text-zinc-400 px-4 py-1 bg-zinc-100 border-b border-zinc-200 truncate" title="API URL used for extraction"></p>
     <div id="scan-step-camera" class="flex-1 flex flex-col items-center justify-center p-4 overflow-auto relative">
       <p class="section-label text-center mb-4 text-xs font-semibold uppercase tracking-widest text-zinc-500">[ scan product ]</p>
@@ -206,7 +206,7 @@
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-serif text-xl font-bold text-zinc-900">Scan result</h2>
           <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded border border-zinc-200 bg-zinc-100 text-zinc-700">Draft</span>
-        </div>
+          </div>
         <div class="bg-white rounded-2xl border border-zinc-200 overflow-hidden">
           <div class="p-5 border-b border-zinc-100">
             <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">What we extracted</p>
@@ -217,24 +217,24 @@
               <button type="button" id="scan-result-upload-btn" class="w-full py-3 px-4 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 text-zinc-700 font-semibold text-sm hover:bg-zinc-100 transition-colors">
                 Upload different photo
               </button>
-            </div>
+          </div>
             <div class="space-y-4">
               <div>
                 <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">SEO Title</p>
                 <p id="scan-seo-title" class="text-zinc-700 font-medium min-h-[1.25rem] text-sm"></p>
-              </div>
+            </div>
               <div>
                 <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Attributes</p>
                 <p id="scan-attributes" class="min-h-[1.25rem] text-sm text-zinc-600"></p>
-              </div>
+          </div>
               <div>
                 <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Bullet points</p>
                 <ul id="scan-bullets" class="text-sm text-zinc-600 mt-1 list-disc list-inside space-y-1"></ul>
-              </div>
+            </div>
               <div>
                 <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Tags</p>
                 <p id="scan-tags" class="min-h-[1.25rem] text-sm text-zinc-600"></p>
-              </div>
+          </div>
             </div>
           </div>
           <div class="p-5 bg-zinc-50/50">
@@ -256,12 +256,12 @@
                 </button>
                 <a href="/dashboard" class="inline-flex items-center gap-2 bg-zinc-900 text-white font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-zinc-800 transition-colors no-underline">
                   Dashboard
-                  <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
+              <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
                 </a>
               </div>
               <button type="button" id="scan-continue-sample-btn" class="hidden inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white text-zinc-700 font-semibold text-sm px-4 py-2.5 hover:bg-zinc-50 transition-colors">
                 Continue with sample listing
-              </button>
+            </button>
             </div>
           </div>
         </div>
@@ -305,13 +305,13 @@
                 <a href="/dashboard" class="text-sm text-[#555] hover:text-[#111] transition-colors">Login</a>
                 <a href="/dashboard" class="bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition-all no-underline">
                     Sign up
-                </a>
-            </div>
-        </nav>
-    </header>
+        </a>
+      </div>
+    </nav>
+  </header>
 
     <div id="main-content">
-        <main id="main-landing">
+  <main id="main-landing">
         <!-- Hero -->
         <section class="relative pt-32 pb-20 px-6 overflow-hidden vercel-dot-pattern">
             <div class="max-w-5xl mx-auto text-center">
@@ -322,7 +322,7 @@
                     <p class="text-[10px] md:text-xs text-[#555] leading-tight vercel-body whitespace-nowrap">
                         <span class="font-semibold text-[#111]">Smart Suggest:</span> AI gets smarter the more you use it—it gets to know your products.
                     </p>
-                </div>
+        </div>
                 <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-8 text-[#000]">
                     Photos to <span class="inline-flex items-center gap-1.5"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/shopify.svg" alt="" class="inline-block h-[0.85em] w-auto" style="filter: brightness(0);" /><span>Shopify</span></span> listings
                 </h1>
@@ -334,7 +334,7 @@
                         <div class="relative flex items-center justify-center w-5 h-5 overflow-hidden">
                             <i data-lucide="camera" class="w-5 h-5 relative z-10"></i>
                             <div class="absolute left-0 right-0 h-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] animate-scan-sweep z-20"></div>
-                        </div>
+              </div>
                         Scan Your First Item
                     </a>
                     <a href="/flow-batch-upload.html" class="bg-white text-[#111] px-8 py-3.5 rounded-xl font-semibold border border-[#eaeaea] hover:bg-zinc-50 transition-all inline-flex items-center gap-2">
@@ -342,13 +342,13 @@
                         Batch upload
                         <span class="text-[10px] font-semibold text-amber-600 uppercase">Premium</span>
                     </a>
-                </div>
-            </div>
+              </div>
+              </div>
             <div class="mt-20 max-w-6xl mx-auto">
                 <div class="relative rounded-xl border border-[#eaeaea] bg-white shadow-[0_0_80px_rgba(0,0,0,0.05)] overflow-hidden">
                     <video src="https://cdn.shopify.com/videos/c/o/v/fd32bb276dc64999a7a3bc00066f58ef.mp4" class="rounded-xl w-full h-auto object-cover" muted loop playsinline autoplay></video>
-                </div>
             </div>
+          </div>
         </section>
 
         <!-- Marquee: Shopify live + coming soon -->
@@ -357,13 +357,13 @@
                 <div class="inline-flex items-center justify-center gap-2 rounded-lg border border-[#eaeaea] bg-white px-4 py-2 shadow-sm">
                     <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/shopify.svg" alt="" class="h-4 w-4" style="filter: brightness(0);" />
                     <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded vercel-body"><span class="text-white">Shopify now </span><span class="text-emerald-500">live</span></span>
-                </div>
-            </div>
+          </div>
+        </div>
             <p class="text-center text-xs text-zinc-400 mt-2 mb-4 vercel-body">More integrations coming soon</p>
             <div class="animate-marquee whitespace-nowrap" id="marquee-content">
                 <!-- Content generated by JS -->
-            </div>
-        </section>
+      </div>
+    </section>
 
         <!-- Features: How it works (step process) -->
         <section id="features" class="py-24 px-6 vercel-section-alt features-benefits-section">
@@ -372,38 +372,38 @@
                     <div class="features-benefits-label">
                         <i data-lucide="list-ordered" class="w-3.5 h-3.5"></i>
                         How it works
-                    </div>
+        </div>
                     <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">From photo to live listing in 4 steps.</h2>
                     <p class="text-[#555] text-lg max-w-xl mx-auto vercel-body">Do this to get your products on Shopify—no typing required.</p>
-                </div>
+        </div>
                 <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="flex-shrink-0 w-8 h-8 rounded-full bg-black text-white text-sm font-bold flex items-center justify-center">1</span>
                             <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
                                 <i data-lucide="camera" class="w-5 h-5 text-[#111]"></i>
-                            </div>
-                        </div>
+      </div>
+            </div>
                         <h3 class="text-lg font-semibold mb-3 text-[#111]">Snap or upload a photo</h3>
                         <p class="text-sm text-[#555] leading-relaxed vercel-body">Take a picture of your product or upload one from your device. One photo is enough to get started.</p>
-                    </div>
+          </div>
                     <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="flex-shrink-0 w-8 h-8 rounded-full bg-black text-white text-sm font-bold flex items-center justify-center">2</span>
                             <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
                                 <i data-lucide="file-text" class="w-5 h-5 text-[#111]"></i>
-                            </div>
-                        </div>
+            </div>
+          </div>
                         <h3 class="text-lg font-semibold mb-3 text-[#111]">Review your draft listing</h3>
                         <p class="text-sm text-[#555] leading-relaxed vercel-body">AI fills in title, description, category, and tags. Check the result and edit anything you want before pushing to your store.</p>
-                    </div>
+            </div>
                     <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="flex-shrink-0 w-8 h-8 rounded-full bg-black text-white text-sm font-bold flex items-center justify-center">3</span>
                             <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
                                 <i data-lucide="upload" class="w-5 h-5 text-[#111]"></i>
-                            </div>
-                        </div>
+          </div>
+        </div>
                         <h3 class="text-lg font-semibold mb-3 text-[#111]">Push to Shopify as draft</h3>
                         <p class="text-sm text-[#555] leading-relaxed vercel-body">Send the listing to your Shopify store as a draft. It won’t go live until you say so—you’re in control.</p>
                     </div>
@@ -418,8 +418,8 @@
                         <p class="text-sm text-[#555] leading-relaxed vercel-body">In Shopify admin, review the draft, make any final tweaks, then hit Publish. Your product is live and ready for buyers.</p>
                     </div>
                 </div>
-            </div>
-        </section>
+      </div>
+    </section>
 
         <!-- Comparison -->
         <section id="comparison" class="py-32 px-6 bg-white border-y border-[#eaeaea]">
@@ -428,10 +428,10 @@
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-[10px] font-bold uppercase tracking-widest mb-4">
                         <i data-lucide="zap" class="w-3 h-3 text-black"></i>
                         Efficiency
-                    </div>
+            </div>
                     <h2 class="text-4xl md:text-6xl font-bold tracking-tight mb-6 vercel-headline">Built for speed</h2>
                     <p class="text-[#555] text-lg max-w-xl mx-auto vercel-body">SyncLyst automates the tedious parts of selling, so you can focus on growing your brand.</p>
-                </div>
+            </div>
                 
                 <div class="grid md:grid-cols-2 gap-12 items-start">
                     <!-- Manual Side -->
@@ -441,49 +441,49 @@
                             <div class="flex items-center gap-3 mb-10">
                                 <div class="w-10 h-10 rounded-full bg-zinc-50 flex items-center justify-center border border-[#eaeaea]">
                                     <i data-lucide="x" class="w-5 h-5 text-zinc-400"></i>
-                                </div>
+            </div>
                                 <div>
                                     <h3 class="text-xl font-bold">Manual Workflow</h3>
                                     <p class="text-xs text-[#999] font-medium uppercase tracking-wider">The slow way</p>
-                                </div>
-                            </div>
+            </div>
+          </div>
                             
                             <div class="space-y-8">
                                 <div class="group">
                                     <div class="flex justify-between items-end mb-2">
                                         <span class="text-sm font-bold text-zinc-500">Data Entry</span>
                                         <span class="text-sm font-mono text-zinc-400 line-through">20 min</span>
-                                    </div>
+        </div>
                                     <div class="h-1.5 w-full bg-zinc-50 rounded-full overflow-hidden">
                                         <div class="h-full bg-zinc-200 rounded-full" style="width: 100%"></div>
-                                    </div>
-                                </div>
+          </div>
+          </div>
                                 <div class="group">
                                     <div class="flex justify-between items-end mb-2">
                                         <span class="text-sm font-bold text-zinc-500">SEO Research</span>
                                         <span class="text-sm font-mono text-zinc-400 line-through">10 min</span>
-                                    </div>
+          </div>
                                     <div class="h-1.5 w-full bg-zinc-50 rounded-full overflow-hidden">
                                         <div class="h-full bg-zinc-200 rounded-full" style="width: 50%"></div>
-                                    </div>
-                                </div>
+          </div>
+          </div>
                                 <div class="group">
                                     <div class="flex justify-between items-end mb-2">
                                         <span class="text-sm font-bold text-zinc-500">Image Prep</span>
                                         <span class="text-sm font-mono text-zinc-400 line-through">5 min</span>
-                                    </div>
+          </div>
                                     <div class="h-1.5 w-full bg-zinc-50 rounded-full overflow-hidden">
                                         <div class="h-full bg-zinc-200 rounded-full" style="width: 25%"></div>
-                                    </div>
-                                </div>
+          </div>
+          </div>
                                 
                                 <div class="pt-6 mt-6 border-t border-zinc-100 flex justify-between items-center">
                                     <span class="text-sm font-bold text-zinc-400">Total Time</span>
                                     <span class="text-2xl font-black text-zinc-300 tracking-tighter">35.0m</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+          </div>
+          </div>
+          </div>
+          </div>
                     
                     <!-- SyncLyst Side -->
                     <div class="relative">
@@ -491,17 +491,17 @@
                         <div class="comparison-synclyst-card p-10 rounded-2xl border border-black bg-black text-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative overflow-hidden">
                             <div class="absolute top-0 right-0 p-4">
                                 <div class="px-2 py-1 rounded bg-zinc-800 text-[10px] font-bold tracking-tighter border border-zinc-700">98% FASTER</div>
-                            </div>
-                            
+        </div>
+
                             <div class="flex items-center gap-3 mb-10">
                                 <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
                                     <i data-lucide="zap" class="w-5 h-5 text-white fill-white"></i>
-                                </div>
+          </div>
                                 <div>
                                     <h3 class="text-xl font-bold">SyncLyst AI</h3>
                                     <p class="text-xs text-zinc-500 font-medium uppercase tracking-wider">The high-speed way</p>
-                                </div>
-                            </div>
+            </div>
+          </div>
                             
                             <div class="space-y-8">
                                 <div class="group">
@@ -545,9 +545,9 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </section>
+        </div>
+      </div>
+    </section>
 
         <!-- Video Carousel Section (with AI Box) -->
         <section class="py-24 px-6 bg-zinc-50/50 overflow-hidden">
@@ -560,15 +560,15 @@
                             <h2 class="text-4xl md:text-6xl font-bold tracking-tight leading-[0.95] vercel-headline">
                                 Loved by sellers.<br />
                                 <span class="text-[#555] font-normal">Everywhere.</span>
-                            </h2>
-                        </div>
-                    </div>
-                </div>
+        </h2>
+            </div>
+            </div>
+            </div>
 
                 <div class="overflow-hidden">
                     <div id="video-carousel" class="animate-video-marquee gap-6">
                         <!-- Content generated by JS -->
-                    </div>
+            </div>
                 </div>
             </div>
         </section>
@@ -581,32 +581,32 @@
                     <p class="text-[#555] max-w-2xl mx-auto vercel-body">
                         Shopify is live now. We're adding Etsy, eBay, Amazon, TikTok Shop, and more—vote below to shape what we build next.
                     </p>
-                </div>
+            </div>
 
                 <div class="max-w-2xl mx-auto grid grid-cols-4 gap-0 rounded-xl border border-[#eaeaea] bg-white overflow-hidden mb-12">
                     <div class="p-4 text-center border-r border-[#eaeaea]">
                         <div class="text-[10px] font-bold text-[#666] uppercase tracking-wider mb-1">Total Votes</div>
                         <div class="text-xl font-bold" id="total-votes">11</div>
-                    </div>
+            </div>
                     <div class="p-4 text-center border-r border-[#eaeaea]">
                         <div class="text-[10px] font-bold text-[#666] uppercase tracking-wider mb-1">Coming Soon</div>
                         <div class="text-xl font-bold">11</div>
-                    </div>
+            </div>
                     <div class="p-4 text-center border-r border-[#eaeaea]">
                         <div class="text-[10px] font-bold text-[#666] uppercase tracking-wider mb-1">Live</div>
                         <div class="text-xl font-bold">1</div>
-                    </div>
+            </div>
                     <div class="p-4 text-center">
                         <div class="text-[10px] font-bold text-[#666] uppercase tracking-wider mb-1">Top Pick</div>
                         <div class="text-xl font-bold capitalize" id="top-pick">eBay</div>
-                    </div>
-                </div>
+            </div>
+        </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" id="integrations-grid">
                     <!-- Content generated by JS -->
                 </div>
-            </div>
-        </section>
+      </div>
+    </section>
 
         <!-- Pricing -->
         <section id="pricing" class="py-24 px-6">
@@ -674,17 +674,17 @@
 
         <!-- FAQ -->
         <section id="faq" class="py-24 px-6">
-            <div class="max-w-3xl mx-auto">
+      <div class="max-w-3xl mx-auto">
                 <div class="text-center mb-16">
                     <p class="text-xs font-bold text-[#555] uppercase tracking-widest mb-4 vercel-body">[ faq ]</p>
                     <h2 class="text-3xl md:text-5xl font-bold tracking-tight vercel-headline">Got questions?</h2>
                 </div>
                 <div class="space-y-4" id="faq-container">
                     <!-- Content generated by JS -->
-                </div>
-            </div>
-        </section>
-    </main>
+        </div>
+      </div>
+    </section>
+  </main>
 
     <!-- Footer: Vercel-style multi-column -->
     <footer class="py-16 px-6 border-t border-[#eaeaea] bg-white">
@@ -737,9 +737,9 @@
                     <a href="#" class="hover:text-[#111] transition-colors"><i data-lucide="twitter" class="w-4 h-4 inline"></i></a>
                     <a href="#" class="hover:text-[#111] transition-colors"><i data-lucide="github" class="w-4 h-4 inline"></i></a>
                 </div>
-            </div>
-        </div>
-    </footer>
+      </div>
+    </div>
+  </footer>
     </div>
 
     <!-- Modals -->
@@ -761,7 +761,7 @@
     <script>
         // SyncLyst API URL (injected at build via NEXT_PUBLIC_API_URL)
         window.AURALINK_CONFIG = { API_URL: 'http://localhost:8000' };
-        (function() {
+      (function() {
           var meta = document.querySelector('meta[name="auralink-api-url"]');
           var url = (meta && meta.getAttribute('content') ? meta.getAttribute('content').trim().replace(/\/$/, '') : '') || window.AURALINK_CONFIG.API_URL;
           window.AURALINK_CONFIG.API_URL = (url && url !== 'http://localhost:8000') ? url : 'http://localhost:8000';
@@ -1114,12 +1114,12 @@
         window.closeModal = closeModal;
 
         // Scan mode: show scan view when ?mode=scan
-        var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('mode') === 'scan') {
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('mode') === 'scan') {
           var mainLanding = document.getElementById('main-landing');
           if (mainLanding) mainLanding.style.display = 'none';
-          var mainHeader = document.getElementById('main-header');
-          if (mainHeader) mainHeader.style.display = 'none';
+        var mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
           var scanView = document.getElementById('scan-view');
           if (scanView) { scanView.classList.remove('hidden'); scanView.classList.add('flex'); }
           var isSecureContext = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -1132,21 +1132,21 @@
             scanApiHintEl.classList.remove('hidden');
           }
 
-          var video = document.getElementById('scan-video');
-          var stepCamera = document.getElementById('scan-step-camera');
-          var stepResult = document.getElementById('scan-step-result');
+        var video = document.getElementById('scan-video');
+        var stepCamera = document.getElementById('scan-step-camera');
+        var stepResult = document.getElementById('scan-step-result');
           var stepReading = document.getElementById('scan-step-reading');
-          var captureBtn = document.getElementById('scan-capture-btn');
-          var capturedImg = document.getElementById('scan-captured-img');
+        var captureBtn = document.getElementById('scan-capture-btn');
+        var capturedImg = document.getElementById('scan-captured-img');
           var seoTitleEl = document.getElementById('scan-seo-title');
           var attributesEl = document.getElementById('scan-attributes');
           var bulletsEl = document.getElementById('scan-bullets');
           var tagsEl = document.getElementById('scan-tags');
-          var cameraErrorEl = document.getElementById('scan-camera-error');
-          var doneBtn = document.getElementById('scan-done-btn');
+        var cameraErrorEl = document.getElementById('scan-camera-error');
+        var doneBtn = document.getElementById('scan-done-btn');
           var saveDraftBtn = document.getElementById('scan-save-draft-btn');
-          var toastEl = document.getElementById('scan-toast');
-          var stream = null;
+        var toastEl = document.getElementById('scan-toast');
+        var stream = null;
           var lastExtractionData = null;
           var lastCapturedBase64 = null;
           var extractAbortController = null;
@@ -1258,8 +1258,8 @@
               extractAbortController = new AbortController();
               var timeoutId = setTimeout(function() { extractAbortController.abort(); }, EXTRACT_TIMEOUT_MS);
               fetch(apiUrl + '/api/v1/vision/extract', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image_base64: b64, mime_type: 'image/jpeg', include_ocr: true, skip_web_enrichment: true }),
                 signal: extractAbortController.signal
               })
@@ -1308,8 +1308,8 @@
               img.src = dataUrl;
             }
             resizeThenSend();
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-          }
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
 
           function savePendingScanAndGoToFlow2(base64, onError) {
             var dataUrl = (base64.indexOf('data:') === 0) ? base64 : ('data:image/jpeg;base64,' + base64);
@@ -1353,25 +1353,25 @@
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
               if (cameraErrorEl) { cameraErrorEl.textContent = 'Camera needs HTTPS. Use Upload photo below—it works for everyone.'; cameraErrorEl.classList.remove('hidden'); }
               if (stepCamera) stepCamera.classList.add('camera-unavailable');
-              return;
-            }
+            return;
+          }
             var opts = { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
             navigator.mediaDevices.getUserMedia(opts).then(function(s) { stream = s; video.srcObject = s; }).catch(function() {
               navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(function(s) { stream = s; video.srcObject = s; }).catch(function() {
                 if (cameraErrorEl) { cameraErrorEl.textContent = 'Camera not available on this connection (e.g. iPhone needs HTTPS). Use Upload photo below—works on all devices.'; cameraErrorEl.classList.remove('hidden'); }
                 if (stepCamera) stepCamera.classList.add('camera-unavailable');
-              });
             });
-          }
-          startCamera();
+          });
+        }
+        startCamera();
 
           if (captureBtn) captureBtn.addEventListener('click', function() {
-            var canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0);
-            var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          var canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0);
+          var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
             var base64 = dataUrl.split(',')[1];
             if (!video.videoWidth || !video.videoHeight) { if (cameraErrorEl) { cameraErrorEl.textContent = 'Camera not ready.'; cameraErrorEl.classList.remove('hidden'); } return; }
             if (!base64 || base64.length < 100) { if (cameraErrorEl) { cameraErrorEl.textContent = 'Invalid image.'; cameraErrorEl.classList.remove('hidden'); } return; }
@@ -1430,8 +1430,8 @@
 
           if (doneBtn) doneBtn.addEventListener('click', function() {
             stepResult.classList.add('hidden'); stepResult.classList.remove('flex');
-            stepCamera.classList.remove('hidden');
-            capturedImg.src = '';
+          stepCamera.classList.remove('hidden');
+          capturedImg.src = '';
             lastExtractionData = null;
             lastCapturedBase64 = null;
             if (uploadInput) uploadInput.value = '';
@@ -1439,8 +1439,8 @@
             var scanResultUploadRow = document.getElementById('scan-result-upload-row');
             if (scanResultUploadRow) scanResultUploadRow.classList.add('hidden');
             if (scanExtractErrorEl) scanExtractErrorEl.classList.add('hidden');
-            startCamera();
-          });
+          startCamera();
+        });
 
           var openCameraBtn = document.getElementById('scan-open-camera-btn');
           if (openCameraBtn) openCameraBtn.addEventListener('click', function() { if (doneBtn) doneBtn.click(); });
@@ -1493,17 +1493,17 @@
 
           var scanViewBack = document.getElementById('scan-view-back');
           if (scanViewBack) scanViewBack.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
+          e.preventDefault();
+          if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
             window.location.href = '/';
-          });
+        });
 
           var popup = document.getElementById('conversion-popup');
           var closeBtn = document.getElementById('conversion-popup-close');
           if (closeBtn) closeBtn.addEventListener('click', function() { if (popup) { popup.classList.add('hidden'); popup.classList.remove('flex'); } });
           if (popup) popup.addEventListener('click', function(e) { if (e.target === popup) { popup.classList.add('hidden'); popup.classList.remove('flex'); } });
-        }
-        });
-    </script>
+      }
+    });
+  </script>
 </body>
 </html>
