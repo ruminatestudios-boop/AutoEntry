@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice extracted | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col px-5 py-6">
+    <a href="/landing.html?mode=scan" class="text-zinc-600 hover:text-zinc-900 text-sm font-medium mb-4 inline-flex items-center gap-1 no-underline">
+      <span>←</span> Scan another
+    </a>
+    <h1 class="font-semibold text-lg text-zinc-900 mb-2">Extracted <span id="doc-type-label">invoice</span></h1>
+    <p class="text-sm text-zinc-500 mb-6">Review and export or connect to your tools.</p>
+
+    <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-6">
+      <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-4">
+        <span class="text-zinc-500">Vendor</span>
+        <span id="inv-vendor" class="font-medium">—</span>
+        <span class="text-zinc-500">Date</span>
+        <span id="inv-date">—</span>
+        <span class="text-zinc-500">Number</span>
+        <span id="inv-number">—</span>
+        <span class="text-zinc-500">Total</span>
+        <span id="inv-total">—</span>
+        <span class="text-zinc-500">Currency</span>
+        <span id="inv-currency">—</span>
+      </div>
+      <div class="border-t border-zinc-100 pt-3">
+        <p class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Line items</p>
+        <div id="inv-line-items" class="space-y-2 text-sm">
+          <!-- filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <button type="button" id="btn-export-json" class="w-full py-3 rounded-xl border border-zinc-200 bg-white font-medium text-zinc-800 hover:bg-zinc-50">
+        Export JSON
+      </button>
+      <button type="button" id="btn-export-csv" class="w-full py-3 rounded-xl border border-zinc-200 bg-white font-medium text-zinc-800 hover:bg-zinc-50">
+        Export CSV
+      </button>
+      <p class="text-xs text-zinc-400 text-center mt-2">Connect to Xero, QuickBooks & more — coming soon.</p>
+    </div>
+  </div>
+  <script>
+    (function() {
+      var KEY = 'synclyst_invoice_extraction';
+      var raw = sessionStorage.getItem(KEY);
+      var data = null;
+      try {
+        if (raw) data = JSON.parse(raw);
+      } catch (e) {}
+      if (!data || !data.extraction_type) {
+        window.location.href = '/landing.html?mode=scan';
+        return;
+      }
+      var type = data.extraction_type === 'receipt' ? 'receipt' : 'invoice';
+      document.getElementById('doc-type-label').textContent = type;
+
+      function set(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = value != null && value !== '' ? value : '—';
+      }
+      set('inv-vendor', data.vendor_name);
+      set('inv-date', data.document_date);
+      set('inv-number', data.invoice_number);
+      set('inv-currency', data.currency);
+      var totalStr = data.total != null ? (data.currency ? data.currency + ' ' : '') + Number(data.total).toFixed(2) : '—';
+      set('inv-total', totalStr);
+
+      var container = document.getElementById('inv-line-items');
+      (data.line_items || []).forEach(function(line) {
+        var desc = line.description || 'Item';
+        var amt = line.amount != null ? Number(line.amount).toFixed(2) : (line.unit_price != null ? Number(line.unit_price).toFixed(2) : '—');
+        var qty = line.quantity != null ? line.quantity : '';
+        var row = document.createElement('div');
+        row.className = 'flex justify-between items-start gap-2';
+        row.innerHTML = '<span class="flex-1 min-w-0">' + escapeHtml(desc) + (qty ? ' × ' + qty : '') + '</span><span class="font-medium shrink-0">' + amt + '</span>';
+        container.appendChild(row);
+      });
+      if (!(data.line_items && data.line_items.length)) {
+        container.innerHTML = '<p class="text-zinc-400">No line items extracted.</p>';
+      }
+
+      function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      document.getElementById('btn-export-json').addEventListener('click', function() {
+        var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (type === 'receipt' ? 'receipt' : 'invoice') + '-extract.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+      document.getElementById('btn-export-csv').addEventListener('click', function() {
+        var rows = [['Description', 'Quantity', 'Unit price', 'Amount']];
+        (data.line_items || []).forEach(function(line) {
+          rows.push([
+            (line.description || '').replace(/"/g, '""'),
+            line.quantity != null ? line.quantity : '',
+            line.unit_price != null ? line.unit_price : '',
+            line.amount != null ? line.amount : ''
+          ]);
+        });
+        var csv = rows.map(function(r) { return r.map(function(c) { return '"' + c + '"'; }).join(','); }).join('\n');
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (type === 'receipt' ? 'receipt' : 'invoice') + '-extract.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+    })();
+  </script>
+</body>
+</html>

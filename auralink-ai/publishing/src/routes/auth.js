@@ -110,13 +110,42 @@ if (enabled.includes('ebay')) {
 
 if (enabled.includes('etsy')) {
   const { getEtsyAuthUrl, handleEtsyCallback } = await import('../auth/etsy.js');
-  authRouter.get('/etsy', requireUser, (req, res) => res.redirect(getEtsyAuthUrl(req.userId)));
+  /** Debug: return Etsy auth URL as JSON (no redirect). Use ?state={"userId":"x","returnTo":"flow-3-etsy.html"} to verify server has correct www.etsy.com/oauth/connect URL. */
+  authRouter.get('/etsy/url', (req, res) => {
+    const state = req.query.state || JSON.stringify({ userId: 'debug', returnTo: 'flow-3-etsy.html' });
+    const url = getEtsyAuthUrl(state);
+    res.json({ url, expected_prefix: 'https://www.etsy.com/oauth/connect' });
+  });
+  authRouter.get('/etsy', requireUser, (req, res) => {
+    const returnTo = req.query.return_to || req.query.returnTo || 'flow-3-etsy.html';
+    const stateStr = JSON.stringify({ userId: req.userId, returnTo });
+    res.redirect(getEtsyAuthUrl(stateStr));
+  });
   authRouter.get('/etsy/callback', async (req, res) => {
     try {
       const result = await handleEtsyCallback(req.query.code, req.query.state);
-      res.redirect(`${FRONTEND_URL}/dashboard?etsy=connected&shop_id=${encodeURIComponent(result.shop_id || '')}`);
+      const base = FRONTEND_URL.replace(/\/$/, '');
+      const qs = `etsy=connected&shop_id=${encodeURIComponent(result.shop_id || '')}`;
+      if (result.returnTo) {
+        const path = result.returnTo.startsWith('/') ? result.returnTo : `/${result.returnTo}`;
+        res.redirect(`${base}${path}?${qs}`);
+      } else {
+        res.redirect(`${base}/dashboard?${qs}`);
+      }
     } catch (e) {
-      res.redirect(`${FRONTEND_URL}/dashboard?error=etsy&message=${encodeURIComponent(e.message)}`);
+      const base = FRONTEND_URL.replace(/\/$/, '');
+      let returnTo = '';
+      try {
+        const s = JSON.parse(req.query.state || '{}');
+        returnTo = s.returnTo || s.return_to || '';
+      } catch (_) {}
+      const errQs = `error=etsy&message=${encodeURIComponent(e.message)}`;
+      if (returnTo) {
+        const path = returnTo.startsWith('/') ? returnTo : `/${returnTo}`;
+        res.redirect(`${base}${path}?${errQs}`);
+      } else {
+        res.redirect(`${base}/dashboard?${errQs}`);
+      }
     }
   });
 }

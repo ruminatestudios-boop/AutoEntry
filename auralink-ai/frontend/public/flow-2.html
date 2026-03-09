@@ -33,7 +33,7 @@
 <body class="min-h-screen bg-[#fafafa] font-sans text-[#111] antialiased">
   <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
     <header class="shrink-0 border-b border-[#eaeaea] bg-white px-4 h-14 flex items-center justify-center">
-      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#111]">SyncLyst</a>
+      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#111]">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></a>
     </header>
     <main class="flex-1 px-5 pt-6 pb-6 overflow-auto">
       <div class="text-center mb-6">
@@ -107,7 +107,16 @@
       }
       function redirectToFlow3() {
         try { sessionStorage.removeItem(PENDING_SCAN_KEY); } catch (e) {}
-        window.location.href = '/flow-3.html';
+        var platform = '';
+        try {
+          platform = sessionStorage.getItem('synclyst_selected_platform') || '';
+        } catch (e) {}
+        var target = '/flow-choose-platform.html';
+        if (platform === 'shopify') target = '/flow-3.html';
+        else if (platform === 'etsy') target = '/flow-3-etsy.html';
+        else if (platform === 'ebay') target = '/flow-3-ebay.html';
+        else if (platform === 'tiktok_shop') target = '/flow-3-tiktok.html';
+        window.location.href = target;
       }
       function showError(message) {
         extractionDone = true;

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connect eBay | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] } } } };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col px-5 py-8">
+    <a href="/flow-3-ebay.html" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-900 no-underline text-sm font-medium mb-6">
+      <span class="text-lg">←</span>
+      <span>Back to listing</span>
+    </a>
+    <div class="flex items-center gap-3 mb-6">
+      <span class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center overflow-hidden shrink-0">
+        <img src="https://www.google.com/s2/favicons?domain=ebay.com&sz=128" alt="" class="w-7 h-7 object-contain" onerror="this.parentElement.innerHTML='<span class=\'text-blue-600 text-lg font-bold\'>e</span>';" />
+      </span>
+      <div>
+        <h1 class="font-serif text-xl font-bold text-zinc-900">Connect eBay</h1>
+        <p class="text-sm text-zinc-500 mt-0.5">eBay integration is coming soon</p>
+      </div>
+    </div>
+    <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-6">
+      <p class="text-sm text-zinc-800">You’ll be able to connect your eBay account here and publish draft listings. For now, use Etsy or Shopify from the marketplace picker.</p>
+    </div>
+    <a href="/flow-choose-platform.html" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] text-center no-underline">
+      Choose another marketplace
+    </a>
+  </div>
+</body>
+</html>

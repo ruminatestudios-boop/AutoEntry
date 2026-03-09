@@ -148,7 +148,7 @@
             border: 1px solid #eee;
         }
         .vercel-dot-pattern { background-image: radial-gradient(circle at 1px 1px, #e5e5e5 1px, transparent 0); background-size: 24px 24px; background-position: 0 0; }
-        .scan-hero-btn:hover { background-color: #003d3d !important; border-color: #003d3d; }
+        .scan-hero-btn:hover { background-color: #1a1a1a !important; border-color: #1a1a1a; }
         /* Live integration icon: subtle pulse */
         @keyframes live-icon-pulse {
             0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(16, 185, 129, 0)); }
@@ -180,7 +180,7 @@
   <div id="scan-view" class="fixed inset-0 z-[80] hidden flex-col bg-[#fafafa] text-[#111]">
     <div class="scan-view-header flex items-center justify-between px-4 h-14 border-b border-[#eaeaea] bg-white shrink-0">
       <div></div>
-      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#111]">SyncLyst</a>
+      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#111]">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></a>
       <a href="/flow-batch-upload.html" class="text-xs font-medium text-amber-600 hover:text-amber-700">Batch</a>
     </div>
     <p id="scan-api-hint" class="hidden text-[10px] text-zinc-400 px-4 py-1 bg-zinc-100 border-b border-zinc-200 truncate" title="API URL used for extraction"></p>
@@ -275,7 +275,7 @@
   <div id="conversion-popup" class="fixed inset-0 z-[90] hidden flex items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="conversion-popup-title">
     <div class="w-full max-w-md p-6 sm:p-8 shadow-xl rounded-2xl bg-white border border-zinc-200" onclick="event.stopPropagation()">
       <h2 id="conversion-popup-title" class="text-xl font-bold text-zinc-900 mb-2">That looks great!</h2>
-      <p class="text-zinc-600 text-sm leading-relaxed mb-6">We've saved this draft for you. Claim your 3 free credits to push this listing to Shopify or TikTok.</p>
+      <p class="text-zinc-600 text-sm leading-relaxed mb-6">We've saved this draft for you. Claim your 3 free credits to push this listing to your connected stores.</p>
       <div class="flex flex-col sm:flex-row gap-3">
         <a href="/dashboard" id="conversion-claim-btn" class="inline-flex items-center justify-center gap-2 bg-zinc-900 text-white font-semibold px-5 py-3 rounded-xl">
           Claim 3 free credits
@@ -299,7 +299,7 @@
                 </div>
             </div>
             <a href="#" class="flex items-center gap-2 flex-shrink-0 absolute left-1/2 -translate-x-1/2">
-                <span class="text-xl font-bold tracking-tight text-[#111]">SyncLyst</span>
+                <span class="text-xl font-bold tracking-tight text-[#111]">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></span>
             </a>
             <div class="hidden md:flex items-center gap-4 flex-1 justify-end min-w-0">
                 <a href="/dashboard" class="text-sm text-[#555] hover:text-[#111] transition-colors">Login</a>
@@ -324,13 +324,13 @@
                     </p>
                 </div>
                 <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-8 text-[#000]">
-                    Photos to <span class="inline-flex items-center gap-1.5"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/shopify.svg" alt="" class="inline-block h-[0.85em] w-auto" style="filter: brightness(0);" /><span>Shopify</span></span> listings
+                    One photo. List everywhere.
                 </h1>
                 <p class="text-lg md:text-xl text-[#555] max-w-2xl mx-auto mb-10 text-balance leading-relaxed vercel-body">
-                    SyncLyst is the platform for high-performance Shopify sellers. Turn product photos into SEO-ready listings instantly.
+                    SyncLyst is the platform for sellers who list on multiple marketplaces. Turn product photos into SEO-ready listings for Shopify, Etsy, eBay, TikTok Shop, and Amazon—instantly.
                 </p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="/landing.html?mode=scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-[#002D2D] transition-all flex items-center gap-2.5 group inline-flex" style="background-color: #002D2D;">
+                    <a href="/landing.html?mode=scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center gap-2.5 group inline-flex bg-black">
                         <div class="relative flex items-center justify-center w-5 h-5 overflow-hidden">
                             <i data-lucide="camera" class="w-5 h-5 relative z-10"></i>
                             <div class="absolute left-0 right-0 h-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] animate-scan-sweep z-20"></div>
@@ -351,15 +351,29 @@
             </div>
         </section>
 
-        <!-- Marquee: Shopify live + coming soon -->
+        <!-- Marquee: Live integrations (Shopify, Etsy, eBay, TikTok Shop) -->
         <section class="py-5 border-y border-[#eaeaea] overflow-hidden bg-white">
-            <div class="flex justify-center">
-                <div class="inline-flex items-center justify-center gap-2 rounded-lg border border-[#eaeaea] bg-white px-4 py-2 shadow-sm">
-                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/shopify.svg" alt="" class="h-4 w-4" style="filter: brightness(0);" />
-                    <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded vercel-body"><span class="text-white">Shopify now </span><span class="text-emerald-500">live</span></span>
+            <div class="flex flex-wrap items-center justify-center gap-3 px-4">
+                <div class="inline-flex flex-wrap items-center justify-center gap-3 rounded-xl border border-[#eaeaea] bg-white px-5 py-3 shadow-sm">
+                    <div class="inline-flex items-center justify-center gap-2">
+                        <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="" class="h-5 w-5 rounded" referrerPolicy="no-referrer" />
+                        <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded text-white">Shopify <span class="text-emerald-500">Live</span></span>
+                    </div>
+                    <div class="inline-flex items-center justify-center gap-2">
+                        <img src="https://www.google.com/s2/favicons?domain=etsy.com&sz=128" alt="" class="h-5 w-5 rounded" referrerPolicy="no-referrer" />
+                        <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded text-white">Etsy <span class="text-emerald-500">Live</span></span>
+                    </div>
+                    <div class="inline-flex items-center justify-center gap-2">
+                        <img src="https://www.google.com/s2/favicons?domain=ebay.com&sz=128" alt="" class="h-5 w-5 rounded" referrerPolicy="no-referrer" />
+                        <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded text-white">eBay <span class="text-emerald-500">Live</span></span>
+                    </div>
+                    <div class="inline-flex items-center justify-center gap-2">
+                        <img src="https://www.google.com/s2/favicons?domain=tiktok.com&sz=128" alt="" class="h-5 w-5 rounded" referrerPolicy="no-referrer" />
+                        <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded text-white">TikTok Shop <span class="text-emerald-500">Live</span></span>
+                    </div>
                 </div>
             </div>
-            <p class="text-center text-xs text-zinc-400 mt-2 mb-4 vercel-body">More integrations coming soon</p>
+            <p class="text-center text-xs text-zinc-400 mt-2 mb-4 vercel-body">List to your connected stores in one flow</p>
             <div class="animate-marquee whitespace-nowrap" id="marquee-content">
                 <!-- Content generated by JS -->
             </div>
@@ -374,12 +388,11 @@
                         How it works
                     </div>
                     <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">From photo to live listing in 4 steps.</h2>
-                    <p class="text-[#555] text-lg max-w-xl mx-auto vercel-body">Do this to get your products on Shopify—no typing required.</p>
+                    <p class="text-[#555] text-lg max-w-xl mx-auto vercel-body">Do this to get your products on your stores—no typing required.</p>
                 </div>
                 <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
                         <div class="flex items-center gap-3 mb-6">
-                            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-black text-white text-sm font-bold flex items-center justify-center">1</span>
                             <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
                                 <i data-lucide="camera" class="w-5 h-5 text-[#111]"></i>
                             </div>
@@ -389,7 +402,6 @@
                     </div>
                     <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
                         <div class="flex items-center gap-3 mb-6">
-                            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-black text-white text-sm font-bold flex items-center justify-center">2</span>
                             <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
                                 <i data-lucide="file-text" class="w-5 h-5 text-[#111]"></i>
                             </div>
@@ -399,23 +411,21 @@
                     </div>
                     <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
                         <div class="flex items-center gap-3 mb-6">
-                            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-black text-white text-sm font-bold flex items-center justify-center">3</span>
                             <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
                                 <i data-lucide="upload" class="w-5 h-5 text-[#111]"></i>
                             </div>
                         </div>
-                        <h3 class="text-lg font-semibold mb-3 text-[#111]">Push to Shopify as draft</h3>
-                        <p class="text-sm text-[#555] leading-relaxed vercel-body">Send the listing to your Shopify store as a draft. It won’t go live until you say so—you’re in control.</p>
+                        <h3 class="text-lg font-semibold mb-3 text-[#111]">Push to your store as draft</h3>
+                        <p class="text-sm text-[#555] leading-relaxed vercel-body">Send the listing to your connected store (Shopify, Etsy, eBay, TikTok Shop, or Amazon) as a draft. It won’t go live until you say so—you’re in control.</p>
                     </div>
                     <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
                         <div class="flex items-center gap-3 mb-6">
-                            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-black text-white text-sm font-bold flex items-center justify-center">4</span>
                             <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
                                 <i data-lucide="send" class="w-5 h-5 text-[#111]"></i>
                             </div>
                         </div>
                         <h3 class="text-lg font-semibold mb-3 text-[#111]">Publish when you’re ready</h3>
-                        <p class="text-sm text-[#555] leading-relaxed vercel-body">In Shopify admin, review the draft, make any final tweaks, then hit Publish. Your product is live and ready for buyers.</p>
+                        <p class="text-sm text-[#555] leading-relaxed vercel-body">In your store admin, review the draft, make any final tweaks, then hit Publish. Your product is live and ready for buyers.</p>
                     </div>
                 </div>
             </div>
@@ -524,7 +534,7 @@
                                 </div>
                                 <div class="group comparison-shopify-sync">
                                     <div class="flex justify-between items-end mb-2">
-                                        <span class="text-sm font-bold text-zinc-400">Shopify Sync</span>
+                                        <span class="text-sm font-bold text-zinc-400">Store sync</span>
                                         <span class="flex items-center gap-1.5">
                                             <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Live</span>
                                             <span class="text-sm font-mono text-white">0.5s</span>
@@ -579,7 +589,7 @@
                 <div class="text-center mb-12">
                     <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">More apps and integrations coming soon</h2>
                     <p class="text-[#555] max-w-2xl mx-auto vercel-body">
-                        Shopify is live now. We're adding Etsy, eBay, Amazon, TikTok Shop, and more—vote below to shape what we build next.
+                        Shopify, Etsy, eBay, TikTok Shop, and Amazon are live now. More marketplaces are on the way—vote below to shape what we build next.
                     </p>
                 </div>
 
@@ -626,7 +636,7 @@
                         </div>
                         <ul class="space-y-4 mb-10 flex-1">
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>3 Scans / Month</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Shopify Sync</li>
+                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Multi-store sync</li>
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Web enrichment</li>
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Community Support</li>
                         </ul>
@@ -643,7 +653,7 @@
                         </div>
                         <ul class="space-y-4 mb-10 flex-1">
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>250 Scans / Month</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Shopify Sync</li>
+                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Multi-store sync</li>
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Web enrichment</li>
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Priority Support</li>
                         </ul>
@@ -661,7 +671,7 @@
                         <ul class="space-y-4 mb-10 flex-1">
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>1,000 Scans / Month</li>
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i><strong>Batch processing</strong></li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Shopify Sync</li>
+                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Multi-store sync</li>
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>API Access</li>
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Priority Support</li>
                             <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>SSO / SAML (on request)</li>
@@ -692,7 +702,7 @@
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 md:gap-12 mb-16">
                 <div class="col-span-2">
                     <a href="#" class="inline-flex items-center gap-2 mb-4">
-                        <span class="text-xl font-bold tracking-tight text-[#111]">SyncLyst</span>
+                        <span class="text-xl font-bold tracking-tight text-[#111]">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></span>
                     </a>
                     <p class="text-sm text-[#555] max-w-xs leading-relaxed vercel-body">
                         The high-performance listing machine for modern sellers. Built for speed, optimized for SEO.
@@ -919,10 +929,10 @@
         const votes = { etsy: 1, ebay: 6, tiktok: 0, amazon: 0, depop: 0, vinted: 4, bigcommerce: 0, walmart: 0, mercari: 0, poshmark: 0, facebook: 0 };
         const connectors = [
             { id: 'shopify', name: 'Shopify', status: 'Active', icon: 'shopify.com' },
-            { id: 'etsy', name: 'Etsy', status: 'Coming Soon', icon: 'etsy.com' },
-            { id: 'ebay', name: 'eBay', status: 'Coming Soon', icon: 'ebay.com' },
-            { id: 'tiktok', name: 'TikTok Shop', status: 'Coming Soon', icon: 'tiktok.com' },
-            { id: 'amazon', name: 'Amazon SP-API', status: 'Coming Soon', icon: 'amazon.com' },
+            { id: 'etsy', name: 'Etsy', status: 'Active', icon: 'etsy.com' },
+            { id: 'ebay', name: 'eBay', status: 'Active', icon: 'ebay.com' },
+            { id: 'tiktok', name: 'TikTok Shop', status: 'Active', icon: 'tiktok.com' },
+            { id: 'amazon', name: 'Amazon SP-API', status: 'Active', icon: 'amazon.com' },
             { id: 'depop', name: 'Depop', status: 'Coming Soon', icon: 'depop.com' },
             { id: 'vinted', name: 'Vinted', status: 'Coming Soon', icon: 'vinted.com' },
             { id: 'bigcommerce', name: 'BigCommerce', status: 'Coming Soon', icon: 'bigcommerce.com' },
@@ -943,19 +953,24 @@
         }
 
         connectors.forEach(c => {
-            const btn = document.createElement('button');
-            btn.className = `vercel-card p-6 flex flex-col items-center justify-center text-center group transition-all ${c.status === 'Coming Soon' ? 'cursor-pointer hover:scale-[1.02]' : 'cursor-default'}`;
+            const isActive = c.status === 'Active';
+            const btn = document.createElement(isActive ? 'a' : 'button');
+            btn.className = `vercel-card p-6 flex flex-col items-center justify-center text-center group transition-all duration-200 ${isActive ? 'cursor-pointer hover:scale-[1.02] hover:border-black hover:shadow-lg' : 'cursor-pointer hover:scale-[1.02]'}`;
+            if (isActive) {
+                btn.href = '/flow-choose-platform.html';
+                btn.setAttribute('aria-label', `List on ${c.name}`);
+            }
             btn.innerHTML = `
-                <span class="inline-block mb-4 ${c.status === 'Active' ? 'integration-icon-live' : ''}">
-                    <img src="https://www.google.com/s2/favicons?domain=${c.icon}&sz=128" alt="${c.name}" class="w-10 h-10 rounded-lg transition-all block" referrerPolicy="no-referrer">
+                <span class="inline-block mb-4 ${isActive ? 'integration-icon-live' : ''}">
+                    <img src="https://www.google.com/s2/favicons?domain=${c.icon}&sz=128" alt="${c.name}" class="w-10 h-10 rounded-lg transition-transform duration-200 block group-hover:scale-105" referrerPolicy="no-referrer">
                 </span>
                 <span class="text-sm font-bold mb-2">${c.name}</span>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${c.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-zinc-50 text-zinc-500 border-zinc-100'}">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-zinc-50 text-zinc-500 border-zinc-100'}">
                     ${c.status}
                 </span>
-                ${c.status === 'Coming Soon' ? `<span class="mt-2 text-xs font-medium text-[#666]" id="vote-${c.id}">${votes[c.id]} votes</span>` : ''}
+                ${!isActive ? `<span class="mt-2 text-xs font-medium text-[#666]" id="vote-${c.id}">${votes[c.id]} votes</span>` : ''}
             `;
-            if (c.status === 'Coming Soon') {
+            if (!isActive) {
                 btn.onclick = () => {
                     votes[c.id]++;
                     document.getElementById(`vote-${c.id}`).innerText = `${votes[c.id]} votes`;
@@ -969,10 +984,10 @@
         const faqs = [
             { q: "How does the scanning process actually work?", a: "Simply snap a photo of your product. Our vision models instantly identify the item, read any labels (OCR), and extract key attributes like brand, material, color, and dimensions to build a complete draft." },
             { q: "Can I customize the 'voice' of the AI-generated descriptions?", a: "Yes. Pro users can set custom brand guidelines. Whether you want your listings to sound luxury, minimalist, or high-energy, the AI adapts its writing style to match your store's personality." },
-            { q: "Does SyncLyst handle product variations like sizes and colors?", a: "Absolutely. The AI can detect multiple variations from a single scan or a series of photos, automatically grouping them into a single Shopify listing with the correct variant options." },
-            { q: "Can I edit the listing before it goes live on Shopify?", a: "Of course. Every scan creates a 'Draft' first. You can review, tweak the SEO title, adjust the price, or swap tags before hitting 'Publish' to sync it to your store." },
+            { q: "Does SyncLyst handle product variations like sizes and colors?", a: "Absolutely. The AI can detect multiple variations from a single scan or a series of photos, automatically grouping them into a single listing with the correct variant options." },
+            { q: "Can I edit the listing before it goes live on my store?", a: "Of course. Every scan creates a 'Draft' first. You can review, tweak the SEO title, adjust the price, or swap tags before hitting 'Publish' to sync it to your connected store." },
             { q: "How does it handle messy backgrounds or poor lighting?", a: "Our vision models are trained on real-world seller environments. While good lighting helps, the AI is excellent at isolating the product from busy backgrounds and correcting for minor lighting issues." },
-            { q: "Which marketplaces are supported right now?", a: "We are currently active with Shopify, with integrations for Etsy, eBay, and TikTok Shop coming soon." },
+            { q: "Which marketplaces are supported right now?", a: "We're live with Shopify, Etsy, eBay, TikTok Shop, and Amazon SP-API. More marketplaces are in the pipeline." },
             { q: "Is there a limit to how many products I can scan?", a: "The Hobby plan includes 3 free scans per month. Pro includes 250 scans per month; Enterprise includes 1,000 scans plus batch processing for high-volume sellers." },
             { q: "Is my store data and product imagery secure?", a: "Security is our priority. We use enterprise-grade encryption and never share your product data or images with third parties. Your data is used only to generate your specific listings." }
         ];
@@ -1005,7 +1020,7 @@
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">2. Information We Collect</h4>
-                <p>We collect information that you provide directly to us, including your name, email address, and Shopify store credentials. We also collect product photos you upload and data retrieved via the Shopify API to generate listings.</p>
+                <p>We collect information that you provide directly to us, including your name, email address, and credentials for connected stores (e.g. Shopify, Etsy, eBay). We also collect product photos you upload and data retrieved via marketplace APIs to generate listings.</p>
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">3. How We Use Your Information</h4>
@@ -1032,7 +1047,7 @@
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">2. Description of Service</h4>
-                <p>SyncLyst AI provides AI-powered tools for e-commerce sellers to generate product listings and sync them with platforms like Shopify. We reserve the right to modify or discontinue the service at any time.</p>
+                <p>SyncLyst AI provides AI-powered tools for e-commerce sellers to generate product listings and sync them with platforms like Shopify, Etsy, eBay, TikTok Shop, and Amazon. We reserve the right to modify or discontinue the service at any time.</p>
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">3. User Accounts</h4>
@@ -1055,15 +1070,15 @@
         const aboutContent = `
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">Who we are</h4>
-                <p>SyncLyst AI is the platform for high-performance Shopify sellers. We turn product photos into SEO-ready listings in seconds, so you can list more and sell more.</p>
+                <p>SyncLyst AI is the platform for sellers who list on multiple marketplaces. We turn product photos into SEO-ready listings in seconds, so you can list more and sell more.</p>
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">What we do</h4>
-                <p>Our AI scans your product images, extracts titles, descriptions, attributes, and tags, and syncs draft listings to Shopify. You review and publish when you’re ready—no more manual data entry or copy-paste.</p>
+                <p>Our AI scans your product images, extracts titles, descriptions, attributes, and tags, and syncs draft listings to your connected stores (Shopify, Etsy, eBay, TikTok Shop, Amazon). You review and publish when you’re ready—no more manual data entry or copy-paste.</p>
             </section>
             <section>
-                <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">Why SyncLyst</h4>
-                <p>We combine computer vision, natural language, and direct Shopify integration so one photo becomes a full listing. Sellers get more time back, fewer errors, and listings that rank. We’re building the fastest path from photo to live product.</p>
+                <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">Why SyncLyst<sup class="text-[0.6em] opacity-80 font-normal">®</sup></h4>
+                <p>We combine computer vision, natural language, and direct integrations with Shopify, Etsy, eBay, TikTok Shop, and Amazon so one photo becomes a full listing. Sellers get more time back, fewer errors, and listings that rank. We’re building the fastest path from photo to live product.</p>
             </section>
         `;
 
@@ -1207,7 +1222,7 @@
               try {
                 sessionStorage.removeItem('auralink_review_draft');
                 sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
-                window.location.href = '/flow-2.html';
+                window.location.href = '/flow-choose-platform.html';
                 return true;
               } catch (err) { return false; }
             }
@@ -1217,7 +1232,7 @@
               delete payload.imageDataUrl;
               if (!saveAndGo(payload)) {
                 try { sessionStorage.removeItem('auralink_review_draft'); sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); } catch (e) {}
-                window.location.href = '/flow-2.html';
+                window.location.href = '/flow-choose-platform.html';
               }
             }
           }
@@ -1331,7 +1346,7 @@
               }
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: b64 }));
-                window.location.href = '/flow-2.html';
+                window.location.href = '/flow-choose-platform.html';
               } catch (e) {
                 if (onError) onError(e);
               }
@@ -1339,7 +1354,7 @@
             img.onerror = function() {
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: rawB64 }));
-                window.location.href = '/flow-2.html';
+                window.location.href = '/flow-choose-platform.html';
               } catch (e) {
                 if (onError) onError(e);
               }
@@ -1485,9 +1500,9 @@
             try {
               sessionStorage.removeItem('auralink_review_draft');
               sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
-              window.location.href = '/flow-2.html';
+              window.location.href = '/flow-choose-platform.html';
             } catch (e) {
-              if (e.name === 'QuotaExceededError') { delete payload.imageDataUrl; try { sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); window.location.href = '/flow-2.html'; } catch (e2) {} }
+              if (e.name === 'QuotaExceededError') { delete payload.imageDataUrl; try { sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); window.location.href = '/flow-choose-platform.html'; } catch (e2) {} }
             }
           });
 
