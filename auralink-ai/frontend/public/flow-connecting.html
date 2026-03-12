@@ -99,7 +99,7 @@
           var raw = sessionStorage.getItem(STORAGE_KEY);
           if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length > 0) return arr; }
         } catch (e) {}
-        return ['amazon', 'shopify'];
+        return ['shopify'];
       }
       function setAllConnected(ids) {
         var o = {};

@@ -3,14 +3,25 @@ import { encrypt, decrypt } from './encrypt.js';
 import { getEnabledPlatforms } from '../config/platforms.js';
 import { isDevMode, devGetTokenRow, devUpsertToken, devGetConnectedStores, devSetTokenStatus } from './devStore.js';
 
+const DEV_USER_UUID = '00000000-0000-0000-0000-000000000001';
+
+/** When using Supabase, map dev-local to the dev user UUID so FK to users(id) is satisfied. */
+export function storageUserId(userId) {
+  const db = getSupabase();
+  if (!db) return userId;
+  if (userId === 'dev-local') return process.env.DEV_USER_UUID || DEV_USER_UUID;
+  return userId;
+}
+
 export async function getTokenRow(userId, platform) {
   if (isDevMode()) return devGetTokenRow(userId, platform);
   const db = getSupabase();
   if (!db) return null;
+  const uid = storageUserId(userId);
   const { data, error } = await db
     .from('platform_tokens')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', uid)
     .eq('platform', platform)
     .single();
   if (error || !data) return null;
@@ -30,7 +41,7 @@ export async function upsertToken(row) {
   const access_enc = row.access_token ? encrypt(row.access_token) : null;
   const refresh_enc = row.refresh_token ? encrypt(row.refresh_token) : null;
   const payload = {
-    user_id: row.user_id,
+    user_id: storageUserId(row.user_id),
     platform: row.platform,
     access_token: access_enc ?? row.access_token,
     refresh_token: refresh_enc ?? row.refresh_token,
@@ -54,7 +65,7 @@ export async function setTokenStatus(userId, platform, status) {
   if (isDevMode()) { devSetTokenStatus(userId, platform, status); return; }
   const db = getSupabase();
   if (!db) return;
-  await db.from('platform_tokens').update({ status }).eq('user_id', userId).eq('platform', platform);
+  await db.from('platform_tokens').update({ status }).eq('user_id', storageUserId(userId)).eq('platform', platform);
 }
 
 export function getDecryptedAccessToken(row) {
@@ -80,7 +91,7 @@ export async function getConnectedStores(userId) {
   if (isDevMode()) return devGetConnectedStores(userId, platforms);
   const db = getSupabase();
   if (!db) return Object.fromEntries(platforms.map((p) => [p, { status: 'not_connected' }]));
-  const { data } = await db.from('platform_tokens').select('platform, status, shop_domain, shop_id, region').eq('user_id', userId);
+  const { data } = await db.from('platform_tokens').select('platform, status, shop_domain, shop_id, region').eq('user_id', storageUserId(userId));
   const out = {};
   platforms.forEach(p => { out[p] = { status: 'not_connected' }; });
   (data || []).forEach(r => {

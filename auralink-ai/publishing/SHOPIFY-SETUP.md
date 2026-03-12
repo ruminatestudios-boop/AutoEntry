@@ -2,6 +2,8 @@
 
 If SyncLyst redirects to Shopify but you see **“Sorry, this shop is currently unavailable”**, do these steps in order.
 
+**First-time setup?** Use **[SHOPIFY-CUSTOM-APP-SETUP.md](./SHOPIFY-CUSTOM-APP-SETUP.md)** to create a Custom app and go live without App Store approval.
+
 ## 1. Get the exact redirect URL our app uses
 
 Our app tells Shopify where to send users after they approve. That URL **must match exactly** in Shopify Partners.

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { getValidToken } from '../auth/tokenManager.js';
+import { storageUserId } from '../db/tokens.js';
 import { getListingById, getListingsByUserId, insertListing, updateListingStatus, insertPublishResults, incrementUserListings, getUserTotalListings } from '../db/listings.js';
 import { publishToShopify, publishToTikTok, publishToEbay, publishToEtsy, publishToAmazon } from '../publish/publishers.js';
 import { validateListingForPlatform, getPlatformFieldsSummary, checkListingQuality } from '../config/platformFields.js';
@@ -26,6 +27,22 @@ publishRouter.get('/', authMiddleware, async (req, res) => {
     res.json({ listings });
   } catch (e) {
     console.error('List listings error', e);
+    res.status(500).json({ error: e.message || 'Server error' });
+  }
+});
+
+/** GET single listing by id. Requires JWT; returns 404 if not found or not owned. */
+publishRouter.get('/:id', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const id = req.params.id;
+    if (!id) return res.status(400).json({ error: 'Listing id required' });
+    const row = await getListingById(id);
+    if (!row) return res.status(404).json({ error: 'Listing not found' });
+    if (row.user_id !== storageUserId(userId)) return res.status(404).json({ error: 'Listing not found' });
+    res.json({ listing: row });
+  } catch (e) {
+    console.error('Get listing error', e);
     res.status(500).json({ error: e.message || 'Server error' });
   }
 });
@@ -73,7 +90,7 @@ publishRouter.post('/publish', authMiddleware, async (req, res) => {
 
     const listingRow = await getListingById(listing_id);
     if (!listingRow) return res.status(404).json({ error: 'Listing not found' });
-    if (listingRow.user_id !== userId) return res.status(403).json({ error: 'Not your listing' });
+    if (listingRow.user_id !== storageUserId(userId)) return res.status(403).json({ error: 'Not your listing' });
 
     const listing = listingRow.universal_data || listingRow;
     const quality = checkListingQuality(listingRow);

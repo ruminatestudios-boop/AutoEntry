@@ -3,108 +3,98 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stores | SyncLyst</title>
+  <meta name="auralink-publishing-url" content="http://localhost:8001" />
+  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <title>Connected stores | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
-        },
-      },
-    };
-  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };</script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .vercel-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .vercel-headline { font-weight: 700; color: #0a0a0a; letter-spacing: -0.025em; }
+    .vercel-body { font-weight: 400; color: #525252; }
+  </style>
 </head>
-<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
-  <div class="max-w-md mx-auto min-h-screen flex flex-col">
-    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
-      <a href="settings.html" id="back-link" class="flex items-center gap-2 text-zinc-900 no-underline">
-        <span class="text-lg">←</span>
-        <span class="font-semibold">Settings</span>
-      </a>
-      <h1 class="font-serif text-lg font-bold text-zinc-900">Stores</h1>
+<body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <header class="shrink-0 border-b border-[#e5e5e5] bg-white px-4 h-14 grid grid-cols-3 items-center">
+      <a href="/dashboard-home.html" class="text-sm font-medium text-[#525252] no-underline flex items-center gap-1"><i data-lucide="chevron-left" class="w-4 h-4"></i> Back</a>
+      <h1 class="text-xl font-bold tracking-tight text-[#0a0a0a] justify-self-center">Stores</h1>
       <span class="w-14"></span>
     </header>
-
-    <main class="flex-1 px-5 py-4 overflow-auto">
-      <!-- Warning -->
-      <div class="rounded-xl bg-white border border-red-200 p-4 mb-5">
-        <p class="text-sm font-medium text-zinc-900">Amazon disconnected</p>
-        <p class="text-xs text-zinc-600 mt-0.5">Your token expired. Reconnect to resume publishing.</p>
+    <main class="flex-1 px-5 pt-6 pb-8 overflow-auto">
+      <p class="text-sm text-[#525252] mb-6 vercel-body">Connect marketplaces to publish your listings as drafts.</p>
+      <div id="stores-list" class="space-y-3">
+        <p id="stores-loading" class="text-sm text-[#71717a]">Loading…</p>
       </div>
-
-      <!-- Store list -->
-      <div class="space-y-3 mb-6">
-        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-sm font-bold">A</div>
-            <div>
-              <p class="font-semibold text-zinc-900">Amazon</p>
-              <p class="text-xs text-zinc-500">Disconnected · 3 listings paused</p>
-            </div>
-          </div>
-          <a href="/stores-connect-amazon.html" class="text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 text-white no-underline" id="reconnect-amazon-card">Reconnect</a>
-        </div>
-        <a href="#" class="block rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between no-underline">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-sm font-bold">T</div>
-            <div>
-              <p class="font-semibold text-zinc-900">TikTok Shop</p>
-              <p class="text-xs text-zinc-500">Connected</p>
-            </div>
-          </div>
-          <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Active</span>
-        </a>
-        <a href="/stores-connect-shopify.html" id="shopify-card-link" class="block rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between no-underline text-zinc-900 hover:bg-zinc-50 transition-colors">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-sm font-bold">S</div>
-            <div>
-              <p class="font-semibold text-zinc-900">Shopify</p>
-              <p class="text-xs text-zinc-500">Connected</p>
-            </div>
-          </div>
-          <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Active</span>
-        </a>
-      </div>
-
-      <a href="/stores-connect-amazon.html" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline" id="reconnect-btn">
-        Reconnect Amazon
-      </a>
     </main>
   </div>
   <script>
     (function() {
-      var params = new URLSearchParams(window.location.search);
-      var from = params.get('from');
-      var backLink = document.getElementById('back-link');
-      var reconnectBtn = document.getElementById('reconnect-btn');
-      var reconnectCard = document.getElementById('reconnect-amazon-card');
-      if (from === 'flow-marketplaces' && backLink) {
-        backLink.href = '/flow-marketplaces.html';
-        var label = backLink.querySelector('.font-semibold');
-        if (label) label.textContent = 'Choose marketplaces';
+      var PLATFORMS = [
+        { id: 'shopify', name: 'Shopify', domain: 'shopify.com', connectPath: '/stores-connect-shopify.html', letter: 'S' },
+        { id: 'etsy', name: 'Etsy', domain: 'etsy.com', connectPath: '/stores-connect-etsy.html', letter: 'E' },
+        { id: 'ebay', name: 'eBay', domain: 'ebay.com', connectPath: '/stores-connect-ebay.html', letter: 'e' },
+        { id: 'tiktok', name: 'TikTok Shop', domain: 'tiktok.com', connectPath: '/stores-connect-tiktok.html', letter: 'T' },
+        { id: 'amazon', name: 'Amazon', domain: 'amazon.com', connectPath: '/stores-connect-amazon.html', letter: 'A' }
+      ];
+      function getPublishingUrl() {
+        var meta = document.querySelector('meta[name="auralink-publishing-url"]');
+        var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
+        var host = window.location.hostname;
+        if (host && host !== 'localhost' && host !== '127.0.0.1') {
+          var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
+          if (prodMeta && prodMeta.getAttribute('content')) url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+        }
+        return url;
       }
-      if (from === 'flow-marketplaces' && reconnectBtn) {
-        reconnectBtn.href = '/stores-connect-amazon.html?return=flow-marketplaces';
+      function getToken() { try { return sessionStorage.getItem('auralink_jwt'); } catch (e) { return null; } }
+      function fetchToken() {
+        var base = getPublishingUrl();
+        return fetch(base + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(d) { if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; } return null; });
       }
-      if (from === 'flow-connect' && backLink) {
-        backLink.href = '/flow-connect.html';
-        var label = backLink.querySelector('.font-semibold');
-        if (label) label.textContent = 'Connect your stores';
-      }
-      if (from === 'flow-connect' && reconnectBtn) {
-        reconnectBtn.href = '/stores-connect-amazon.html?return=flow-connect';
-      }
-      if (from === 'flow-connect' && reconnectCard) {
-        reconnectCard.href = '/stores-connect-amazon.html?return=flow-connect';
-      }
-      var shopifyCard = document.getElementById('shopify-card-link');
-      if (shopifyCard) {
-        shopifyCard.href = from === 'flow-marketplaces' ? '/stores-connect-shopify.html?return=flow-marketplaces' : (from === 'flow-connect' ? '/stores-connect-shopify.html?return=flow-connect' : '/stores-connect-shopify.html');
-      }
+      var token = getToken();
+      (token ? Promise.resolve(token) : fetchToken()).then(function(t) {
+        if (!t) {
+          document.getElementById('stores-loading').textContent = 'Get a token first (e.g. start a scan).';
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          return;
+        }
+        var base = getPublishingUrl();
+        return fetch(base + '/api/user/connected-stores', { headers: { 'Authorization': 'Bearer ' + t } })
+          .then(function(r) { return r.ok ? r.json() : {}; })
+          .then(function(stores) {
+            var container = document.getElementById('stores-list');
+            container.innerHTML = '';
+            var returnTo = 'stores-list';
+            PLATFORMS.forEach(function(p) {
+              var st = stores[p.id] || {};
+              var connected = st.status === 'connected';
+              var card = document.createElement('div');
+              card.className = 'vercel-card p-4 flex items-center justify-between';
+              var logoUrl = 'https://www.google.com/s2/favicons?domain=' + p.domain + '&sz=128';
+              var statusHtml = connected
+                ? '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#ecfdf5] border border-[#059669] text-[#059669]">Connected</span>'
+                : '<a href="' + p.connectPath + '?return=' + returnTo + '" class="text-xs font-semibold px-3 py-1.5 rounded-full bg-black text-white no-underline">Connect</a>';
+              card.innerHTML = '<div class="flex items-center gap-3">' +
+                '<span class="w-10 h-10 rounded-xl bg-[#f5f5f5] border border-[#e5e5e5] flex items-center justify-center overflow-hidden">' +
+                  '<img src="' + logoUrl + '" alt="" class="w-6 h-6 object-contain" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span class=text-[#525252] text-sm font-bold>' + p.letter + '</span>\';">' +
+                '</span>' +
+                '<div><p class="font-semibold text-[#0a0a0a]">' + p.name + '</p>' +
+                (connected && (st.shop_id || st.shop_domain) ? '<p class="text-xs text-[#525252]">' + (st.shop_domain || st.shop_id || '') + '</p>' : '<p class="text-xs text-[#525252]">' + (connected ? 'Ready to publish' : 'Not connected') + '</p>') +
+                '</div></div>' + statusHtml;
+              container.appendChild(card);
+            });
+          })
+          .catch(function() {
+            document.getElementById('stores-loading').textContent = 'Could not load stores. Try again.';
+          });
+      }).then(function() { if (typeof lucide !== 'undefined') lucide.createIcons(); }).catch(function() { if (typeof lucide !== 'undefined') lucide.createIcons(); });
     })();
   </script>
 </body>

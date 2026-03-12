@@ -3,82 +3,172 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="auralink-publishing-url" content="http://localhost:8001" />
+  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
   <title>Listing detail | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
-        },
-      },
-    };
-  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };</script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .vercel-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .vercel-headline { font-weight: 700; color: #0a0a0a; letter-spacing: -0.025em; }
+    .vercel-body { font-weight: 400; color: #525252; }
+  </style>
 </head>
-<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
-  <div class="max-w-md mx-auto min-h-screen flex flex-col">
-    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
-      <a href="/listings-all.html" class="flex items-center gap-2 text-zinc-900 no-underline">
-        <span class="text-lg">←</span>
-        <span class="font-semibold">Listings</span>
-      </a>
-      <button type="button" class="text-sm font-semibold text-zinc-900">Edit</button>
+<body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <header class="shrink-0 border-b border-[#e5e5e5] bg-white px-4 h-14 grid grid-cols-3 items-center">
+      <a href="/listings-all.html" class="text-sm font-medium text-[#525252] no-underline flex items-center gap-1"><i data-lucide="chevron-left" class="w-4 h-4"></i> Listings</a>
+      <h1 class="text-lg font-bold tracking-tight text-[#0a0a0a] justify-self-center truncate max-w-[180px]" id="detail-title">Listing</h1>
+      <span class="w-14"></span>
     </header>
-
-    <main class="flex-1 px-5 pb-6 overflow-auto">
-      <!-- Product image -->
-      <div class="flex justify-center my-6">
-        <div class="w-32 h-32 rounded-2xl bg-zinc-100 border border-zinc-200"></div>
-      </div>
-
-      <h1 class="font-serif text-xl font-bold text-zinc-900 text-center mb-1">Sony WH-1000XM5</h1>
-      <p class="font-serif text-2xl font-bold text-emerald-700 text-center mb-6">$269.00</p>
-
-      <!-- Platform pills -->
-      <div class="flex flex-wrap justify-center gap-2 mb-6">
-        <span class="text-[10px] font-semibold px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-1.5">
-          <span>T</span> TikTok — Live
-        </span>
-        <span class="text-[10px] font-semibold px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-1.5">
-          <span>A</span> Amazon — Live
-        </span>
-        <span class="text-[10px] font-semibold px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-1.5">
-          <span>S</span> Shopify — Live
-        </span>
-      </div>
-
-      <!-- Metrics -->
-      <div class="flex gap-4 justify-center mb-6">
-        <div class="text-center">
-          <p class="font-serif text-lg font-bold text-zinc-900">247</p>
-          <p class="text-[11px] text-zinc-500">views</p>
+    <main class="flex-1 px-5 pt-6 pb-8 overflow-auto">
+      <div id="detail-loading" class="text-sm text-[#71717a] py-8">Loading…</div>
+      <div id="detail-content" class="hidden">
+        <!-- Photo -->
+        <div class="flex justify-center mb-6">
+          <div id="detail-photo" class="w-full max-w-[240px] aspect-square rounded-xl bg-[#f5f5f5] border border-[#e5e5e5] overflow-hidden flex items-center justify-center">
+            <i data-lucide="image" class="w-16 h-16 text-[#a1a1aa]"></i>
+          </div>
         </div>
-        <div class="text-center">
-          <p class="font-serif text-lg font-bold text-zinc-900">18</p>
-          <p class="text-[11px] text-zinc-500">saves</p>
+        <h2 class="vercel-headline text-xl font-bold text-[#0a0a0a] text-center mb-1" id="detail-name">—</h2>
+        <p class="text-xl font-bold text-[#0a0a0a] text-center mb-6" id="detail-price">—</p>
+        <div class="vercel-card p-5 mb-5">
+          <span class="text-[13px] font-medium text-[#0a0a0a] block mb-2">Status</span>
+          <p id="detail-status" class="text-sm text-[#525252]">—</p>
         </div>
-        <div class="text-center">
-          <p class="font-serif text-lg font-bold text-zinc-900">1.8d</p>
-          <p class="text-[11px] text-zinc-500">est. sale</p>
+        <div class="vercel-card p-5 mb-5" id="detail-description-wrap">
+          <span class="text-[13px] font-medium text-[#0a0a0a] block mb-2">Description</span>
+          <p id="detail-description" class="text-sm text-[#525252] whitespace-pre-wrap">—</p>
         </div>
+        <div class="vercel-card p-5 mb-5" id="detail-platforms-wrap">
+          <span class="text-[13px] font-medium text-[#0a0a0a] block mb-3">Published to</span>
+          <div id="detail-platforms" class="space-y-2"></div>
+        </div>
+        <a href="/listings-all.html" class="block w-full py-3.5 rounded-xl bg-black text-white font-semibold text-[15px] text-center no-underline">
+          Back to listings
+        </a>
       </div>
-
-      <!-- AI suggestion -->
-      <div class="rounded-xl bg-zinc-100 border border-zinc-200 p-4 mb-6">
-        <p class="text-sm text-zinc-700"><span class="font-semibold text-zinc-900">AI:</span> Listing score 87/100. Consider adding a lifestyle photo to boost conversion.</p>
+      <div id="detail-error" class="hidden text-center py-12">
+        <p class="text-sm text-[#525252] mb-4">Listing not found.</p>
+        <a href="/listings-all.html" class="text-sm font-semibold text-[#0a0a0a] underline">Back to listings</a>
       </div>
-
-      <!-- Actions -->
-      <a href="/flow-choose-platform.html" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline mb-3">
-        Edit listing
-      </a>
-      <button type="button" class="block w-full py-3 rounded-xl border border-red-200 text-red-600 font-medium text-sm">
-        Remove from all stores
-      </button>
     </main>
   </div>
+  <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var id = params.get('id');
+      if (!id) {
+        document.getElementById('detail-loading').classList.add('hidden');
+        document.getElementById('detail-error').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+      }
+      function getPublishingUrl() {
+        var meta = document.querySelector('meta[name="auralink-publishing-url"]');
+        var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
+        var host = window.location.hostname;
+        if (host && host !== 'localhost' && host !== '127.0.0.1') {
+          var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
+          if (prodMeta && prodMeta.getAttribute('content')) url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+        }
+        return url;
+      }
+      function getToken() { try { return sessionStorage.getItem('auralink_jwt'); } catch (e) { return null; } }
+      function fetchToken() {
+        var base = getPublishingUrl();
+        return fetch(base + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(d) { if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; } return null; });
+      }
+      function formatPrice(val) {
+        if (val == null || val === '') return '—';
+        var n = Number(val);
+        if (isNaN(n)) return String(val);
+        return '£' + n.toFixed(2);
+      }
+      var platformNames = { shopify: 'Shopify', etsy: 'Etsy', ebay: 'eBay', tiktok: 'TikTok Shop', amazon: 'Amazon' };
+      var token = getToken();
+      (token ? Promise.resolve(token) : fetchToken()).then(function(t) {
+        if (!t) {
+          document.getElementById('detail-loading').classList.add('hidden');
+          document.getElementById('detail-error').classList.remove('hidden');
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          return;
+        }
+        var base = getPublishingUrl();
+        return fetch(base + '/api/listings/' + encodeURIComponent(id), { headers: { 'Authorization': 'Bearer ' + t } })
+          .then(function(r) {
+            if (!r.ok) throw new Error('Not found');
+            return r.json();
+          })
+          .then(function(data) {
+            var listing = data.listing;
+            if (!listing) throw new Error('No listing');
+            var u = listing.universal_data || listing;
+            document.getElementById('detail-loading').classList.add('hidden');
+            document.getElementById('detail-content').classList.remove('hidden');
+            document.getElementById('detail-title').textContent = (u.title || '').trim() || 'Listing';
+            document.getElementById('detail-name').textContent = (u.title || '').trim() || 'Untitled';
+            document.getElementById('detail-price').textContent = formatPrice(u.price);
+            document.getElementById('detail-status').textContent = listing.status === 'published' ? 'Published to marketplace(s)' : 'Draft (not yet published)';
+            var desc = (u.description || '').trim();
+            if (desc) {
+              document.getElementById('detail-description').textContent = desc;
+              document.getElementById('detail-description-wrap').classList.remove('hidden');
+            } else {
+              document.getElementById('detail-description-wrap').classList.add('hidden');
+            }
+            var photo = Array.isArray(u.photos) && u.photos[0] ? u.photos[0] : null;
+            var photoSrc = null;
+            if (photo) {
+              if (typeof photo === 'string') photoSrc = photo;
+              else if (photo.url) photoSrc = photo.url;
+              else if (photo.imageDataUrl) photoSrc = photo.imageDataUrl;
+            }
+            var photoEl = document.getElementById('detail-photo');
+            if (photoSrc) {
+              photoEl.innerHTML = '<img src="' + photoSrc + '" alt="" class="w-full h-full object-cover" />';
+            }
+            var pr = listing.publish_results || {};
+            var platformsEl = document.getElementById('detail-platforms');
+            var platformsWrap = document.getElementById('detail-platforms-wrap');
+            var keys = Object.keys(pr).filter(function(k) { return pr[k] && pr[k].success; });
+            if (keys.length === 0) {
+              platformsWrap.classList.add('hidden');
+            } else {
+              platformsWrap.classList.remove('hidden');
+              platformsEl.innerHTML = '';
+              keys.forEach(function(k) {
+                var r = pr[k];
+                var name = platformNames[k] || k;
+                var row = document.createElement('div');
+                row.className = 'flex items-center justify-between py-2 border-b border-[#f4f4f5] last:border-0';
+                if (r.url) {
+                  row.innerHTML = '<span class="text-sm text-[#525252]">' + name + '</span><a href="' + r.url + '" target="_blank" rel="noopener" class="text-sm font-semibold text-[#0a0a0a] no-underline hover:underline flex items-center gap-1.5">View draft <i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>';
+                } else {
+                  row.innerHTML = '<span class="text-sm text-[#525252]">' + name + '</span><span class="text-xs text-[#71717a]">Published</span>';
+                }
+                platformsEl.appendChild(row);
+              });
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          })
+          .catch(function() {
+            document.getElementById('detail-loading').classList.add('hidden');
+            document.getElementById('detail-error').classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          });
+      }).catch(function() {
+        document.getElementById('detail-loading').classList.add('hidden');
+        document.getElementById('detail-error').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      });
+    })();
+  </script>
 </body>
 </html>

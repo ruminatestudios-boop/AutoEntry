@@ -53,12 +53,25 @@
         <p class="text-sm text-zinc-700">You’ll be sent to Shopify to sign in and approve access. SyncLyst can then create and update product listings. You approve every listing before it goes live.</p>
       </div>
 
+      <p id="redirect-uri-hint" class="text-xs text-zinc-500 mb-3 hidden">
+        <strong>Seeing &quot;redirect_uri is not whitelisted&quot;?</strong> Add the <em>exact</em> callback URL in Shopify. Get it from: <a href="#" id="redirect-uri-link" class="text-zinc-900 underline">/auth/shopify/status</a> (publishing service). In Shopify: Partners → App setup → URLs, or Dev Dashboard → your app version → Redirect URLs → save and set version active.
+      </p>
+
       <button type="button" id="connect-btn" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center mb-3">
         Connect store
       </button>
-      <a href="/stores-list.html" id="cancel-btn" class="block w-full py-3 rounded-xl border border-zinc-200 text-zinc-600 font-medium text-sm text-center no-underline">
+      <a href="/stores-list.html" id="cancel-btn" class="block w-full py-3 rounded-xl border border-zinc-200 text-zinc-600 font-medium text-sm text-center no-underline mb-8">
         Cancel
       </a>
+
+      <div class="rounded-xl border border-zinc-200 bg-white p-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Test SyncLyst in 3 steps</p>
+        <ol class="space-y-3 text-sm text-zinc-700 list-decimal list-inside">
+          <li><strong>Connect your test store</strong> — You’re here. Enter your store above and click Connect store, then Install app in Shopify.</li>
+          <li><strong>Run the flow &amp; Publish</strong> — <a href="/" class="text-zinc-900 font-medium underline">Start from home</a> → scan or upload a product → choose Shopify → review the listing → click <strong>Publish to Shopify</strong>.</li>
+          <li><strong>Check your listing</strong> — In <strong>Shopify Admin</strong> go to <strong>Products</strong> → <strong>Drafts</strong>. Your listing appears there as a draft; open it and click Publish to make it live.</li>
+        </ol>
+      </div>
     </main>
   </div>
   <script>
@@ -145,15 +158,31 @@
         backHref = '/flow-batch-review.html';
         if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Back to batch</span>';
         if (header) header.style.display = 'block';
+      } else if (returnTo === 'stores-list') {
+        backHref = '/stores-list.html';
+        if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Back to stores</span>';
+        if (header) header.style.display = 'block';
       }
       if (cancelBtn) cancelBtn.href = backHref;
       if (backLink) backLink.href = backHref;
+
+      var redirectUriLink = document.getElementById('redirect-uri-link');
+      var redirectUriHint = document.getElementById('redirect-uri-hint');
+      if (redirectUriLink) {
+        redirectUriLink.href = getPublishingBase() + '/auth/shopify/status';
+        redirectUriLink.target = '_blank';
+        redirectUriLink.rel = 'noopener';
+      }
+      if (redirectUriHint && (params.get('error') || (document.referrer && document.referrer.indexOf('admin.shopify.com') !== -1))) {
+        redirectUriHint.classList.remove('hidden');
+      }
 
       function getReturnToPath() {
         if (returnTo === 'flow-marketplaces') return 'flow-3.html';
         if (returnTo === 'flow-connect') return 'flow-connect-done.html';
         if (returnTo === 'flow-3') return 'flow-3.html';
         if (returnTo === 'flow-batch-review') return 'flow-batch-review.html';
+        if (returnTo === 'stores-list') return 'stores-list.html';
         return '';
       }
 
@@ -195,38 +224,33 @@
             if (errorEl) { errorEl.textContent = 'Use your store name, store URL (e.g. fightlore.store), or myshopify domain — not a path like admin/oauth.'; errorEl.classList.remove('hidden'); return; }
           }
           updateLoginHint();
-          var returnToPath = getReturnToPath();
-          if (returnToPath) {
-            var pubBase = getPublishingBase();
-            console.log('[Connect Shopify] Publishing API URL:', pubBase);
-            connectBtn.disabled = true;
-            connectBtn.textContent = 'Connecting…';
-            var connectAbort = new AbortController();
-            var timeoutId = setTimeout(function() { connectAbort.abort(); }, 15000);
-            fetch(pubBase + '/auth/dev-token', { signal: connectAbort.signal })
-              .then(function(r) { return r.ok ? r.json() : null; })
-              .then(function(data) {
-                clearTimeout(timeoutId);
-                if (data && data.user_id) {
-                  var authUrl = pubBase + '/auth/shopify?shop=' + encodeURIComponent(domain) + '&user_id=' + encodeURIComponent(data.user_id) + '&return_to=' + encodeURIComponent(returnToPath);
-                  if (data.token) try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {}
-                  window.location.href = authUrl;
-                } else {
-                  window.location.href = getApiBase() + '/api/v1/shopify/install?shop=' + encodeURIComponent(domain);
-                }
-              })
-              .catch(function(err) {
-                clearTimeout(timeoutId);
-                var msg = err.name === 'AbortError'
-                  ? 'Connection timed out. The publishing service may be unreachable. If you\'re on synclyst.app, make sure the latest version is deployed (try sync-lyt.vercel.app) and that the publishing API is running.'
-                  : 'Could not reach the publishing service. Try again or use sync-lyt.vercel.app if synclyst.app is not updated.';
-                if (errorEl) { errorEl.textContent = msg; errorEl.classList.remove('hidden'); }
-              })
-              .finally(function() { connectBtn.disabled = false; connectBtn.textContent = 'Connect store'; });
-          } else {
-            var apiBase = getApiBase();
-            window.location.href = apiBase + '/api/v1/shopify/install?shop=' + encodeURIComponent(domain);
-          }
+          var returnToPath = getReturnToPath() || 'flow-3';
+          var pubBase = getPublishingBase();
+          console.log('[Connect Shopify] Publishing API URL:', pubBase);
+          connectBtn.disabled = true;
+          connectBtn.textContent = 'Connecting…';
+          var connectAbort = new AbortController();
+          var timeoutId = setTimeout(function() { connectAbort.abort(); }, 15000);
+          fetch(pubBase + '/auth/dev-token', { signal: connectAbort.signal })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+              clearTimeout(timeoutId);
+              if (data && data.user_id) {
+                var authUrl = pubBase + '/auth/shopify?shop=' + encodeURIComponent(domain) + '&user_id=' + encodeURIComponent(data.user_id) + '&return_to=' + encodeURIComponent(returnToPath);
+                if (data.token) try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {}
+                window.location.href = authUrl;
+              } else {
+                if (errorEl) { errorEl.textContent = 'Could not get auth token. Is the publishing service running on port 8001?'; errorEl.classList.remove('hidden'); }
+              }
+            })
+            .catch(function(err) {
+              clearTimeout(timeoutId);
+              var msg = err.name === 'AbortError'
+                ? 'Connection timed out. The publishing service may be unreachable. Start it with: cd auralink-ai/publishing && node src/index.js'
+                : 'Could not reach the publishing service. Start it with: cd auralink-ai/publishing && node src/index.js';
+              if (errorEl) { errorEl.textContent = msg; errorEl.classList.remove('hidden'); }
+            })
+            .finally(function() { connectBtn.disabled = false; connectBtn.textContent = 'Connect store'; });
         });
       }
     })();

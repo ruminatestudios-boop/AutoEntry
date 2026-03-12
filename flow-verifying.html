@@ -775,6 +775,10 @@
         })
           .then(function(result) {
             if (result === undefined) return;
+            try {
+              var platforms = (result && result.results) ? Object.keys(result.results) : ['shopify'];
+              sessionStorage.setItem('auralink_last_publish_platforms', JSON.stringify(platforms));
+            } catch (e) {}
             closeModal();
             window.location.href = '/flow-success.html';
           })

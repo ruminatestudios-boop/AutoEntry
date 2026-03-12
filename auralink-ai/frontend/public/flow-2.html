@@ -144,11 +144,15 @@
 
       var apiUrl = (document.querySelector('meta[name="auralink-api-url"]') && document.querySelector('meta[name="auralink-api-url"]').getAttribute('content')) || 'http://localhost:8000';
       apiUrl = (apiUrl || '').trim().replace(/\/$/, '') || 'http://localhost:8000';
-      // On production, call Cloud Run backend directly (bypasses Vercel proxy / env var)
       var host = window.location.hostname;
-      if (host && host !== 'localhost' && host !== '127.0.0.1') {
-        var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
-        apiUrl = (prodBackend && prodBackend.getAttribute('content')) ? prodBackend.getAttribute('content').trim().replace(/\/$/, '') : window.location.origin;
+      var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
+      // On localhost use same-origin so Next.js proxy handles the request (avoids CORS)
+      if (host === 'localhost' || host === '127.0.0.1') {
+        apiUrl = window.location.origin;
+      } else if (prodBackend && prodBackend.getAttribute('content')) {
+        apiUrl = prodBackend.getAttribute('content').trim().replace(/\/$/, '');
+      } else if (host) {
+        apiUrl = window.location.origin;
       }
 
       var start = Date.now();

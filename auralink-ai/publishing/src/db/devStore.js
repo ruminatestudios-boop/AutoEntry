@@ -14,8 +14,9 @@ export function getDevUserId() {
   return DEV_USER_ID;
 }
 
-/** True when Supabase is not configured OR client failed to init (e.g. wrong key format). */
+/** True when Supabase is not configured OR client failed to init (e.g. wrong key format). When DEV_BYPASS_ETSY_LOGIN is set, use in-memory store so we never hit Supabase. */
 export function isDevMode() {
+  if (process.env.DEV_BYPASS_ETSY_LOGIN === 'true' || process.env.DEV_BYPASS_ETSY_LOGIN === '1') return true;
   if (process.env.SUPABASE_URL == null || process.env.SUPABASE_URL === '') return true;
   if (getSupabase() === null) return true;
   return false;
@@ -31,7 +32,13 @@ export function devInsertListing(userId, universalData) {
 export function devGetListingById(listingId) {
   const row = listings.get(String(listingId));
   if (!row) return null;
-  return { id: listingId, user_id: row.user_id, universal_data: row.universal_data, status: row.status };
+  return {
+    id: listingId,
+    user_id: row.user_id,
+    universal_data: row.universal_data,
+    status: row.status,
+    publish_results: row.publish_results || null,
+  };
 }
 
 export function devUpdateListingStatus(listingId, status, publishResults = null) {
@@ -47,7 +54,13 @@ export function devGetListingsByUser(userId) {
   const out = [];
   for (const [id, row] of listings) {
     if (row.user_id === userId) {
-      out.push({ id, user_id: row.user_id, universal_data: row.universal_data, status: row.status });
+      out.push({
+        id,
+        user_id: row.user_id,
+        universal_data: row.universal_data,
+        status: row.status,
+        publish_results: row.publish_results || null,
+      });
     }
   }
   out.sort((a, b) => String(b.id).localeCompare(String(a.id), undefined, { numeric: true }));

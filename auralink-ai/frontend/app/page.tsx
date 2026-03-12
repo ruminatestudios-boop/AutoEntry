@@ -1,73 +1,96 @@
+"use client";
+
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { Hero } from "@/components/ui/animated-hero";
+import BentoFourStepsSection from "@/components/ui/bento-four-steps-section";
+
+const ScrollMorphHero = dynamic(
+  () => import("@/components/ui/scroll-morph-hero").then((m) => m.default),
+  { ssr: false }
+);
 
 /**
- * Simple home page so the app loads at /. No redirect — avoids app-router errors.
+ * Home page with scroll-morph hero: scatter → line → circle → bottom arc.
+ * SyncLyst messaging and CTAs are overlaid; scroll to explore the morph.
  */
 export default function HomePage() {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-        fontFamily: "system-ui",
-        background: "linear-gradient(160deg, #f8fafc 0%, #f1f5f9 100%)",
-        color: "#18181b",
-      }}
-    >
-      <h1 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-        SyncLyst
-      </h1>
-      <p style={{ color: "#71717a", marginBottom: "2rem" }}>
-        Product photo → listing → multi-channel sync
-      </p>
-      <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "1.5rem", maxWidth: "28rem", textAlign: "center" }}>
-        For local dev: start the backend on port 8000, then open Dashboard or use the static flows below.
-      </p>
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
+    <div className="min-h-screen flex flex-col">
+      <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 h-16 bg-white/70 backdrop-blur-xl border-b border-zinc-200/50">
+        <div className="flex items-center gap-8">
+          <Link
+            href="#"
+            className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+          >
+            Features
+          </Link>
+          <Link
+            href="#"
+            className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+          >
+            Pricing
+          </Link>
+        </div>
         <Link
-          href="/dashboard"
-          style={{
-            padding: "0.75rem 1.5rem",
-            background: "#18181b",
-            color: "#fff",
-            borderRadius: "8px",
-            fontWeight: 600,
-            textDecoration: "none",
-          }}
+          href="#"
+          className="text-lg font-semibold tracking-tight text-zinc-900 uppercase"
         >
-          Open Dashboard
+          SYNCLYST
         </Link>
-        <Link
-          href="/review"
-          style={{
-            padding: "0.75rem 1.5rem",
-            background: "#095739",
-            color: "#fff",
-            borderRadius: "8px",
-            fontWeight: 600,
-            textDecoration: "none",
-          }}
-        >
-          Shopify flow — Review & publish
-        </Link>
-        <a
-          href="/landing.html"
-          style={{
-            padding: "0.75rem 1.5rem",
-            border: "1px solid #e4e4e7",
-            borderRadius: "8px",
-            color: "#18181b",
-            fontWeight: 600,
-            textDecoration: "none",
-          }}
-        >
-          Landing page
-        </a>
-      </div>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard"
+            className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+          >
+            Login
+          </Link>
+          <Link
+            href="/dashboard"
+            className="bg-zinc-900 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-zinc-800 transition-colors"
+          >
+            Sign up
+          </Link>
+        </div>
+      </header>
+
+      <main className="flex-1 relative" style={{ minHeight: "100vh" }}>
+        <Hero />
+        <ScrollMorphHero />
+      </main>
+
+      <section id="how-it-works" className="bg-white">
+        <BentoFourStepsSection />
+      </section>
+
+      <footer className="border-t border-zinc-200 bg-white py-6 px-6">
+        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center gap-6 text-sm text-zinc-500">
+          <Link href="/dashboard" className="hover:text-zinc-900 transition-colors">
+            Dashboard
+          </Link>
+          <Link href="/review" className="hover:text-zinc-900 transition-colors">
+            Review & publish
+          </Link>
+          <a
+            href="/landing.html?mode=scan"
+            className="hover:text-zinc-900 transition-colors"
+          >
+            Photo → Shopify flow
+          </a>
+          <a
+            href="/landing.html"
+            className="hover:text-zinc-900 transition-colors"
+          >
+            Static landing
+          </a>
+          <a
+            href="/stores-connect-shopify.html"
+            className="hover:text-zinc-900 transition-colors"
+          >
+            Connect Shopify
+          </a>
+        </div>
+      </footer>
     </div>
   );
 }

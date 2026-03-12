@@ -16,6 +16,12 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const allowedOrigins = FRONTEND_URL.includes(',')
   ? FRONTEND_URL.split(',').map((u) => u.trim()).filter(Boolean)
   : [FRONTEND_URL];
+// In dev, allow common local origins (different ports/hostnames)
+if (process.env.NODE_ENV !== 'production') {
+  ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:8080', 'http://127.0.0.1:8080'].forEach(function(o) {
+    if (allowedOrigins.indexOf(o) === -1) allowedOrigins.push(o);
+  });
+}
 // Ensure production frontend is allowed when running on Cloud Run (in case FRONTEND_URL is unset)
 const isCloudRun = /\.run\.app$/i.test(process.env.APP_URL || '');
 if (isCloudRun) {
@@ -27,7 +33,8 @@ const allowAllOrigins = process.env.NODE_ENV !== 'production';
 function corsHeaders(req, res, next) {
   const origin = req.headers.origin;
   const isSynclystProd = origin === 'https://synclyst.app' || origin === 'https://www.synclyst.app';
-  const allowOrigin = origin && (isSynclystProd || allowAllOrigins || allowedOrigins.includes(origin)) ? origin : null;
+  const isLocalDev = process.env.NODE_ENV !== 'production' && origin && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+  const allowOrigin = origin && (isSynclystProd || allowAllOrigins || allowedOrigins.includes(origin) || isLocalDev) ? origin : null;
   if (allowOrigin) {
     res.setHeader('Access-Control-Allow-Origin', allowOrigin);
   }
@@ -47,6 +54,8 @@ app.use(cors({
     if (origin === 'https://synclyst.app' || origin === 'https://www.synclyst.app') return cb(null, origin);
     if (allowedOrigins[0] === true) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, origin);
+    // In dev, allow any localhost / 127.0.0.1 (any port) to avoid "fetch failed" from CORS
+    if (process.env.NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return cb(null, origin);
     cb(null, false);
   },
   credentials: true,

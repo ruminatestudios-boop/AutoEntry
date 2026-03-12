@@ -507,6 +507,12 @@
         var shopId = params.get('shop_id') || '';
         var err = params.get('error');
         var msg = params.get('message');
+        // After connecting Etsy, go straight to success page — skip this confirm screen and green banner
+        if (connected || (err === 'etsy' && msg)) {
+          var qs = window.location.search || '';
+          window.location.replace('/flow-success.html' + (qs ? (qs.startsWith('?') ? qs : '?' + qs) : ''));
+          return;
+        }
         var banner = document.getElementById('etsy-connected-banner');
         var errBanner = document.getElementById('etsy-error-banner');
         var dismissBtn = document.getElementById('etsy-connected-dismiss');
@@ -1901,8 +1907,14 @@
             var msg = err.message || 'Publish failed. Try again.';
             if (err.name === 'AbortError') {
               msg = 'Publish timed out. The publishing service may not be running or reachable. On production, deploy the publishing service and set the synclyst-publishing-url meta tag.';
-            } else if (msg === 'Failed to fetch' || err.name === 'TypeError') {
-              msg = 'Couldn\'t reach the publishing service. On synclyst.app you need to deploy the publishing API (see auralink-ai/publishing) and set synclyst-publishing-url in this page. Locally: run "npm run dev" in auralink-ai/publishing.';
+            } else if (msg === 'Failed to fetch' || msg === 'fetch failed' || err.name === 'TypeError') {
+              msg = 'Couldn\'t reach the publishing service. 1) Start it: "node src/index.js" in auralink-ai/publishing. 2) Open this page from a server (e.g. http://localhost:3000), not by opening the file directly.';
+            }
+            var errBanner = document.getElementById('etsy-error-banner');
+            if (errBanner) {
+              errBanner.querySelector('p').textContent = msg;
+              errBanner.classList.remove('hidden');
+              errBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
             alert(msg);
           });

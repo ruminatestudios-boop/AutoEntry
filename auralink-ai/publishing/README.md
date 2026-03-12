@@ -59,10 +59,10 @@ Multi-platform listing publish service. One POST with a universal listing → pu
 ## Registering developer accounts and OAuth apps
 
 ### Shopify
-- Create an app in [Shopify Partner Dashboard](https://partners.shopify.com) → Apps → Create app → Custom app (or public).
-- Set redirect URL: `https://your-app-url/auth/shopify/callback`.
+- **To go live without App Store approval:** use a **Custom app**. Follow **[SHOPIFY-CUSTOM-APP-SETUP.md](./SHOPIFY-CUSTOM-APP-SETUP.md)** for step-by-step setup (create app, set redirect URL, generate install link, verify).
+- Create app in [Shopify Partner Dashboard](https://partners.shopify.com) → Apps → Create app → **Create app manually** (Custom). Do not choose “for the App Store.”
+- Set redirect URL: `{APP_URL}/auth/shopify/callback` (exact match required).
 - Scopes: `write_products`, `read_products`, `write_inventory`.
-- Use development store for testing.
 
 ### TikTok Shop
 - [TikTok Shop Seller Center](https://seller-us.tiktok.com) → Developer portal (or partner docs).

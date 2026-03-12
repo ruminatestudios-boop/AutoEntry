@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { getEnabledPlatforms } from '../config/platforms.js';
+import { upsertToken } from '../db/tokens.js';
 
 const authRouter = Router();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -58,12 +59,9 @@ if (enabled.includes('shopify')) {
       const result = await handleShopifyCallback(req.query.code, req.query.shop || '', req.query.state);
       const base = FRONTEND_URL.replace(/\/$/, '');
       const qs = `shopify=connected&shop=${encodeURIComponent(result.shop_domain)}`;
-      if (result.returnTo) {
-        const path = result.returnTo.startsWith('/') ? result.returnTo : `/${result.returnTo}`;
-        res.redirect(`${base}${path}?${qs}`);
-      } else {
-        res.redirect(`${base}/dashboard?${qs}`);
-      }
+      // After connecting Shopify, send user to success page (draft created / next steps)
+      const path = '/flow-success.html';
+      res.redirect(`${base}${path}?${qs}`);
     } catch (e) {
       const base = FRONTEND_URL.replace(/\/$/, '');
       let returnTo = '';
@@ -97,14 +95,45 @@ if (enabled.includes('tiktok')) {
 
 if (enabled.includes('ebay')) {
   const { getEbayAuthUrl, handleEbayCallback } = await import('../auth/ebay.js');
-  authRouter.get('/ebay', requireUser, (req, res) => res.redirect(getEbayAuthUrl(req.userId)));
+  authRouter.get('/ebay', requireUser, (req, res) => {
+    const returnTo = req.query.return_to || req.query.returnTo || '';
+    const state = returnTo ? JSON.stringify({ userId: req.userId, returnTo }) : req.userId;
+    res.redirect(getEbayAuthUrl(state));
+  });
   authRouter.get('/ebay/callback', async (req, res) => {
     try {
       const result = await handleEbayCallback(req.query.code, req.query.state);
-      res.redirect(`${FRONTEND_URL}/dashboard?ebay=connected&shop_id=${encodeURIComponent(result.shop_id || '')}`);
+      const base = FRONTEND_URL.replace(/\/$/, '');
+      const qs = `ebay=connected&shop_id=${encodeURIComponent(result.shop_id || '')}`;
+      if (result.returnTo) {
+        const path = result.returnTo.startsWith('/') ? result.returnTo : `/${result.returnTo}`;
+        res.redirect(`${base}${path}?${qs}`);
+      } else {
+        res.redirect(`${base}/dashboard?${qs}`);
+      }
     } catch (e) {
-      res.redirect(`${FRONTEND_URL}/dashboard?error=ebay&message=${encodeURIComponent(e.message)}`);
+      const base = FRONTEND_URL.replace(/\/$/, '');
+      let returnTo = '';
+      try {
+        const s = typeof req.query.state === 'string' && req.query.state.startsWith('{') ? JSON.parse(req.query.state) : null;
+        returnTo = (s && s.returnTo) || '';
+      } catch (_) {}
+      const errQs = `error=ebay&message=${encodeURIComponent(e.message)}`;
+      if (returnTo) {
+        const path = returnTo.startsWith('/') ? returnTo : `/${returnTo}`;
+        res.redirect(`${base}${path}?${errQs}`);
+      } else {
+        res.redirect(`${base}/dashboard?${errQs}`);
+      }
     }
+  });
+} else {
+  authRouter.get('/ebay', (_req, res) => {
+    res.status(503).json({
+      error: 'eBay is not enabled',
+      hint: 'Set ENABLED_PLATFORMS=shopify,etsy,ebay in auralink-ai/publishing/.env and restart the publishing service.',
+      enabledPlatforms: enabled,
+    });
   });
 }
 
@@ -117,6 +146,25 @@ if (enabled.includes('etsy')) {
     res.json({ url, expected_prefix: 'https://www.etsy.com/oauth/connect' });
   });
   authRouter.get('/etsy', requireUser, (req, res) => {
+    /** Temporary: bypass Etsy login and assume connected. Set DEV_BYPASS_ETSY_LOGIN=true in .env to test the full flow without Etsy OAuth. */
+    if (process.env.DEV_BYPASS_ETSY_LOGIN === 'true' || process.env.DEV_BYPASS_ETSY_LOGIN === '1') {
+      const base = FRONTEND_URL.replace(/\/$/, '');
+      upsertToken({
+        user_id: req.userId,
+        platform: 'etsy',
+        access_token: 'dev-bypass-etsy',
+        refresh_token: 'dev-bypass',
+        expires_at: new Date(Date.now() + 86400000).toISOString(),
+        shop_id: 'dev-shop',
+        status: 'connected',
+      }).then(() => {
+        res.redirect(`${base}/flow-success.html?etsy=connected&shop_id=dev-shop`);
+      }).catch((e) => {
+        console.error('Dev bypass Etsy upsert', e);
+        res.redirect(`${base}/flow-success.html?error=etsy&message=${encodeURIComponent(e.message || 'Bypass failed')}`);
+      });
+      return;
+    }
     const returnTo = req.query.return_to || req.query.returnTo || 'flow-3-etsy.html';
     const stateStr = JSON.stringify({ userId: req.userId, returnTo });
     res.redirect(getEtsyAuthUrl(stateStr));
@@ -126,12 +174,8 @@ if (enabled.includes('etsy')) {
       const result = await handleEtsyCallback(req.query.code, req.query.state);
       const base = FRONTEND_URL.replace(/\/$/, '');
       const qs = `etsy=connected&shop_id=${encodeURIComponent(result.shop_id || '')}`;
-      if (result.returnTo) {
-        const path = result.returnTo.startsWith('/') ? result.returnTo : `/${result.returnTo}`;
-        res.redirect(`${base}${path}?${qs}`);
-      } else {
-        res.redirect(`${base}/dashboard?${qs}`);
-      }
+      // After connecting Etsy, send user to success page (same flow as Shopify)
+      res.redirect(`${base}/flow-success.html?${qs}`);
     } catch (e) {
       const base = FRONTEND_URL.replace(/\/$/, '');
       let returnTo = '';

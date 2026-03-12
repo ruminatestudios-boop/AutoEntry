@@ -1,4 +1,5 @@
 import { getSupabase } from './client.js';
+import { storageUserId } from './tokens.js';
 import { isDevMode, devGetListingById, devGetListingsByUser, devInsertListing, devUpdateListingStatus } from './devStore.js';
 
 export async function getListingById(listingId) {
@@ -14,7 +15,7 @@ export async function getListingsByUserId(userId) {
   if (isDevMode()) return devGetListingsByUser(userId);
   const db = getSupabase();
   if (!db) return [];
-  const { data, error } = await db.from('listings').select('id, user_id, universal_data, status, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(100);
+  const { data, error } = await db.from('listings').select('id, user_id, universal_data, status, created_at, publish_results').eq('user_id', storageUserId(userId)).order('created_at', { ascending: false }).limit(100);
   if (error) return [];
   return data || [];
 }
@@ -24,7 +25,7 @@ export async function insertListing(userId, universalData) {
   const db = getSupabase();
   if (!db) return null;
   const { data, error } = await db.from('listings').insert({
-    user_id: userId,
+    user_id: storageUserId(userId),
     universal_data: universalData || {},
     status: 'draft',
   }).select('id').single();
@@ -61,10 +62,11 @@ export async function incrementUserListings(userId) {
   const db = getSupabase();
   if (!db) return;
   if (isDevMode()) return;
-  const { error } = await db.rpc('increment_total_listings', { uid: userId });
+  const uid = storageUserId(userId);
+  const { error } = await db.rpc('increment_total_listings', { uid });
   if (error) {
-    const { data } = await db.from('users').select('total_listings').eq('id', userId).single();
-    if (data) await db.from('users').update({ total_listings: (data.total_listings || 0) + 1 }).eq('id', userId);
+    const { data } = await db.from('users').select('total_listings').eq('id', uid).single();
+    if (data) await db.from('users').update({ total_listings: (data.total_listings || 0) + 1 }).eq('id', uid);
   }
 }
 
@@ -72,6 +74,6 @@ export async function getUserTotalListings(userId) {
   const db = getSupabase();
   if (!db) return 0;
   if (isDevMode()) return 0;
-  const { data } = await db.from('users').select('total_listings').eq('id', userId).single();
+  const { data } = await db.from('users').select('total_listings').eq('id', storageUserId(userId)).single();
   return data?.total_listings ?? 0;
 }

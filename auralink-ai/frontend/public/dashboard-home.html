@@ -4,119 +4,89 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
-  <title>Home | Dashboard | SyncLyst AI</title>
+  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <title>Dashboard | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
-        },
-      },
-    };
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
   </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .vercel-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .vercel-headline { font-weight: 700; color: #0a0a0a; letter-spacing: -0.025em; }
+    .vercel-body { font-weight: 400; color: #525252; }
+  </style>
 </head>
-<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
-  <div class="max-w-md mx-auto min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50">
-      <span class="font-serif text-2xl font-bold text-zinc-900">SyncLyst<sup class="text-[0.45em] opacity-80 font-normal">®</sup></span>
-      <div class="flex items-center gap-2">
-        <a href="/landing.html?mode=scan" class="w-9 h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center text-lg font-bold leading-none no-underline hover:bg-zinc-800 transition-colors" aria-label="Add / Scan new product">+</a>
-        <a href="settings.html" class="w-9 h-9 rounded-full bg-zinc-200 border border-zinc-300 flex items-center justify-center text-sm font-semibold text-zinc-600 no-underline">J</a>
-      </div>
+<body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <header class="shrink-0 border-b border-[#e5e5e5] bg-white px-4 h-14 grid grid-cols-3 items-center">
+      <div></div>
+      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#0a0a0a] justify-self-center no-underline">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></a>
+      <a href="/landing.html?mode=scan" class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center text-lg font-bold leading-none no-underline hover:bg-zinc-800 justify-self-end" aria-label="Scan new">+</a>
     </header>
+    <main class="flex-1 px-5 pt-6 pb-8 overflow-auto">
+      <h1 class="vercel-headline text-xl font-bold text-[#0a0a0a] mb-1">Dashboard</h1>
+      <p class="text-sm text-[#525252] mb-6 vercel-body">Your listings and connected stores.</p>
 
-    <main class="flex-1 px-5 pb-24 overflow-auto">
-      <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Home & Dashboard</p>
-
-      <!-- Main card -->
-      <div class="rounded-2xl bg-white border border-zinc-200 overflow-hidden">
-        <!-- AI summary: light, sectioned like Timeblok -->
-        <div class="p-5 border-b border-zinc-100">
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Morning, James</p>
-          <p class="text-sm text-zinc-800 mb-5">AI has learned <span class="font-serif font-bold text-zinc-900">47 things</span> about your store</p>
-          <div class="space-y-4 mb-5">
-            <div>
-              <div class="flex justify-between text-xs text-zinc-500 mb-1.5">
-                <span>Pricing IQ</span>
-                <span class="font-medium text-zinc-700">78%</span>
-              </div>
-              <div class="h-2 bg-zinc-200 rounded-full overflow-hidden">
-                <div class="h-full bg-zinc-700 rounded-full transition-all" style="width: 78%;"></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex justify-between text-xs text-zinc-500 mb-1.5">
-                <span>Category IQ</span>
-                <span class="font-medium text-zinc-700">91%</span>
-              </div>
-              <div class="h-2 bg-zinc-200 rounded-full overflow-hidden">
-                <div class="h-full bg-zinc-700 rounded-full transition-all" style="width: 91%;"></div>
-              </div>
-            </div>
+      <!-- Listings summary -->
+      <div class="vercel-card p-5 mb-5">
+        <span class="text-[13px] font-medium text-[#0a0a0a] block mb-3">Your listings</span>
+        <div class="flex items-center justify-between">
+          <div>
+            <p id="dashboard-listed-count" class="text-2xl font-bold text-[#0a0a0a]">—</p>
+            <p class="text-xs text-[#525252] mt-0.5">Created in SyncLyst</p>
           </div>
-          <div class="flex gap-3">
-            <div class="flex-1 rounded-xl bg-zinc-50 border border-zinc-200 p-3 text-center">
-              <p id="dashboard-listed-count" class="font-serif text-xl font-bold text-zinc-900">—</p>
-              <p class="text-[10px] text-zinc-500 mt-0.5">listed</p>
-            </div>
-            <div class="flex-1 rounded-xl bg-zinc-50 border border-zinc-200 p-3 text-center">
-              <p class="font-serif text-xl font-bold text-zinc-900">67</p>
-              <p class="text-[10px] text-zinc-500 mt-0.5">sold</p>
-            </div>
-            <div class="flex-1 rounded-xl bg-zinc-50 border border-zinc-200 p-3 text-center">
-              <p class="font-serif text-xl font-bold text-zinc-900">2.1d</p>
-              <p class="text-[10px] text-zinc-500 mt-0.5">avg time</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Today's Insights -->
-        <div class="p-5 pt-4">
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">Today's Insights</p>
-        <div class="space-y-3 mb-6">
-          <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-3 flex gap-3">
-            <span class="w-8 h-8 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-600 text-xs font-bold shrink-0">!</span>
-            <p class="text-sm text-zinc-800">You underprice electronics on eBay by avg $18. That's $108 lost this month.</p>
-          </div>
-          <div class="rounded-xl bg-zinc-50 border border-zinc-200 p-3 flex gap-3">
-            <span class="w-8 h-8 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 text-xs font-bold shrink-0">^</span>
-            <p class="text-sm text-zinc-800">Vintage clothing is your best category. 94% sell rate. List more of this.</p>
-          </div>
-        </div>
-
-        <!-- CTA -->
-        <a href="/landing.html?mode=scan" class="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 no-underline">
-          <span class="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center text-[10px] font-bold">C</span>
-          Scan new product
-          <span class="text-white/70">→</span>
-        </a>
-        <p class="text-center text-xs text-zinc-500 mt-2">Or <a href="/landing.html?mode=scan" class="font-medium text-zinc-700 underline">list a new item</a> with photo</p>
+          <a href="/listings-all.html" class="text-sm font-semibold text-[#0a0a0a] flex items-center gap-1.5 no-underline hover:underline">
+            View all
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </a>
         </div>
       </div>
+
+      <!-- Connected stores -->
+      <div class="vercel-card p-5 mb-5">
+        <span class="text-[13px] font-medium text-[#0a0a0a] block mb-3">Connected stores</span>
+        <p class="text-sm text-[#525252] mb-4 vercel-body">Connect marketplaces to publish drafts from SyncLyst.</p>
+        <a href="/stores-list.html" class="inline-flex items-center gap-2 text-sm font-semibold text-[#0a0a0a] no-underline hover:underline">
+          <i data-lucide="store" class="w-4 h-4"></i>
+          Manage connections
+        </a>
+      </div>
+
+      <!-- CTA -->
+      <a href="/landing.html?mode=scan" class="flex items-center justify-center gap-2.5 w-full py-3.5 rounded-xl bg-black text-white font-semibold text-[15px] border border-black no-underline hover:bg-zinc-800 transition-colors">
+        <i data-lucide="camera" class="w-5 h-5"></i>
+        Scan new product
+      </a>
+      <p class="text-center text-xs text-[#71717a] mt-3">Or <a href="/flow-choose-platform.html" class="font-medium text-[#0a0a0a] underline">choose a marketplace</a> to list to.</p>
     </main>
   </div>
   <script>
     (function() {
-      var meta = document.querySelector('meta[name="auralink-publishing-url"]');
-      var base = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
-      var host = window.location.hostname;
-      if (host && host !== 'localhost' && host !== '127.0.0.1' && base.indexOf('localhost') !== -1)
-        base = window.location.protocol + '//' + host + ':8001';
-      function getToken() {
-        try { return sessionStorage.getItem('auralink_jwt'); } catch (e) { return null; }
+      function getPublishingUrl() {
+        var meta = document.querySelector('meta[name="auralink-publishing-url"]');
+        var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
+        var host = window.location.hostname;
+        if (host && host !== 'localhost' && host !== '127.0.0.1') {
+          var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
+          if (prodMeta && prodMeta.getAttribute('content')) url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+        }
+        return url;
       }
+      function getToken() { try { return sessionStorage.getItem('auralink_jwt'); } catch (e) { return null; } }
       function fetchToken() {
+        var base = getPublishingUrl();
         return fetch(base + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; })
           .then(function(d) { if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; } return null; });
       }
       var token = getToken();
       (token ? Promise.resolve(token) : fetchToken()).then(function(t) {
-        if (!t) { var el = document.getElementById('dashboard-listed-count'); if (el) el.textContent = '0'; return; }
+        if (!t) { var el = document.getElementById('dashboard-listed-count'); if (el) el.textContent = '0'; if (typeof lucide !== 'undefined') lucide.createIcons(); return; }
+        var base = getPublishingUrl();
         return fetch(base + '/api/listings', { headers: { 'Authorization': 'Bearer ' + t } })
           .then(function(r) { return r.ok ? r.json() : null; })
           .then(function(data) {
@@ -125,7 +95,7 @@
             else if (el) el.textContent = '0';
           })
           .catch(function() { var el = document.getElementById('dashboard-listed-count'); if (el) el.textContent = '0'; });
-      }).catch(function() { var el = document.getElementById('dashboard-listed-count'); if (el) el.textContent = '0'; });
+      }).then(function() { if (typeof lucide !== 'undefined') lucide.createIcons(); }).catch(function() { if (typeof lucide !== 'undefined') lucide.createIcons(); });
     })();
   </script>
 </body>

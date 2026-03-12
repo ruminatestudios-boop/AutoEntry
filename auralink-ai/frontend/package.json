@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/inject-api-url.js && next dev --hostname 0.0.0.0",
+    "dev": "node scripts/dev-open.js",
+    "dev:no-open": "node scripts/inject-api-url.js && next dev --hostname 0.0.0.0",
     "dev:phone": "node scripts/dev-phone.js",
     "dev:safe": "node scripts/inject-api-url.js && (test -f .next/server/app/_not-found/page.js || npm run build) && next dev --hostname 0.0.0.0",
     "dev:clean": "node scripts/inject-api-url.js && (rm -rf .next && next dev --hostname 0.0.0.0)",
@@ -14,6 +15,14 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.0.0",
+    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-switch": "^1.2.6",
+    "class-variance-authority": "^0.7.1",
+    "lucide-react": "^0.577.0",
+    "motion": "^12.35.2",
     "next": "^15.2.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -26,6 +35,7 @@
     "autoprefixer": "^10.4.27",
     "eslint": "^9",
     "eslint-config-next": "^15.2.3",
+    "open": "^11.0.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.2.1",
     "typescript": "~5.6.0"

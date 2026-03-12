@@ -61,6 +61,11 @@ export async function publishToEbay(listing, accessToken, row) {
 }
 
 export async function publishToEtsy(listing, accessToken, row) {
+  /** Temporary: skip real Etsy API when using dev bypass token (DEV_BYPASS_ETSY_LOGIN=true). */
+  if (accessToken === 'dev-bypass-etsy' || process.env.DEV_BYPASS_ETSY_LOGIN === 'true' || process.env.DEV_BYPASS_ETSY_LOGIN === '1') {
+    const id = 'dev-' + Date.now();
+    return { url: `https://www.etsy.com/your/shop/drafts`, listing_id: id };
+  }
   const payload = toEtsy(listing);
   const { data } = await axios.post(
     'https://openapi.etsy.com/v3/application/shops/' + (row?.shop_id || 'default') + '/listings',

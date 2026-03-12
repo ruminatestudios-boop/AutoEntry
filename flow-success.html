@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>You're live! | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -26,8 +29,8 @@
         <span class="text-2xl font-bold text-zinc-900">✓</span>
       </div>
 
-      <h1 class="font-serif text-2xl font-bold text-zinc-900 mb-1">You're live!</h1>
-      <p class="text-sm text-zinc-500 mb-8" id="success-count-text">Listed on 3 stores in 2.4 seconds</p>
+      <h1 class="font-serif text-2xl font-bold text-zinc-900 mb-1" id="success-heading">You're live!</h1>
+      <p class="text-sm text-zinc-500 mb-8" id="success-count-text">Listed on 1 store in 2.4 seconds</p>
 
       <!-- Store cards: filled from selected marketplaces -->
       <div class="w-full space-y-3 mb-6" id="success-stores-list"></div>
@@ -67,14 +70,28 @@
         mercari: { name: 'Mercari', domain: 'mercari.com', letter: 'M' },
         vinted: { name: 'Vinted', domain: 'vinted.com', letter: 'V' }
       };
+      var LAST_PUBLISH_KEY = 'auralink_last_publish_platforms';
       function loadSelected() {
+        try {
+          var lastRaw = sessionStorage.getItem(LAST_PUBLISH_KEY);
+          if (lastRaw) {
+            sessionStorage.removeItem(LAST_PUBLISH_KEY);
+            var arr = JSON.parse(lastRaw);
+            if (Array.isArray(arr) && arr.length > 0) return arr;
+          }
+        } catch (e) {}
+        var params = new URLSearchParams(window.location.search || '');
+        if (params.get('shopify') === 'connected' || (params.get('shop') && String(params.get('shop')).includes('myshopify.com'))) return ['shopify'];
+        var platform = params.get('platform');
+        if (platform) return [platform.toLowerCase()];
         try {
           var raw = sessionStorage.getItem(STORAGE_KEY);
           if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length > 0) return arr; }
         } catch (e) {}
-        return ['amazon', 'shopify'];
+        return ['shopify'];
       }
-      var selected = loadSelected();
+      var selected = loadSelected().filter(function(id) { return id !== 'amazon'; });
+      if (selected.length === 0) selected = ['shopify'];
       var n = selected.length;
       var countEl = document.getElementById('success-count-text');
       if (countEl) countEl.textContent = n === 1 ? 'Listed on 1 store in 2.4 seconds' : 'Listed on ' + n + ' stores in 2.4 seconds';
