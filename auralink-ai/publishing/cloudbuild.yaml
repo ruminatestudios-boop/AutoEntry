@@ -1,0 +1,16 @@
+# Cloud Build config for auto-deploying synclyst-publishing to Cloud Run on push to main.
+# Create a trigger in Cloud Build that points to this file (e.g. auralink-ai/publishing/cloudbuild.yaml).
+# Optional: set "Included files filter" to auralink-ai/publishing/** so only publishing changes trigger.
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - synclyst-publishing
+      - --source
+      - .
+      - --region
+      - us-central1
+      - --allow-unauthenticated
+    dir: 'auralink-ai/publishing'
