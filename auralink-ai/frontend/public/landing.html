@@ -805,8 +805,8 @@
         (function initSynclystAppOrigin() {
           var m = document.querySelector('meta[name="synclyst-app-origin"]');
           var raw = (m && m.getAttribute('content')) ? String(m.getAttribute('content')).trim() : '';
-          // Unreplaced build placeholder or empty → same host as this page (avoids /__SYNCLYST_APP_ORIGIN__/… 404s)
-          if (!raw || raw === '__SYNCLYST_APP_ORIGIN__') {
+          // Empty, unreplaced template, or mistaken Vercel env (literal __ or ___SYNCLYST_APP_ORIGIN___) → same host
+          if (!raw || /SYNCLYST_APP_ORIGIN/.test(raw)) {
             window.SYNCLYST_APP_ORIGIN = '';
           } else {
             window.SYNCLYST_APP_ORIGIN = raw.replace(/\/$/, '');
