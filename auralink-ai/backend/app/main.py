@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routes import vision, products, audit, shopify, feedback, ucp, integrations, usage
+from app.routes import vision, products, audit, shopify, feedback, ucp, integrations, usage, billing
 
 
 @asynccontextmanager
@@ -51,6 +51,7 @@ def create_app() -> FastAPI:
     app.include_router(integrations.router, prefix="/api/v1/integrations", tags=["Integrations"])
     app.include_router(ucp.router, prefix="/.well-known/ucp", tags=["UCP", "GEO"])
     app.include_router(usage.router, prefix="/api/v1/usage", tags=["Usage"])
+    app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
     return app
 
 

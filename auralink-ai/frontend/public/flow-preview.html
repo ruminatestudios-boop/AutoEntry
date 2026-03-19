@@ -378,7 +378,7 @@
           var div = document.createElement('div');
           div.className = 'flex items-center justify-between gap-3';
           var domain = domains[id];
-          var logoUrl = domain ? 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=128' : '';
+          var logoUrl = domain === 'ebay.com' ? '/assets/ebay-logo.png' : (domain ? 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=128' : '');
           var logoHtml = logoUrl
             ? '<span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0"><img src="' + logoUrl + '" alt="" class="w-6 h-6 object-contain" onerror="this.style.display=\'none\'" /></span>'
             : '';

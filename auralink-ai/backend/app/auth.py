@@ -3,6 +3,7 @@ Clerk JWT verification for protected API routes.
 Uses JWKS from Clerk to verify Bearer tokens.
 """
 from typing import Optional
+import base64
 
 import jwt
 from fastapi import Depends, HTTPException, Request
@@ -14,13 +15,46 @@ _security = HTTPBearer(auto_error=False)
 _jwks_client: Optional[jwt.PyJWKClient] = None
 
 
+def _derive_clerk_jwks_url_from_publishable_key(publishable_key: str) -> Optional[str]:
+    """
+    Derive Clerk instance JWKS URL from publishable key.
+    Example key payload decodes to: "<instance>.clerk.accounts.dev$".
+    """
+    key = (publishable_key or "").strip()
+    if not key:
+        return None
+    parts = key.split("_", 2)
+    if len(parts) < 3:
+        return None
+    encoded = parts[-1]
+    # Clerk key payload is base64 (often URL-safe) and may be unpadded.
+    pad = "=" * ((4 - (len(encoded) % 4)) % 4)
+    try:
+        decoded = base64.urlsafe_b64decode((encoded + pad).encode("utf-8")).decode("utf-8")
+    except Exception:
+        return None
+    host = decoded.rstrip("$").strip()
+    if not host or "." not in host:
+        return None
+    return f"https://{host}/.well-known/jwks.json"
+
+
 def _get_jwks_client() -> jwt.PyJWKClient:
     """Get or create PyJWKClient for Clerk JWKS."""
     global _jwks_client
     if _jwks_client is not None:
         return _jwks_client
     settings = get_settings()
-    jwks_url = getattr(settings, "clerk_jwks_url", None) or "https://api.clerk.com/v1/jwks"
+    configured = (getattr(settings, "clerk_jwks_url", None) or "").strip()
+    default_jwks = "https://api.clerk.com/v1/jwks"
+    derived = _derive_clerk_jwks_url_from_publishable_key(
+        getattr(settings, "clerk_publishable_key", "") or ""
+    )
+    # Prefer instance-specific JWKS when config is blank or just the global default.
+    if configured and configured != default_jwks:
+        jwks_url = configured
+    else:
+        jwks_url = derived or configured or default_jwks
     _jwks_client = jwt.PyJWKClient(jwks_url)
     return _jwks_client
 

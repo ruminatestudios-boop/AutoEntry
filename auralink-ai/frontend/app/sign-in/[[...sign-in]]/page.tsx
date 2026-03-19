@@ -1,6 +1,9 @@
-import { redirect } from "next/navigation";
+import { SignIn } from "@clerk/nextjs";
 
-// Clerk paused for testing — redirect to dashboard so you can test the flow without login.
 export default function SignInPage() {
-  redirect("/dashboard");
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem", background: "#f8fafc" }}>
+      <SignIn />
+    </div>
+  );
 }

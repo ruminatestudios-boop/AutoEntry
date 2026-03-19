@@ -1658,7 +1658,7 @@
         selected.forEach(function(id) {
           var name = marketplaceNames[id] || id;
           var domain = marketplaceDomains[id];
-          var logoUrl = domain ? 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=32' : '';
+          var logoUrl = domain === 'ebay.com' ? '/assets/ebay-logo.png' : (domain ? 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=32' : '');
           var span = document.createElement('span');
           span.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium bg-white border border-[#eaeaea] text-[#555]';
           span.innerHTML = (logoUrl ? '<img src="' + logoUrl + '" alt="" class="w-3.5 h-3.5 rounded-sm object-contain shrink-0" onerror="this.style.display=\'none\'" />' : '') + '<span>' + name + '</span>';

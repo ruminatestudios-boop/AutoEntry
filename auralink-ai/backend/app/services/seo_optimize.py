@@ -46,20 +46,47 @@ def _optimize_seo_sync(
             "improvements": [],
         }
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        try:
+            import google.genai as genai
+            from google.genai import types
+        except ModuleNotFoundError:
+            logger.warning("Gemini SDK missing for SEO optimize. Install google-genai.")
+            return {
+                "seo_title": (title or "Product")[:70],
+                "meta_description": (description or title or "")[:320],
+                "analysis": "Gemini SDK missing in backend environment. Install google-genai.",
+                "improvements": [],
+            }
+        client = genai.Client(api_key=gemini_api_key)
         user = OPTIMIZE_USER_TEMPLATE.format(
             title=title or "(none)",
             description=(description or "(none)")[:2000],
             category=category or "(none)",
             vendor=vendor or "(none)",
         )
-        response = model.generate_content(
-            [OPTIMIZE_SYSTEM, user],
-            generation_config=genai.GenerationConfig(temperature=0.3, max_output_tokens=1024),
-        )
-        text = (response.text or "").strip()
+        text = ""
+        last_err = None
+        for model_name in ("gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=[OPTIMIZE_SYSTEM, user],
+                    config=types.GenerateContentConfig(
+                        temperature=0.3,
+                        max_output_tokens=1024,
+                    ),
+                )
+                text = (getattr(response, "text", None) or "").strip()
+                if text:
+                    break
+            except Exception as e:
+                last_err = e
+                err = str(e).lower()
+                if "404" in err or "not found" in err:
+                    continue
+                raise
+        if not text:
+            raise RuntimeError(f"No available Gemini model for SEO optimize: {last_err}")
         text = re.sub(r"^```(?:json)?\s*", "", text)
         text = re.sub(r"\s*```\s*$", "", text)
         data = json.loads(text)

@@ -1,6 +1,8 @@
 """
 Supabase/PostgreSQL: Universal_Products and Channel_Adapters.
 """
+import os
+from urllib.parse import urlparse
 from typing import Optional, Any
 from uuid import uuid4
 
@@ -20,6 +22,19 @@ def get_supabase():
     if not settings.supabase_url or not settings.supabase_service_key:
         return None
     try:
+        # Some local environments inject HTTPS proxy vars that break Supabase API calls.
+        # Keep other proxy behavior intact while explicitly bypassing proxy for Supabase host.
+        host = urlparse(settings.supabase_url).hostname or ""
+        if host:
+            existing = os.environ.get("NO_PROXY") or os.environ.get("no_proxy") or ""
+            parts = [p.strip() for p in existing.split(",") if p.strip()]
+            if host not in parts:
+                parts.append(host)
+            if ".supabase.co" not in parts:
+                parts.append(".supabase.co")
+            no_proxy_value = ",".join(parts)
+            os.environ["NO_PROXY"] = no_proxy_value
+            os.environ["no_proxy"] = no_proxy_value
         from supabase import create_client
         _supabase_client = create_client(
             settings.supabase_url,
@@ -440,50 +455,139 @@ def upsert_description_variation(
 
 
 # ---------------------------------------------------------------------------
-# Free scan quota (3 free scans per user, then paywall)
+# Tier + monthly scan quota (Stripe-backed)
 # ---------------------------------------------------------------------------
 
-FREE_SCANS_LIMIT = 3
+TIER_LIMITS = {
+    "starter": 10,
+    "pro": 100,
+    "growth": 500,
+    "scale": 10**9,  # treat as unlimited
+}
+
+
+def _month_key() -> str:
+    """YYYY-MM in UTC for monthly quotas."""
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc)
+    return f"{now.year:04d}-{now.month:02d}"
+
+
+def get_user_tier(supabase, clerk_user_id: str) -> str:
+    """Return user's tier (starter/pro/growth/scale). Defaults to starter."""
+    try:
+        r = (
+            supabase.table("user_billing")
+            .select("tier,status")
+            .eq("clerk_user_id", clerk_user_id)
+            .limit(1)
+            .execute()
+        )
+        if r.data and len(r.data) > 0:
+            row = r.data[0] or {}
+            tier = (row.get("tier") or "starter").strip().lower()
+            status = (row.get("status") or "").strip().lower()
+            if status in ("active", "trialing") and tier in TIER_LIMITS:
+                return tier
+            # If cancelled/past_due/etc. fall back to starter
+    except Exception:
+        pass
+    return "starter"
+
+
+def upsert_user_billing(
+    supabase,
+    *,
+    clerk_user_id: str,
+    tier: str,
+    status: str,
+    stripe_customer_id: Optional[str] = None,
+    stripe_subscription_id: Optional[str] = None,
+    current_period_end: Optional[int] = None,
+) -> None:
+    """Upsert billing state into user_billing (Supabase)."""
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc).isoformat()
+    row: dict[str, Any] = {
+        "clerk_user_id": clerk_user_id,
+        "tier": tier,
+        "status": status,
+        "updated_at": now,
+    }
+    if stripe_customer_id:
+        row["stripe_customer_id"] = stripe_customer_id
+    if stripe_subscription_id:
+        row["stripe_subscription_id"] = stripe_subscription_id
+    if current_period_end is not None:
+        row["current_period_end"] = current_period_end
+    try:
+        supabase.table("user_billing").upsert(
+            row,
+            on_conflict="clerk_user_id",
+            update_columns=["tier", "status", "stripe_customer_id", "stripe_subscription_id", "current_period_end", "updated_at"],
+        ).execute()
+    except Exception:
+        # Table might not exist in dev; fail open.
+        return
 
 
 def get_scan_usage(supabase, clerk_user_id: str) -> dict:
-    """Return { free_scans_used, free_scans_limit, can_scan } for the user."""
+    """Return { tier, scans_used, scans_limit, can_scan } for the user (monthly quota)."""
+    tier = get_user_tier(supabase, clerk_user_id) if supabase else "starter"
+    limit = TIER_LIMITS.get(tier, TIER_LIMITS["starter"])
+    used = 0
     try:
-        r = supabase.table("user_scan_quota").select("free_scans_used").eq("clerk_user_id", clerk_user_id).limit(1).execute()
-        used = r.data[0]["free_scans_used"] if r.data and len(r.data) > 0 else 0
+        r = (
+            supabase.table("user_scan_usage_monthly")
+            .select("scans_used")
+            .eq("clerk_user_id", clerk_user_id)
+            .eq("month_key", _month_key())
+            .limit(1)
+            .execute()
+        )
+        used = r.data[0]["scans_used"] if r.data and len(r.data) > 0 else 0
     except Exception:
         used = 0
     return {
-        "free_scans_used": used,
-        "free_scans_limit": FREE_SCANS_LIMIT,
-        "can_scan": used < FREE_SCANS_LIMIT,
+        "tier": tier,
+        "scans_used": used,
+        "scans_limit": limit,
+        "can_scan": used < limit,
     }
 
 
-def increment_free_scan(supabase, clerk_user_id: str) -> dict:
-    """Increment free_scans_used for user; upsert row if missing. Returns updated usage."""
-    from datetime import datetime
-    now = datetime.utcnow().isoformat()
+def increment_scan(supabase, clerk_user_id: str) -> dict:
+    """Increment scans_used for this month; upsert row if missing."""
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc).isoformat()
+    key = _month_key()
     try:
-        r = supabase.table("user_scan_quota").select("free_scans_used").eq("clerk_user_id", clerk_user_id).limit(1).execute()
+        r = (
+            supabase.table("user_scan_usage_monthly")
+            .select("scans_used")
+            .eq("clerk_user_id", clerk_user_id)
+            .eq("month_key", key)
+            .limit(1)
+            .execute()
+        )
         if r.data and len(r.data) > 0:
-            new_count = (r.data[0].get("free_scans_used") or 0) + 1
-            supabase.table("user_scan_quota").update({"free_scans_used": new_count, "updated_at": now}).eq("clerk_user_id", clerk_user_id).execute()
+            new_count = (r.data[0].get("scans_used") or 0) + 1
+            supabase.table("user_scan_usage_monthly").update({"scans_used": new_count, "updated_at": now}).eq(
+                "clerk_user_id", clerk_user_id
+            ).eq("month_key", key).execute()
         else:
-            supabase.table("user_scan_quota").insert({
-                "clerk_user_id": clerk_user_id,
-                "free_scans_used": 1,
-                "updated_at": now,
-            }).execute()
+            supabase.table("user_scan_usage_monthly").insert(
+                {"clerk_user_id": clerk_user_id, "month_key": key, "scans_used": 1, "updated_at": now}
+            ).execute()
             new_count = 1
     except Exception:
-        try:
-            supabase.table("user_scan_quota").insert({
-                "clerk_user_id": clerk_user_id,
-                "free_scans_used": 1,
-                "updated_at": now,
-            }).execute()
-        except Exception:
-            pass
-        new_count = 1
-    return {"free_scans_used": new_count, "free_scans_limit": FREE_SCANS_LIMIT, "can_scan": new_count < FREE_SCANS_LIMIT}
+        # Table missing or DB error; fail open but return safe-ish values
+        new_count = 0
+    usage = get_scan_usage(supabase, clerk_user_id)
+    usage["scans_used"] = max(usage.get("scans_used", 0), new_count)
+    usage["can_scan"] = usage["scans_used"] < usage["scans_limit"]
+    return usage
+

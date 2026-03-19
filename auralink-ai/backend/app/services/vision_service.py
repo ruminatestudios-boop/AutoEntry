@@ -23,6 +23,47 @@ from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 
+class VisionServiceError(Exception):
+    """Raised when vision provider calls fail in a user-actionable way."""
+
+
+def _genai_client(api_key: str):
+    try:
+        import google.genai as genai
+    except ModuleNotFoundError as e:
+        raise VisionServiceError(
+            "Gemini SDK missing in backend environment. Install with: pip install google-genai"
+        ) from e
+    return genai.Client(api_key=api_key)
+
+
+def _genai_types():
+    try:
+        from google.genai import types
+    except ModuleNotFoundError as e:
+        raise VisionServiceError(
+            "Gemini SDK missing in backend environment. Install with: pip install google-genai"
+        ) from e
+    return types
+
+
+def _extract_response_text(response) -> str:
+    text = getattr(response, "text", None)
+    if text:
+        return str(text).strip()
+    try:
+        candidates = getattr(response, "candidates", None) or []
+        parts = (getattr(candidates[0], "content", None).parts or []) if candidates else []
+        out = []
+        for p in parts:
+            t = getattr(p, "text", None)
+            if t:
+                out.append(str(t))
+        return "\n".join(out).strip()
+    except Exception:
+        return ""
+
+
 try:
     from app.prompts import VLM_SYSTEM_PROMPT, build_user_prompt
 except ImportError:
@@ -201,6 +242,8 @@ def _run_verification_pass_sync(
         "brand": result.attributes.brand,
         "seo_title": result.extraction_copy.seo_title,
         "exact_model": result.attributes.exact_model,
+        "make": result.attributes.make,
+        "model_year": result.attributes.model_year,
     }
     prompt = f"""Given the OCR text from a product label and the current draft fields, output ONLY a JSON object with the corrected values. Use the EXACT text from the OCR when the draft is wrong or missing. If a field is correct or not in OCR, use null for that key.
 
@@ -210,25 +253,68 @@ OCR text:
 Current draft:
 {json.dumps(draft)}
 
-Output ONLY valid JSON (no markdown), e.g. {{ "brand": "exact from OCR or null", "seo_title": "exact from OCR or null", "exact_model": "exact from OCR or null" }}. Only include keys that need correction; use null to mean "no change"."""
+Output ONLY valid JSON (no markdown), e.g. {{ "brand": "exact from OCR or null", "seo_title": "exact from OCR or null", "exact_model": "exact from OCR or null", "make": "exact from OCR or null", "model_year": "2024 or SS24 or null" }}. Only include keys that need correction; use null to mean "no change". For model_year use the exact year or season code from the label (e.g. 2024, SS24, FW23)."""
 
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(temperature=0, max_output_tokens=512),
-        )
-        text = (response.text or "").strip()
-        text = re.sub(r"^```(?:json)?\s*", "", text)
-        text = re.sub(r"\s*```\s*$", "", text)
-        data = json.loads(text)
-        if isinstance(data, dict) and (data.get("brand") is not None or data.get("seo_title") is not None or data.get("exact_model") is not None):
-            return data
+        from google.genai import types
+        client = _genai_client(gemini_api_key)
+        for model_name in _candidate_gemini_models(client):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0,
+                        max_output_tokens=512,
+                    ),
+                )
+                text = _extract_response_text(response)
+                text = re.sub(r"^```(?:json)?\s*", "", text)
+                text = re.sub(r"\s*```\s*$", "", text)
+                data = json.loads(text)
+                if isinstance(data, dict) and (data.get("brand") is not None or data.get("seo_title") is not None or data.get("exact_model") is not None or data.get("make") is not None or data.get("model_year") is not None):
+                    return data
+            except Exception as e2:
+                err2 = str(e2).lower()
+                if "not found" in err2 or "404" in err2:
+                    continue
+                raise
     except Exception as e:
         logger.debug("Verification pass failed: %s", e)
     return None
+
+
+def _candidate_gemini_models(client=None) -> list[str]:
+    """
+    Return a preferred list of Gemini model names for generate_content.
+    Uses list_models() when available to avoid 404s for keys without access.
+    """
+    preferred = [
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+    ]
+    try:
+        c = client
+        if c is None:
+            settings = get_settings()
+            if not settings.gemini_api_key:
+                return preferred
+            c = _genai_client(settings.gemini_api_key)
+        available = []
+        for m in c.models.list():
+            name = getattr(m, "name", "") or ""
+            short = name.split("/")[-1] if "/" in name else name
+            if short and short.startswith("gemini-"):
+                available.append(short)
+        # Keep preferred ordering but only include models the key can actually use
+        picked = [m for m in preferred if m in available]
+        return picked or preferred
+    except Exception:
+        return preferred
 
 
 def apply_verification_pass(
@@ -250,6 +336,12 @@ def apply_verification_pass(
     if corrections.get("exact_model") is not None and str(corrections["exact_model"]).strip():
         result.attributes.exact_model = str(corrections["exact_model"]).strip()[:100]
         sources["exact_model"] = "ocr"
+    if corrections.get("make") is not None and str(corrections["make"]).strip():
+        result.attributes.make = str(corrections["make"]).strip()[:100]
+        sources["make"] = "ocr"
+    if corrections.get("model_year") is not None and str(corrections["model_year"]).strip():
+        result.attributes.model_year = str(corrections["model_year"]).strip()[:20]
+        sources["model_year"] = "ocr"
     result.sources = sources
     return result
 
@@ -315,7 +407,16 @@ def _parse_extraction_response(text: str) -> VisionExtractionResponse:
     try:
         data = json.loads(text)
     except json.JSONDecodeError:
-        return _fallback_extraction()
+        # Gemini sometimes returns extra text around JSON. Try to salvage the largest JSON object.
+        try:
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                data = json.loads(text[start : end + 1])
+            else:
+                raise VisionServiceError("Vision model returned non-JSON output")
+        except Exception:
+            raise VisionServiceError("Vision model returned invalid JSON")
     if not isinstance(data, dict):
         data = {}
     # UCP format (new) has description_fact_feel_proof, weight_grams, etc.
@@ -325,7 +426,7 @@ def _parse_extraction_response(text: str) -> VisionExtractionResponse:
             return _parse_ucp_extraction_response(data)
         except (ValidationError, TypeError, ValueError, KeyError) as e:
             logger.warning("UCP parse fallback: %s", e)
-            return _fallback_extraction()
+            raise VisionServiceError("Vision model returned invalid extraction schema")
     att = _dict(data.get("attributes"))
     copy_data = _dict(data.get("copy"))
     tags_data = _dict(data.get("tags"))
@@ -347,6 +448,8 @@ def _parse_extraction_response(text: str) -> VisionExtractionResponse:
                 weight=att.get("weight"),
                 dimensions=att.get("dimensions"),
                 brand=att.get("brand"),
+                make=att.get("make"),
+                model_year=att.get("model_year"),
                 price_display=price_disp,
                 price_value=price_val,
                 price_source=price_src if price_src in ("found_in_image", "ai_suggested", "not_found") else None,
@@ -370,7 +473,7 @@ def _parse_extraction_response(text: str) -> VisionExtractionResponse:
         )
     except (ValidationError, TypeError, ValueError) as e:
         logger.warning("Legacy parse fallback: %s", e)
-        return _fallback_extraction()
+        raise VisionServiceError("Vision model returned invalid extraction fields")
 
 
 def _parse_ucp_extraction_response(data: dict) -> VisionExtractionResponse:
@@ -433,6 +536,8 @@ def _parse_ucp_extraction_response(data: dict) -> VisionExtractionResponse:
             weight=att.get("weight") or (f"{int(weight_val)}g" if isinstance(weight_val, (int, float)) and weight_val else None),
             dimensions=att.get("dimensions"),
             brand=att.get("brand"),
+            make=att.get("make"),
+            model_year=att.get("model_year"),
             price_display=price_disp,
             price_value=price_val,
             price_source=price_src if price_src in ("found_in_image", "ai_suggested", "not_found") else None,
@@ -472,6 +577,8 @@ Rules:
 - brand: EXACT brand from logo/label (e.g. Sony, LEGO, Nike). Copy spelling and capitalization. If not visible, use null.
 - seo_title: EXACT product name as printed (e.g. "WH-1000XM5 Wireless Headphones", "Classic Fit Jeans"). Not a generic category.
 - exact_model: Model number, SKU, or style code from label when visible. null otherwise.
+- make: Manufacturer or parent brand when different from brand (e.g. vehicles, electronics). null if not visible.
+- model_year: Year or season code from label (e.g. 2024, SS24, FW23). null otherwise.
 - material_composition: Exact material text from label (e.g. "100% Cotton"). Not "fabric" or "material".
 - When in doubt, use null. Do not guess or substitute generic terms.
 
@@ -484,6 +591,8 @@ Output ONLY valid JSON (no markdown):
     "weight": "e.g. 200g if visible",
     "dimensions": "from label if visible",
     "brand": "exact brand or null",
+    "make": "manufacturer or null",
+    "model_year": "2024 or SS24 or null",
     "price_display": "as shown or null",
     "price_value": number or null,
     "price_source": "found_in_image if price visible, else not_found",
@@ -531,35 +640,36 @@ def _gemini_extract_sync(
     mime_type: str,
     ocr_snippets: list[str],
 ) -> VisionExtractionResponse:
-    """Synchronous Gemini call (MultimodalProcessor). Tries gemini-2.0-flash, then gemini-1.5-flash."""
-    import google.generativeai as genai
+    """Synchronous Gemini call (MultimodalProcessor)."""
+    types = _genai_types()
 
     settings = get_settings()
-    genai.configure(api_key=settings.gemini_api_key)
+    if not settings.gemini_api_key:
+        raise VisionServiceError("Gemini API key is missing")
+    client = _genai_client(settings.gemini_api_key)
     raw, _ = _decode_base64(image_base64)
-    image_part = {
-        "mime_type": mime_type or "image/jpeg",
-        "data": raw,
-    }
-    for model_name in ("gemini-2.0-flash", "gemini-1.5-flash"):
+    image_part = types.Part.from_bytes(data=raw, mime_type=mime_type or "image/jpeg")
+    last_err = None
+    for model_name in _candidate_gemini_models(client):
         try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(
-                [_get_system_prompt(), _get_user_prompt(ocr_snippets), image_part],
-                generation_config=genai.GenerationConfig(
+            response = client.models.generate_content(
+                model=model_name,
+                contents=[_get_system_prompt(), _get_user_prompt(ocr_snippets), image_part],
+                config=types.GenerateContentConfig(
                     temperature=0.1,
                     max_output_tokens=2048,
                 ),
             )
-            text = (response.text or "").strip()
+            text = _extract_response_text(response)
             return _parse_extraction_response(text)
         except Exception as e:
+            last_err = e
             err = str(e).lower()
             if "not found" in err or "404" in err or "model" in err and "invalid" in err:
                 logger.info("Gemini model %s not available, trying next: %s", model_name, e)
                 continue
             raise
-    return _fallback_extraction()
+    raise VisionServiceError(f"No available Gemini model for extraction: {last_err}")
 
 
 async def extract_with_gemini(
@@ -568,8 +678,10 @@ async def extract_with_gemini(
     ocr_snippets: list[str],
 ) -> VisionExtractionResponse:
     """Use Gemini 2.0 Flash for multimodal extraction."""
-    return await asyncio.to_thread(
-        _gemini_extract_sync, image_base64, mime_type, ocr_snippets
+    # Avoid hanging forever on slow / stuck model calls.
+    return await asyncio.wait_for(
+        asyncio.to_thread(_gemini_extract_sync, image_base64, mime_type, ocr_snippets),
+        timeout=120,
     )
 
 
@@ -732,20 +844,23 @@ Output ONLY the JSON object with extraction_type, vendor_name, document_date, in
         return _parse_invoice_json(text, doc_type)
 
     if settings.gemini_api_key:
-        import google.generativeai as genai
-        genai.configure(api_key=settings.gemini_api_key)
+        types = _genai_types()
+        client = _genai_client(settings.gemini_api_key)
         raw, _ = _decode_base64(image_base64)
-        image_part = {"mime_type": mime_type or "image/jpeg", "data": raw}
-        for model_name in ("gemini-2.0-flash", "gemini-1.5-flash"):
+        image_part = types.Part.from_bytes(data=raw, mime_type=mime_type or "image/jpeg")
+        for model_name in _candidate_gemini_models(client):
             try:
-                model = genai.GenerativeModel(model_name)
                 response = await asyncio.to_thread(
-                    lambda: model.generate_content(
-                        [INVOICE_EXTRACTION_SYSTEM, user_prompt, image_part],
-                        generation_config=genai.GenerationConfig(temperature=0.1, max_output_tokens=2048),
+                    lambda: client.models.generate_content(
+                        model=model_name,
+                        contents=[INVOICE_EXTRACTION_SYSTEM, user_prompt, image_part],
+                        config=types.GenerateContentConfig(
+                            temperature=0.1,
+                            max_output_tokens=2048,
+                        ),
                     )
                 )
-                text = (response.text or "").strip()
+                text = _extract_response_text(response)
                 return _parse_invoice_json(text, doc_type)
             except Exception as e:
                 if "not found" in str(e).lower() or "404" in str(e).lower():
@@ -764,25 +879,38 @@ async def get_synthetic_ocr(image_base64: str, mime_type: str = "image/jpeg") ->
     When Google Cloud Vision is not configured, use the VLM to list all text visible in the image.
     Gives the main extractor OCR-like input so brand and product name can be exact.
     """
-    import google.generativeai as genai
+    types = _genai_types()
     settings = get_settings()
     if not settings.gemini_api_key or settings.vision_provider == "openai":
         return []
-    genai.configure(api_key=settings.gemini_api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    client = _genai_client(settings.gemini_api_key)
     raw, _ = _decode_base64(image_base64)
-    image_part = {"mime_type": mime_type or "image/jpeg", "data": raw}
+    image_part = types.Part.from_bytes(data=raw, mime_type=mime_type or "image/jpeg")
     prompt = """List every word, number, and phrase you can read from this product image. One item per line. Preserve exact spelling and capitalization. Include: brand names, product names, model numbers, labels, packaging text. No explanations—only the list."""
     try:
-        response = await asyncio.to_thread(
-            lambda: model.generate_content(
-                [prompt, image_part],
-                generation_config=genai.GenerationConfig(temperature=0, max_output_tokens=1024),
-            )
-        )
-        text = (response.text or "").strip()
-        lines = [s.strip() for s in text.splitlines() if s.strip()]
-        return lines[:80]
+        for model_name in _candidate_gemini_models(client):
+            try:
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        lambda: client.models.generate_content(
+                            model=model_name,
+                            contents=[prompt, image_part],
+                            config=types.GenerateContentConfig(
+                                temperature=0,
+                                max_output_tokens=1024,
+                            ),
+                        )
+                    ),
+                    timeout=45,
+                )
+                text = _extract_response_text(response)
+                lines = [s.strip() for s in text.splitlines() if s.strip()]
+                return lines[:80]
+            except Exception as e:
+                err = str(e).lower()
+                if "not found" in err or "404" in err:
+                    continue
+                raise
     except Exception:
         return []
 
@@ -820,6 +948,8 @@ def get_dummy_extraction() -> VisionExtractionResponse:
             weight="200g",
             dimensions="30 x 20 x 5 cm",
             brand="Demo Brand",
+            make=None,
+            model_year=None,
         ),
         extraction_copy=ExtractionCopy(
             seo_title="Demo Product – Sample Listing",

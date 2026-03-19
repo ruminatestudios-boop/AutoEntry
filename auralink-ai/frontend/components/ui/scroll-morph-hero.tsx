@@ -345,7 +345,7 @@ export default function ScrollMorphHero() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pointer-events-auto">
             <Link
-              href="/landing.html?mode=scan"
+              href="/home.html?mode=scan"
               className="inline-flex items-center justify-center gap-2 bg-zinc-900 text-white px-6 py-3.5 rounded-xl text-sm font-medium hover:bg-zinc-800 transition-colors shadow-lg shadow-zinc-900/10"
             >
               <svg

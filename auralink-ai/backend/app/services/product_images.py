@@ -140,21 +140,25 @@ def _fetch_product_images_sync(
     exact_model: Optional[str],
     gemini_api_key: str,
 ) -> List[str]:
-    import google.generativeai as genai
-
-    genai.configure(api_key=gemini_api_key)
+    try:
+        import google.genai as genai
+        from google.genai import types
+    except ModuleNotFoundError:
+        logger.warning("Gemini SDK missing for product images fetch. Install google-genai.")
+        return []
+    client = genai.Client(api_key=gemini_api_key)
     prompt = _build_image_search_prompt(brand or "", title or "", exact_model)
-    for model_name in ("gemini-2.0-flash", "gemini-1.5-flash"):
+    for model_name in ("gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"):
         try:
-            model = genai.GenerativeModel(model_name, tools=["google_search_retrieval"])
-            response = model.generate_content(
-                prompt,
-                generation_config=genai.GenerationConfig(
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
                     temperature=0.1,
                     max_output_tokens=1024,
                 ),
             )
-            text = (response.text or "").strip()
+            text = (getattr(response, "text", None) or "").strip()
             urls = _parse_image_urls_response(text)
             if urls:
                 validated = _filter_valid_image_urls(urls)
@@ -164,22 +168,6 @@ def _fetch_product_images_sync(
             if "not found" in err or "404" in err:
                 continue
             logger.warning("Product images fetch failed (%s): %s", model_name, e)
-            try:
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content(
-                    prompt,
-                    generation_config=genai.GenerationConfig(
-                        temperature=0.1,
-                        max_output_tokens=1024,
-                    ),
-                )
-                text = (response.text or "").strip()
-                urls = _parse_image_urls_response(text)
-                if urls:
-                    validated = _filter_valid_image_urls(urls)
-                    return validated if validated else urls
-            except Exception:
-                pass
     return []
 
 

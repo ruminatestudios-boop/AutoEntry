@@ -118,6 +118,25 @@ The dashboard and scan flow call the **backend** at `http://localhost:8000`. If 
 
 ---
 
+## 3c. Shopify end-to-end flow – why it might not work & two paths
+
+**Two ways to run the flow:**
+
+| Path | Entry | Design | When it works |
+|------|--------|--------|----------------|
+| **App flow** | **Dashboard → Upload** (`/dashboard/upload`) or home footer “Photo → Shopify (app)” | React app, same UI as dashboard | Backend (8000) running, frontend started with `NEXT_PUBLIC_API_URL=http://localhost:8000`. Upload → extract → save product → “Sync to Shopify” from dashboard. |
+| **Legacy / static flow** | **Landing scan** (`/landing.html?mode=scan`) → flow-2 → flow-choose-platform → flow-3 → Publish to Shopify | Static HTML (Tailwind + vanilla JS) | Backend (8000) + **publishing service (8001)** running. Frontend must use `NEXT_PUBLIC_API_URL=http://localhost:8000` so the **vision extract proxy** (used by flow-2) targets your local backend. |
+
+**Why the static flow can “not work”:**
+
+1. **Extract goes to wrong backend** – flow-2 calls `localhost:3000/api/v1/vision/extract` (same-origin). The Next.js proxy forwards that to the backend URL. If you didn’t set `NEXT_PUBLIC_API_URL=http://localhost:8000` when starting the frontend, the proxy still points at production; local backend never gets the request.
+2. **Publishing service not running** – “Publish to Shopify” on flow-3 talks to the **publishing service** on port **8001**. If that service isn’t running, the button fails (e.g. “Failed to fetch”).
+3. **Shopify not connected** – flow-3 checks for a connected Shopify store (via publishing service or backend). If none, it redirects to Connect Shopify; you must complete OAuth and return to flow-3.
+
+**Recommendation:** Use the **app flow** (`/dashboard/upload`) as the main path; it uses the same backend and doesn’t depend on the publishing service for the upload/sync step. Use the legacy flow only if you need the static scan → flow-2 → flow-3 journey (e.g. camera on a separate device).
+
+---
+
 ## 4. Launch for real users (Android + iPhone) – camera must work
 
 The in-app **camera** only works for **all users** (including iPhone) when the app is served over **HTTPS**.

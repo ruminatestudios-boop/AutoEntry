@@ -1,5 +1,5 @@
 """
-User usage: free scan quota for paywall flow.
+User usage: tier + scan quota for paywall flow.
 """
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -12,12 +12,12 @@ router = APIRouter()
 @router.get("", response_model=dict)
 async def get_usage(_auth: dict = Depends(verify_clerk)):
     """
-    Return current user's scan usage: free_scans_used, free_scans_limit (3), can_scan.
+    Return current user's scan usage: tier, scans_used, scans_limit, can_scan.
     Used by dashboard and to show paywall when can_scan is false.
     """
     supabase = get_supabase()
     if not supabase:
-        return {"free_scans_used": 0, "free_scans_limit": 3, "can_scan": True, "demo": True}
+        return {"tier": "starter", "scans_used": 0, "scans_limit": 10, "can_scan": True, "demo": True}
     user_id = _auth.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Missing user id")

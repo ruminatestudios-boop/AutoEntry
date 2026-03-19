@@ -145,7 +145,7 @@ def _looks_like_product_title(s: str) -> bool:
     return True
 
 
-def best_brand_and_title_from_ocr(ocr_snippets: list[str]) -> Tuple[Optional[str], Optional[str]]:
+def best_brand_and_title_from_ocr(ocr_snippets: Optional[list[str]]) -> Tuple[Optional[str], Optional[str]]:
     """Pick best OCR line for brand and for product title. Brand is usually in the first few lines."""
     if not ocr_snippets:
         return None, None
@@ -241,7 +241,7 @@ def run_ocr_tesseract(image_bytes: bytes) -> list[str]:
 
 
 def enrich_attributes_from_ocr(
-    ocr_snippets: list[str],
+    ocr_snippets: Optional[list[str]],
     current_material: Optional[str] = None,
     current_brand: Optional[str] = None,
 ) -> tuple[Optional[str], Optional[str]]:
@@ -251,6 +251,8 @@ def enrich_attributes_from_ocr(
     """
     material = current_material
     brand = current_brand
+    if not ocr_snippets:
+        return material, brand
     combined = " ".join(ocr_snippets).lower()
     if not material:
         material = infer_material_from_text(combined)
@@ -266,7 +268,7 @@ DIMENSION_PATTERNS = [
 ]
 
 
-def extract_dimensions_from_ocr(ocr_snippets: list[str]) -> Optional[str]:
+def extract_dimensions_from_ocr(ocr_snippets: Optional[list[str]]) -> Optional[str]:
     """Extract dimensions string from OCR (e.g. '30×20×5 cm'). Returns None if not found."""
     if not ocr_snippets:
         return None

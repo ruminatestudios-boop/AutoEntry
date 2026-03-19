@@ -1,8 +1,10 @@
 /**
  * Proxies POST /api/v1/vision/extract to the SyncLyst backend.
- * Pages API fallback so /api/v1/vision/extract always responds on localhost.
+ * Use NEXT_PUBLIC_API_URL for local dev (e.g. http://localhost:8000) so the
+ * static flow (flow-2 → flow-3) and app flow both hit your local backend.
  */
 const BACKEND =
+  process.env.NEXT_PUBLIC_API_URL ||
   process.env.NEXT_PUBLIC_SYNCLYST_BACKEND_URL ||
   process.env.SYNCLYST_BACKEND_URL ||
   "https://auralink-api-299567386855.us-central1.run.app";
@@ -18,17 +20,28 @@ export default async function handler(req, res) {
   }
   const url = `${BACKEND.replace(/\/$/, "")}/api/v1/vision/extract`;
   try {
+    const abort = new AbortController();
+    const timeoutMs = 120_000;
+    const timeoutId = setTimeout(() => abort.abort(), timeoutMs);
+
     const headers = { "Content-Type": "application/json" };
     if (req.headers.authorization) headers["Authorization"] = req.headers.authorization;
     const r = await fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(req.body || {}),
+      signal: abort.signal,
     });
+    clearTimeout(timeoutId);
     const data = await r.json().catch(() => ({}));
     res.status(r.status).json(data);
   } catch (e) {
     console.error("[vision/extract proxy]", e);
-    res.status(502).json({ detail: "Extraction service unavailable. Try again later." });
+    const isAbort = e && (e.name === "AbortError" || e.code === "UND_ERR_HEADERS_TIMEOUT");
+    res.status(502).json({
+      detail: isAbort
+        ? "Extraction timed out. Try again (or use a smaller photo)."
+        : "Extraction service unavailable. Try again later.",
+    });
   }
 }

@@ -86,7 +86,7 @@
         tiktok_shop: { name: 'TikTok Shop', domain: 'tiktok.com', letter: 'T' },
         amazon: { name: 'Amazon', domain: 'amazon.com', letter: 'A' },
         shopify: { name: 'Shopify', domain: 'shopify.com', letter: 'S' },
-        ebay: { name: 'eBay', domain: 'ebay.com', letter: 'E' },
+        ebay: { name: 'eBay', domain: 'ebay.com', letter: 'E', logoUrl: '/assets/ebay-logo.png' },
         etsy: { name: 'Etsy', domain: 'etsy.com', letter: 'E' },
         depop: { name: 'Depop', domain: 'depop.com', letter: 'D' },
         walmart: { name: 'Walmart', domain: 'walmart.com', letter: 'W' },
@@ -123,7 +123,7 @@
           var st = statuses[i];
           var row = document.createElement('div');
           row.className = 'rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between';
-          var logoUrl = 'https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128';
+          var logoUrl = m.logoUrl || ('https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128');
           var statusText = st === 'done' ? 'Done' : (st === 'connecting' ? 'Connecting…' : 'Waiting…');
           var statusClass = st === 'done' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-zinc-100 border-zinc-200 text-zinc-600';
           row.innerHTML = '<div class="flex items-center gap-3">' +

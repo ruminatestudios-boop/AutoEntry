@@ -58,7 +58,7 @@
         tiktok_shop: { name: 'TikTok Shop', domain: 'tiktok.com', letter: 'T' },
         amazon: { name: 'Amazon', domain: 'amazon.com', letter: 'A' },
         shopify: { name: 'Shopify', domain: 'shopify.com', letter: 'S' },
-        ebay: { name: 'eBay', domain: 'ebay.com', letter: 'E' },
+        ebay: { name: 'eBay', domain: 'ebay.com', letter: 'E', logoUrl: '/assets/ebay-logo.png' },
         etsy: { name: 'Etsy', domain: 'etsy.com', letter: 'E' },
         depop: { name: 'Depop', domain: 'depop.com', letter: 'D' },
         walmart: { name: 'Walmart', domain: 'walmart.com', letter: 'W' },
@@ -82,7 +82,7 @@
         selected.forEach(function(id, i) {
           var m = meta[id];
           if (!m) return;
-          var logoUrl = 'https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128';
+          var logoUrl = m.logoUrl || ('https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128');
           var statusHtml;
           if (i === 0) statusHtml = '<span class="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-white text-xs flex-shrink-0"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg></span>';
           else if (i === 1) statusHtml = '<span class="w-5 h-5 rounded-full border-2 border-zinc-300 border-t-zinc-600 animate-spin flex-shrink-0"></span>';

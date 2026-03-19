@@ -89,7 +89,10 @@ async def list_universal_products(limit: int = 50, offset: int = 0, _auth: dict 
     """List master products (for Control Center). Uses demo store when DB not configured."""
     supabase = get_supabase()
     if supabase:
-        return list_products(supabase, limit=limit, offset=offset)
+        try:
+            return list_products(supabase, limit=limit, offset=offset)
+        except Exception as e:
+            raise HTTPException(status_code=503, detail=f"Database list failed: {str(e)}")
     return list_products_demo(limit=limit, offset=offset)
 
 

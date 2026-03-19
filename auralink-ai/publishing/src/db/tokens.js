@@ -14,7 +14,21 @@ export function storageUserId(userId) {
 }
 
 export async function getTokenRow(userId, platform) {
-  if (isDevMode()) return devGetTokenRow(userId, platform);
+  if (isDevMode()) {
+    // Dev-token bypass: use env Shopify token so publish works without OAuth (survives restarts).
+    if (platform === 'shopify' && process.env.SHOPIFY_DEV_ACCESS_TOKEN && process.env.SHOPIFY_DEV_SHOP_DOMAIN) {
+      const shop = process.env.SHOPIFY_DEV_SHOP_DOMAIN.replace(/\.myshopify\.com$/i, '') + '.myshopify.com';
+      return {
+        access_token: process.env.SHOPIFY_DEV_ACCESS_TOKEN,
+        refresh_token: null,
+        expires_at: null,
+        shop_id: shop,
+        shop_domain: shop,
+        status: 'connected',
+      };
+    }
+    return devGetTokenRow(userId, platform);
+  }
   const db = getSupabase();
   if (!db) return null;
   const uid = storageUserId(userId);
@@ -88,7 +102,14 @@ export function getDecryptedRefreshToken(row) {
 
 export async function getConnectedStores(userId) {
   const platforms = getEnabledPlatforms();
-  if (isDevMode()) return devGetConnectedStores(userId, platforms);
+  if (isDevMode()) {
+    const out = devGetConnectedStores(userId, platforms);
+    if (platforms.includes('shopify') && process.env.SHOPIFY_DEV_ACCESS_TOKEN && process.env.SHOPIFY_DEV_SHOP_DOMAIN) {
+      const shop = process.env.SHOPIFY_DEV_SHOP_DOMAIN.replace(/\.myshopify\.com$/i, '') + '.myshopify.com';
+      out.shopify = { status: 'connected', shop_domain: shop, shop_id: shop };
+    }
+    return out;
+  }
   const db = getSupabase();
   if (!db) return Object.fromEntries(platforms.map((p) => [p, { status: 'not_connected' }]));
   const { data } = await db.from('platform_tokens').select('platform, status, shop_domain, shop_id, region').eq('user_id', storageUserId(userId));

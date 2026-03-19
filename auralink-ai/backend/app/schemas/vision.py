@@ -18,6 +18,10 @@ class ExtractionAttributes(BaseModel):
     weight: Optional[str] = None  # e.g. "200g", "1.5 kg" (display)
     dimensions: Optional[str] = None  # e.g. "10x20x5 cm"
     brand: Optional[str] = None
+    # Make: manufacturer or parent brand when different from brand (e.g. vehicles, electronics). Often same as brand.
+    make: Optional[str] = None
+    # Model year or release year when visible on label/packaging (e.g. "2024", "2023", "SS24").
+    model_year: Optional[str] = None
     # Price when visible on label/packaging
     price_display: Optional[str] = None  # e.g. "$19.99", "£12.50" exactly as shown
     price_value: Optional[float] = None  # numeric for calculations (no currency symbol)

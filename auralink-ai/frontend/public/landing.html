@@ -30,6 +30,25 @@
             border-color: #000;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
+        .pricing-card--inactive {
+            opacity: 0.65;
+        }
+        /* Free tier always greyed out; paid tiers stay black and active */
+        .pricing-card--free {
+            opacity: 0.6;
+            background: #fafafa;
+            border-color: #e5e5e5;
+        }
+        .pricing-card--free:hover {
+            border-color: #e5e5e5;
+            box-shadow: none;
+        }
+        .pricing-card--free .vercel-headline,
+        .pricing-card--free h3,
+        .pricing-card--free .text-\[#111\] { color: #737373 !important; }
+        .pricing-card--free .text-4xl { color: #737373 !important; }
+        .pricing-card--free .text-\[#666\] { color: #a3a3a3 !important; }
+        .pricing-card--free .text-emerald-600 { color: #a7a7a7 !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -180,7 +199,7 @@
   <div id="scan-view" class="fixed inset-0 z-[80] hidden flex-col bg-[#fafafa] text-[#111]">
     <div class="scan-view-header flex items-center justify-between px-4 h-14 border-b border-[#eaeaea] bg-white shrink-0">
       <div></div>
-      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#111]">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></a>
+      <a href="/landing.html" class="inline-flex items-center"><img src="/synclyst-logo.png" alt="SyncLyst®" class="h-7 w-auto" /></a>
       <a href="/flow-batch-upload.html" class="text-xs font-medium text-amber-600 hover:text-amber-700">Batch</a>
     </div>
     <p id="scan-api-hint" class="hidden text-[10px] text-zinc-400 px-4 py-1 bg-zinc-100 border-b border-zinc-200 truncate" title="API URL used for extraction"></p>
@@ -288,6 +307,23 @@
     </div>
   </div>
 
+  <!-- Upgrade modal (when scan limit reached) -->
+  <div id="upgrade-modal" class="fixed inset-0 z-[95] hidden flex items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="upgrade-modal-title">
+    <div class="w-full max-w-md p-6 sm:p-8 shadow-xl rounded-2xl bg-white border border-zinc-200" onclick="event.stopPropagation()">
+      <h2 id="upgrade-modal-title" class="text-xl font-bold text-zinc-900 mb-2">Scan limit reached</h2>
+      <p id="upgrade-modal-message" class="text-zinc-600 text-sm leading-relaxed mb-6">You've used all your scans for this month on your current plan. Upgrade to get more scans and unlock more features.</p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a href="/dashboard/upgrade" id="upgrade-modal-view-plans" class="inline-flex items-center justify-center gap-2 bg-zinc-900 text-white font-semibold px-5 py-3 rounded-xl hover:bg-zinc-800 transition-colors">
+          View plans
+          <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
+        </a>
+        <button type="button" id="upgrade-modal-close" class="inline-flex items-center justify-center px-5 py-3 rounded-xl border border-zinc-300 text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors">
+          Maybe later
+        </button>
+      </div>
+    </div>
+  </div>
+
     <!-- Nav -->
     <header id="main-header" class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#eaeaea]">
         <nav class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between relative">
@@ -299,7 +335,7 @@
                 </div>
             </div>
             <a href="#" class="flex items-center gap-2 flex-shrink-0 absolute left-1/2 -translate-x-1/2">
-                <span class="text-xl font-bold tracking-tight text-[#111]">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></span>
+                <img src="/synclyst-logo.png" alt="SyncLyst®" class="h-7 w-auto" />
             </a>
             <div class="hidden md:flex items-center gap-4 flex-1 justify-end min-w-0">
                 <a href="/dashboard" class="text-sm text-[#555] hover:text-[#111] transition-colors">Login</a>
@@ -330,7 +366,7 @@
                     SyncLyst is the platform for sellers who list on multiple marketplaces. Turn product photos into SEO-ready listings for Shopify, Etsy, eBay, TikTok Shop, and Amazon—instantly.
                 </p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="/landing.html?mode=scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center gap-2.5 group inline-flex bg-black">
+                    <a href="/home.html?mode=scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center gap-2.5 group inline-flex bg-black">
                         <div class="relative flex items-center justify-center w-5 h-5 overflow-hidden">
                             <i data-lucide="camera" class="w-5 h-5 relative z-10"></i>
                             <div class="absolute left-0 right-0 h-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] animate-scan-sweep z-20"></div>
@@ -351,17 +387,12 @@
             </div>
         </section>
 
-        <!-- Marquee: Live integrations (Shopify, Etsy, eBay, TikTok Shop) -->
+        <!-- Marquee: Shopify live -->
         <section class="py-5 border-y border-[#eaeaea] overflow-hidden bg-white">
             <div class="flex flex-wrap items-center justify-center gap-3 px-4">
-                <div class="inline-flex flex-wrap items-center justify-center gap-3 rounded-xl border border-[#eaeaea] bg-white px-5 py-3 shadow-sm">
-                    <div class="inline-flex items-center justify-center gap-2">
-                        <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="Shopify" class="h-5 w-5 rounded" referrerPolicy="no-referrer" />
-                        <img src="https://www.google.com/s2/favicons?domain=etsy.com&sz=128" alt="Etsy" class="h-5 w-5 rounded" referrerPolicy="no-referrer" />
-                        <img src="https://www.google.com/s2/favicons?domain=ebay.com&sz=128" alt="eBay" class="h-5 w-5 rounded" referrerPolicy="no-referrer" />
-                        <img src="https://www.google.com/s2/favicons?domain=tiktok.com&sz=128" alt="TikTok Shop" class="h-5 w-5 rounded" referrerPolicy="no-referrer" />
-                        <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded text-white ml-1"><span class="text-emerald-500">Live</span></span>
-                    </div>
+                <div class="inline-flex flex-wrap items-center justify-center gap-2 rounded-xl border border-[#eaeaea] bg-white px-5 py-3 shadow-sm">
+                    <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="Shopify" class="h-5 w-5 rounded" referrerPolicy="no-referrer" />
+                    <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded text-white"><span>SHOPIFY </span><span class="text-emerald-500">LIVE NOW</span></span>
                 </div>
             </div>
             <p class="text-center text-xs text-zinc-400 mt-2 mb-4 vercel-body">List to your connected stores in one flow</p>
@@ -573,58 +604,96 @@
                     <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">Pricing</h2>
                     <p class="text-[#555] vercel-body">Choose the plan that fits your scale. Pay by scans—no surprise API bills.</p>
                 </div>
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div class="vercel-card p-8 flex flex-col">
-                        <div class="mb-8">
-                            <h3 class="text-xl font-bold mb-2">Hobby</h3>
-                            <p class="text-sm text-[#666]">For personal projects.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="pricing-cards">
+                    <!-- Starter (free tier: always greyed out) -->
+                    <div class="pricing-card pricing-card--free vercel-card p-8 flex flex-col transition-all duration-200" data-tier="starter">
+                        <div class="mb-6">
+                            <h3 class="text-xl font-bold mb-2">Starter</h3>
+                            <p class="text-sm text-[#666]">Try it free. No credit card needed.</p>
                         </div>
-                        <div class="mb-8">
-                            <span class="text-4xl font-extrabold tracking-tighter">$0</span>
+                        <div class="mb-6">
+                            <span class="text-4xl font-extrabold tracking-tighter">£0</span>
+                            <span class="text-[#666] text-sm ml-1">/mo</span>
                         </div>
-                        <ul class="space-y-4 mb-10 flex-1">
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>3 Scans / Month</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Multi-store sync</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Web enrichment</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Community Support</li>
+                        <ul class="space-y-3 mb-8 flex-1 text-sm text-[#666] border-t border-[#eaeaea] pt-6">
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i><strong class="text-[#111]">10 scans per month</strong></li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Basic AI extraction</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Shopify integration</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Saves to Shopify drafts</li>
+                            <li class="flex items-center gap-3 text-[#999]"><span class="w-4 shrink-0 text-center">—</span>Web enrichment</li>
+                            <li class="flex items-center gap-3 text-[#999]"><span class="w-4 shrink-0 text-center">—</span>Batch processing</li>
+                            <li class="flex items-center gap-3 text-[#999]"><span class="w-4 shrink-0 text-center">—</span>Smart suggest</li>
+                            <li class="flex items-center gap-3 text-[#999]"><span class="w-4 shrink-0 text-center">—</span>More platforms</li>
                         </ul>
-                        <button class="w-full py-2 rounded-md font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Start for Free</button>
+                        <button type="button" data-tier="starter" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Start for Free</button>
                     </div>
-                    <div class="vercel-card p-8 flex flex-col border-black shadow-[0_0_40px_rgba(0,0,0,0.05)]">
-                        <div class="mb-8">
+                    <!-- Pro -->
+                    <div class="pricing-card vercel-card p-8 flex flex-col transition-all duration-200" data-tier="pro">
+                        <div class="mb-6">
                             <h3 class="text-xl font-bold mb-2">Pro</h3>
-                            <p class="text-sm text-[#666]">For professional sellers.</p>
+                            <p class="text-sm text-[#666]">For sellers just getting started on Shopify.</p>
                         </div>
-                        <div class="mb-8">
-                            <span class="text-4xl font-extrabold tracking-tighter">$29</span>
+                        <div class="mb-6">
+                            <span class="text-4xl font-extrabold tracking-tighter">£9</span>
                             <span class="text-[#666] text-sm ml-1">/mo</span>
                         </div>
-                        <ul class="space-y-4 mb-10 flex-1">
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>250 Scans / Month</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Multi-store sync</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Web enrichment</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Priority Support</li>
+                        <ul class="space-y-3 mb-8 flex-1 text-sm text-[#666] border-t border-[#eaeaea] pt-6">
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i><strong class="text-[#111]">100 scans per month</strong></li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Full AI extraction</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Shopify integration</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Publish live or save draft</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Web enrichment (50 scans)</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Email support</li>
+                            <li class="flex items-center gap-3 text-[#999]"><span class="w-4 shrink-0 text-center">—</span>Batch processing</li>
+                            <li class="flex items-center gap-3 text-[#999]"><span class="w-4 shrink-0 text-center">—</span>Smart suggest</li>
                         </ul>
-                        <button class="w-full py-2 rounded-md font-medium bg-black text-white border border-black hover:bg-white hover:text-black transition-all">Upgrade plan</button>
+                        <button type="button" data-tier="pro" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade plan</button>
                     </div>
-                    <div class="vercel-card p-8 flex flex-col">
-                        <div class="mb-8">
-                            <h3 class="text-xl font-bold mb-2">Enterprise</h3>
-                            <p class="text-sm text-[#666]">For large teams & batch.</p>
+                    <!-- Growth (Most popular) - black accent -->
+                    <div class="pricing-card vercel-card p-8 flex flex-col border-2 border-black shadow-[0_0_40px_rgba(0,0,0,0.06)] relative transition-all duration-200" data-tier="growth">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-zinc-100 text-zinc-900 border border-zinc-300">Most popular</span>
+                        <div class="mb-6 mt-2">
+                            <h3 class="text-xl font-bold mb-2">Growth</h3>
+                            <p class="text-sm text-[#666]">For active sellers listing regularly.</p>
                         </div>
-                        <div class="mb-8">
-                            <span class="text-4xl font-extrabold tracking-tighter">$79</span>
+                        <div class="mb-6">
+                            <span class="text-4xl font-extrabold tracking-tighter">£29</span>
                             <span class="text-[#666] text-sm ml-1">/mo</span>
                         </div>
-                        <ul class="space-y-4 mb-10 flex-1">
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>1,000 Scans / Month</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i><strong>Batch processing</strong></li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Multi-store sync</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>API Access</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>Priority Support</li>
-                            <li class="flex items-center gap-3 text-sm text-[#666]"><i data-lucide="check" class="w-4 h-4 text-black"></i>SSO / SAML (on request)</li>
+                        <ul class="space-y-3 mb-8 flex-1 text-sm text-[#666] border-t border-[#eaeaea] pt-6">
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i><strong class="text-[#111]">500 scans per month</strong></li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Full AI extraction</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Shopify integration</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Publish live or save draft</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Web enrichment (all scans)</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Smart suggest</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Batch processing</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Priority support</li>
                         </ul>
-                        <button class="w-full py-2 rounded-md font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade plan</button>
+                        <button type="button" data-tier="growth" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-black text-white border border-black hover:bg-zinc-800 transition-all">Upgrade plan</button>
+                    </div>
+                    <!-- Scale -->
+                    <div class="pricing-card vercel-card p-8 flex flex-col transition-all duration-200" data-tier="scale">
+                        <div class="mb-6">
+                            <h3 class="text-xl font-bold mb-2">Scale</h3>
+                            <p class="text-sm text-[#666]">For high volume sellers and growing stores.</p>
+                        </div>
+                        <div class="mb-6">
+                            <span class="text-4xl font-extrabold tracking-tighter">£79</span>
+                            <span class="text-[#666] text-sm ml-1">/mo</span>
+                        </div>
+                        <ul class="space-y-3 mb-8 flex-1 text-sm text-[#666] border-t border-[#eaeaea] pt-6">
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i><strong class="text-[#111]">Unlimited scans</strong></li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Full AI extraction</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Shopify integration</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Publish live or save draft</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Web enrichment unlimited</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Smart suggest + seller brain</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Batch processing</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>API access</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Dedicated support</li>
+                        </ul>
+                        <button type="button" data-tier="scale" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade plan</button>
                     </div>
                 </div>
             </div>
@@ -650,7 +719,7 @@
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 md:gap-12 mb-16">
                 <div class="col-span-2">
                     <a href="#" class="inline-flex items-center gap-2 mb-4">
-                        <span class="text-xl font-bold tracking-tight text-[#111]">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></span>
+                        <img src="/synclyst-logo.png" alt="SyncLyst®" class="h-7 w-auto" />
                     </a>
                     <p class="text-sm text-[#555] max-w-xs leading-relaxed vercel-body">
                         The high-performance listing machine for modern sellers. Built for speed, optimized for SEO.
@@ -659,7 +728,7 @@
                 <div>
                     <h4 class="text-xs font-semibold text-[#111] uppercase tracking-wider mb-4">Get Started</h4>
                     <ul class="space-y-3 text-sm text-[#555]">
-                        <li><a href="/landing.html?mode=scan" class="hover:text-[#111] transition-colors">Scan your first item</a></li>
+                        <li><a href="/home.html?mode=scan" class="hover:text-[#111] transition-colors">Scan your first item</a></li>
                         <li><a href="/flow-batch-upload.html" class="hover:text-[#111] transition-colors">Batch upload <span class="text-[10px] font-semibold text-amber-600 uppercase">Premium</span></a></li>
                         <li><a href="#pricing" onclick="handleNavigate(event, 'pricing')" class="hover:text-[#111] transition-colors">Pricing</a></li>
                     </ul>
@@ -770,7 +839,7 @@
         const marketplaces = [
             { name: 'Amazon', domain: 'amazon.com' },
             { name: 'TikTok', domain: 'tiktok.com' },
-            { name: 'eBay', domain: 'ebay.com' },
+            { name: 'eBay', domain: 'ebay.com', logoUrl: '/assets/ebay-logo.png' },
             { name: 'Meta', domain: 'meta.com' },
             { name: 'Etsy', domain: 'etsy.com' },
             { name: 'Depop', domain: 'depop.com' },
@@ -783,7 +852,8 @@
         items.forEach(m => {
             const div = document.createElement('div');
             div.className = 'mx-12 flex items-center justify-center';
-            div.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=${m.domain}&sz=128" alt="${m.name}" class="h-8 w-auto hover:scale-110 transition-all duration-300" referrerPolicy="no-referrer">`;
+            const imgSrc = m.logoUrl || `https://www.google.com/s2/favicons?domain=${m.domain}&sz=128`;
+            div.innerHTML = `<img src="${imgSrc}" alt="${m.name}" class="h-8 w-auto hover:scale-110 transition-all duration-300" referrerPolicy="no-referrer">`;
             marqueeContent.appendChild(div);
         });
 
@@ -878,7 +948,7 @@
         const connectors = [
             { id: 'shopify', name: 'Shopify', status: 'Active', icon: 'shopify.com' },
             { id: 'etsy', name: 'Etsy', status: 'Active', icon: 'etsy.com' },
-            { id: 'ebay', name: 'eBay', status: 'Active', icon: 'ebay.com' },
+            { id: 'ebay', name: 'eBay', status: 'Active', icon: 'ebay.com', logoUrl: '/assets/ebay-logo.png' },
             { id: 'tiktok', name: 'TikTok Shop', status: 'Active', icon: 'tiktok.com' },
             { id: 'amazon', name: 'Amazon SP-API', status: 'Active', icon: 'amazon.com' },
             { id: 'depop', name: 'Depop', status: 'Coming Soon', icon: 'depop.com' },
@@ -905,12 +975,12 @@
             const btn = document.createElement(isActive ? 'a' : 'button');
             btn.className = `vercel-card p-6 flex flex-col items-center justify-center text-center group transition-all duration-200 ${isActive ? 'cursor-pointer hover:scale-[1.02] hover:border-black hover:shadow-lg' : 'cursor-pointer hover:scale-[1.02]'}`;
             if (isActive) {
-                btn.href = '/flow-choose-platform.html';
+                btn.href = '/home.html?mode=scan';
                 btn.setAttribute('aria-label', `List on ${c.name}`);
             }
             btn.innerHTML = `
                 <span class="inline-block mb-4 ${isActive ? 'integration-icon-live' : ''}">
-                    <img src="https://www.google.com/s2/favicons?domain=${c.icon}&sz=128" alt="${c.name}" class="w-10 h-10 rounded-lg transition-transform duration-200 block group-hover:scale-105" referrerPolicy="no-referrer">
+                    <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="w-10 h-10 rounded-lg transition-transform duration-200 block group-hover:scale-105" referrerPolicy="no-referrer">
                 </span>
                 <span class="text-sm font-bold mb-2">${c.name}</span>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-zinc-50 text-zinc-500 border-zinc-100'}">
@@ -936,7 +1006,7 @@
             { q: "Can I edit the listing before it goes live on my store?", a: "Of course. Every scan creates a 'Draft' first. You can review, tweak the SEO title, adjust the price, or swap tags before hitting 'Publish' to sync it to your connected store." },
             { q: "How does it handle messy backgrounds or poor lighting?", a: "Our vision models are trained on real-world seller environments. While good lighting helps, the AI is excellent at isolating the product from busy backgrounds and correcting for minor lighting issues." },
             { q: "Which marketplaces are supported right now?", a: "We're live with Shopify, Etsy, eBay, TikTok Shop, and Amazon SP-API. More marketplaces are in the pipeline." },
-            { q: "Is there a limit to how many products I can scan?", a: "The Hobby plan includes 3 free scans per month. Pro includes 250 scans per month; Enterprise includes 1,000 scans plus batch processing for high-volume sellers." },
+            { q: "Is there a limit to how many products I can scan?", a: "Starter includes 10 scans per month; Pro includes 100; Growth includes 500; Scale includes unlimited scans. When you hit your limit, we'll prompt you to upgrade." },
             { q: "Is my store data and product imagery secure?", a: "Security is our priority. We use enterprise-grade encryption and never share your product data or images with third parties. Your data is used only to generate your specific listings." }
         ];
         const faqContainer = document.getElementById('faq-container');
@@ -1011,7 +1081,7 @@
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">4. Credits &amp; Billing</h4>
-                <p>Free accounts: 3 scans per month. Paid plans billed monthly in advance. Fees non-refundable unless required by law. Pricing changes with 30 days notice.</p>
+                <p>Starter: 10 scans per month. Pro, Growth, and Scale billed monthly in advance. Fees non-refundable unless required by law. Pricing changes with 30 days notice.</p>
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">5. AI Content &amp; Liability</h4>
@@ -1083,6 +1153,130 @@
 
         window.openModal = openModal;
         window.closeModal = closeModal;
+
+        // Scan limit and upgrade modal (per-tier limits; scans reset monthly)
+        var TIER_LIMITS = { starter: 10, pro: 100, growth: 500, scale: Infinity };
+        function getScansStorageKey() {
+          var d = new Date();
+          return 'synclyst_scans_' + d.getFullYear() + '_' + String(d.getMonth() + 1).padStart(2, '0');
+        }
+        function getTier() {
+          try {
+            var t = localStorage.getItem('synclyst_tier') || 'starter';
+            if (TIER_LIMITS.hasOwnProperty(t)) return t;
+          } catch (e) {}
+          return 'starter';
+        }
+        function setTier(tier) {
+          try {
+            if (TIER_LIMITS.hasOwnProperty(tier)) localStorage.setItem('synclyst_tier', tier);
+          } catch (e) {}
+        }
+        function getScansUsed() {
+          try {
+            var n = parseInt(localStorage.getItem(getScansStorageKey()), 10);
+            return isNaN(n) ? 0 : n;
+          } catch (e) { return 0; }
+        }
+        function setScansUsed(n) {
+          try {
+            localStorage.setItem(getScansStorageKey(), String(Math.max(0, n)));
+          } catch (e) {}
+        }
+        function incrementScansUsed() {
+          setScansUsed(getScansUsed() + 1);
+        }
+        function getScanLimit() {
+          var limit = TIER_LIMITS[getTier()];
+          return limit === Infinity ? 999999 : limit;
+        }
+        function canScan() {
+          return getScansUsed() < getScanLimit();
+        }
+        function getNextUpgradeTier() {
+          var current = getTier();
+          if (current === 'starter') return 'pro';
+          if (current === 'pro') return 'growth';
+          return 'scale';
+        }
+        function showUpgradeModal() {
+          var modal = document.getElementById('upgrade-modal');
+          var msg = document.getElementById('upgrade-modal-message');
+          var used = getScansUsed();
+          var limit = getScanLimit();
+          var tier = getTier();
+          if (msg) {
+            if (limit >= 999999) msg.textContent = 'Upgrade to unlock more features.';
+            else msg.textContent = "You've used all " + limit + " scans for this month on " + tier + ". Upgrade to get more scans and unlock more features.";
+          }
+          if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+        function closeUpgradeModal() {
+          var modal = document.getElementById('upgrade-modal');
+          if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        }
+        document.getElementById('upgrade-modal-close').addEventListener('click', closeUpgradeModal);
+        document.getElementById('upgrade-modal').addEventListener('click', function(e) { if (e.target === this) closeUpgradeModal(); });
+        var upgradeViewPlans = document.getElementById('upgrade-modal-view-plans');
+        if (upgradeViewPlans) {
+          upgradeViewPlans.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeUpgradeModal();
+            // Quota hit flow: take user straight into paid checkout flow
+            var nextTier = getNextUpgradeTier();
+            window.location.href = '/dashboard/upgrade?tier=' + nextTier + '&autostart=1';
+          });
+        }
+        function renderPricingCards() {
+          var current = getTier();
+          var cards = document.querySelectorAll('.pricing-card');
+          var tierOrder = ['starter', 'pro', 'growth', 'scale'];
+          cards.forEach(function(card) {
+            var tier = card.getAttribute('data-tier');
+            var btn = card.querySelector('.pricing-tier-btn');
+            var isCurrent = tier === current;
+            /* Only grey out free tier (Starter); Pro, Growth, Scale stay black and active */
+            if (tier !== 'starter') card.classList.remove('pricing-card--inactive');
+            if (btn) {
+              btn.disabled = isCurrent;
+              if (isCurrent) {
+                btn.textContent = 'Current plan';
+                btn.className = 'pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-zinc-100 text-zinc-600 border border-zinc-200 cursor-default transition-all';
+              } else {
+                btn.textContent = tier === 'starter' ? 'Start for Free' : 'Upgrade plan';
+                if (tier === 'growth') {
+                  btn.className = 'pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-black text-white border border-black hover:bg-zinc-800 transition-all';
+                } else {
+                  btn.className = 'pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all';
+                }
+              }
+            }
+          });
+        }
+        renderPricingCards();
+
+        document.querySelectorAll('.pricing-tier-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            if (btn.disabled) return;
+            var tier = btn.getAttribute('data-tier');
+            if (!tier) return;
+            // Paid tiers: go to app upgrade flow → Stripe Checkout
+            if (tier === 'pro' || tier === 'growth' || tier === 'scale') {
+              window.location.href = '/dashboard/upgrade?tier=' + tier + '&autostart=1';
+              return;
+            }
+            // Starter: sign up then dashboard (free tier)
+            if (tier === 'starter') {
+              window.location.href = '/sign-up';
+              return;
+            }
+            if (getTier() !== tier) setTier(tier);
+            renderPricingCards();
+            var el = document.getElementById('pricing');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        });
 
         // Scan mode: show scan view when ?mode=scan
         var urlParams = new URLSearchParams(window.location.search);
@@ -1178,7 +1372,8 @@
               try {
                 sessionStorage.removeItem('auralink_review_draft');
                 sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
-                window.location.href = '/flow-choose-platform.html';
+                sessionStorage.setItem('synclyst_selected_platform', 'shopify');
+                window.location.href = '/flow-2.html';
                 return true;
               } catch (err) { return false; }
             }
@@ -1187,8 +1382,8 @@
             if (!saveAndGo(payload)) {
               delete payload.imageDataUrl;
               if (!saveAndGo(payload)) {
-                try { sessionStorage.removeItem('auralink_review_draft'); sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); } catch (e) {}
-                window.location.href = '/flow-choose-platform.html';
+                try { sessionStorage.removeItem('auralink_review_draft'); sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); sessionStorage.setItem('synclyst_selected_platform', 'shopify'); } catch (e) {}
+                window.location.href = '/flow-2.html';
               }
             }
           }
@@ -1236,7 +1431,7 @@
               })
                 .then(function(r) {
                   clearTimeout(timeoutId);
-                  if (r.status === 402) { showExtractError('Free scans used', 'You\'ve used all 3 free scans. Upgrade to continue.'); return; }
+                  if (r.status === 402) { showExtractError('Scan limit reached', 'You\'ve used your scans for this month. Upgrade to continue.'); return; }
                   if (!r.ok) return r.text().then(function(text) { throw new Error('Server error (' + r.status + ')'); });
                   return r.json();
                 })
@@ -1302,7 +1497,8 @@
               }
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: b64 }));
-                window.location.href = '/flow-choose-platform.html';
+                sessionStorage.setItem('synclyst_selected_platform', 'shopify');
+                window.location.href = '/flow-2.html';
               } catch (e) {
                 if (onError) onError(e);
               }
@@ -1310,7 +1506,8 @@
             img.onerror = function() {
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: rawB64 }));
-                window.location.href = '/flow-choose-platform.html';
+                sessionStorage.setItem('synclyst_selected_platform', 'shopify');
+                window.location.href = '/flow-2.html';
               } catch (e) {
                 if (onError) onError(e);
               }
@@ -1337,6 +1534,7 @@
           startCamera();
 
           if (captureBtn) captureBtn.addEventListener('click', function() {
+            if (typeof canScan === 'function' && !canScan()) { showUpgradeModal(); return; }
             var canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
@@ -1348,6 +1546,7 @@
             if (!base64 || base64.length < 100) { if (cameraErrorEl) { cameraErrorEl.textContent = 'Invalid image.'; cameraErrorEl.classList.remove('hidden'); } return; }
             if (cameraErrorEl) cameraErrorEl.classList.add('hidden');
             if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
+            if (typeof incrementScansUsed === 'function') incrementScansUsed();
             savePendingScanAndGoToFlow2(base64, function() {
               if (cameraErrorEl) { cameraErrorEl.textContent = 'Could not save image. Try again.'; cameraErrorEl.classList.remove('hidden'); }
             });
@@ -1360,6 +1559,7 @@
             uploadInput.addEventListener('change', function() {
               var file = uploadInput.files && uploadInput.files[0];
               if (!file || !file.type.match(/^image\//)) return;
+              if (typeof canScan === 'function' && !canScan()) { showUpgradeModal(); uploadInput.value = ''; return; }
               if (cameraErrorEl) cameraErrorEl.classList.add('hidden');
               var reader = new FileReader();
               reader.onload = function() {
@@ -1368,6 +1568,7 @@
                 if (!base64 || base64.length < 100) return;
                 if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
                 uploadInput.value = '';
+                if (typeof incrementScansUsed === 'function') incrementScansUsed();
                 savePendingScanAndGoToFlow2(base64, function() {
                   if (cameraErrorEl) { cameraErrorEl.textContent = 'Could not save image. Try again.'; cameraErrorEl.classList.remove('hidden'); }
                 });
@@ -1385,12 +1586,14 @@
             scanResultUploadInput.addEventListener('change', function() {
               var file = scanResultUploadInput.files && scanResultUploadInput.files[0];
               if (!file || !file.type.match(/^image\//)) return;
+              if (typeof canScan === 'function' && !canScan()) { showUpgradeModal(); scanResultUploadInput.value = ''; return; }
               var reader = new FileReader();
               reader.onload = function() {
                 var dataUrl = reader.result;
                 var base64 = dataUrl.indexOf(',') >= 0 ? dataUrl.split(',')[1] : dataUrl;
                 if (!base64 || base64.length < 100) return;
                 scanResultUploadInput.value = '';
+                if (typeof incrementScansUsed === 'function') incrementScansUsed();
                 savePendingScanAndGoToFlow2(base64, function() {
                   if (cameraErrorEl) { cameraErrorEl.textContent = 'Could not save image. Try again.'; cameraErrorEl.classList.remove('hidden'); }
                 });
@@ -1456,9 +1659,10 @@
             try {
               sessionStorage.removeItem('auralink_review_draft');
               sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
-              window.location.href = '/flow-choose-platform.html';
+              sessionStorage.setItem('synclyst_selected_platform', 'shopify');
+              window.location.href = '/flow-2.html';
             } catch (e) {
-              if (e.name === 'QuotaExceededError') { delete payload.imageDataUrl; try { sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); window.location.href = '/flow-choose-platform.html'; } catch (e2) {} }
+              if (e.name === 'QuotaExceededError') { delete payload.imageDataUrl; try { sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); sessionStorage.setItem('synclyst_selected_platform', 'shopify'); window.location.href = '/flow-2.html'; } catch (e2) {} }
             }
           });
 

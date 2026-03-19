@@ -1,0 +1,9 @@
+{
+  "name": "auralink-ai",
+  "private": true,
+  "description": "Run backend, publishing, and frontend for the master flow",
+  "scripts": {
+    "inject": "cd frontend && node scripts/inject-api-url.js",
+    "start": "npm run inject && npx concurrently -n be,pub,fe -c blue,green,magenta \"cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000\" \"cd publishing && node src/index.js\" \"cd frontend && next dev --hostname 0.0.0.0\""
+  }
+}

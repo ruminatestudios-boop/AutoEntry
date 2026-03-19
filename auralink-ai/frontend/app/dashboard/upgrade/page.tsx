@@ -1,8 +1,112 @@
 "use client";
 
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
+import { apiFetch } from "@/lib/api";
+import { useState, useRef, useEffect } from "react";
+
+const CLERK_JWT_TEMPLATE = process.env.NEXT_PUBLIC_CLERK_JWT_TEMPLATE?.trim();
+const PENDING_UPGRADE_TIER_KEY = "synclyst_pending_upgrade_tier";
+
+function getTierFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  const t = new URLSearchParams(window.location.search).get("tier")?.toLowerCase();
+  return t === "pro" || t === "growth" || t === "scale" ? t : null;
+}
+
+function shouldAutoStartFromUrl(): boolean {
+  if (typeof window === "undefined") return false;
+  const v = new URLSearchParams(window.location.search).get("autostart");
+  return v === "1" || v === "true";
+}
+
+function getPendingTierFromStorage(): string | null {
+  if (typeof window === "undefined") return null;
+  const t = window.sessionStorage.getItem(PENDING_UPGRADE_TIER_KEY)?.toLowerCase();
+  return t === "pro" || t === "growth" || t === "scale" ? t : null;
+}
+
+function setPendingTierInStorage(tier: "pro" | "growth" | "scale") {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.setItem(PENDING_UPGRADE_TIER_KEY, tier);
+}
+
+function clearPendingTierInStorage() {
+  if (typeof window === "undefined") return;
+  window.sessionStorage.removeItem(PENDING_UPGRADE_TIER_KEY);
+}
 
 export default function UpgradePage() {
+  const { isLoaded, getToken, userId } = useAuth();
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
+  const didAutoStart = useRef(false);
+
+  const redirectToSignIn = () => {
+    if (typeof window === "undefined") return;
+    const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = `/sign-in?redirect_url=${redirect}`;
+  };
+
+  const startCheckout = async (tier: "pro" | "growth" | "scale") => {
+    if (!getToken) return;
+    setLoadingTier(tier);
+    try {
+      setPendingTierInStorage(tier);
+      if (!userId) {
+        redirectToSignIn();
+        return;
+      }
+      // Prefer backend JWT template, but gracefully fall back when template is missing.
+      let token: string | null = null;
+      if (CLERK_JWT_TEMPLATE) {
+        try {
+          token = await getToken({ template: CLERK_JWT_TEMPLATE });
+        } catch {
+          token = null;
+        }
+      }
+      if (!token) token = await getToken();
+      if (!token) {
+        redirectToSignIn();
+        return;
+      }
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 15000);
+      const res = await apiFetch("/api/v1/billing/checkout-session", {
+        method: "POST",
+        token,
+        body: JSON.stringify({ tier }),
+        signal: controller.signal,
+      });
+      window.clearTimeout(timeout);
+      if (!res.ok) throw new Error(await res.text());
+      const data = (await res.json()) as { url?: string };
+      if (!data.url) throw new Error("Missing checkout URL");
+      clearPendingTierInStorage();
+      window.location.href = data.url;
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") {
+        window.alert("Checkout request timed out. Please try again.");
+      } else {
+        window.alert(e instanceof Error ? e.message : "Could not start checkout");
+      }
+    } finally {
+      setLoadingTier(null);
+    }
+  };
+
+  // Auto-start only for explicit deep links (?autostart=1) or pending tier in session storage.
+  // This keeps the page interactive when users open it manually.
+  useEffect(() => {
+    if (didAutoStart.current || !isLoaded) return;
+    const fromStorage = getPendingTierFromStorage();
+    const fromUrl = shouldAutoStartFromUrl() ? getTierFromUrl() : null;
+    const t = fromStorage || fromUrl;
+    if (!t || !userId || !getToken) return;
+    didAutoStart.current = true;
+    startCheckout(t as "pro" | "growth" | "scale");
+  }, [isLoaded, userId, getToken]);
+
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <header className="glass-nav" style={{ padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -19,29 +123,52 @@ export default function UpgradePage() {
             Upgrade
           </p>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text)", marginBottom: "0.5rem" }}>
-            You&apos;ve used all 3 free scans!
+            You&apos;ve hit your scan limit
           </h1>
           <p style={{ color: "var(--muted)", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
             Upgrade to keep scanning and syncing to your marketplaces.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.5rem" }}>
             <div style={{ padding: "1rem", border: "1px solid var(--border)", borderRadius: "12px", textAlign: "left" }}>
-              <p style={{ fontWeight: 700, color: "var(--text)" }}>⭐ $9/mo — 50 scans</p>
-              <p style={{ fontSize: "0.8125rem", color: "var(--muted)" }}>Perfect for small batches</p>
+              <p style={{ fontWeight: 700, color: "var(--text)" }}>Pro — £9/mo</p>
+              <p style={{ fontSize: "0.8125rem", color: "var(--muted)" }}>100 scans/month</p>
+              <button
+                type="button"
+                disabled={loadingTier !== null}
+                className="glass-cta"
+                style={{ marginTop: "0.75rem", padding: "0.6rem 1rem", borderRadius: "10px", fontWeight: 600, cursor: loadingTier !== null ? "not-allowed" : "pointer", color: "#fff", width: "100%" }}
+                onClick={() => startCheckout("pro")}
+              >
+                {loadingTier === "pro" ? "Redirecting…" : "Upgrade to Pro"}
+              </button>
             </div>
             <div style={{ padding: "1rem", border: "1px solid var(--border)", borderRadius: "12px", textAlign: "left" }}>
-              <p style={{ fontWeight: 700, color: "var(--text)" }}>⭐ $19/mo — Unlimited</p>
-              <p style={{ fontSize: "0.8125rem", color: "var(--muted)" }}>Best value for power sellers</p>
+              <p style={{ fontWeight: 700, color: "var(--text)" }}>Growth — £29/mo</p>
+              <p style={{ fontSize: "0.8125rem", color: "var(--muted)" }}>500 scans/month</p>
+              <button
+                type="button"
+                disabled={loadingTier !== null}
+                className="glass-cta"
+                style={{ marginTop: "0.75rem", padding: "0.6rem 1rem", borderRadius: "10px", fontWeight: 600, cursor: loadingTier !== null ? "not-allowed" : "pointer", color: "#fff", width: "100%" }}
+                onClick={() => startCheckout("growth")}
+              >
+                {loadingTier === "growth" ? "Redirecting…" : "Upgrade to Growth"}
+              </button>
+            </div>
+            <div style={{ padding: "1rem", border: "1px solid var(--border)", borderRadius: "12px", textAlign: "left" }}>
+              <p style={{ fontWeight: 700, color: "var(--text)" }}>Scale — £79/mo</p>
+              <p style={{ fontSize: "0.8125rem", color: "var(--muted)" }}>Unlimited scans</p>
+              <button
+                type="button"
+                disabled={loadingTier !== null}
+                className="glass-cta"
+                style={{ marginTop: "0.75rem", padding: "0.6rem 1rem", borderRadius: "10px", fontWeight: 600, cursor: loadingTier !== null ? "not-allowed" : "pointer", color: "#fff", width: "100%" }}
+                onClick={() => startCheckout("scale")}
+              >
+                {loadingTier === "scale" ? "Redirecting…" : "Upgrade to Scale"}
+              </button>
             </div>
           </div>
-          <button
-            type="button"
-            className="glass-cta"
-            style={{ padding: "0.75rem 1.5rem", borderRadius: "10px", fontWeight: 600, cursor: "pointer", color: "#fff", width: "100%" }}
-            onClick={() => window.alert("Stripe checkout coming soon. For now you can continue using the app — we'll add payment here.")}
-          >
-            Upgrade now
-          </button>
           <p style={{ marginTop: "1rem", fontSize: "0.75rem", color: "var(--muted)" }}>
             Payment powered by Stripe. Cancel anytime.
           </p>

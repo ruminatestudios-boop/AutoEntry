@@ -35,6 +35,11 @@
       <!-- Store cards: filled from actual publish result or URL/session -->
       <div class="w-full space-y-3 mb-6" id="success-stores-list"></div>
 
+      <!-- Where to find it -->
+      <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 flex gap-3 text-left mb-4">
+        <span class="w-6 h-6 rounded border border-amber-300 flex items-center justify-center text-amber-700 text-xs font-bold shrink-0">!</span>
+        <p class="text-sm text-amber-900"><strong>Shopify:</strong> <span id="success-shop-hint">Your product is in <strong>Shopify Admin → Products → Drafts</strong>. Open it there and click <strong>Publish</strong> to make it live.</span></p>
+      </div>
       <!-- Info box -->
       <div class="rounded-xl bg-zinc-100 border border-zinc-200 p-4 flex gap-3 text-left mb-8">
         <span class="w-6 h-6 rounded border border-zinc-300 flex items-center justify-center text-zinc-500 text-xs font-bold shrink-0">◆</span>
@@ -46,7 +51,7 @@
         <a href="/dashboard-home.html" class="flex-1 py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline">
           View listings
         </a>
-        <a href="/landing.html?mode=scan" class="flex-1 py-3.5 rounded-2xl bg-white border border-zinc-200 text-zinc-600 font-semibold text-[15px] text-center no-underline hover:bg-zinc-50 transition-colors">
+        <a href="/home.html?mode=scan" class="flex-1 py-3.5 rounded-2xl bg-white border border-zinc-200 text-zinc-600 font-semibold text-[15px] text-center no-underline hover:bg-zinc-50 transition-colors">
           List another
         </a>
       </div>
@@ -62,7 +67,7 @@
         tiktok_shop: { name: 'TikTok Shop', domain: 'tiktok.com', letter: 'T' },
         amazon: { name: 'Amazon', domain: 'amazon.com', letter: 'A' },
         shopify: { name: 'Shopify', domain: 'shopify.com', letter: 'S' },
-        ebay: { name: 'eBay', domain: 'ebay.com', letter: 'E' },
+        ebay: { name: 'eBay', domain: 'ebay.com', letter: 'E', logoUrl: '/assets/ebay-logo.png' },
         etsy: { name: 'Etsy', domain: 'etsy.com', letter: 'E' },
         depop: { name: 'Depop', domain: 'depop.com', letter: 'D' },
         walmart: { name: 'Walmart', domain: 'walmart.com', letter: 'W' },
@@ -71,6 +76,7 @@
         vinted: { name: 'Vinted', domain: 'vinted.com', letter: 'V' }
       };
       var LAST_PUBLISH_KEY = 'auralink_last_publish_platforms';
+      var LAST_PUBLISH_SHOP_KEY = 'auralink_last_publish_shop';
       function loadSelected() {
         try {
           var lastRaw = sessionStorage.getItem(LAST_PUBLISH_KEY);
@@ -101,7 +107,7 @@
         selected.forEach(function(id, i) {
           var m = meta[id];
           if (!m) return;
-          var logoUrl = 'https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128';
+          var logoUrl = m.logoUrl || ('https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128');
           var badges = '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Live</span>';
           if (id === 'tiktok_shop') badges = '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Live</span><span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Trending</span>';
           var row = document.createElement('div');
@@ -114,6 +120,16 @@
             '<div class="flex gap-2">' + badges + '</div>';
           container.appendChild(row);
         });
+      }
+      var shopHint = document.getElementById('success-shop-hint');
+      if (shopHint) {
+        try {
+          var shop = sessionStorage.getItem(LAST_PUBLISH_SHOP_KEY);
+          if (shop) {
+            sessionStorage.removeItem(LAST_PUBLISH_SHOP_KEY);
+            shopHint.innerHTML = 'Published to <strong>' + shop + '</strong>. Your product is in <strong>Shopify Admin → Products → Drafts</strong> for that store. Open it there and click <strong>Publish</strong> to make it live.';
+          }
+        } catch (e) {}
       }
     })();
   </script>

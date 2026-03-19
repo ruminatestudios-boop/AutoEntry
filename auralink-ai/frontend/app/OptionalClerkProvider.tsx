@@ -1,29 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { ClerkProvider as ClerkProviderBase } from "@clerk/nextjs";
 
-const key = String((typeof process !== "undefined" && process.env?.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) ?? "");
+const publishableKey = String(
+  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) ?? ""
+);
 
 /**
  * When Clerk is disabled (no NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY), just render children.
- * When the key is set, wrap with ClerkProvider so Clerk hooks work.
- * Clerk is loaded only when the key is set to avoid "missing components" / "missing publishable key" errors in dummy runs.
+ * When the key is set, wrap with ClerkProvider so useSession and other Clerk hooks work.
+ * Uses a single top-level import so SignIn/useSession share the same context (avoids "useSession can only be used within ClerkProvider").
  */
 export default function OptionalClerkProvider({ children }: { children: React.ReactNode }) {
-  const [ClerkProvider, setClerkProvider] = useState<React.ComponentType<{ publishableKey: string; children: React.ReactNode }> | null>(null);
-
-  useEffect(() => {
-    if (!key.trim()) return;
-    import("@clerk/nextjs").then((mod) => setClerkProvider(() => mod.ClerkProvider));
-  }, []);
-
-  if (!key.trim()) return <>{children}</>;
-  if (!ClerkProvider) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc", fontFamily: "system-ui" }}>
-        <span style={{ color: "#71717a" }}>Loading…</span>
-      </div>
-    );
-  }
-  return <ClerkProvider publishableKey={key}>{children}</ClerkProvider>;
+  if (!publishableKey.trim()) return <>{children}</>;
+  return <ClerkProviderBase publishableKey={publishableKey}>{children}</ClerkProviderBase>;
 }

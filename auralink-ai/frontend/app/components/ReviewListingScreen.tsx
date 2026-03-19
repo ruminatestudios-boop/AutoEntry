@@ -428,7 +428,7 @@ export default function ReviewListingScreen() {
     return hasPhoto && hasTitle && hasDesc && hasBrand && hasCategory && hasCondition && hasPrice;
   }, [isEtsyMode, photoUrls.length, title, description, brand, category, condition, price]);
 
-  const handlePushLive = useCallback(() => {
+  const handlePushLive = useCallback(async () => {
     const payload: ListingPayload = {
       listing: {
         photos: photoUrls,
@@ -482,8 +482,66 @@ export default function ReviewListingScreen() {
         }),
       },
     };
-    console.log(JSON.stringify(payload, null, 2));
-    alert("Listing JSON logged to console. In production, send to API.");
+    try {
+      const publishBase = (process.env.NEXT_PUBLIC_PUBLISHING_API_URL || "http://localhost:8001").replace(/\/$/, "");
+      let token: string | null = null;
+
+      // Try signed-in token first; fall back to publishing dev token for local runs.
+      try {
+        const clerkRes = await fetch("/api/clerk/token");
+        if (clerkRes.ok) {
+          const clerkData = await clerkRes.json();
+          token = clerkData?.token || null;
+        }
+      } catch (_) {}
+      if (!token) {
+        const devRes = await fetch(`${publishBase}/auth/dev-token`);
+        if (!devRes.ok) throw new Error("Could not get publishing token");
+        const devData = await devRes.json();
+        token = devData?.token || null;
+      }
+      if (!token) throw new Error("Missing publishing token");
+
+      const createRes = await fetch(`${publishBase}/api/listings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          universal_data: payload.listing,
+          confidence_score: 0.95,
+        }),
+      });
+      if (!createRes.ok) {
+        const createText = await createRes.text();
+        throw new Error(`Create listing failed: ${createText}`);
+      }
+      const createData = await createRes.json();
+      const listingId = createData?.listing_id;
+      if (!listingId) throw new Error("Create listing succeeded but listing_id is missing");
+
+      const publishRes = await fetch(`${publishBase}/api/listings/publish`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          listing_id: listingId,
+          platforms: [...platforms],
+        }),
+      });
+      const publishBody = await publishRes.json().catch(() => ({}));
+      if (!publishRes.ok) {
+        const err = publishBody?.error || "Publish failed";
+        throw new Error(String(err));
+      }
+      alert(`Publish complete. Listing: ${listingId}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Publish failed";
+      alert(msg);
+    }
   }, [
     photoUrls,
     title,
@@ -536,6 +594,7 @@ export default function ReviewListingScreen() {
     vendor,
     status,
     metaDescription,
+    platforms,
   ]);
 
   const subcategoryOptions = SUBCATEGORIES[category] || SUBCATEGORIES.Other;

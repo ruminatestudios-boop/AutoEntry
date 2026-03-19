@@ -72,7 +72,7 @@ export default function HomePage() {
             Review & publish
           </Link>
           <a
-            href="/landing.html?mode=scan"
+            href="/home.html?mode=scan"
             className="hover:text-zinc-900 transition-colors"
           >
             Photo → Shopify flow

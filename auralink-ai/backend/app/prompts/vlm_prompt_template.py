@@ -16,8 +16,13 @@ VLM_SYSTEM_PROMPT = """You are a strict product data extractor. Your job is to c
 - brand: Only output the EXACT brand name as it appears on the product, box, or label (e.g. "Sony", "LEGO", "Coca-Cola", "Nike"). Copy capitalization and punctuation exactly. If no brand is visible, use null.
 - seo_title: The EXACT product name or line as printed (e.g. "WH-1000XM5 Wireless Headphones", "Classic Fit Stretch Jeans", "Original Blend 12 oz"). Not a category like "Wireless Headphones" or "Blue Jeans". If the package has a product name, use it verbatim.
 - exact_model: Exact model number, SKU, style code, or variant from the label when visible (e.g. "WH-1000XM5", "NK-2341", "Style 501"). null if not visible.
+- make: Manufacturer or parent brand when different from brand (e.g. vehicles: make vs model; electronics: parent company). Often same as brand; use null if not visible or same as brand.
+- model_year: Model year, release year, or season code when visible on label/packaging (e.g. "2024", "2023", "SS24", "FW23"). null if not visible.
 - material_composition: Copy the exact material text from the label (e.g. "100% Cotton", "Stainless Steel", "Merino Wool 180gsm"). Not "fabric" or "metal".
 - dimensions / weight: Use the exact text when printed (e.g. "30×20×5 cm", "200g"); otherwise leave null—do not guess.
+
+## Detailed product recognition (priority order)
+Extract in this order when visible: (1) brand — exact from logo/label; (2) make — if different from brand; (3) exact_model — model number, SKU, style; (4) model_year — year or season code; (5) seo_title — full product name; (6) material_composition, dimensions, weight. For any product type (electronics, apparel, collectibles, etc.), copy EXACT text from the image and OCR. Never substitute a generic term when the label shows something specific.
 
 ## Condition (for resale marketplaces)
 - condition: Infer from the image. Use one of: "new" (with tags, sealed, or clearly unused), "like_new" (minimal wear, no defects), "good" (normal wear), "fair" (visible wear), "for_parts" (non-working or for parts). If packaging/tags suggest new, use "new". If unclear, use null.
@@ -41,7 +46,9 @@ VLM_SYSTEM_PROMPT = """You are a strict product data extractor. Your job is to c
   "schema_context": "https://schema.org/Product",
   "attributes": {
     "brand": "exact brand from label/logo or null",
+    "make": "manufacturer or parent brand or null",
     "exact_model": "exact model/SKU/style from label or null",
+    "model_year": "2024 or SS24 or FW23 or null",
     "material_composition": "exact material text from label or null",
     "weight_grams": number or null,
     "dimensions": "exact dimensions from label or null",
@@ -71,7 +78,7 @@ VLM_SYSTEM_PROMPT = """You are a strict product data extractor. Your job is to c
   },
   "raw_ocr_snippets": ["exact text snippets from labels you used"],
   "confidence_score": 0.0 to 1.0,
-  "confidence_per_field": { "brand": "high" | "medium" | "low" | null, "seo_title": "high" | "medium" | "low" | null, "exact_model": "high" | "medium" | "low" | null }
+  "confidence_per_field": { "brand": "high" | "medium" | "low" | null, "seo_title": "high" | "medium" | "low" | null, "exact_model": "high" | "medium" | "low" | null, "make": "high" | "medium" | "low" | null, "model_year": "high" | "medium" | "low" | null }
 }
 
 ## Rules
@@ -96,14 +103,16 @@ When OCR is provided: for "brand" use the exact line that clearly is the brand n
 OCR text (use verbatim for matching):
 {ocr_block}
 
-For seo_title: use the exact product name from the package/label if present in OCR or clearly visible. For brand: use the exact brand name from the logo/label. For exact_model: use any model number, SKU, or style code from the label. For material_composition and dimensions: copy the exact wording from the product when visible. For condition: use "new" if packaging/tags suggest new, otherwise like_new/good/fair/for_parts or null.
+For seo_title: use the exact product name from the package/label if present in OCR or clearly visible. For brand: use the exact brand name from the logo/label. For make: use when different from brand (e.g. manufacturer). For exact_model: use any model number, SKU, or style code from the label. For model_year: use year or season code when visible (e.g. 2024, SS24, FW23). For material_composition and dimensions: copy the exact wording from the product when visible. For condition: use "new" if packaging/tags suggest new, otherwise like_new/good/fair/for_parts or null.
 
-Output ONLY the JSON object (ucp_version, schema_context, attributes including condition, copy with description_fact_feel_proof, tags, raw_ocr_snippets, confidence_score, confidence_per_field)."""
+Output ONLY the JSON object (ucp_version, schema_context, attributes including brand, make, exact_model, model_year, condition, copy with description_fact_feel_proof, tags, raw_ocr_snippets, confidence_score, confidence_per_field)."""
 
 
 UCP_ATTRIBUTE_KEYS = [
     "brand",
+    "make",
     "exact_model",
+    "model_year",
     "material_composition",
     "weight_grams",
     "dimensions",

@@ -71,7 +71,7 @@
         tiktok_shop: { name: 'TikTok Shop', domain: 'tiktok.com', letter: 'T', connectHref: '/stores-list.html?from=flow-connect' },
         amazon:       { name: 'Amazon', domain: 'amazon.com', letter: 'A', connectHref: '/stores-connect-amazon.html?return=flow-connect' },
         shopify:      { name: 'Shopify', domain: 'shopify.com', letter: 'S', connectHref: '/stores-connect-shopify.html?return=flow-connect' },
-        ebay:         { name: 'eBay', domain: 'ebay.com', letter: 'E', connectHref: '/stores-list.html?from=flow-connect' }
+        ebay:         { name: 'eBay', domain: 'ebay.com', letter: 'E', connectHref: '/stores-list.html?from=flow-connect', logoUrl: '/assets/ebay-logo.png' }
       };
 
       function loadSelected() {
@@ -140,7 +140,7 @@
           card.className = 'rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between';
           card.setAttribute('data-marketplace', id);
 
-          var logoUrl = 'https://www.google.com/s2/favicons?domain=' + meta.domain + '&sz=128';
+          var logoUrl = meta.logoUrl || ('https://www.google.com/s2/favicons?domain=' + meta.domain + '&sz=128');
           card.innerHTML =
             '<div class="flex items-center gap-3">' +
               '<span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">' +

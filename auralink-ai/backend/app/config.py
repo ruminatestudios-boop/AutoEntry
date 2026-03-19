@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     vision_provider: str = "gemini"
     gemini_api_key: str = ""
     openai_api_key: str = ""
+    # Force dummy extraction even if keys exist (local dev safety switch).
+    force_dummy_vision: bool = False
 
     # Web enrichment: after image extraction, use Gemini + Google Search to fetch exact
     # product name and full listing details from the web (optional; requires Gemini key).
@@ -64,6 +66,14 @@ class Settings(BaseSettings):
 
     # Integrations: webhook secret for listing-published (optional)
     integrations_webhook_secret: str = ""
+
+    # Stripe billing
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_pro: str = ""
+    stripe_price_growth: str = ""
+    stripe_price_scale: str = ""
+    stripe_customer_portal_return_url: str = ""
 
     def get_cors_origins_list(self) -> List[str]:
         """Return CORS origins as a list. Empty or '*' means allow all.

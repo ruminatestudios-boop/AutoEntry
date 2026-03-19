@@ -20,6 +20,8 @@ const MARKETPLACES = [
   { id: "vinted", name: "Vinted", logo: "https://www.google.com/s2/favicons?domain=vinted.com&sz=128", connect: false },
 ] as const;
 
+const CLERK_JWT_TEMPLATE = process.env.NEXT_PUBLIC_CLERK_JWT_TEMPLATE?.trim();
+
 export default function DashboardClient() {
   const { user } = useUser();
   const { isLoaded, getToken } = useAuth();
@@ -27,11 +29,12 @@ export default function DashboardClient() {
   const [shopifyStores, setShopifyStores] = useState<{ shop_domain: string }[]>([]);
   const [shopInput, setShopInput] = useState("");
   const [selectedChannel, setSelectedChannel] = useState<string | null>("shopify");
-  const [usage, setUsage] = useState<{ free_scans_used: number; free_scans_limit: number; can_scan: boolean } | null>(null);
+  const [usage, setUsage] = useState<{ tier: string; scans_used: number; scans_limit: number; can_scan: boolean } | null>(null);
   const [pushProductTitle, setPushProductTitle] = useState<string | null>(null);
   const [pushChannels, setPushChannels] = useState<string[]>(["shopify"]);
   const [pushLoading, setPushLoading] = useState(false);
   const [pushMessage, setPushMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [billingNotice, setBillingNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -39,23 +42,61 @@ export default function DashboardClient() {
     setPushProductId(params.get("push_product"));
   }, []);
 
+  const fetchUsage = async () => {
+    try {
+      const token = await getToken?.(CLERK_JWT_TEMPLATE ? { template: CLERK_JWT_TEMPLATE } : undefined);
+      const r = await apiFetch("/api/v1/usage", { token });
+      setUsage(r.ok ? await r.json() : null);
+    } catch {
+      setUsage(null);
+    }
+  };
+
   useEffect(() => {
     if (!isLoaded) return;
-    getToken?.()
+    getToken?.(CLERK_JWT_TEMPLATE ? { template: CLERK_JWT_TEMPLATE } : undefined)
       .then((token) => apiFetch("/api/v1/shopify/stores", { token }))
       .then((r) => (r.ok ? r.json() : { stores: [] }))
       .then((d: { stores?: { shop_domain: string }[] }) => setShopifyStores(d.stores ?? []))
       .catch(() => setShopifyStores([]));
-    getToken?.()
-      .then((token) => apiFetch("/api/v1/usage", { token }))
-      .then((r) => (r.ok ? r.json() : null))
-      .then((u) => setUsage(u))
-      .catch(() => setUsage(null));
+    fetchUsage();
+  }, [isLoaded, getToken]);
+
+  useEffect(() => {
+    if (!isLoaded || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const billing = (params.get("billing") || "").toLowerCase();
+    const sessionId = params.get("session_id") || "";
+    if (billing !== "success" || !sessionId) return;
+
+    (async () => {
+      try {
+        const token = await getToken?.(CLERK_JWT_TEMPLATE ? { template: CLERK_JWT_TEMPLATE } : undefined);
+        const res = await apiFetch("/api/v1/billing/confirm", {
+          method: "POST",
+          token,
+          body: JSON.stringify({ session_id: sessionId }),
+        });
+        if (res.ok) {
+          await fetchUsage();
+          setBillingNotice("Payment confirmed. Your plan is now active.");
+        } else {
+          setBillingNotice("Payment received. Plan sync is in progress.");
+        }
+      } catch {
+        setBillingNotice("Payment received. Plan sync is in progress.");
+      } finally {
+        const cleaned = new URL(window.location.href);
+        cleaned.searchParams.delete("billing");
+        cleaned.searchParams.delete("session_id");
+        window.history.replaceState({}, "", cleaned.toString());
+      }
+    })();
   }, [isLoaded, getToken]);
 
   useEffect(() => {
     if (!pushProductId || !getToken) return;
-    getToken()
+    getToken(CLERK_JWT_TEMPLATE ? { template: CLERK_JWT_TEMPLATE } : undefined)
       .then((token) => apiFetch(`/api/v1/products/${pushProductId}`, { token }))
       .then((r) => (r.ok ? r.json() : null))
       .then((p: { copy_seo_title?: string } | null) => setPushProductTitle(p?.copy_seo_title ?? "Draft"))
@@ -74,7 +115,7 @@ export default function DashboardClient() {
     setPushLoading(true);
     setPushMessage(null);
     try {
-      const token = await getToken?.();
+      const token = await getToken?.(CLERK_JWT_TEMPLATE ? { template: CLERK_JWT_TEMPLATE } : undefined);
       const res = await apiFetch(`/api/v1/products/${pushProductId}/push-drafts`, {
         method: "POST",
         token,
@@ -129,17 +170,22 @@ export default function DashboardClient() {
           </p>
           {usage !== null && (
             <p style={{ marginTop: "0.5rem", fontSize: "0.8125rem", color: "var(--muted)" }}>
-              🔍 {usage.free_scans_used}/{usage.free_scans_limit} free scans used
+              🔍 {usage.scans_used}/{usage.scans_limit} scans used · Plan: {usage.tier}
             </p>
           )}
-          {usage?.can_scan && usage.free_scans_used === 0 && (
+          {billingNotice && (
+            <p style={{ marginTop: "0.5rem", fontSize: "0.8125rem", color: "#166534" }}>
+              {billingNotice}
+            </p>
+          )}
+          {usage?.can_scan && usage.scans_used === 0 && (
             <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", display: "inline-block" }}>
-              <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#166534" }}>✨ You have 3 FREE scans!</span>
+              <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#166534" }}>✨ You’re ready to scan.</span>
             </div>
           )}
           {usage && !usage.can_scan && (
             <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", display: "inline-block" }}>
-              <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#991b1b" }}>You&apos;ve used all 3 free scans.</span>
+              <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#991b1b" }}>You&apos;ve hit your scan limit.</span>
               <Link href="/dashboard/upgrade" style={{ display: "block", marginTop: "0.5rem", fontSize: "0.875rem", fontWeight: 600, color: "var(--accent)" }}>Upgrade to continue →</Link>
             </div>
           )}

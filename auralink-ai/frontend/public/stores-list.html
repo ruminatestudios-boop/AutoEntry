@@ -38,7 +38,7 @@
       var PLATFORMS = [
         { id: 'shopify', name: 'Shopify', domain: 'shopify.com', connectPath: '/stores-connect-shopify.html', letter: 'S' },
         { id: 'etsy', name: 'Etsy', domain: 'etsy.com', connectPath: '/stores-connect-etsy.html', letter: 'E' },
-        { id: 'ebay', name: 'eBay', domain: 'ebay.com', connectPath: '/stores-connect-ebay.html', letter: 'e' },
+        { id: 'ebay', name: 'eBay', domain: 'ebay.com', connectPath: '/stores-connect-ebay.html', letter: 'e', logoUrl: '/assets/ebay-logo.png' },
         { id: 'tiktok', name: 'TikTok Shop', domain: 'tiktok.com', connectPath: '/stores-connect-tiktok.html', letter: 'T' },
         { id: 'amazon', name: 'Amazon', domain: 'amazon.com', connectPath: '/stores-connect-amazon.html', letter: 'A' }
       ];
@@ -77,7 +77,7 @@
               var connected = st.status === 'connected';
               var card = document.createElement('div');
               card.className = 'vercel-card p-4 flex items-center justify-between';
-              var logoUrl = 'https://www.google.com/s2/favicons?domain=' + p.domain + '&sz=128';
+              var logoUrl = p.logoUrl || ('https://www.google.com/s2/favicons?domain=' + p.domain + '&sz=128');
               var statusHtml = connected
                 ? '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#ecfdf5] border border-[#059669] text-[#059669]">Connected</span>'
                 : '<a href="' + p.connectPath + '?return=' + returnTo + '" class="text-xs font-semibold px-3 py-1.5 rounded-full bg-black text-white no-underline">Connect</a>';

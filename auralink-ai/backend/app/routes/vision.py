@@ -1,6 +1,7 @@
 """
 Vision extraction: MultimodalProcessor → UCP/schema.org attributes, Fact-Feel-Proof copy.
 """
+import asyncio
 import base64
 import logging
 from urllib.parse import urlparse
@@ -11,18 +12,18 @@ from pydantic import ValidationError
 import httpx
 
 from app.auth import optional_verify_clerk
-from app.db import get_supabase, get_scan_usage, increment_free_scan, FREE_SCANS_LIMIT
+from app.db import get_supabase, get_scan_usage, increment_scan
 from app.schemas.vision import VisionExtractionRequest, VisionExtractionResponse, FetchProductImagesRequest, OptimizeSeoRequest, OptimizeSeoResponse
 from app.services.vision_service import (
     MultimodalProcessor,
     get_synthetic_ocr,
     get_dummy_extraction,
-    get_fallback_extraction,
     apply_post_extraction,
     apply_blocklist_and_ocr_validation,
     apply_normalizer,
     apply_verification_pass,
     run_invoice_extraction,
+    VisionServiceError,
 )
 from app.services.ocr_service import (
     run_ocr_google,
@@ -110,13 +111,12 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
                 except Exception:
                     pass
                 if not ocr_snippets:
-                    import asyncio
                     ocr_snippets = await asyncio.to_thread(run_ocr_tesseract, raw_bytes)
                 if not ocr_snippets:
                     ocr_snippets = await get_synthetic_ocr(raw_b64, mime)
-        use_dummy = (settings.vision_provider == "gemini" and not bool(settings.gemini_api_key)) or (
-            settings.vision_provider == "openai" and not bool(settings.openai_api_key)
-        )
+        # Be defensive: downstream helpers expect a list.
+        ocr_snippets = ocr_snippets or []
+        use_dummy = bool(getattr(settings, "force_dummy_vision", False))
         if use_dummy:
             from app.schemas.vision import InvoiceExtractionResponse, InvoiceLineItem
             dummy = InvoiceExtractionResponse(
@@ -134,38 +134,65 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
                 confidence_score=0.5,
             )
             return dummy.model_dump()
+        if settings.vision_provider == "gemini" and not bool(settings.gemini_api_key):
+            raise HTTPException(
+                status_code=503,
+                detail="Vision API not configured. Set GEMINI_API_KEY in backend .env to use invoice extraction.",
+            )
+        if settings.vision_provider == "openai" and not bool(settings.openai_api_key):
+            raise HTTPException(
+                status_code=503,
+                detail="Vision API not configured. Set OPENAI_API_KEY in backend .env to use invoice extraction.",
+            )
         supabase = get_supabase()
         user_id = _auth.get("sub") if _auth else None
         if user_id and supabase:
             usage = get_scan_usage(supabase, user_id)
-            if not usage["can_scan"]:
-                raise HTTPException(
-                    status_code=402,
-                    detail=f"You've used all {FREE_SCANS_LIMIT} free scans. Upgrade to continue.",
-                )
-        result = await run_invoice_extraction(raw_b64, mime, ocr_snippets, extraction_type)
+            if not usage.get("can_scan", True):
+                raise HTTPException(status_code=402, detail="Scan limit reached. Upgrade to continue.")
+        try:
+            result = await asyncio.wait_for(
+                run_invoice_extraction(raw_b64, mime, ocr_snippets, extraction_type),
+                timeout=120.0,
+            )
+        except asyncio.TimeoutError:
+            raise HTTPException(
+                status_code=504,
+                detail="Invoice extraction timed out. Try a clearer or smaller image, then retry.",
+            ) from None
+        except Exception as e:
+            logger.warning("Invoice extraction failed: %s", e)
+            raise HTTPException(
+                status_code=503,
+                detail=f"Invoice extraction failed: {e}",
+            ) from None
         if user_id and supabase:
-            increment_free_scan(supabase, user_id)
+            increment_scan(supabase, user_id)
         return result.model_dump()
 
     # Product path (existing)
     has_gemini = bool(settings.gemini_api_key)
     has_openai = bool(settings.openai_api_key)
-    use_dummy = (settings.vision_provider == "gemini" and not has_gemini) or (
-        settings.vision_provider == "openai" and not has_openai
-    )
+    use_dummy = bool(getattr(settings, "force_dummy_vision", False))
     if use_dummy:
         return get_dummy_extraction().model_dump()
+    if settings.vision_provider == "gemini" and not has_gemini:
+        raise HTTPException(
+            status_code=503,
+            detail="Vision API not configured. Set GEMINI_API_KEY in backend .env to use image extraction.",
+        )
+    if settings.vision_provider == "openai" and not has_openai:
+        raise HTTPException(
+            status_code=503,
+            detail="Vision API not configured. Set OPENAI_API_KEY in backend .env.",
+        )
 
     supabase = get_supabase()
     user_id = _auth.get("sub") if _auth else None
     if user_id and supabase:
         usage = get_scan_usage(supabase, user_id)
-        if not usage["can_scan"]:
-            raise HTTPException(
-                status_code=402,
-                detail=f"You've used all {FREE_SCANS_LIMIT} free scans. Upgrade to continue.",
-            )
+        if not usage.get("can_scan", True):
+            raise HTTPException(status_code=402, detail="Scan limit reached. Upgrade to continue.")
 
     raw_b64 = request.image_base64
     mime = request.mime_type or "image/jpeg"
@@ -176,31 +203,75 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
     raw_b64 = _resize_image_if_large(raw_b64, mime)
 
     if request.include_ocr:
-        try:
-            raw_bytes = _decode_base64(raw_b64)
-        except Exception:
-            pass
-        if raw_bytes:
+        async def _run_ocr_with_timeout() -> list[str]:
+            out: list[str] = []
             try:
-                ocr_snippets = await run_ocr_google(raw_bytes)
+                raw_bytes = _decode_base64(raw_b64)
             except Exception:
-                pass
-        if not ocr_snippets and raw_bytes:
-            import asyncio
-            ocr_snippets = await asyncio.to_thread(run_ocr_tesseract, raw_bytes)
-        if not ocr_snippets:
-            ocr_snippets = await get_synthetic_ocr(raw_b64, mime)
+                return out
+            if not raw_bytes:
+                return out
+            try:
+                out = await asyncio.wait_for(
+                    run_ocr_google(raw_bytes),
+                    timeout=25.0,
+                )
+            except asyncio.TimeoutError:
+                logger.warning("Google OCR timed out after 25s")
+            except Exception as e:
+                logger.warning("Google OCR failed: %s", e)
+            if not out and raw_bytes:
+                try:
+                    out = await asyncio.wait_for(
+                        asyncio.to_thread(run_ocr_tesseract, raw_bytes),
+                        timeout=20.0,
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning("Tesseract OCR timed out after 20s")
+                except Exception as e:
+                    logger.warning("Tesseract OCR failed: %s", e)
+            if not out:
+                try:
+                    out = await asyncio.wait_for(
+                        get_synthetic_ocr(raw_b64, mime),
+                        timeout=15.0,
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning("Synthetic OCR timed out after 15s")
+                except Exception as e:
+                    logger.warning("Synthetic OCR failed: %s", e)
+            return out or []
 
-    # Already resized above for both OCR and vision
+        try:
+            ocr_snippets = await asyncio.wait_for(_run_ocr_with_timeout(), timeout=45.0)
+        except asyncio.TimeoutError:
+            logger.warning("OCR step timed out, continuing with empty snippets")
+            ocr_snippets = []
+    # Be defensive: downstream helpers expect a list.
+    ocr_snippets = ocr_snippets or []
+
+    # Already resized above for both OCR and vision. Main Gemini call has 120s timeout inside processor.
     try:
         result = await _processor.process(
             image_base64=raw_b64,
             mime_type=mime,
             ocr_snippets=ocr_snippets or None,
         )
+    except asyncio.TimeoutError:
+        logger.warning("Vision extraction timed out (Gemini >120s)")
+        raise HTTPException(
+            status_code=504,
+            detail="Extraction took too long. Try a smaller or simpler image, or try again in a moment.",
+        ) from None
     except ValidationError as e:
-        logger.warning("Vision extraction validation error, returning fallback: %s", e)
-        result = get_fallback_extraction()
+        logger.warning("Vision extraction validation error: %s", e)
+        raise HTTPException(
+            status_code=503,
+            detail="Vision extraction returned invalid structured data. Please retry with a clearer image.",
+        ) from None
+    except VisionServiceError as e:
+        logger.warning("Vision extraction upstream error: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from None
     except Exception as e:
         logger.exception("Vision extraction failed")
         from app.config import get_settings
@@ -216,7 +287,14 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
                 detail="Vision API not configured. Set OPENAI_API_KEY in backend .env.",
             )
         err_msg = str(e)
-        if "API_KEY_INVALID" in err_msg or "403" in err_msg or "invalid" in err_msg.lower():
+        lower_err = err_msg.lower()
+        is_key_error = (
+            "api_key_invalid" in lower_err
+            or "api key not valid" in lower_err
+            or ("403" in err_msg and "invalid argument" not in lower_err)
+            or ("permission denied" in lower_err and "api key" in lower_err)
+        )
+        if is_key_error:
             raise HTTPException(
                 status_code=503,
                 detail="Gemini API key invalid or restricted. Check GEMINI_API_KEY in backend .env and ensure the Generative Language API is enabled in Google Cloud / AI Studio.",
@@ -240,10 +318,15 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
     result = apply_blocklist_and_ocr_validation(result, ocr_snippets)
     result = apply_normalizer(result)
 
-    # Optional verification pass: text-only consistency check (Gemini)
+    # Optional verification pass: text-only consistency check (Gemini). Cap at 30s so total route stays within frontend timeout.
     if ocr_snippets and settings.gemini_api_key:
         try:
-            result = apply_verification_pass(result, ocr_snippets, settings.gemini_api_key)
+            result = await asyncio.wait_for(
+                asyncio.to_thread(apply_verification_pass, result, ocr_snippets, settings.gemini_api_key),
+                timeout=30.0,
+            )
+        except asyncio.TimeoutError:
+            logger.debug("Verification pass timed out, using draft as-is")
         except Exception as e:
             logger.debug("Verification pass skipped: %s", e)
 
@@ -273,7 +356,7 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
 
     # Count this scan for authenticated user
     if user_id and supabase:
-        increment_free_scan(supabase, user_id)
+        increment_scan(supabase, user_id)
 
     # Return as dict to avoid FastAPI re-validating and triggering "copy" validation errors
     return result.model_dump()

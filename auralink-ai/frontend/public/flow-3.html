@@ -144,7 +144,7 @@
     <!-- Header: landing-style -->
     <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
       <div id="flow3-header-left"></div>
-      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#0a0a0a] justify-self-center">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></a>
+      <a href="/landing.html" class="inline-flex items-center justify-self-center"><img src="/synclyst-logo.png" alt="SyncLyst®" class="h-7 w-auto" /></a>
       <div class="justify-self-end"></div>
     </header>
     <main class="flex-1 px-5 pt-6 pb-6 overflow-auto">
@@ -556,6 +556,9 @@
               price_source: priceSource,
               product_type: category,
               vendor: (att.brand || '').trim(),
+              brand: (att.brand || '').trim(),
+              make: (att.make || '').trim() || undefined,
+              model_year: (att.model_year || '').trim() || undefined,
               condition: (att.condition || 'new'),
               status: 'draft',
               meta_description: metaDesc,
@@ -613,25 +616,8 @@
         return url;
       }
 
-      (function requireShopifyConnected() {
-        var platforms = loadSelected();
-        if (!platforms || platforms.indexOf('shopify') === -1) return;
-        var base = getPublishingUrl().replace(/\/$/, '');
-        var token = null;
-        try { token = sessionStorage.getItem('auralink_jwt'); } catch (e) {}
-        var getToken = token ? Promise.resolve(token) : fetch(base + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; }).then(function(d) { return d && d.token ? d.token : null; });
-        getToken.then(function(t) {
-          if (!t) { window.location.href = '/stores-connect-shopify.html?return=flow-3'; return; }
-          return fetch(base + '/api/user/connected-stores', { headers: { 'Authorization': 'Bearer ' + t } })
-            .then(function(r) { return r.ok ? r.json() : {}; })
-            .then(function(stores) {
-              if (!stores.shopify || stores.shopify.status !== 'connected') {
-                window.location.href = '/stores-connect-shopify.html?return=flow-3';
-              }
-            })
-            .catch(function() { window.location.href = '/stores-connect-shopify.html?return=flow-3'; });
-        }).catch(function() { window.location.href = '/stores-connect-shopify.html?return=flow-3'; });
-      })();
+      // Connect Shopify page removed from scan flow: do not redirect to it on load. User goes flow-2 → flow-3 → flow-verifying.
+      // (function requireShopifyConnected() { ... })();
 
       var draft = loadDraft();
       var selected = loadSelected();
@@ -1005,7 +991,7 @@
           barEl.setAttribute('aria-valuenow', score);
           var segments = 60;
           var filledCount = Math.round((score / 100) * segments);
-          var gradientStops = [{ p: 0, r: 212, g: 212, b: 212 }, { p: 0.5, r: 234, g: 179, b: 8 }, { p: 1, r: 234, g: 179, b: 8 }];
+          var gradientStops = [{ p: 0, r: 234, g: 179, b: 8 }, { p: 1, r: 34, g: 197, b: 94 }];
           function interpColor(t) {
             var i = 0;
             while (i + 1 < gradientStops.length && gradientStops[i + 1].p < t) i++;
@@ -1187,7 +1173,17 @@
       function updateSeoPreview() {}
       if (seoTitleInput) seoTitleInput.addEventListener('input', function() { updateListingQuality(); });
       if (metaDescInput) metaDescInput.addEventListener('input', function() { updateListingQuality(); });
-      if (priceInput) priceInput.addEventListener('input', function() { updateListingQuality(); });
+      if (priceInput) {
+        priceInput.addEventListener('input', function() {
+          updateListingQuality();
+          var hasPrice = (priceInput.value || '').trim() !== '';
+          if (hasPrice) {
+            priceInput.classList.remove('border-amber-400');
+            var priceSection = document.getElementById('modal-section-price');
+            if (priceSection) priceSection.classList.remove('section-highlight');
+          }
+        });
+      }
       var seoEditBtn = document.getElementById('modal-seo-edit-btn');
       if (seoEditBtn && seoTitleInput) seoEditBtn.addEventListener('click', function() { seoTitleInput.focus(); });
       if (titleInput) titleInput.addEventListener('input', updateListingQuality);
@@ -1532,7 +1528,7 @@
         selected.forEach(function(id) {
           var name = marketplaceNames[id] || id;
           var domain = marketplaceDomains[id];
-          var logoUrl = domain ? 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=32' : '';
+          var logoUrl = domain === 'ebay.com' ? '/assets/ebay-logo.png' : (domain ? 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=32' : '');
           var span = document.createElement('span');
           span.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium bg-white border border-[#eaeaea] text-[#555]';
           span.innerHTML = (logoUrl ? '<img src="' + logoUrl + '" alt="" class="w-3.5 h-3.5 rounded-sm object-contain shrink-0" onerror="this.style.display=\'none\'" />' : '') + '<span>' + name + '</span>';
@@ -1644,12 +1640,15 @@
         var pricePence = Math.round(priceNum * 100);
         var weightKgNum = (weightInput && weightInput.value) ? parseFloat(weightInput.value.trim()) : (d.weight_kg ? parseFloat(d.weight_kg) : 0.5);
         if (isNaN(weightKgNum) || weightKgNum <= 0) weightKgNum = 0.5;
+        var att = (d.extraction && d.extraction.attributes) || {};
         var universal_data = {
           title: d.title || 'Untitled listing',
           description: d.description || '',
           price: pricePence,
           photos: photos,
           brand: d.brand || d.vendor || '',
+          make: (d.make || att.make || '').trim() || undefined,
+          model_year: (d.model_year || att.model_year || '').trim() || undefined,
           category: d.category || '',
           tags: d.tags || [],
           quantity: Math.max(1, d.quantity != null ? d.quantity : 1),
@@ -1662,47 +1661,28 @@
           product_type: d.product_type || d.category || ''
         };
 
+        // Flow order: flow-3 → flow-success (Confirm/verifying step removed; publish directly from here).
         var pubUrl = getPublishingUrl();
+        var nextBtn = document.getElementById('review-next-btn');
         if (nextBtn) { nextBtn.disabled = true; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publishing…'; nextBtn.style.pointerEvents = 'none'; nextBtn.style.opacity = '0.7'; }
-
         var publishAbort = new AbortController();
         var timeoutId = setTimeout(function() { publishAbort.abort(); }, 15000);
-
         function getToken() {
-          try {
-            var t = sessionStorage.getItem('auralink_jwt');
-            if (t) return Promise.resolve(t);
-          } catch (e) {}
-          return fetch(pubUrl + '/auth/dev-token', { signal: publishAbort.signal })
-            .then(function(r) {
-              if (r.ok) return r.json();
-              return r.json().then(function(j) { throw new Error(j.error || r.statusText || 'Could not get token'); }).catch(function(e) { if (e.message) throw e; throw new Error('Could not get token'); });
-            })
-            .then(function(data) {
-              if (data && data.token) { try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {} return data.token; }
-              return null;
-            });
+          try { var t = sessionStorage.getItem('auralink_jwt'); if (t) return Promise.resolve(t); } catch (e) {}
+          return fetch(pubUrl.replace(/\/$/, '') + '/auth/dev-token', { signal: publishAbort.signal }).then(function(r) { return r.ok ? r.json() : null; }).then(function(d) { if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; } return null; });
         }
-
         var platforms = loadSelected();
         if (!platforms || platforms.length === 0) platforms = ['shopify'];
-
         getToken().then(function(token) {
           if (!token) {
+            clearTimeout(timeoutId);
             if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to Shopify'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
             window.location.href = '/stores-connect-shopify.html?return=flow-3';
             return;
           }
           var base = pubUrl.replace(/\/$/, '');
-          // Require user to have logged into their store before we can publish
-          return fetch(base + '/api/user/connected-stores', {
-            headers: { 'Authorization': 'Bearer ' + token },
-            signal: publishAbort.signal
-          })
-            .then(function(r) {
-              if (!r.ok) return r.json().then(function(j) { throw new Error(j.error || r.statusText); }).catch(function() { throw new Error(r.statusText); });
-              return r.json();
-            })
+          return fetch(base + '/api/user/connected-stores', { headers: { 'Authorization': 'Bearer ' + token }, signal: publishAbort.signal })
+            .then(function(r) { return r.ok ? r.json() : {}; })
             .then(function(stores) {
               var needShopify = platforms.indexOf('shopify') !== -1;
               if (needShopify && (!stores.shopify || stores.shopify.status !== 'connected')) {
@@ -1714,6 +1694,7 @@
             });
         }).then(function(token) {
           if (!token) return;
+          clearTimeout(timeoutId);
           var base = pubUrl.replace(/\/$/, '');
           return fetch(base + '/api/listings', {
             method: 'POST',
@@ -1742,17 +1723,25 @@
           .then(function(result) {
             clearTimeout(timeoutId);
             if (result === undefined) return;
+            var results = result && result.results ? result.results : {};
+            var shopifyResult = results.shopify;
+            if (shopifyResult && shopifyResult.success === false) {
+              if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to Shopify'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
+              alert('Shopify: ' + (shopifyResult.error || 'Publish failed. Check your connection and try again.'));
+              return;
+            }
+            var succeeded = Object.keys(results).filter(function(p) { return results[p] && results[p].success === true; });
+            try {
+              sessionStorage.setItem('auralink_last_publish_platforms', JSON.stringify(succeeded.length ? succeeded : ['shopify']));
+              if (results.shopify && results.shopify.shop_domain) sessionStorage.setItem('auralink_last_publish_shop', results.shopify.shop_domain);
+            } catch (e) {}
             window.location.href = '/flow-success.html';
           })
           .catch(function(err) {
             clearTimeout(timeoutId);
             if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to Shopify'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
             var msg = err.message || 'Publish failed. Try again.';
-            if (err.name === 'AbortError') {
-              msg = 'Publish timed out. The publishing service may not be running or reachable. On production, deploy the publishing service and set the synclyst-publishing-url meta tag.';
-            } else if (msg === 'Failed to fetch' || err.name === 'TypeError') {
-              msg = 'Couldn\'t reach the publishing service. On synclyst.app you need to deploy the publishing API (see auralink-ai/publishing) and set synclyst-publishing-url in this page. Locally: run "npm run dev" in auralink-ai/publishing.';
-            }
+            if (err.name === 'AbortError') msg = 'Publish timed out. Ensure the publishing API is running (e.g. npm start in auralink-ai/publishing).';
             alert(msg);
           });
       });

@@ -41,7 +41,7 @@ export default function UploadPage() {
         }),
       });
       if (res.status === 402) {
-        setError("You've used all 3 free scans. Upgrade to continue.");
+        setError("Scan limit reached. Upgrade to continue.");
         window.location.href = "/dashboard/upgrade";
         return;
       }

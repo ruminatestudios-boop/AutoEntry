@@ -32,7 +32,8 @@ def _build_search_prompt(result: VisionExtractionResponse) -> str:
     title = (copy.seo_title or "").strip()
     model = (att.exact_model or "").strip()
     category = (tags.category or "").strip()
-    parts = [p for p in [brand, title, model, category] if p]
+    product_type = (att.product_type or "").strip()
+    parts = [p for p in [brand, title, model, category, product_type] if p]
     product_ref = " ".join(parts) if parts else "this product"
     return f"""Search the internet for this product and return the exact title and best description from real retailer or brand listings: {product_ref}.
 
@@ -43,7 +44,7 @@ Return:
 2. **style_print_or_model**: The print name, style code, season, or SKU when visible on the listing (e.g. "K-Nein Print", "P30JK006", "SS26"). null if not found.
 3. **full_description**: The best product description from the listing — materials, construction, features. Prefer text from the official or authoritative retailer page (e.g. "Shell: 100% Polyester. Lining: 100% Nylon. Made in China."). Ready to use as the listing description.
 4. **bullet_points**: 5–7 short bullet points of key features/specs from the listing.
-5. **average_price_gbp**: For pricing, look at 3–5 separate retailer or marketplace listings for this exact product (or closest match). Compute the average selling price in British Pounds and return that number (e.g. 398). If you find only 1–2 listings, use the average of those. null only if no listings with a price are found.
+5. **average_price_gbp**: Always attempt to find pricing. Look at 3–5 separate retailer or marketplace listings for this exact product (or closest match). Compute the average selling price in British Pounds and return that number (e.g. 398). If you find only 1–2 listings, use the average of those. For category-only or generic searches, still return the average price from comparable listings when available. null only if no listings with a price are found.
 6. **price_range_gbp** (optional): "min-max" in GBP from the lowest to highest price you saw across those listings (e.g. "385-420"); null if only one price or not found.
 7. **category** (optional): Product category as on the listing (e.g. "Men's Jackets", "Wireless Earbuds", "Headphones"). null if not found.
 
@@ -262,22 +263,26 @@ def _generate_sales_ready_copy_sync(
     gemini_api_key: str,
 ) -> Optional[dict]:
     """Call Gemini to generate sales-ready description and bullets from extraction; return dict or None."""
-    import google.generativeai as genai
-
-    genai.configure(api_key=gemini_api_key)
+    try:
+        import google.genai as genai
+        from google.genai import types
+    except ModuleNotFoundError:
+        logger.warning("Gemini SDK missing for web enrichment. Install google-genai.")
+        return None
+    client = genai.Client(api_key=gemini_api_key)
     prompt = _build_sales_ready_prompt(result)
 
-    for model_name in ("gemini-2.0-flash", "gemini-1.5-flash"):
+    for model_name in ("gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"):
         try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(
-                prompt,
-                generation_config=genai.GenerationConfig(
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
                     temperature=0.3,
                     max_output_tokens=2048,
                 ),
             )
-            text = (response.text or "").strip()
+            text = (getattr(response, "text", None) or "").strip()
             data = _parse_sales_ready_response(text)
             if data:
                 return data
@@ -292,26 +297,27 @@ def _gemini_web_enrich_sync(
     gemini_api_key: str,
 ) -> Optional[dict]:
     """Try Gemini with Google Search grounding; on failure, retry without tools (model knowledge)."""
-    import google.generativeai as genai
-
-    genai.configure(api_key=gemini_api_key)
+    try:
+        import google.genai as genai
+        from google.genai import types
+    except ModuleNotFoundError:
+        logger.warning("Gemini SDK missing for web enrichment. Install google-genai.")
+        return None
+    client = genai.Client(api_key=gemini_api_key)
     prompt = _build_search_prompt(result)
 
     def _call(tools: Optional[list] = None) -> Optional[dict]:
-        for model_name in ("gemini-2.0-flash", "gemini-1.5-flash"):
+        for model_name in ("gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"):
             try:
-                kwargs = {}
-                if tools:
-                    kwargs["tools"] = tools
-                model = genai.GenerativeModel(model_name, **kwargs)
-                response = model.generate_content(
-                    prompt,
-                    generation_config=genai.GenerationConfig(
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
                         temperature=0.1,
                         max_output_tokens=2048,
                     ),
                 )
-                text = (response.text or "").strip()
+                text = (getattr(response, "text", None) or "").strip()
                 enrichment = _parse_enrichment_response(text)
                 if enrichment:
                     return enrichment
@@ -373,12 +379,15 @@ async def enrich_from_web(
 
     att = result.attributes
     copy = result.extraction_copy
+    tags = result.tags
     has_brand = bool(att.brand and att.brand.strip())
     has_title = bool(copy.seo_title and copy.seo_title.strip().lower() not in GENERIC_TITLES)
     has_model = bool(att.exact_model and att.exact_model.strip())
+    has_category = bool(tags.category and tags.category.strip())
+    has_product_type = bool(att.product_type and att.product_type.strip())
 
-    # No search terms: generate sales-ready copy from image extraction only
-    if not (has_brand or has_title or has_model):
+    # Try web enrichment for all products when we have any searchable signal (brand, title, model, category, or product type)
+    if not (has_brand or has_title or has_model or has_category or has_product_type):
         try:
             return await _generate_sales_ready_copy_async(result, gemini_api_key)
         except Exception as e:
