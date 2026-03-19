@@ -5,6 +5,7 @@
  */
 const BACKEND =
   process.env.NEXT_PUBLIC_API_URL ||
+  process.env.AURALINK_BACKEND_URL ||
   process.env.NEXT_PUBLIC_SYNCLYST_BACKEND_URL ||
   process.env.SYNCLYST_BACKEND_URL ||
   "https://auralink-api-299567386855.us-central1.run.app";

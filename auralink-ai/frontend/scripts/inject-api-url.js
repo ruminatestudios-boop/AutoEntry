@@ -10,7 +10,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const apiUrl =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.AURALINK_BACKEND_URL ||
+  'http://localhost:8000';
 /** When marketing HTML is on a different host than Next (e.g. static synclyst.app + app on *.vercel.app). No trailing slash. */
 let appOrigin = (process.env.NEXT_PUBLIC_SYNCLYST_APP_ORIGIN || '').trim().replace(/\/$/, '');
 // Never inject a literal placeholder (common Vercel mistake: pasting the token name instead of a real URL)

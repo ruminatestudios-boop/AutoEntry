@@ -2,6 +2,7 @@
  * API client with optional Clerk auth.
  * Pass token from useAuth().getToken() for protected routes.
  */
+/** Set NEXT_PUBLIC_API_URL on Vercel, or AURALINK_BACKEND_URL (mapped in next.config.ts). */
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function apiFetch(
