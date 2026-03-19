@@ -805,8 +805,12 @@
         (function initSynclystAppOrigin() {
           var m = document.querySelector('meta[name="synclyst-app-origin"]');
           var raw = (m && m.getAttribute('content')) ? String(m.getAttribute('content')).trim() : '';
-          if (raw === '') raw = '';
-          window.SYNCLYST_APP_ORIGIN = raw.replace(/\/$/, '');
+          // Unreplaced build placeholder or empty → same host as this page (avoids /__SYNCLYST_APP_ORIGIN__/… 404s)
+          if (!raw || raw === '__SYNCLYST_APP_ORIGIN__') {
+            window.SYNCLYST_APP_ORIGIN = '';
+          } else {
+            window.SYNCLYST_APP_ORIGIN = raw.replace(/\/$/, '');
+          }
         })();
         window.synclystAppUrl = function(path) {
           if (!path) return '/';
