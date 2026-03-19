@@ -287,3 +287,19 @@ Use the **Scan** URL it prints (e.g. `http://192.168.1.196:3000/landing.html?mod
 **5. Publish to Shopify on phone**
 
 - The publishing service (port 8001) must be running on your computer. It listens on `0.0.0.0`, so the phone can reach it at `http://<your-ip>:8001`. Start it with `cd auralink-ai/publishing && npm run dev`. In development, CORS allows the phone's origin.
+
+---
+
+## Production: `synclyst.app` (static) + Next.js on Vercel (split)
+
+If **marketing** is deployed from the **repo root** (`index.html`) but **Dashboard / upgrade / scan flows** live on a **separate Next.js** URL (e.g. `https://synclyst-xxxxx.vercel.app`):
+
+1. Set the Next deployment origin on the marketing page:
+   - **Option A:** In repo root `index.html` (and `frontend/public/landing.html` before sync), set  
+     `<meta name="synclyst-app-origin" content="https://YOUR-NEXT-DEPLOYMENT.vercel.app" />`  
+     (no trailing slash).
+   - **Option B:** Set `NEXT_PUBLIC_SYNCLYST_APP_ORIGIN` in `.env`, then run `node scripts/inject-api-url.js` and `npm run sync:root-index` from `auralink-ai/frontend`, commit, push.
+
+2. **Backend CORS:** add your Next.js origin and `https://synclyst.app` to `CORS_ORIGINS` on Cloud Run.
+
+3. **Limitation:** **Session storage is per-origin.** If users **scan on** `synclyst.app` but **flow-2 opens on** another domain, the pending scan in `sessionStorage` will **not** carry over. For a full in-browser scan → flow → publish path, run **one** Next.js deployment on **`synclyst.app`** (root directory `auralink-ai/frontend`) so everything shares the same origin.

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="auralink-api-url" content="http://localhost:8000" />
     <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
+    <!-- If this file is served from a static host (repo root) while the Next.js app lives elsewhere, set the Next deployment origin (no trailing slash). Injected at build via  or edit manually. Empty = same host as this page. -->
+    <meta name="synclyst-app-origin" content="" />
     <title>SyncLyst - List products. In seconds.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -800,7 +802,40 @@
           }
         })();
 
+        (function initSynclystAppOrigin() {
+          var m = document.querySelector('meta[name="synclyst-app-origin"]');
+          var raw = (m && m.getAttribute('content')) ? String(m.getAttribute('content')).trim() : '';
+          if (raw === '') raw = '';
+          window.SYNCLYST_APP_ORIGIN = raw.replace(/\/$/, '');
+        })();
+        window.synclystAppUrl = function(path) {
+          if (!path) return '/';
+          var p = path.charAt(0) === '/' ? path : '/' + path;
+          if (window.SYNCLYST_APP_ORIGIN) return window.SYNCLYST_APP_ORIGIN + p;
+          return p;
+        };
+        function rewriteSynclystAppLinks() {
+          var origin = window.SYNCLYST_APP_ORIGIN;
+          if (!origin) return;
+          function needsRewrite(href) {
+            if (!href || typeof href !== 'string' || href.charAt(0) !== '/') return false;
+            if (href.indexOf('/synclyst-logo') === 0) return false;
+            var appPaths = ['/dashboard', '/sign-in', '/sign-up', '/home.html', '/review'];
+            for (var i = 0; i < appPaths.length; i++) {
+              var pre = appPaths[i];
+              if (href === pre || href.indexOf(pre + '?') === 0 || href.indexOf(pre + '/') === 0) return true;
+            }
+            if (href.indexOf('/flow-') === 0) return true;
+            return false;
+          }
+          document.querySelectorAll('a[href]').forEach(function(a) {
+            var h = a.getAttribute('href');
+            if (needsRewrite(h)) a.setAttribute('href', origin + h);
+          });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+        rewriteSynclystAppLinks();
         // Fast smooth scroll (zoom) to section
         function handleNavigate(e, id) {
             e.preventDefault();
@@ -975,7 +1010,7 @@
             const btn = document.createElement(isActive ? 'a' : 'button');
             btn.className = `vercel-card p-6 flex flex-col items-center justify-center text-center group transition-all duration-200 ${isActive ? 'cursor-pointer hover:scale-[1.02] hover:border-black hover:shadow-lg' : 'cursor-pointer hover:scale-[1.02]'}`;
             if (isActive) {
-                btn.href = '/home.html?mode=scan';
+                btn.href = window.synclystAppUrl('/home.html?mode=scan');
                 btn.setAttribute('aria-label', `List on ${c.name}`);
             }
             btn.innerHTML = `
@@ -1225,7 +1260,7 @@
             closeUpgradeModal();
             // Quota hit flow: take user straight into paid checkout flow
             var nextTier = getNextUpgradeTier();
-            window.location.href = '/dashboard/upgrade?tier=' + nextTier + '&autostart=1';
+            window.location.href = window.synclystAppUrl('/dashboard/upgrade?tier=' + nextTier + '&autostart=1');
           });
         }
         function renderPricingCards() {
@@ -1263,12 +1298,12 @@
             if (!tier) return;
             // Paid tiers: go to app upgrade flow → Stripe Checkout
             if (tier === 'pro' || tier === 'growth' || tier === 'scale') {
-              window.location.href = '/dashboard/upgrade?tier=' + tier + '&autostart=1';
+              window.location.href = window.synclystAppUrl('/dashboard/upgrade?tier=' + tier + '&autostart=1');
               return;
             }
             // Starter: sign up then dashboard (free tier)
             if (tier === 'starter') {
-              window.location.href = '/sign-up';
+              window.location.href = window.synclystAppUrl('/sign-up');
               return;
             }
             if (getTier() !== tier) setTier(tier);
@@ -1373,7 +1408,7 @@
                 sessionStorage.removeItem('auralink_review_draft');
                 sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
                 sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-                window.location.href = '/flow-2.html';
+                window.location.href = window.synclystAppUrl('/flow-2.html');
                 return true;
               } catch (err) { return false; }
             }
@@ -1383,7 +1418,7 @@
               delete payload.imageDataUrl;
               if (!saveAndGo(payload)) {
                 try { sessionStorage.removeItem('auralink_review_draft'); sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); sessionStorage.setItem('synclyst_selected_platform', 'shopify'); } catch (e) {}
-                window.location.href = '/flow-2.html';
+                window.location.href = window.synclystAppUrl('/flow-2.html');
               }
             }
           }
@@ -1396,12 +1431,12 @@
             fetch(apiUrl + '/api/v1/products/from-extraction', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
               .then(function(r) { if (r.ok) return r.json(); return null; })
               .then(function(res) {
-                if (claimBtn) { claimBtn.href = (res && res.id) ? (window.location.origin + '/dashboard/products?highlight=' + encodeURIComponent(res.id)) : '/dashboard'; }
+                if (claimBtn) { claimBtn.href = (res && res.id) ? (window.synclystAppUrl('/dashboard/products?highlight=' + encodeURIComponent(res.id))) : window.synclystAppUrl('/dashboard'); }
                 popup.classList.remove('hidden'); popup.classList.add('flex');
                 if (typeof lucide !== 'undefined') lucide.createIcons();
               })
               .catch(function() {
-                if (claimBtn) claimBtn.href = '/dashboard';
+                if (claimBtn) claimBtn.href = window.synclystAppUrl('/dashboard');
                 popup.classList.remove('hidden'); popup.classList.add('flex');
                 if (typeof lucide !== 'undefined') lucide.createIcons();
               });
@@ -1498,7 +1533,7 @@
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: b64 }));
                 sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-                window.location.href = '/flow-2.html';
+                window.location.href = window.synclystAppUrl('/flow-2.html');
               } catch (e) {
                 if (onError) onError(e);
               }
@@ -1507,7 +1542,7 @@
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: rawB64 }));
                 sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-                window.location.href = '/flow-2.html';
+                window.location.href = window.synclystAppUrl('/flow-2.html');
               } catch (e) {
                 if (onError) onError(e);
               }
@@ -1638,8 +1673,8 @@
                 saveDraftBtn.textContent = 'Saved';
                 var popup = document.getElementById('conversion-popup');
                 var claimBtn = document.getElementById('conversion-claim-btn');
-                if (claimBtn && res && res.id) claimBtn.href = window.location.origin + '/dashboard/products?highlight=' + encodeURIComponent(res.id);
-                else if (claimBtn) claimBtn.href = '/dashboard';
+                if (claimBtn && res && res.id) claimBtn.href = window.synclystAppUrl('/dashboard/products?highlight=' + encodeURIComponent(res.id));
+                else if (claimBtn) claimBtn.href = window.synclystAppUrl('/dashboard');
                 if (popup && !window._conversionPopupShown) { window._conversionPopupShown = true; popup.classList.remove('hidden'); popup.classList.add('flex'); }
                 if (typeof lucide !== 'undefined') lucide.createIcons();
               })
@@ -1660,9 +1695,9 @@
               sessionStorage.removeItem('auralink_review_draft');
               sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
               sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-              window.location.href = '/flow-2.html';
+              window.location.href = window.synclystAppUrl('/flow-2.html');
             } catch (e) {
-              if (e.name === 'QuotaExceededError') { delete payload.imageDataUrl; try { sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); sessionStorage.setItem('synclyst_selected_platform', 'shopify'); window.location.href = '/flow-2.html'; } catch (e2) {} }
+              if (e.name === 'QuotaExceededError') { delete payload.imageDataUrl; try { sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); sessionStorage.setItem('synclyst_selected_platform', 'shopify'); window.location.href = window.synclystAppUrl('/flow-2.html'); } catch (e2) {} }
             }
           });
 
@@ -1670,7 +1705,7 @@
           if (scanViewBack) scanViewBack.addEventListener('click', function(e) {
             e.preventDefault();
             if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
-            window.location.href = '/landing.html';
+            window.location.href = '/';
           });
 
           var popup = document.getElementById('conversion-popup');

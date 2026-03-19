@@ -11,6 +11,8 @@ const fs = require('fs');
 const path = require('path');
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+/** When marketing HTML is on a different host than Next (e.g. static synclyst.app + app on *.vercel.app). No trailing slash. */
+const appOrigin = (process.env.NEXT_PUBLIC_SYNCLYST_APP_ORIGIN || '').trim().replace(/\/$/, '');
 const publicDir = path.join(__dirname, '../public');
 const targets = [
   'landing.html',
@@ -22,7 +24,9 @@ targets.forEach((p) => {
   if (!fs.existsSync(p)) return;
   let html = fs.readFileSync(p, 'utf8');
   html = html.replace(/__AURALINK_API_URL__/g, apiUrl);
+  html = html.replace(/__SYNCLYST_APP_ORIGIN__/g, appOrigin);
   fs.writeFileSync(p, html);
 });
 
 console.log('[inject-api-url] API URL set to:', apiUrl);
+if (appOrigin) console.log('[inject-api-url] SYNCLYST app origin:', appOrigin);
