@@ -28,12 +28,13 @@ Use this list to take SyncLyst from test mode to live for real users. Tick each 
 3. **Root Directory:** set to `auralink-ai/frontend` (not repo root).
 4. **Build Command:** `npm run build` (default for Next.js).
 5. **Output Directory:** leave default (Next.js).
-6. Add **Environment Variables** (at least for later):
+6. **Avoid:** a `vercel.json` at the **repository root** with `"framework": null` or empty `buildCommand` — Vercel still merges it and you get a static deploy; **`/dashboard/upgrade` and all app routes 404**. Remove that file or fix it (see `auralink-ai/frontend/VERCEL.md`).
+7. Add **Environment Variables** (at least for later):
    - `NEXT_PUBLIC_API_URL` = leave empty for now, or set after step 5 (your backend URL).
    - `NEXT_PUBLIC_PUBLISHING_API_URL` = set after step 6 (your publishing URL).
-7. Deploy. You get `https://your-project.vercel.app`.
+8. Deploy. You get `https://your-project.vercel.app`.
 
-**Verify:** Open the Vercel URL; site loads. Camera still won’t work until backend is reachable; that’s step 5–7.
+**Verify:** Open the Vercel URL; site loads. Camera still won’t work until backend is reachable; that’s later steps.
 
 ---
 
