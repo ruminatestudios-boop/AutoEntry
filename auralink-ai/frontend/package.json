@@ -9,6 +9,7 @@
     "dev:safe": "node scripts/inject-api-url.js && (test -f .next/server/app/_not-found/page.js || npm run build) && next dev --hostname 0.0.0.0",
     "dev:clean": "node scripts/inject-api-url.js && (rm -rf .next && next dev --hostname 0.0.0.0)",
     "phone-test": "node scripts/phone-test.js",
+    "sync:root-index": "node scripts/sync-root-index-from-landing.js",
     "build": "node scripts/inject-api-url.js && next build",
     "start": "next start",
     "lint": "next lint"
