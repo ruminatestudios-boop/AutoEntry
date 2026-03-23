@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
   <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
   <title>Connected stores | SyncLyst</title>
@@ -10,6 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };</script>
   <style>
@@ -22,7 +28,7 @@
 <body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
   <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
     <header class="shrink-0 border-b border-[#e5e5e5] bg-white px-4 h-14 grid grid-cols-3 items-center">
-      <a href="/dashboard-home.html" class="text-sm font-medium text-[#525252] no-underline flex items-center gap-1"><i data-lucide="chevron-left" class="w-4 h-4"></i> Back</a>
+      <a href="/dashboard/home" class="text-sm font-medium text-[#525252] no-underline flex items-center gap-1"><i data-lucide="chevron-left" class="w-4 h-4"></i> Back</a>
       <h1 class="text-xl font-bold tracking-tight text-[#0a0a0a] justify-self-center">Stores</h1>
       <span class="w-14"></span>
     </header>
@@ -36,7 +42,7 @@
   <script>
     (function() {
       var PLATFORMS = [
-        { id: 'shopify', name: 'Shopify', domain: 'shopify.com', connectPath: '/stores-connect-shopify.html', letter: 'S' },
+        { id: 'shopify', name: 'Shopify', domain: 'shopify.com', connectPath: '/connect-store', letter: 'S' },
         { id: 'etsy', name: 'Etsy', domain: 'etsy.com', connectPath: '/stores-connect-etsy.html', letter: 'E' },
         { id: 'ebay', name: 'eBay', domain: 'ebay.com', connectPath: '/stores-connect-ebay.html', letter: 'e', logoUrl: '/assets/ebay-logo.png' },
         { id: 'tiktok', name: 'TikTok Shop', domain: 'tiktok.com', connectPath: '/stores-connect-tiktok.html', letter: 'T' },

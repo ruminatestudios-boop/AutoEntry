@@ -287,14 +287,13 @@ export default function ScrollMorphHero() {
                 <path d="M5 21l2-6 2 2 2-2-2-2 2-6" />
                 <path d="M19 21l-2-6-2 2-2-2 2-2-2-6" />
               </svg>
-              <p className="text-xs text-zinc-600 font-medium">
-                <span className="text-zinc-900 font-semibold">Smart Suggest:</span>{" "}
-                AI gets smarter the more you use it.
+              <p className="text-xs text-zinc-600 font-medium leading-tight text-left whitespace-nowrap max-[380px]:whitespace-normal">
+                <span className="text-zinc-900 font-semibold">Smart Suggest:</span> Your AI builds a
+                memory. Every scan gets faster and smarter
               </p>
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 md:text-4xl">
-              One photo. <br className="md:hidden" />
-              List everywhere.
+              Stop listing manually
             </h1>
             <motion.p
               initial={{ opacity: 0 }}
@@ -329,23 +328,22 @@ export default function ScrollMorphHero() {
             >
               <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
             </svg>
-            <p className="text-xs text-zinc-600 font-medium">
-              <span className="text-zinc-900 font-semibold">Smart Suggest:</span>{" "}
-              AI gets smarter the more you use it.
+            <p className="text-xs text-zinc-600 font-medium leading-tight text-left whitespace-nowrap max-[380px]:whitespace-normal">
+              <span className="text-zinc-900 font-semibold">Smart Suggest:</span> Your AI builds a
+              memory. Every scan gets faster and smarter
             </p>
           </div>
           <h2 className="text-3xl md:text-5xl font-semibold text-zinc-900 tracking-tight mb-4">
-            One photo. <br className="hidden md:block" />
-            List everywhere.
+            Stop listing manually
           </h2>
           <p className="text-sm md:text-base text-zinc-500 max-w-xl leading-relaxed mb-6">
-            The platform for sellers who list on multiple marketplaces. Turn
-            photos into SEO-ready listings for Shopify, Etsy, eBay, TikTok Shop,
-            and Amazon—instantly.
+            Snap a photo. AI writes the title, description, price and tags.
+            <br />
+            Live on Shopify in one tap.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pointer-events-auto">
             <Link
-              href="/home.html?mode=scan"
+              href="/scan"
               className="inline-flex items-center justify-center gap-2 bg-zinc-900 text-white px-6 py-3.5 rounded-xl text-sm font-medium hover:bg-zinc-800 transition-colors shadow-lg shadow-zinc-900/10"
             >
               <svg
@@ -379,7 +377,7 @@ export default function ScrollMorphHero() {
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              Batch upload
+              Batch Upload
               <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest ml-1">
                 Premium
               </span>

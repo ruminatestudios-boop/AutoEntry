@@ -3,7 +3,7 @@
  * Injects NEXT_PUBLIC_API_URL into static HTML screens before dev/build.
  *
  * Why: Avoid hardcoding localhost backend ports into checked-in HTML. One env var
- * controls the backend URL for all flow pages (scan → flow-2 → flow-3).
+ * controls the backend URL for all flow pages (scan → reading-product → review).
  *
  * Replaces __AURALINK_API_URL__ with env var or http://localhost:8000.
  */

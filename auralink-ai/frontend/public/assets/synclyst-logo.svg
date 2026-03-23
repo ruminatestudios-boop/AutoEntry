@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 24" fill="#0a0a0a" role="img" aria-label="Synclyst">
+  <text
+    x="0"
+    y="17.5"
+    font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    font-size="17"
+    font-weight="600"
+    letter-spacing="-0.03em"
+  >
+    Synclyst<tspan font-size="9.5" font-weight="400" dy="-5" dx="1">�</tspan>
+  </text>
+</svg>

@@ -3,75 +3,87 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
   <title>Connect Shopify | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
         },
       },
     };
   </script>
 </head>
-<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
-  <div class="max-w-md mx-auto min-h-screen flex flex-col px-5 py-8">
-    <header class="shrink-0 pb-4" id="connect-header" style="display: none;">
-      <a href="#" id="back-link" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-900 no-underline text-sm font-medium">
-        <span class="text-lg">←</span>
-        <span>Back</span>
-      </a>
+<body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
+  <div id="synclyst-flow-shell" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
+      <div id="connect-header-left" class="min-w-0 justify-self-start"></div>
+      <a href="/landing.html" class="inline-flex items-center justify-self-center no-underline text-[#111]"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <div class="justify-self-end"></div>
     </header>
-    <main class="flex-1 flex flex-col" id="connect-main">
-      <div class="flex items-center gap-3 mb-6">
-        <span class="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
-          <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="" class="w-7 h-7 object-contain" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-600 text-lg font-bold\'>S</span>';" />
-        </span>
-        <div>
-          <h1 class="font-serif text-xl font-bold text-zinc-900">Connect Shopify</h1>
-          <p class="text-sm text-zinc-500 mt-0.5">Authorise SyncLyst to list and manage products in your store</p>
+    <main class="flex-1 px-5 pt-6 pb-6 overflow-auto flex flex-col" id="connect-main">
+      <div class="flex flex-col items-center mb-6">
+        <div class="flex items-center justify-center gap-2 mb-1 w-full flex-wrap">
+          <img src="https://cdn.simpleicons.org/shopify/95BF47" alt="" class="w-5 h-5 object-contain shrink-0" width="20" height="20" onerror="this.onerror=null;this.src='https://www.google.com/s2/favicons?domain=shopify.com&amp;sz=64';" />
+          <h1 class="text-xl font-bold tracking-tight text-[#0a0a0a] text-center">Connect Shopify</h1>
         </div>
+        <p class="text-center text-sm text-[#525252] max-w-sm">Authorise SyncLyst to list and manage products in your store</p>
+      </div>
+
+      <div id="shop-dev-bypass-panel" class="hidden mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3" role="region" aria-label="Local development shortcut">
+        <p class="text-sm font-semibold text-emerald-950 mb-1">Local dev: admin token already configured</p>
+        <p class="text-sm text-emerald-900/95 leading-relaxed mb-3">Your publishing service has <code class="text-[11px] bg-emerald-100/90 px-1 rounded">SHOPIFY_DEV_ACCESS_TOKEN</code> and <code class="text-[11px] bg-emerald-100/90 px-1 rounded">SHOPIFY_DEV_SHOP_DOMAIN</code> set, so you can skip OAuth. Use this when <strong>Client ID / secret</strong> are not in <code class="text-[11px] bg-emerald-100/90 px-1 rounded">.env</code> yet.</p>
+        <button type="button" id="shop-dev-bypass-btn" class="w-full py-3 rounded-xl bg-emerald-800 text-white font-semibold text-sm border border-emerald-900 hover:bg-emerald-900 text-center transition-colors">
+          Continue without OAuth (local dev)
+        </button>
       </div>
 
       <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Your store</p>
-      <div class="rounded-xl bg-white border border-zinc-200 p-4 mb-4">
+      <div class="rounded-xl bg-white border border-[#e5e5e5] p-4 mb-4 shadow-sm" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
         <label for="shop-input" class="block text-sm font-medium text-zinc-700 mb-2">Store domain or URL</label>
-        <input type="text" id="shop-input" placeholder="e.g. fightlore.store, your-store.myshopify.com, or your-store" class="w-full text-sm text-zinc-900 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:border-zinc-400" />
-        <p class="text-xs text-zinc-500 mt-2">Enter your store URL (e.g. <strong>fightlore.store</strong>), store name (<strong>fightlore</strong>), or myshopify domain. We’ll use the right format for Shopify.</p>
-        <p id="shop-login-hint" class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2 hidden"></p>
-        <p id="shop-error" class="text-xs text-red-600 mt-2 hidden"></p>
+        <input type="text" id="shop-input" placeholder="e.g. your-brand.store, your-store.myshopify.com, or your-store" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" />
+        <p class="text-xs text-zinc-500 mt-2">Enter your store URL (e.g. <strong>your-brand.store</strong>), store name (<strong>your-store</strong>), or myshopify domain. We’ll use the right format for Shopify.</p>
+        <p id="shop-login-hint" class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2 hidden"></p>
       </div>
 
-      <div class="rounded-xl bg-zinc-100 border border-zinc-200 p-4 mb-8">
-        <p class="text-sm text-zinc-700">You’ll be sent to Shopify to sign in and approve access. SyncLyst can then create and update product listings. You approve every listing before it goes live.</p>
+      <div id="shop-error-panel" class="hidden mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3" role="alert">
+        <div id="shop-error-user" class="text-sm text-red-900 leading-relaxed"></div>
+        <button type="button" id="shop-error-dev-toggle" class="hidden mt-3 text-xs font-semibold text-red-800 underline underline-offset-2">Details for developers</button>
+        <div id="shop-error-dev" class="hidden mt-2 text-xs text-red-950/90 font-mono whitespace-pre-wrap break-words border-t border-red-200/80 pt-2"></div>
       </div>
 
-      <p id="redirect-uri-hint" class="text-xs text-zinc-500 mb-3 hidden">
-        <strong>Seeing &quot;redirect_uri is not whitelisted&quot;?</strong> Add the <em>exact</em> callback URL in Shopify. Get it from: <a href="#" id="redirect-uri-link" class="text-zinc-900 underline">/auth/shopify/status</a> (publishing service). In Shopify: Partners → App setup → URLs, or Dev Dashboard → your app version → Redirect URLs → save and set version active.
-      </p>
+      <div id="redirect-user-guide" class="hidden mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+        <p class="text-sm font-semibold text-amber-950 mb-1">If Shopify mentioned redirect URL, callback, or the app</p>
+        <p class="text-sm text-amber-900/95 leading-relaxed">That usually means the app’s <strong>callback address</strong> in Shopify (Partners / Dev Dashboard) doesn’t match what this site uses after you click Install—not that your store name is spelled wrong. The store owner or whoever manages the app needs to add the exact redirect URL Shopify expects.</p>
+        <button type="button" id="redirect-dev-toggle" class="mt-3 text-xs font-semibold text-amber-900 underline underline-offset-2">Technical details for developers</button>
+        <div id="redirect-dev-panel" class="hidden mt-2 text-xs text-amber-950 border-t border-amber-200/80 pt-2 leading-relaxed">
+          <p class="mb-2">Add the <em>exact</em> callback URL in Shopify. Open <a href="#" id="redirect-uri-link" class="text-amber-950 underline font-medium">publishing service → /auth/shopify/status</a> and copy <code class="bg-amber-100/80 px-1 rounded">redirect_uri</code> into Partners → App setup → Redirect URLs (or Dev Dashboard → your app version), save, and activate the app version.</p>
+        </div>
+      </div>
 
-      <button type="button" id="connect-btn" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center mb-3">
+      <div class="rounded-xl bg-[#fafafa] border border-[#e5e5e5] p-4 mb-8">
+        <p class="text-sm text-[#525252]">You’ll be sent to Shopify to sign in and approve access. SyncLyst can then create and update product listings. You approve every listing before it goes live.</p>
+      </div>
+
+      <button type="button" id="connect-btn" class="block w-full py-3.5 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[15px] border border-[#0a0a0a] hover:bg-[#262626] text-center mb-3 transition-colors">
         Connect store
       </button>
-      <a href="/stores-list.html" id="cancel-btn" class="block w-full py-3 rounded-xl border border-zinc-200 text-zinc-600 font-medium text-sm text-center no-underline mb-8">
+      <a href="/stores-list.html" id="cancel-btn" class="block w-full py-3 rounded-xl border border-[#e5e5e5] text-[#525252] font-medium text-sm text-center no-underline mb-8 hover:bg-zinc-50 transition-colors">
         Cancel
       </a>
-
-      <div class="rounded-xl border border-zinc-200 bg-white p-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Test SyncLyst in 3 steps</p>
-        <ol class="space-y-3 text-sm text-zinc-700 list-decimal list-inside">
-          <li><strong>Connect your test store</strong> — You’re here. Enter your store above and click Connect store, then Install app in Shopify.</li>
-          <li><strong>Run the flow &amp; Publish</strong> — <a href="/" class="text-zinc-900 font-medium underline">Start from home</a> → scan or upload a product → choose Shopify → review the listing → click <strong>Publish to Shopify</strong>.</li>
-          <li><strong>Check your listing</strong> — In <strong>Shopify Admin</strong> go to <strong>Products</strong> → <strong>Drafts</strong>. Your listing appears there as a draft; open it and click Publish to make it live.</li>
-        </ol>
-      </div>
     </main>
   </div>
   <script>
@@ -97,9 +109,15 @@
         return url;
       }
       function getPublishingBase() {
+        var host = window.location.hostname;
+        var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+        // Same-origin proxy (next.config) → publishing on 8001; avoids CORS when dev server is :3000 or :3001
+        var isLocalDevHost = host === 'localhost' || host === '127.0.0.1';
+        if (isLocalDevHost && (port === '3000' || port === '3001')) {
+          return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
+        }
         var meta = document.querySelector('meta[name="auralink-publishing-url"]');
         var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
-        var host = window.location.hostname;
         if (host && host !== 'localhost' && host !== '127.0.0.1') {
           var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
           if (prodMeta && prodMeta.getAttribute('content') && prodMeta.getAttribute('content').trim()) {
@@ -112,6 +130,103 @@
         }
         return url;
       }
+      var PUBLISH_UNREACHABLE_MSG = 'Publishing API is not running (port 8001). In a terminal: cd auralink-ai/publishing && npm run dev — or from repo root: npm run dev:all. Then open http://localhost:8001/health (should show ok).';
+      function escapeHtml(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+      function codeWrap(t) {
+        return '<code class="text-red-950 bg-red-100/70 px-1 py-0.5 rounded text-[11px] font-normal">' + escapeHtml(t) + '</code>';
+      }
+      function shouldShowRedirectGuide(raw) {
+        var t = (raw || '').toLowerCase();
+        return /redirect_uri|whitelist|callback url|oauth/i.test(t);
+      }
+      function classifyConnectError(raw) {
+        raw = (raw || '').trim();
+        var lower = raw.toLowerCase();
+        if (lower === 'shopify') {
+          return {
+            userHtml: '<p class="mb-0">Shopify didn’t finish connecting. <strong>Confirm the store</strong> you entered matches the account you’re logged into, and complete any <strong>Install / Approve</strong> step on Shopify. If Shopify mentioned a <strong>redirect</strong> or <strong>callback</strong> URL, that’s an app-settings issue—not your store name being slightly misspelled.</p>',
+            devText: null,
+            showRedirectGuide: true
+          };
+        }
+        if (/shopify app not configured|shopify_api_key|shopify_api_secret|SHOPIFY_API_KEY|auralink-ai\/publishing\/\.env/i.test(raw)) {
+          return {
+            userHtml: '<p class="mb-0">The <strong>Shopify link for this site isn’t set up on the server yet</strong> (the Shopify app credentials are missing). That’s not the same as typing the wrong store address.</p>' +
+              '<p class="mt-2 mb-0">If you <em>are</em> connecting a real store: double-check the <strong>store name or domain</strong>—use what Shopify shows (the part before <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">.myshopify.com</code> under <strong>Settings → Domains</strong>, or your custom domain). Don’t paste a full Admin URL.</p>',
+            devText: raw,
+            showRedirectGuide: false
+          };
+        }
+        if (/redirect_uri|not whitelisted|whitelist/i.test(lower)) {
+          return {
+            userHtml: '<p class="mb-0">Shopify blocked the return to SyncLyst because the app’s <strong>redirect (callback) URL</strong> in Shopify doesn’t match what this installation expects. That’s an <strong>app configuration mismatch</strong>, not a spelling mistake in your store name.</p>',
+            devText: raw,
+            showRedirectGuide: true
+          };
+        }
+        if (lower.indexOf('enter your store name') !== -1) {
+          return {
+            userHtml: '<p class="mb-0">The store field was <strong>empty</strong> or not sent. Enter your <strong>store handle</strong> (' + codeWrap('your-store') + ' from ' + codeWrap('your-store.myshopify.com') + '), your <strong>custom domain</strong>, or the full <strong>myshopify.com</strong> address.</p>',
+            devText: null,
+            showRedirectGuide: false
+          };
+        }
+        if (/use your store name only/i.test(lower) || /not ["']admin["']|admin.*or a url path/i.test(raw)) {
+          return {
+            userHtml: '<p class="mb-0">That value isn’t a valid <strong>store identifier</strong>. Don’t paste Shopify <strong>Admin</strong> links or paths like ' + codeWrap('/admin') + ' or ' + codeWrap('/oauth') + '. Use only the store name or domain, e.g. ' + codeWrap('your-store') + ', ' + codeWrap('your-store.myshopify.com') + ', or ' + codeWrap('your-brand.store') + '.</p>',
+            devText: null,
+            showRedirectGuide: false
+          };
+        }
+        if (/publishing api is not running|port 8001|failed to fetch|networkerror|load failed|network request failed|connection timed out|aborterror|econnrefused|502|503|504/.test(lower) || raw === 'unreachable') {
+          return {
+            userHtml: '<p class="mb-0">Your browser <strong>couldn’t reach SyncLyst’s connection service</strong>. That’s usually <strong>not</strong> because your store URL is wrong—the service that hands off to Shopify may be off, blocked, or timing out (typical on local dev if the publishing app isn’t running).</p>',
+            devText: /publishing api|port 8001|npm run dev|dev:all|localhost:8001/i.test(raw) ? raw : (raw ? raw : PUBLISH_UNREACHABLE_MSG),
+            showRedirectGuide: false
+          };
+        }
+        if (raw.length > 140 || /exception|undefined is not/.test(lower)) {
+          return {
+            userHtml: '<p class="mb-0">Something failed during the Shopify handoff. <strong>Re-check your store</strong>: use the same name/domain as in Shopify Admin, prefer ' + codeWrap('your-store.myshopify.com') + ', and avoid long Admin URLs. If it persists, the problem may be app setup or the connection server—not only the text you typed.</p>',
+            devText: raw,
+            showRedirectGuide: shouldShowRedirectGuide(raw)
+          };
+        }
+        if (!raw) {
+          return { userHtml: '', devText: null, showRedirectGuide: false };
+        }
+        return {
+          userHtml: '<p class="mb-0">' + escapeHtml(raw) + '</p>',
+          devText: null,
+          showRedirectGuide: shouldShowRedirectGuide(raw)
+        };
+      }
+      function showConnectError(userHtml, devText) {
+        var panel = document.getElementById('shop-error-panel');
+        var userEl = document.getElementById('shop-error-user');
+        var devToggle = document.getElementById('shop-error-dev-toggle');
+        var devEl = document.getElementById('shop-error-dev');
+        if (!panel || !userEl) return;
+        userEl.innerHTML = userHtml || '';
+        if (devText && devToggle && devEl) {
+          devEl.textContent = devText;
+          devToggle.classList.remove('hidden');
+          devEl.classList.add('hidden');
+          devToggle.setAttribute('aria-expanded', 'false');
+        } else if (devToggle && devEl) {
+          devToggle.classList.add('hidden');
+          devEl.classList.add('hidden');
+          devEl.textContent = '';
+        }
+        if (userHtml) panel.classList.remove('hidden');
+        else panel.classList.add('hidden');
+      }
+      function hideConnectError() {
+        var panel = document.getElementById('shop-error-panel');
+        if (panel) panel.classList.add('hidden');
+      }
       function normalizeShopDomain(raw) {
         raw = (raw || '').trim().toLowerCase().split('?')[0].split('#')[0].replace(/\/+$/, '');
         if (!raw) return '';
@@ -123,12 +238,6 @@
         else if (raw.indexOf('.') !== -1) raw = raw.split('.')[0];
         return raw ? (raw + '.myshopify.com') : '';
       }
-      function storeNameFromDomain(domain) {
-        if (!domain) return '';
-        var d = domain.toLowerCase();
-        if (d.indexOf('.myshopify.com') !== -1) return d.split('.myshopify')[0];
-        return domain;
-      }
       function isInvalidStoreName(domain) {
         if (!domain) return true;
         var d = domain.toLowerCase();
@@ -139,48 +248,86 @@
       var params = new URLSearchParams(window.location.search);
       var returnTo = params.get('return');
       var cancelBtn = document.getElementById('cancel-btn');
-      var backLink = document.getElementById('back-link');
-      var header = document.getElementById('connect-header');
+      var headerLeft = document.getElementById('connect-header-left');
+      function setHeaderBack(href, label) {
+        if (!headerLeft) return;
+        headerLeft.innerHTML = '<a href="' + href + '" class="text-sm text-[#555] hover:text-[#111] transition-colors no-underline">' + label + '</a>';
+      }
       var backHref = '/stores-list.html';
       if (returnTo === 'flow-marketplaces') {
         backHref = '/flow-marketplaces.html';
-        if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Choose marketplaces</span>';
-        if (header) header.style.display = 'block';
+        setHeaderBack(backHref, '← Choose marketplaces');
       } else if (returnTo === 'flow-connect') {
         backHref = '/flow-connect.html';
-        if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Connect your stores</span>';
-        if (header) header.style.display = 'block';
-      } else if (returnTo === 'flow-3') {
-        backHref = '/flow-3.html';
-        if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Back to listing</span>';
-        if (header) header.style.display = 'block';
+        setHeaderBack(backHref, '← Connect your stores');
+      } else if (returnTo === 'review' || returnTo === 'flow-3' || returnTo === 'flow-3.html') {
+        backHref = '/review';
       } else if (returnTo === 'flow-batch-review') {
         backHref = '/flow-batch-review.html';
-        if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Back to batch</span>';
-        if (header) header.style.display = 'block';
+        setHeaderBack(backHref, '← Back to batch');
       } else if (returnTo === 'stores-list') {
         backHref = '/stores-list.html';
-        if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Back to stores</span>';
-        if (header) header.style.display = 'block';
+        setHeaderBack(backHref, '← Back to stores');
       }
       if (cancelBtn) cancelBtn.href = backHref;
-      if (backLink) backLink.href = backHref;
 
       var redirectUriLink = document.getElementById('redirect-uri-link');
-      var redirectUriHint = document.getElementById('redirect-uri-hint');
       if (redirectUriLink) {
         redirectUriLink.href = getPublishingBase() + '/auth/shopify/status';
         redirectUriLink.target = '_blank';
         redirectUriLink.rel = 'noopener';
       }
-      if (redirectUriHint && (params.get('error') || (document.referrer && document.referrer.indexOf('admin.shopify.com') !== -1))) {
-        redirectUriHint.classList.remove('hidden');
+      var redirectUserGuide = document.getElementById('redirect-user-guide');
+      var shopErrorDevToggle = document.getElementById('shop-error-dev-toggle');
+      var shopErrorDev = document.getElementById('shop-error-dev');
+      if (shopErrorDevToggle && shopErrorDev) {
+        shopErrorDevToggle.addEventListener('click', function() {
+          shopErrorDev.classList.toggle('hidden');
+          var visible = !shopErrorDev.classList.contains('hidden');
+          shopErrorDevToggle.setAttribute('aria-expanded', visible ? 'true' : 'false');
+        });
+      }
+      var redirectDevToggle = document.getElementById('redirect-dev-toggle');
+      var redirectDevPanel = document.getElementById('redirect-dev-panel');
+      if (redirectDevToggle && redirectDevPanel) {
+        redirectDevToggle.addEventListener('click', function() {
+          redirectDevPanel.classList.toggle('hidden');
+        });
+      }
+      function decodeQueryParam(name) {
+        var v = params.get(name);
+        if (!v) return '';
+        try {
+          return decodeURIComponent(v.replace(/\+/g, ' '));
+        } catch (e) {
+          return v;
+        }
+      }
+      var errFromUrl = decodeQueryParam('error');
+      var msgFromUrl = decodeQueryParam('message');
+      var combinedUrlError = (msgFromUrl || errFromUrl || '').trim();
+      if (combinedUrlError) {
+        var c0 = classifyConnectError(combinedUrlError);
+        showConnectError(c0.userHtml, c0.devText);
+        if (c0.showRedirectGuide || shouldShowRedirectGuide(combinedUrlError)) {
+          if (redirectUserGuide) redirectUserGuide.classList.remove('hidden');
+        }
+        var errPanel = document.getElementById('shop-error-panel');
+        if (errPanel && !errPanel.classList.contains('hidden')) {
+          setTimeout(function() {
+            try {
+              errPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch (e) {}
+          }, 150);
+        }
+      } else if (document.referrer && document.referrer.indexOf('admin.shopify.com') !== -1) {
+        if (redirectUserGuide) redirectUserGuide.classList.remove('hidden');
       }
 
       function getReturnToPath() {
-        if (returnTo === 'flow-marketplaces') return 'flow-3.html';
+        if (returnTo === 'flow-marketplaces') return 'review';
         if (returnTo === 'flow-connect') return 'flow-connect-done.html';
-        if (returnTo === 'flow-3') return 'flow-3.html';
+        if (returnTo === 'review' || returnTo === 'flow-3' || returnTo === 'flow-3.html') return 'review';
         if (returnTo === 'flow-batch-review') return 'flow-batch-review.html';
         if (returnTo === 'stores-list') return 'stores-list.html';
         return '';
@@ -188,43 +335,39 @@
 
       var shopInput = document.getElementById('shop-input');
       var connectBtn = document.getElementById('connect-btn');
-      var errorEl = document.getElementById('shop-error');
       var loginHintEl = document.getElementById('shop-login-hint');
-      var redirectError = params.get('error');
-      if (redirectError && errorEl) {
-        errorEl.textContent = redirectError;
-        errorEl.classList.remove('hidden');
-      }
       function updateLoginHint() {
         var shop = (shopInput && shopInput.value || '').trim();
-        if (!shop) { if (loginHintEl) { loginHintEl.classList.add('hidden'); loginHintEl.textContent = ''; } return; }
+        if (!shop) { if (loginHintEl) { loginHintEl.classList.add('hidden'); loginHintEl.innerHTML = ''; } return; }
         var domain = normalizeShopDomain(shop);
         if (!domain) { if (loginHintEl) { loginHintEl.classList.add('hidden'); } return; }
-        var name = storeNameFromDomain(domain);
         if (shop.toLowerCase().indexOf('.store') !== -1 && domain) {
           if (loginHintEl) {
-            loginHintEl.textContent = 'We\'ll open Shopify to sign in. Use the Shopify account that owns this store. The URL may show ' + domain + ' — that\'s correct. If login fails, in Partner Dashboard → your app → App setup, set Redirect URL to http://localhost:8001/auth/shopify/callback';
+            loginHintEl.innerHTML = 'You’ll sign in on <strong>Shopify</strong>. Use the account that <strong>owns this store</strong>. If the address bar shows <code class="text-amber-950 bg-amber-100/80 px-1 rounded text-[11px]">' + escapeHtml(domain) + '</code>, that’s expected—it’s your store’s Shopify domain, not SyncLyst’s site.';
             loginHintEl.classList.remove('hidden');
           }
-        } else { if (loginHintEl) { loginHintEl.classList.add('hidden'); loginHintEl.textContent = ''; } }
+        } else { if (loginHintEl) { loginHintEl.classList.add('hidden'); loginHintEl.innerHTML = ''; } }
       }
       if (shopInput) { shopInput.addEventListener('input', updateLoginHint); shopInput.addEventListener('blur', updateLoginHint); }
       if (connectBtn && shopInput) {
         connectBtn.addEventListener('click', function() {
           var shop = (shopInput.value || '').trim();
           if (!shop) {
-            if (errorEl) { errorEl.textContent = 'Enter your store domain (e.g. your-store)'; errorEl.classList.remove('hidden'); return; }
+            showConnectError('<p class="mb-0">Add your <strong>store name or domain</strong>. Use the same identifier Shopify uses (e.g. the part before <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">.myshopify.com</code>), not an empty field.</p>', null);
+            return;
           }
-          if (errorEl) errorEl.classList.add('hidden');
+          hideConnectError();
           var domain = normalizeShopDomain(shop);
           if (!domain) {
-            if (errorEl) { errorEl.textContent = 'Enter a valid store name or domain (e.g. your-store or your-store.myshopify.com)'; errorEl.classList.remove('hidden'); return; }
+            showConnectError('<p class="mb-0">That doesn’t look like a <strong>real Shopify store address</strong>. Try <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-store</code>, <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-store.myshopify.com</code>, or your <strong>custom store domain</strong>—not random text.</p>', null);
+            return;
           }
           if (isInvalidStoreName(domain)) {
-            if (errorEl) { errorEl.textContent = 'Use your store name, store URL (e.g. fightlore.store), or myshopify domain — not a path like admin/oauth.'; errorEl.classList.remove('hidden'); return; }
+            showConnectError('<p class="mb-0">Use your <strong>store identity only</strong>—not a full Shopify Admin link or a path. Examples: <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-store</code>, <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-store.myshopify.com</code>, <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-brand.store</code>.</p>', null);
+            return;
           }
           updateLoginHint();
-          var returnToPath = getReturnToPath() || 'flow-3';
+          var returnToPath = getReturnToPath() || 'review';
           var pubBase = getPublishingBase();
           console.log('[Connect Shopify] Publishing API URL:', pubBase);
           connectBtn.disabled = true;
@@ -232,7 +375,13 @@
           var connectAbort = new AbortController();
           var timeoutId = setTimeout(function() { connectAbort.abort(); }, 15000);
           fetch(pubBase + '/auth/dev-token', { signal: connectAbort.signal })
-            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(r) {
+              if (!r.ok) {
+                if (r.status === 502 || r.status === 503 || r.status === 504) throw new Error('unreachable');
+                return null;
+              }
+              return r.json();
+            })
             .then(function(data) {
               clearTimeout(timeoutId);
               if (data && data.user_id) {
@@ -240,18 +389,61 @@
                 if (data.token) try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {}
                 window.location.href = authUrl;
               } else {
-                if (errorEl) { errorEl.textContent = 'Could not get auth token. Is the publishing service running on port 8001?'; errorEl.classList.remove('hidden'); }
+                var c1 = classifyConnectError(PUBLISH_UNREACHABLE_MSG);
+                showConnectError(c1.userHtml, PUBLISH_UNREACHABLE_MSG);
               }
             })
             .catch(function(err) {
               clearTimeout(timeoutId);
-              var msg = err.name === 'AbortError'
-                ? 'Connection timed out. The publishing service may be unreachable. Start it with: cd auralink-ai/publishing && node src/index.js'
-                : 'Could not reach the publishing service. Start it with: cd auralink-ai/publishing && node src/index.js';
-              if (errorEl) { errorEl.textContent = msg; errorEl.classList.remove('hidden'); }
+              var msg = PUBLISH_UNREACHABLE_MSG;
+              if (err && err.name === 'AbortError') {
+                msg = 'Connection timed out (15s). ' + PUBLISH_UNREACHABLE_MSG;
+              } else if (err && err.message !== 'unreachable' && err.message && !/failed to fetch|networkerror|load failed/i.test(String(err.message))) {
+                msg = String(err.message);
+              }
+              var c2 = classifyConnectError(msg);
+              showConnectError(c2.userHtml, c2.devText || msg);
             })
             .finally(function() { connectBtn.disabled = false; connectBtn.textContent = 'Connect store'; });
         });
+      }
+
+      function devBypassRedirectUrl(shopDomain) {
+        var q = 'shopify=connected&shop=' + encodeURIComponent(shopDomain);
+        var rt = getReturnToPath();
+        if (rt === 'review') return '/review?' + q;
+        if (rt === 'flow-batch-review.html') return '/flow-batch-review.html?' + q;
+        if (rt === 'flow-connect-done.html') return '/flow-connect-done.html?' + q;
+        if (rt === 'stores-list.html') return '/stores-list.html?' + q;
+        return '/listing/published?' + q;
+      }
+      var devBypassPanel = document.getElementById('shop-dev-bypass-panel');
+      var devBypassBtn = document.getElementById('shop-dev-bypass-btn');
+      if (devBypassPanel && devBypassBtn) {
+        var pubBaseForStatus = getPublishingBase();
+        fetch(pubBaseForStatus + '/auth/shopify/status')
+          .then(function(r) { return r.json(); })
+          .then(function(status) {
+            if (status.shopify_configured || !status.dev_shopify_bypass || !status.dev_shop_domain) return;
+            devBypassPanel.classList.remove('hidden');
+            if (typeof hideConnectError === 'function') hideConnectError();
+            setTimeout(function() {
+              try { devBypassPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+            }, 100);
+            devBypassBtn.addEventListener('click', function() {
+              devBypassBtn.disabled = true;
+              fetch(pubBaseForStatus + '/auth/dev-token')
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                  if (d && d.token) {
+                    try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {}
+                  }
+                  window.location.href = devBypassRedirectUrl(status.dev_shop_domain);
+                })
+                .catch(function() { devBypassBtn.disabled = false; });
+            });
+          })
+          .catch(function() {});
       }
     })();
   </script>

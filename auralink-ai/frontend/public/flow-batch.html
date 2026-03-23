@@ -3,11 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
   <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
   <title>Extracting | Batch | SyncLyst</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+  <script src="/js/normalize-product-tag.js"></script>
+
+
   <script>
     tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
   </script>
@@ -80,7 +87,8 @@
         if (raw) pending = JSON.parse(raw);
       } catch (e) {}
       if (!pending || !Array.isArray(pending) || pending.length === 0) {
-        window.location.href = '/flow-batch-upload.html';
+        if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/flow-batch-upload.html');
+        else window.location.href = '/flow-batch-upload.html';
         return;
       }
 
@@ -135,6 +143,77 @@
         item.statusEl.textContent = text || (state === 'done' ? 'Done' : state === 'error' ? 'Error' : state === 'processing' ? '…' : 'Waiting');
       }
 
+      function mergeVariantSizesFromEvidence(att, descriptionAndTitleText, rawOcrSnippets) {
+        var seen = {};
+        var out = [];
+        function push(v) {
+          v = String(v || '').trim();
+          if (!v || v.length > 40) return;
+          var k = v.toLowerCase();
+          if (seen[k]) return;
+          seen[k] = true;
+          out.push(v);
+        }
+        if (att && att.detected_sizes && Array.isArray(att.detected_sizes)) {
+          att.detected_sizes.forEach(function(s) { push(String(s)); });
+        }
+        if (att && att.size && typeof att.size === 'string') {
+          att.size.split(/[,;\/]/).forEach(function(s) { push(s.trim()); });
+        }
+        if (att && att.sizes && Array.isArray(att.sizes)) {
+          att.sizes.forEach(function(s) { push(String(s)); });
+        }
+        var ocrLower = '';
+        if (Array.isArray(rawOcrSnippets) && rawOcrSnippets.length) {
+          ocrLower = rawOcrSnippets.map(function(s) { return String(s || '').toLowerCase(); }).join('\n');
+        }
+        var blob = (descriptionAndTitleText && String(descriptionAndTitleText).trim()) ? String(descriptionAndTitleText) : '';
+        if (blob && ocrLower) {
+          function ocrHas(frag) {
+            return ocrLower.indexOf(String(frag).toLowerCase()) !== -1;
+          }
+          var reLetter = /\b(XXXL|XXL|XL|XS|XXS|S|M|L|2XL|3XL)\b/gi;
+          var m;
+          reLetter.lastIndex = 0;
+          while ((m = reLetter.exec(blob)) !== null) {
+            if (!ocrHas(m[0])) continue;
+            var t = m[1].toUpperCase();
+            if (t === '2XL') t = 'XXL';
+            if (t === '3XL') t = 'XXXL';
+            push(t);
+          }
+          var reUk = /\bUK\s*(\d{1,2}(?:\.\d)?)\b/gi;
+          reUk.lastIndex = 0;
+          while ((m = reUk.exec(blob)) !== null) {
+            if (!ocrHas(m[0])) continue;
+            push('UK ' + m[1]);
+          }
+        }
+        return out;
+      }
+      function mergeVariantColorsFromExtraction(att) {
+        var seen = {};
+        var out = [];
+        function push(v) {
+          v = String(v || '').trim();
+          if (!v) return;
+          var k = v.toLowerCase();
+          if (seen[k]) return;
+          seen[k] = true;
+          out.push(v);
+        }
+        if (att && att.detected_colors && Array.isArray(att.detected_colors)) {
+          att.detected_colors.forEach(function(c) { push(String(c)); });
+        }
+        if (att && att.color && typeof att.color === 'string') {
+          att.color.split(/[,;\/]/).forEach(function(s) { push(s.trim()); });
+        }
+        if (att && att.colors && Array.isArray(att.colors)) {
+          att.colors.forEach(function(c) { push(String(c)); });
+        }
+        return out;
+      }
+
       function buildDraftFromExtraction(data, imageDataUrl) {
         var att = data.attributes || {};
         var copy = data.extraction_copy || data.copy || {};
@@ -161,12 +240,10 @@
         if (att.weight_grams != null && att.weight_grams > 0) weightKg = String(Math.round(att.weight_grams / 1000 * 100) / 100);
         var keywords = (tags.search_keywords && Array.isArray(tags.search_keywords)) ? tags.search_keywords : [];
         var metaDesc = (copy.description || '').trim().slice(0, 320);
-        var sizeVals = [];
-        var colorVals = [];
-        if (att.detected_sizes && Array.isArray(att.detected_sizes) && att.detected_sizes.length > 0) sizeVals = att.detected_sizes.map(function(s) { return String(s).trim(); }).filter(Boolean);
-        else if (att.size && typeof att.size === 'string') sizeVals = att.size.split(/[,;\/]/).map(function(s) { return s.trim(); }).filter(Boolean);
-        if (att.detected_colors && Array.isArray(att.detected_colors) && att.detected_colors.length > 0) colorVals = att.detected_colors.map(function(c) { return String(c).trim(); }).filter(Boolean);
-        else if (att.color && typeof att.color === 'string') colorVals = att.color.split(/[,;\/]/).map(function(s) { return s.trim(); }).filter(Boolean);
+        var variantTextBlob = [desc, seoTitle, category].filter(Boolean).join('\n');
+        var ocrSnippets = data.raw_ocr_snippets || [];
+        var sizeVals = mergeVariantSizesFromEvidence(att, variantTextBlob, ocrSnippets);
+        var colorVals = normalizeProductTagsList(mergeVariantColorsFromExtraction(att));
         return {
           title: seoTitle || 'Untitled listing',
           description: desc,
@@ -184,7 +261,7 @@
           vendor: (att.brand || '').trim(),
           status: 'draft',
           meta_description: metaDesc,
-          tags: keywords,
+          tags: normalizeProductTagsList(keywords),
           photos: imageDataUrl ? [imageDataUrl] : [],
           extraction: data,
           variant_options: [{ name: 'Size', values: sizeVals }, { name: 'Color', values: colorVals }]
@@ -245,7 +322,8 @@
           sessionStorage.removeItem(BATCH_PENDING_KEY);
           sessionStorage.setItem(BATCH_DRAFTS_KEY, JSON.stringify(drafts));
         } catch (e) {}
-        window.location.href = '/flow-batch-review.html';
+        if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/flow-batch-review.html');
+        else window.location.href = '/flow-batch-review.html';
       }
     })();
   </script>

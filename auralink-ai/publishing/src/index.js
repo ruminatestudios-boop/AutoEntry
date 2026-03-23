@@ -68,7 +68,20 @@ app.get('/auth/shopify/status', (req, res) => {
   const configured = !!(process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET);
   const appUrl = process.env.APP_URL || 'http://localhost:8001';
   const redirectUri = `${appUrl.replace(/\/$/, '')}/auth/shopify/callback`;
-  res.json({ shopify_configured: configured, redirect_uri: redirectUri });
+  const devTok = (process.env.SHOPIFY_DEV_ACCESS_TOKEN || '').trim();
+  const devShop = (process.env.SHOPIFY_DEV_SHOP_DOMAIN || '').trim();
+  const devBypass = !!(devTok && devShop);
+  const bypassDisabled = /^(1|true|yes)$/i.test(process.env.DISABLE_DEV_SHOPIFY_CONNECT_BYPASS || '');
+  const dev_shopify_bypass = devBypass && !bypassDisabled;
+  const dev_shop_domain = dev_shopify_bypass
+    ? devShop.replace(/\.myshopify\.com$/i, '') + '.myshopify.com'
+    : null;
+  res.json({
+    shopify_configured: configured,
+    redirect_uri: redirectUri,
+    dev_shopify_bypass,
+    dev_shop_domain,
+  });
 });
 app.use('/auth', authRouter);
 app.use('/api/listings', publishRouter);

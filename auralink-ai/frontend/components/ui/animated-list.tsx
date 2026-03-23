@@ -81,7 +81,7 @@ const COMPARISON_STEPS: ComparisonStep[] = [
   { from: "Data Entry 20m", to: "Scan 1s", label: "Photo to draft" },
   { from: "SEO Research 10m", to: "AI 1.5s", label: "Title & tags" },
   { from: "Image Prep 5m", to: "Sync 0.5s", label: "Push to store" },
-  { from: "35 mins", to: "3 secs", label: "Total time" },
+  { from: "35 mins", to: "1 minute", label: "Total time" },
 ];
 
 const ComparisonNotification = ({ from, to, label }: ComparisonStep) => (

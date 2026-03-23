@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import OptionalClerkProvider from "./OptionalClerkProvider";
 
 export const metadata: Metadata = {
   title: "SyncLyst – Dashboard",
@@ -21,9 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body style={{ minHeight: "100vh", background: "#f8fafc", margin: 0 }}>
-        <ClerkProvider>
-          {children}
-        </ClerkProvider>
+        <OptionalClerkProvider>{children}</OptionalClerkProvider>
       </body>
     </html>
   );

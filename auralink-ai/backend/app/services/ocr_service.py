@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 from app.config import get_settings
+from app.services.product_title_heuristics import is_material_trademark_ocr_line
 
 
 # Known phrases that imply material (label text → material attribute)
@@ -172,14 +173,24 @@ def best_brand_and_title_from_ocr(ocr_snippets: Optional[list[str]]) -> Tuple[Op
             brand_candidate = line
             break
 
-    # Title: longest line that looks like a product name (often product name is longer)
+    # Title: longest line that looks like a product name — never use the brand line alone as title
+    title_lines: list[str] = []
     for line in ocr_snippets:
         line = line.strip()
         if not line:
             continue
-        if _looks_like_product_title(line):
-            if not title_candidate or len(line) > len(title_candidate):
-                title_candidate = line
+        if not _looks_like_product_title(line):
+            continue
+        if is_material_trademark_ocr_line(line):
+            continue
+        title_lines.append(line)
+    title_lines.sort(key=len, reverse=True)
+    brand_l = (brand_candidate or "").strip().lower()
+    for cand in title_lines:
+        if brand_l and cand.strip().lower() == brand_l:
+            continue
+        title_candidate = cand
+        break
 
     return brand_candidate, title_candidate
 

@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     # Web enrichment: after image extraction, use Gemini + Google Search to fetch exact
     # product name and full listing details from the web (optional; requires Gemini key).
     enable_web_enrichment: bool = True
+    # Second stage: fetch HTTPS product pages and extract JSON-LD / OG text (more accurate than
+    # model-paraphrased blurbs). SSRF-safe; can be disabled for minimal latency.
+    enable_web_page_fetch: bool = True
+    web_page_fetch_timeout_sec: float = 12.0
+    web_page_fetch_max_bytes: int = 2_000_000
 
     @field_validator("gemini_api_key", "openai_api_key", mode="before")
     @classmethod
@@ -76,11 +81,12 @@ class Settings(BaseSettings):
     stripe_customer_portal_return_url: str = ""
 
     def get_cors_origins_list(self) -> List[str]:
-        """Return CORS origins as a list. Empty or '*' means allow all.
-        Local dev origins are always included so the dashboard on localhost can connect."""
+        """Return CORS origins as a list. Empty or '*' means allow all origins.
+        Note: main.py sets allow_credentials=False when this is ['*'] (browser requirement)."""
         local_origins = [
             "http://localhost:3000",
             "http://127.0.0.1:3000",
+            "http://[::1]:3000",
             "http://localhost:5173",
             "http://127.0.0.1:5173",
         ]

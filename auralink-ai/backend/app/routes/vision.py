@@ -13,7 +13,14 @@ import httpx
 
 from app.auth import optional_verify_clerk
 from app.db import get_supabase, get_scan_usage, increment_scan
-from app.schemas.vision import VisionExtractionRequest, VisionExtractionResponse, FetchProductImagesRequest, OptimizeSeoRequest, OptimizeSeoResponse
+from app.schemas.vision import (
+    VisionExtractionRequest,
+    VisionExtractionResponse,
+    FetchProductImagesRequest,
+    OptimizeSeoRequest,
+    OptimizeSeoResponse,
+    ProxyImageJsonRequest,
+)
 from app.services.vision_service import (
     MultimodalProcessor,
     get_synthetic_ocr,
@@ -32,7 +39,7 @@ from app.services.ocr_service import (
     extract_dimensions_from_ocr,
 )
 from app.services.web_enrichment import enrich_from_web
-from app.services.product_images import fetch_product_image_urls
+from app.services.product_images import fetch_product_image_urls, load_reference_image_bytes
 from app.services.seo_optimize import optimize_seo_listing
 
 logger = logging.getLogger(__name__)
@@ -350,7 +357,7 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
     # Internet-backed enrichment: fetch exact product name and full listing details from the web
     if not request.skip_web_enrichment and settings.enable_web_enrichment and settings.gemini_api_key:
         try:
-            result = await enrich_from_web(result, settings.gemini_api_key)
+            result = await enrich_from_web(result, settings)
         except Exception as e:
             logger.warning("Web enrichment failed (using image-only result): %s", e)
 
@@ -368,10 +375,11 @@ async def fetch_product_images(
     _auth: dict = Depends(optional_verify_clerk),
 ):
     """
-    Search the web for clean product shot image URLs (official/retailer) and return up to 5.
-    Requires Gemini API key. Used by Confirm listing to add photos without the user taking them.
+    Search the web for product image URLs (official/retailer). When a reference image is sent,
+    prefer the same listing gallery / photoshoot as that photo—not unrelated stock images.
     """
     from app.config import get_settings
+
     settings = get_settings()
     if not settings.gemini_api_key:
         raise HTTPException(
@@ -380,13 +388,21 @@ async def fetch_product_images(
         )
     brand = (request.brand or "").strip()
     title = (request.title or "").strip()
-    if not title and not brand:
+    ref_bytes, ref_mime = await asyncio.to_thread(
+        load_reference_image_bytes,
+        (request.reference_image_base64 or "").strip() or None,
+        (request.reference_image_url or "").strip() or None,
+        (request.reference_image_mime_type or "image/jpeg").strip() or "image/jpeg",
+    )
+    if not title and not brand and not ref_bytes:
         return {"image_urls": []}
     urls = await fetch_product_image_urls(
         brand=brand,
         title=title,
         exact_model=request.exact_model if request.exact_model else None,
         gemini_api_key=settings.gemini_api_key,
+        reference_image_bytes=ref_bytes,
+        reference_image_mime_type=ref_mime,
     )
     return {"image_urls": urls}
 
@@ -437,6 +453,129 @@ def _proxy_url_allowed(url: str) -> bool:
         return False
 
 
+def _sniff_image_media_type(body: bytes) -> str | None:
+    """Return image/* from magic bytes when Content-Type is wrong or generic."""
+    if not body or len(body) < 12:
+        return None
+    if body[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if body[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if body[:4] == b"RIFF" and body[8:12] == b"WEBP":
+        return "image/webp"
+    if body[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    return None
+
+
+def _referer_candidates_for_image_url(url: str) -> list[str]:
+    """
+    Many retailer CDNs require a storefront Referer. Try several so thumbnails load in the UI.
+    """
+    parsed = urlparse(url.strip())
+    scheme = parsed.scheme or "https"
+    netloc = (parsed.netloc or "").lower()
+    host = (parsed.hostname or "").lower()
+    origin = f"{scheme}://{parsed.netloc}/"
+    candidates: list[str] = []
+    if "media-amazon" in host or "ssl-images-amazon" in host or "images-amazon" in host:
+        candidates.append("https://www.amazon.com/")
+    if "ebayimg" in host or host.endswith(".ebaystatic.com"):
+        candidates.append("https://www.ebay.com/")
+    if "etsy" in host:
+        candidates.append("https://www.etsy.com/")
+    if "shopify" in host or "cdn.shopify.com" in host:
+        candidates.append(origin)
+    if "tiktokcdn" in host or "tiktok" in host:
+        candidates.append("https://www.tiktok.com/")
+    candidates.append(origin)
+    candidates.append("https://www.google.com/")
+    seen: set[str] = set()
+    out: list[str] = []
+    for c in candidates:
+        if c not in seen:
+            seen.add(c)
+            out.append(c)
+    return out
+
+
+async def _fetch_upstream_image(url: str) -> tuple[bytes, str]:
+    """GET image bytes with retailer-friendly Referer; retry on 401/403."""
+    clean = url.strip()
+    base_headers = {
+        "User-Agent": PROXY_USER_AGENT,
+        "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        "Sec-Fetch-Dest": "image",
+        "Sec-Fetch-Mode": "no-cors",
+        "Sec-Fetch-Site": "cross-site",
+    }
+    last_status: int | None = None
+    async with httpx.AsyncClient(follow_redirects=True, timeout=20.0) as client:
+        for ref in _referer_candidates_for_image_url(clean):
+            ref_p = urlparse(ref)
+            origin = f"{ref_p.scheme}://{ref_p.netloc}" if ref_p.netloc else ""
+            headers = {**base_headers, "Referer": ref}
+            if origin:
+                headers["Origin"] = origin
+            try:
+                r = await client.get(clean, headers=headers)
+            except httpx.RequestError as e:
+                logger.warning("Proxy image request error for %s: %s", clean[:80], e)
+                raise HTTPException(status_code=502, detail="Could not fetch image") from e
+            if r.status_code in (401, 403):
+                last_status = r.status_code
+                continue
+            try:
+                r.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                sc = e.response.status_code if e.response is not None else 0
+                if sc in (401, 403):
+                    last_status = sc
+                    continue
+                raise HTTPException(status_code=sc, detail="Upstream image unavailable") from e
+
+            body = r.content
+            if not body or len(body) < 32:
+                logger.warning("Proxy image: empty or tiny body for %s", clean[:60])
+                raise HTTPException(status_code=502, detail="URL did not return an image")
+
+            ct = (r.headers.get("content-type") or "").split(";")[0].strip().lower()
+            if "image/" in ct:
+                return body, ct
+            if "octet-stream" in ct or "binary" in ct:
+                sniffed = _sniff_image_media_type(body)
+                if sniffed:
+                    return body, sniffed
+            sniffed = _sniff_image_media_type(body)
+            if sniffed:
+                return body, sniffed
+            logger.warning("Proxy image: upstream non-image content-type %s for %s", ct, clean[:60])
+            raise HTTPException(status_code=502, detail="URL did not return an image")
+
+    if last_status is not None:
+        raise HTTPException(status_code=last_status, detail="Upstream image unavailable")
+    raise HTTPException(status_code=502, detail="Could not fetch image")
+
+
+async def _proxy_image_bytes_response(url: str) -> Response:
+    if not url or not url.strip():
+        raise HTTPException(status_code=400, detail="Missing image URL")
+    if not _proxy_url_allowed(url):
+        raise HTTPException(status_code=400, detail="URL not allowed")
+    try:
+        body, media_type = await _fetch_upstream_image(url)
+        return Response(
+            content=body,
+            media_type=media_type,
+            headers={"Cache-Control": "public, max-age=3600"},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning("Proxy image failed for %s: %s", url[:80], e)
+        raise HTTPException(status_code=502, detail="Could not fetch image") from e
+
+
 @router.get("/proxy-image")
 async def proxy_image(url: str = ""):
     """
@@ -445,25 +584,10 @@ async def proxy_image(url: str = ""):
     """
     if not url or not url.strip():
         raise HTTPException(status_code=400, detail="Missing url query parameter")
-    if not _proxy_url_allowed(url):
-        raise HTTPException(status_code=400, detail="URL not allowed")
-    try:
-        headers = {
-            "User-Agent": PROXY_USER_AGENT,
-            "Accept": "image/webp,image/apng,image/*,*/*;q=0.8",
-        }
-        async with httpx.AsyncClient(follow_redirects=True, timeout=15.0) as client:
-            r = await client.get(url.strip(), headers=headers)
-            r.raise_for_status()
-            ct = (r.headers.get("content-type") or "image/jpeg").split(";")[0].strip().lower()
-            if "image/" not in ct and "octet-stream" not in ct:
-                logger.warning("Proxy image: upstream returned non-image content-type %s for %s", ct, url[:60])
-                raise HTTPException(status_code=502, detail="URL did not return an image")
-            if "image/" not in ct:
-                ct = "image/jpeg"
-            return Response(content=r.content, media_type=ct)
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail="Upstream image unavailable")
-    except Exception as e:
-        logger.warning("Proxy image failed for %s: %s", url[:80], e)
-        raise HTTPException(status_code=502, detail="Could not fetch image")
+    return await _proxy_image_bytes_response(url)
+
+
+@router.post("/proxy-image")
+async def proxy_image_post(request: ProxyImageJsonRequest):
+    """Same as GET proxy-image but URL in JSON body (needed for very long CDN URLs)."""
+    return await _proxy_image_bytes_response(request.url.strip())

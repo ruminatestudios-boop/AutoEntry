@@ -8,6 +8,11 @@ import { useState, useRef, useEffect } from "react";
 const CLERK_JWT_TEMPLATE = process.env.NEXT_PUBLIC_CLERK_JWT_TEMPLATE?.trim();
 const PENDING_UPGRADE_TIER_KEY = "synclyst_pending_upgrade_tier";
 
+const clerkPublishableKey =
+  typeof process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY === "string"
+    ? process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.trim()
+    : "";
+
 function getTierFromUrl(): string | null {
   if (typeof window === "undefined") return null;
   const t = new URLSearchParams(window.location.search).get("tier")?.toLowerCase();
@@ -31,12 +36,42 @@ function setPendingTierInStorage(tier: "pro" | "growth" | "scale") {
   window.sessionStorage.setItem(PENDING_UPGRADE_TIER_KEY, tier);
 }
 
-function clearPendingTierInStorage() {
+function clearPendingTierFromStorage() {
   if (typeof window === "undefined") return;
   window.sessionStorage.removeItem(PENDING_UPGRADE_TIER_KEY);
 }
 
-export default function UpgradePage() {
+function UpgradePageNoClerk() {
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+      <header className="glass-nav" style={{ padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Link href="/" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)" }}>
+          SyncLyst
+        </Link>
+        <Link href="/dashboard" style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--muted)" }}>
+          ← Dashboard
+        </Link>
+      </header>
+      <main style={{ padding: "2rem", maxWidth: "28rem", margin: "0 auto", textAlign: "center" }}>
+        <p style={{ color: "var(--muted)", fontSize: "0.875rem", lineHeight: 1.6 }}>
+          Upgrades use Stripe checkout and require Clerk to be configured. Add your Clerk keys to{" "}
+          <code style={{ fontSize: "0.75rem", background: "var(--border)", padding: "0.15rem 0.35rem", borderRadius: 6 }}>
+            .env.local
+          </code>{" "}
+          and restart the dev server, or continue on the dashboard in guest mode.
+        </p>
+        <Link
+          href="/dashboard"
+          style={{ display: "inline-block", marginTop: "1.25rem", fontWeight: 600, color: "var(--text)" }}
+        >
+          Go to dashboard →
+        </Link>
+      </main>
+    </div>
+  );
+}
+
+function UpgradePageWithClerk() {
   const { isLoaded, getToken, userId } = useAuth();
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
   const didAutoStart = useRef(false);
@@ -56,7 +91,6 @@ export default function UpgradePage() {
         redirectToSignIn();
         return;
       }
-      // Prefer backend JWT template, but gracefully fall back when template is missing.
       let token: string | null = null;
       if (CLERK_JWT_TEMPLATE) {
         try {
@@ -82,7 +116,7 @@ export default function UpgradePage() {
       if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as { url?: string };
       if (!data.url) throw new Error("Missing checkout URL");
-      clearPendingTierInStorage();
+      clearPendingTierFromStorage();
       window.location.href = data.url;
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") {
@@ -95,8 +129,6 @@ export default function UpgradePage() {
     }
   };
 
-  // Auto-start only for explicit deep links (?autostart=1) or pending tier in session storage.
-  // This keeps the page interactive when users open it manually.
   useEffect(() => {
     if (didAutoStart.current || !isLoaded) return;
     const fromStorage = getPendingTierFromStorage();
@@ -176,4 +208,11 @@ export default function UpgradePage() {
       </main>
     </div>
   );
+}
+
+export default function UpgradePage() {
+  if (!clerkPublishableKey) {
+    return <UpgradePageNoClerk />;
+  }
+  return <UpgradePageWithClerk />;
 }

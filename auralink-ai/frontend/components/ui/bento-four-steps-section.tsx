@@ -29,7 +29,7 @@ const SnapUploadCard = () => (
     </CardHeader>
     <CardFooter className="mt-auto">
       <Button variant="outline" size="sm" asChild>
-        <a href="/landing.html?mode=scan">
+        <a href="/scan">
           <Camera className="mr-2 h-4 w-4" />
           Try scan
         </a>
@@ -56,7 +56,7 @@ const ReviewDraftCard = () => (
   </Card>
 );
 
-/* Stat: 3 secs */
+/* Stat: 1 minute */
 const StatisticCard = () => (
   <Card className="relative h-full w-full overflow-hidden border-zinc-200">
     <div
@@ -67,7 +67,7 @@ const StatisticCard = () => (
       }}
     />
     <CardContent className="relative z-10 flex h-full items-center justify-center p-6">
-      <span className="text-6xl md:text-8xl font-bold text-zinc-800/90">3s</span>
+      <span className="text-6xl md:text-8xl font-bold text-zinc-800/90">1m</span>
     </CardContent>
   </Card>
 );
@@ -135,7 +135,7 @@ export default function BentoFourStepsSection() {
       <div className="max-w-5xl mx-auto">
         <div className="mb-10 md:mb-12 text-center">
           <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-zinc-900 mb-4">
-            From photo to live in 4 steps.
+            From photo to live in 4 steps
           </h2>
           <p className="text-zinc-500 text-lg max-w-xl mx-auto">
             Do this to get your products on your stores—no typing required.

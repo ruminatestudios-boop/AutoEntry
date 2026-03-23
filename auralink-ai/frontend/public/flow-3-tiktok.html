@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
   <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
@@ -17,6 +18,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+  <script src="/js/normalize-product-tag.js"></script>
+  <script src="/js/clip-meta-description.js"></script>
+  <script src="/js/variant-voice-dictation.js"></script>
+
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
     tailwind.config = {
@@ -119,6 +127,10 @@
     .quality-improve-row.recommended .quality-improve-icon { color: #525252; background: #f5f5f5; }
     .quality-improve-row.optional .quality-improve-text { color: #525252; }
     .quality-improve-row.optional .quality-improve-icon { color: #737373; background: #fafafa; }
+    .quality-improve-row.ready-publish { background: #ecfdf5; border-color: #a7f3d0; }
+    .quality-improve-row.ready-publish .quality-improve-text { color: #065f46; }
+    .quality-improve-row.ready-publish .quality-improve-icon { color: #059669; background: #d1fae5; }
+    .quality-improve-row.ready-publish:hover { background: #d1fae5 !important; }
     .quality-improve-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #525252; margin-bottom: 8px; }
     .quality-improve-row { cursor: pointer; }
     .quality-improve-row:hover { background: #fafafa !important; }
@@ -202,16 +214,17 @@
                 <!-- Filled by JS: thumbnails + add button as last child -->
               </div>
             </div>
-            <p class="text-xs text-[#71717a] mt-3">Drag and drop files or use the + button. First photo helps suggest title and category.</p>
+            <p class="text-xs text-[#71717a] mt-3">Drag, drop, or use + to add photos. Use clear, well-lit images from several angles so shoppers can see the product.</p>
             <div class="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-[#eaeaea]">
               <button type="button" id="find-photos-online-btn" class="w-full bg-black text-white px-5 py-2.5 rounded-xl font-semibold border border-black hover:bg-zinc-900 transition-all flex items-center justify-center gap-2.5 inline-flex">
                 <div class="relative flex items-center justify-center w-5 h-5 overflow-hidden">
                   <i data-lucide="images" class="w-5 h-5 relative z-10 text-white"></i>
                   <div class="absolute left-0 right-0 h-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] animate-scan-sweep z-20"></div>
                 </div>
-                + Upload
+                Auto-find images
               </button>
             </div>
+            <p class="text-xs text-[#71717a] mt-3">Uses your first photo to look for more images from the same listing or photoshoot when possible; title and brand help narrow results.</p>
           </div>
           <input type="file" id="suggest-from-photo-input" accept="image/*" multiple class="hidden" />
         </div>
@@ -274,8 +287,10 @@
         <div id="modal-section-category" class="vercel-card p-5">
           <label for="modal-category" class="section-label">Category *</label>
           <p class="section-hint">It's best to be specific – we'll tag your item in all the broader categories it fits under, too.</p>
-          <input type="text" id="modal-category" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" placeholder="Search for a category, e.g. Hats, Rings, Cushions, etc." list="modal-category-list" />
-          <datalist id="modal-category-list">
+          <p class="text-[11px] text-[#71717a] mb-2">Use the menu for common categories, or type below.</p>
+          <select id="modal-category-preset" class="synclyst-select-chevron w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg pl-3 pr-10 py-2.5 mb-2 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent cursor-pointer" aria-label="Pick a common product category"></select>
+          <input type="text" id="modal-category" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" placeholder="Search for a category, e.g. Hats, Rings, Cushions, etc." autocomplete="off" />
+          <datalist id="modal-category-list" class="hidden" aria-hidden="true">
             <option value="Art &amp; Collectibles" /><option value="Craft Supplies &amp; Tools" /><option value="Clothing" /><option value="Home &amp; Living" /><option value="Jewellery" /><option value="Toys &amp; Games" /><option value="Electronics" /><option value="Books &amp; Magazines" /><option value="Hats" /><option value="Rings" /><option value="Cushions" /><option value="Other" />
           </datalist>
         </div>
@@ -326,12 +341,21 @@
                 <span class="text-xs font-medium text-[#555]">Size</span>
                 <button type="button" class="variant-option-remove p-1 rounded text-[#555] hover:bg-zinc-100 hover:text-[#111] text-[10px]" aria-label="Remove option">Remove</button>
               </div>
-              <div class="flex flex-wrap items-center gap-2 mb-2">
-                <div class="variant-values-wrap flex flex-wrap gap-1.5" data-option="Size"></div>
-                <div class="flex items-center gap-1 flex-wrap">
-                  <input type="text" class="variant-value-input text-sm border border-[#eaeaea] rounded-lg px-2.5 py-1.5 w-24 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Add size" data-option="Size" />
-                  <button type="button" class="variant-mic-btn flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-100 text-zinc-500 border border-[#eaeaea] hover:bg-zinc-200 transition-colors" title="Dictate sizes" data-option="Size" aria-label="Dictate"><i data-lucide="mic" class="w-4 h-4"></i></button>
+              <div class="space-y-2 mb-2">
+                <div class="variant-values-wrap flex flex-wrap gap-1.5 w-full" data-option="Size"></div>
+                <div class="flex flex-nowrap items-center gap-2 w-full min-w-0">
+                  <input type="text" class="variant-value-input text-sm border border-[#eaeaea] rounded-lg px-2.5 py-1.5 min-w-0 flex-1 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Add size" data-option="Size" />
+                  <button type="button" class="variant-mic-btn flex items-center justify-center w-9 h-9 shrink-0 rounded-lg bg-zinc-100 text-zinc-500 border border-[#eaeaea] hover:bg-zinc-200 transition-colors" title="Dictate sizes" data-option="Size" aria-label="Dictate"><i data-lucide="mic" class="w-4 h-4"></i></button>
                 </div>
+                <p class="variant-voice-hint text-xs text-[#525252]">Tap the mic to dictate sizes. Tap again to add.</p>
+              </div>
+              <div id="variant-size-presets-wrap" class="variant-size-presets flex flex-wrap items-center gap-1.5 mt-2 pt-2 border-t border-[#f0f0f0] hidden" role="group" aria-label="Size presets">
+                <span class="variant-size-presets-label text-[10px] font-semibold text-[#737373] uppercase tracking-wide w-full sm:w-auto sm:mr-1">Quick add</span>
+                <button type="button" class="variant-size-preset-btn text-xs font-medium px-2.5 py-1 rounded-lg border border-[#e5e5e5] bg-[#fafafa] text-[#404040] hover:bg-[#f0f0f0] hover:border-[#d4d4d4] transition-colors" data-preset="apparel-letter" data-preset-category="apparel" title="Replace sizes with XS through XXL">XS–XXL</button>
+                <button type="button" class="variant-size-preset-btn text-xs font-medium px-2.5 py-1 rounded-lg border border-[#e5e5e5] bg-[#fafafa] text-[#404040] hover:bg-[#f0f0f0] hover:border-[#d4d4d4] transition-colors" data-preset="apparel-hoodie" data-preset-category="apparel" title="Replace sizes with XS through XL">XS–XL</button>
+                <button type="button" class="variant-size-preset-btn text-xs font-medium px-2.5 py-1 rounded-lg border border-[#e5e5e5] bg-[#fafafa] text-[#404040] hover:bg-[#f0f0f0] hover:border-[#d4d4d4] transition-colors" data-preset="uk-shoes" data-preset-category="footwear" title="Replace sizes with UK 3–12">UK Shoes</button>
+                <button type="button" class="variant-size-preset-btn text-xs font-medium px-2.5 py-1 rounded-lg border border-[#e5e5e5] bg-[#fafafa] text-[#404040] hover:bg-[#f0f0f0] hover:border-[#d4d4d4] transition-colors" data-preset="us-shoes" data-preset-category="footwear" title="Replace sizes with US 6–13">US Shoes</button>
+                <button type="button" class="variant-size-preset-btn text-xs font-medium px-2.5 py-1 rounded-lg border border-[#e5e5e5] bg-[#fafafa] text-[#404040] hover:bg-[#f0f0f0] hover:border-[#d4d4d4] transition-colors" data-preset="eu-shoes" data-preset-category="footwear" title="Replace sizes with EU 36–46">EU Shoes</button>
               </div>
             </div>
             <!-- Option: Color -->
@@ -340,12 +364,13 @@
                 <span class="text-xs font-medium text-[#555]">Color</span>
                 <button type="button" class="variant-option-remove p-1 rounded text-[#555] hover:bg-zinc-100 hover:text-[#111] text-[10px]" aria-label="Remove option">Remove</button>
               </div>
-              <div class="flex flex-wrap items-center gap-2 mb-2">
-                <div class="variant-values-wrap flex flex-wrap gap-1.5" data-option="Color"></div>
-                <div class="flex items-center gap-1 flex-wrap">
-                  <input type="text" class="variant-value-input text-sm border border-[#eaeaea] rounded-lg px-2.5 py-1.5 w-24 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Add color" data-option="Color" />
-                  <button type="button" class="variant-mic-btn flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-100 text-zinc-500 border border-[#eaeaea] hover:bg-zinc-200 transition-colors" title="Dictate colors" data-option="Color" aria-label="Dictate"><i data-lucide="mic" class="w-4 h-4"></i></button>
+              <div class="space-y-2 mb-2">
+                <div class="variant-values-wrap flex flex-wrap gap-1.5 w-full" data-option="Color"></div>
+                <div class="flex flex-nowrap items-center gap-2 w-full min-w-0">
+                  <input type="text" class="variant-value-input text-sm border border-[#eaeaea] rounded-lg px-2.5 py-1.5 min-w-0 flex-1 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Add color" data-option="Color" />
+                  <button type="button" class="variant-mic-btn flex items-center justify-center w-9 h-9 shrink-0 rounded-lg bg-zinc-100 text-zinc-500 border border-[#eaeaea] hover:bg-zinc-200 transition-colors" title="Dictate colors" data-option="Color" aria-label="Dictate"><i data-lucide="mic" class="w-4 h-4"></i></button>
                 </div>
+                <p class="variant-voice-hint text-xs text-[#525252]">Tap the mic to dictate colors. Tap again to add.</p>
               </div>
             </div>
           </div>
@@ -493,10 +518,22 @@
       (function() {
         var host = window.location.hostname;
         if (host && host !== 'localhost' && host !== '127.0.0.1') {
-          var meta = document.querySelector('meta[name="auralink-api-url"]');
-          if (meta) meta.setAttribute('content', window.location.protocol + '//' + host + ':8000');
-          meta = document.querySelector('meta[name="auralink-publishing-url"]');
-          if (meta) meta.setAttribute('content', window.location.protocol + '//' + host + ':8001');
+          var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
+          var prodPub = document.querySelector('meta[name="synclyst-publishing-url"]');
+          var apiMeta = document.querySelector('meta[name="auralink-api-url"]');
+          var pubMeta = document.querySelector('meta[name="auralink-publishing-url"]');
+          var be = prodBackend && prodBackend.getAttribute('content') ? prodBackend.getAttribute('content').trim().replace(/\/$/, '') : '';
+          if (be && apiMeta) {
+            apiMeta.setAttribute('content', be);
+          } else if (apiMeta) {
+            apiMeta.setAttribute('content', window.location.protocol + '//' + host + ':8000');
+          }
+          var pu = prodPub && prodPub.getAttribute('content') ? prodPub.getAttribute('content').trim().replace(/\/$/, '') : '';
+          if (pu && pubMeta) {
+            pubMeta.setAttribute('content', pu);
+          } else if (pubMeta) {
+            pubMeta.setAttribute('content', window.location.protocol + '//' + host + ':8001');
+          }
         }
       })();
       (function() {
@@ -535,6 +572,88 @@
       } catch (e) {}
       var marketplaceNames = { tiktok_shop: 'TikTok Shop', amazon: 'Amazon', shopify: 'Shopify', ebay: 'eBay', etsy: 'Etsy' };
       var marketplaceDomains = { tiktok_shop: 'tiktok.com', amazon: 'amazon.com', shopify: 'shopify.com', ebay: 'ebay.com', etsy: 'etsy.com' };
+      var SEO_META_DESC_MAX = window.SEO_META_DESC_MAX || 155;
+      function clipMetaDescriptionForSeo(text, maxLen) {
+        if (typeof window.clipMetaDescriptionForSeo === 'function') return window.clipMetaDescriptionForSeo(text, maxLen);
+        maxLen = maxLen || SEO_META_DESC_MAX;
+        var t = (text || '').replace(/\s+/g, ' ').trim();
+        if (t.length <= maxLen) return t;
+        var cut = t.slice(0, maxLen + 1);
+        var lastSpace = cut.lastIndexOf(' ');
+        if (lastSpace >= Math.floor(maxLen * 2 / 3)) return t.slice(0, lastSpace).replace(/[.,;:]+$/, '').trim();
+        return t.slice(0, maxLen).replace(/[.,;:]+$/, '').trim();
+      }
+
+      function mergeVariantSizesFromEvidence(att, descriptionAndTitleText, rawOcrSnippets) {
+        var seen = {};
+        var out = [];
+        function push(v) {
+          v = String(v || '').trim();
+          if (!v || v.length > 40) return;
+          var k = v.toLowerCase();
+          if (seen[k]) return;
+          seen[k] = true;
+          out.push(v);
+        }
+        if (att && att.detected_sizes && Array.isArray(att.detected_sizes)) {
+          att.detected_sizes.forEach(function(s) { push(String(s)); });
+        }
+        if (att && att.size && typeof att.size === 'string') {
+          att.size.split(/[,;\/]/).forEach(function(s) { push(s.trim()); });
+        }
+        if (att && att.sizes && Array.isArray(att.sizes)) {
+          att.sizes.forEach(function(s) { push(String(s)); });
+        }
+        var ocrLower = '';
+        if (Array.isArray(rawOcrSnippets) && rawOcrSnippets.length) {
+          ocrLower = rawOcrSnippets.map(function(s) { return String(s || '').toLowerCase(); }).join('\n');
+        }
+        var blob = (descriptionAndTitleText && String(descriptionAndTitleText).trim()) ? String(descriptionAndTitleText) : '';
+        if (blob && ocrLower) {
+          function ocrHas(frag) {
+            return ocrLower.indexOf(String(frag).toLowerCase()) !== -1;
+          }
+          var reLetter = /\b(XXXL|XXL|XL|XS|XXS|S|M|L|2XL|3XL)\b/gi;
+          var m;
+          reLetter.lastIndex = 0;
+          while ((m = reLetter.exec(blob)) !== null) {
+            if (!ocrHas(m[0])) continue;
+            var t = m[1].toUpperCase();
+            if (t === '2XL') t = 'XXL';
+            if (t === '3XL') t = 'XXXL';
+            push(t);
+          }
+          var reUk = /\bUK\s*(\d{1,2}(?:\.\d)?)\b/gi;
+          reUk.lastIndex = 0;
+          while ((m = reUk.exec(blob)) !== null) {
+            if (!ocrHas(m[0])) continue;
+            push('UK ' + m[1]);
+          }
+        }
+        return out;
+      }
+      function mergeVariantColorsFromExtraction(att) {
+        var seen = {};
+        var out = [];
+        function push(v) {
+          v = String(v || '').trim();
+          if (!v) return;
+          var k = v.toLowerCase();
+          if (seen[k]) return;
+          seen[k] = true;
+          out.push(v);
+        }
+        if (att && att.detected_colors && Array.isArray(att.detected_colors)) {
+          att.detected_colors.forEach(function(c) { push(String(c)); });
+        }
+        if (att && att.color && typeof att.color === 'string') {
+          att.color.split(/[,;\/]/).forEach(function(s) { push(s.trim()); });
+        }
+        if (att && att.colors && Array.isArray(att.colors)) {
+          att.colors.forEach(function(c) { push(String(c)); });
+        }
+        return out;
+      }
 
       function loadDraft() {
         if (batchMode && batchIndex >= 0) {
@@ -620,29 +739,11 @@
             if (!metaDesc && seoTitle) metaDesc = seoTitle;
             if (desc && metaDesc && metaDesc !== desc) metaDesc = (metaDesc + ' – ' + desc).slice(0, 320);
             else if (metaDesc) metaDesc = metaDesc.slice(0, 320);
-            var sizeVals = [];
-            var colorVals = [];
-            if (att.detected_sizes && Array.isArray(att.detected_sizes) && att.detected_sizes.length > 0) {
-              sizeVals = att.detected_sizes.map(function(s) { return String(s).trim(); }).filter(Boolean);
-            } else if (att.size && typeof att.size === 'string') {
-              sizeVals = att.size.split(/[,;\/]/).map(function(s) { return s.trim(); }).filter(Boolean);
-            } else if (att.sizes && Array.isArray(att.sizes)) {
-              sizeVals = att.sizes.map(function(s) { return String(s).trim(); }).filter(Boolean);
-            } else {
-              var pt = (att.product_type || category || '').toLowerCase();
-              if (/dog collar|cat collar|lead|hoodie|t-shirt|shirt|clothing|apparel|dress|jacket|jeans/.test(pt)) {
-                sizeVals = ['XS', 'S', 'M', 'L', 'XL', 'XXL'].filter(function(_, i) { return pt.indexOf('hoodie') === -1 || i < 5; });
-              } else if (/shoes|trainers|footwear/.test(pt)) {
-                sizeVals = ['UK 3', 'UK 4', 'UK 5', 'UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11', 'UK 12'];
-              }
-            }
-            if (att.detected_colors && Array.isArray(att.detected_colors) && att.detected_colors.length > 0) {
-              colorVals = att.detected_colors.map(function(c) { return String(c).trim(); }).filter(Boolean);
-            } else if (att.color && typeof att.color === 'string') {
-              colorVals = att.color.split(/[,;\/]/).map(function(s) { return s.trim(); }).filter(Boolean);
-            } else if (att.colors && Array.isArray(att.colors)) {
-              colorVals = att.colors.map(function(c) { return String(c).trim(); }).filter(Boolean);
-            }
+            metaDesc = clipMetaDescriptionForSeo(metaDesc, SEO_META_DESC_MAX);
+            var rawOcr = data.raw_ocr_snippets || [];
+            var variantTextBlob = [desc, seoTitle, category].filter(Boolean).join('\n');
+            var sizeVals = mergeVariantSizesFromEvidence(att, variantTextBlob, rawOcr);
+            var colorVals = normalizeProductTagsList(mergeVariantColorsFromExtraction(att));
             fromListing = {
               title: seoTitle || 'Untitled listing',
               description: desc,
@@ -663,7 +764,7 @@
               condition: (att.condition || 'new'),
               status: 'draft',
               meta_description: metaDesc,
-              tags: keywords,
+              tags: normalizeProductTagsList(keywords),
               photos: p.imageDataUrl ? [p.imageDataUrl] : [],
               extraction: data,
               variant_options: [{ name: 'Size', values: sizeVals }, { name: 'Color', values: colorVals }]
@@ -719,7 +820,12 @@
 
       var draft = loadDraft();
       var selected = loadSelected();
-      var modalTags = Array.isArray(draft.tags) ? draft.tags.slice() : [];
+      var modalTags = normalizeProductTagsList(Array.isArray(draft.tags) ? draft.tags : []);
+      try {
+        var _tagsBefore = JSON.stringify(Array.isArray(draft.tags) ? draft.tags : []);
+        var _tagsAfter = JSON.stringify(modalTags);
+        if (_tagsBefore !== _tagsAfter) { draft.tags = modalTags.slice(); saveDraft(draft); }
+      } catch (e) {}
 
       if (batchMode) {
         var leftEl = document.getElementById('flow3-header-left');
@@ -752,11 +858,13 @@
         var apiUrl = (apiMeta && apiMeta.getAttribute('content')) ? apiMeta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8000';
         function photoDisplaySrc(src) {
           if (!src || typeof src !== 'string') return '';
-          if (src.indexOf('data:') === 0) return src;
-          if (src.indexOf('http://') === 0 || src.indexOf('https://') === 0) {
-            return apiUrl + '/api/v1/vision/proxy-image?url=' + encodeURIComponent(src);
+          var s = src.trim();
+          if (!s) return '';
+          if (s.indexOf('data:') === 0) return s;
+          if (s.indexOf('http://') === 0 || s.indexOf('https://') === 0) {
+            return apiUrl + '/api/v1/vision/proxy-image?url=' + encodeURIComponent(s);
           }
-          return src;
+          return s;
         }
         container.innerHTML = photos.map(function(src, i) {
           var displaySrc = photoDisplaySrc(src);
@@ -802,17 +910,32 @@
           var d = loadDraft();
           var brand = (d.brand || d.vendor || '').trim();
           var title = (d.title || '').trim();
-          if (!title && !brand) {
-            alert('Enter a product title or brand first so we can search for photos.');
+          var exactModel = (d.model || (d.extraction && d.extraction.attributes && d.extraction.attributes.exact_model) || '').trim() || undefined;
+          var photos = Array.isArray(d.photos) ? d.photos.filter(Boolean) : [];
+          var ref = photos.length ? photos[0] : '';
+          var payload = { brand: brand, title: title, exact_model: exactModel || null };
+          if (ref && typeof ref === 'string') {
+            if (ref.indexOf('data:') === 0) {
+              var semi = ref.indexOf(';');
+              var comma = ref.indexOf(',');
+              if (semi > 0 && comma > semi && ref.indexOf('base64') !== -1) {
+                payload.reference_image_mime_type = ref.slice(5, semi) || 'image/jpeg';
+                payload.reference_image_base64 = ref.slice(comma + 1);
+              }
+            } else if (ref.indexOf('http') === 0) {
+              payload.reference_image_url = ref;
+            }
+          }
+          if (!title && !brand && !payload.reference_image_base64 && !payload.reference_image_url) {
+            alert('Add a photo first, or enter a title or brand, so we can find matching images.');
             return;
           }
-          var exactModel = (d.model || (d.extraction && d.extraction.attributes && d.extraction.attributes.exact_model) || '').trim() || undefined;
           findPhotosOnlineBtn.disabled = true;
           findPhotosOnlineBtn.textContent = 'Searching…';
           fetch(apiUrl + '/api/v1/vision/fetch-product-images', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ brand: brand, title: title, exact_model: exactModel || null })
+            body: JSON.stringify(payload)
           })
             .then(function(r) {
               if (!r.ok) {
@@ -825,20 +948,62 @@
             .then(function(data) {
               var urls = Array.isArray(data.image_urls) ? data.image_urls : [];
               if (urls.length === 0) {
-                alert('No product images found. Try a more specific title or brand.');
+                alert('No matching images found. If you added a photo, try a clearer shot or a more specific title.');
                 return;
               }
               var current = loadDraft();
               if (!Array.isArray(current.photos)) current.photos = [];
-              urls.forEach(function(url) {
-                if (url && typeof url === 'string' && url.indexOf('http') === 0 && current.photos.indexOf(url) === -1) {
-                  current.photos.push(url);
+              var MAX_INGEST = 6;
+              var spaceLeft = Math.max(0, MAX_INGEST - current.photos.length);
+              var candidates = urls.map(function(x) { return x && typeof x === 'string' ? x.trim() : ''; })
+                .filter(function(u) { return u.indexOf('http') === 0 && current.photos.indexOf(u) === -1; })
+                .slice(0, spaceLeft);
+              findPhotosOnlineBtn.textContent = 'Downloading…';
+              function bufferToDataUrl(buffer, mime) {
+                var bytes = new Uint8Array(buffer);
+                var CHUNK = 0x8000;
+                var binary = '';
+                for (var i = 0; i < bytes.length; i += CHUNK) {
+                  binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + CHUNK, bytes.length)));
+                }
+                return 'data:' + (mime || 'image/jpeg') + ';base64,' + btoa(binary);
+              }
+              function pullAsDataUrl(u) {
+                return fetch(apiUrl + '/api/v1/vision/proxy-image', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ url: u })
+                }).then(function(r) {
+                  if (!r.ok) throw new Error('bad');
+                  var ct = (r.headers.get('content-type') || 'image/jpeg').split(';')[0].trim();
+                  return r.arrayBuffer().then(function(buf) {
+                    if (!buf || buf.byteLength < 64) throw new Error('empty');
+                    if (buf.byteLength > 4 * 1024 * 1024) throw new Error('big');
+                    return bufferToDataUrl(buf, ct);
+                  });
+                });
+              }
+              var chain = Promise.resolve();
+              var added = 0;
+              candidates.forEach(function(u) {
+                chain = chain.then(function() {
+                  return pullAsDataUrl(u).then(function(dataUrl) {
+                    if (current.photos.indexOf(dataUrl) === -1) {
+                      current.photos.push(dataUrl);
+                      added++;
+                    }
+                  }).catch(function() {});
+                });
+              });
+              return chain.then(function() {
+                saveDraft(current);
+                draft.photos = current.photos;
+                renderPhotosPanel();
+                updateListingQuality();
+                if (added === 0 && candidates.length > 0) {
+                  alert('Found image links but downloading failed. Try again or add photos manually.');
                 }
               });
-              saveDraft(current);
-              draft.photos = current.photos;
-              renderPhotosPanel();
-              updateListingQuality();
             })
             .catch(function(e) {
               alert(e.message || 'Could not fetch photos. Check your connection and try again.');
@@ -853,6 +1018,69 @@
       var titleInput = document.getElementById('modal-title');
       var descInput = document.getElementById('modal-description');
       var categoryInput = document.getElementById('modal-category');
+      var categoryPresetSelect = document.getElementById('modal-category-preset');
+      (function populateCategoryPresetSelect() {
+        var sel = categoryPresetSelect;
+        var dl = document.getElementById('modal-category-list');
+        if (!sel || !dl) return;
+        sel.innerHTML = '';
+        var z = document.createElement('option');
+        z.value = '';
+        z.textContent = 'Pick a category…';
+        sel.appendChild(z);
+        Array.prototype.forEach.call(dl.querySelectorAll('option'), function(o) {
+          var v = (o.getAttribute('value') || '').trim();
+          if (!v) return;
+          var opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          sel.appendChild(opt);
+        });
+      })();
+      function syncCategoryPresetFromInput() {
+        if (!categoryPresetSelect || !categoryInput) return;
+        var cv = (categoryInput.value || '').trim();
+        var found = '';
+        for (var i = 0; i < categoryPresetSelect.options.length; i++) {
+          var o = categoryPresetSelect.options[i];
+          if (o.value && o.value === cv) {
+            found = o.value;
+            break;
+          }
+        }
+        categoryPresetSelect.value = found;
+      }
+      function isPredeterminedCategoryPath(s) {
+        var t = (s || '').trim();
+        return t.length > 0 && /[>›▸]/.test(t);
+      }
+      function syncCategoryInputMode() {
+        if (!categoryInput) return;
+        var v = (categoryInput.value || '').trim();
+        categoryInput.removeAttribute('list');
+        categoryInput.readOnly = false;
+        categoryInput.removeAttribute('aria-readonly');
+        categoryInput.classList.add('cursor-text');
+        categoryInput.classList.remove('cursor-default');
+        if (isPredeterminedCategoryPath(v)) {
+          categoryInput.classList.add('bg-zinc-50');
+        } else {
+          categoryInput.classList.remove('bg-zinc-50');
+        }
+        syncCategoryPresetFromInput();
+        if (typeof window.syncVariantSizePresetVisibility === 'function') window.syncVariantSizePresetVisibility();
+      }
+      if (categoryPresetSelect && categoryInput) {
+        categoryPresetSelect.addEventListener('change', function() {
+          var val = categoryPresetSelect.value;
+          if (val) categoryInput.value = val;
+          syncCategoryInputMode();
+        });
+      }
+      if (categoryInput) {
+        categoryInput.addEventListener('input', function() { syncCategoryInputMode(); });
+        categoryInput.addEventListener('blur', function() { syncCategoryInputMode(); });
+      }
       var priceInput = document.getElementById('modal-price');
       var compareAtInput = document.getElementById('modal-compare-at');
       var chargeTaxCheck = document.getElementById('modal-charge-tax');
@@ -871,6 +1099,50 @@
       var metaDescInput = document.getElementById('modal-meta-description');
       var metaDescCount = document.getElementById('modal-meta-desc-count');
       var storesList = document.getElementById('modal-stores-list');
+
+      function getVariantPresetHintText() {
+        var a = (productTypeInput && productTypeInput.value) ? String(productTypeInput.value) : '';
+        var b = (categoryInput && categoryInput.value) ? String(categoryInput.value) : '';
+        var t = (titleInput && titleInput.value) ? String(titleInput.value) : '';
+        var primary = (a + ' ' + b).trim();
+        if (primary) return (primary + ' ' + t).trim().toLowerCase();
+        return t.toLowerCase();
+      }
+      function classifyVariantPresetKind(hint) {
+        var lower = (hint || '').toLowerCase();
+        var footwear = /\b(shoe|shoes|boot|boots|sandal|sandals|trainer|trainers|sneaker|sneakers|footwear|slipper|slippers|loafer|loafers|clog|cleat|cleats|mule|mules|oxford|brogue|wedge|flip-flop|flip flop|slides)\b/i.test(lower);
+        var apparel = /\b(shirt|shirts|t-shirt|tshirt|t shirt|tee|hoodie|hoodies|jacket|jackets|dress|dresses|jean|jeans|trouser|trousers|pant|pants|top|tops|apparel|clothing|sweater|sweaters|coat|coats|shorts|skirt|skirts|knitwear|vest|suits|blouse|blouses|polo|polos|legging|leggings|jogger|joggers|tank|cardigan|cardigans|parka|anorak|sleepsuit|bodysuit|romper|overalls|jumpsuit|tracksuit|sweatshirt|beanie|scarf|glove|mittens)\b/i.test(lower);
+        if (footwear && !apparel) return 'footwear';
+        if (apparel && !footwear) return 'apparel';
+        if (footwear && apparel) {
+          if (/\b(shoe|shoes|boot|boots|sandal|trainer|sneaker|footwear|loafer|cleat)\b/i.test(lower)) return 'footwear';
+          return 'apparel';
+        }
+        return '';
+      }
+      function syncVariantSizePresetVisibility() {
+        var wrap = document.getElementById('variant-size-presets-wrap');
+        if (!wrap) return;
+        var kind = classifyVariantPresetKind(getVariantPresetHintText());
+        wrap.querySelectorAll('[data-preset-category]').forEach(function(btn) {
+          btn.classList.remove('hidden');
+        });
+        if (kind === 'footwear') {
+          wrap.classList.remove('hidden');
+          wrap.querySelectorAll('[data-preset-category="apparel"]').forEach(function(b) { b.classList.add('hidden'); });
+        } else if (kind === 'apparel') {
+          wrap.classList.remove('hidden');
+          wrap.querySelectorAll('[data-preset-category="footwear"]').forEach(function(b) { b.classList.add('hidden'); });
+        } else {
+          wrap.classList.add('hidden');
+        }
+      }
+      window.syncVariantSizePresetVisibility = syncVariantSizePresetVisibility;
+      if (productTypeInput) {
+        productTypeInput.addEventListener('input', function() {
+          if (typeof window.syncVariantSizePresetVisibility === 'function') window.syncVariantSizePresetVisibility();
+        });
+      }
 
       function generateSkuFromProduct(title, vendor, category, productType, exactModel) {
         var parts = [];
@@ -1074,21 +1346,24 @@
           improvements.push({ priority: 'recommended', text: 'Add Size or Color options in Variants so customers can pick the right option.', scrollTo: 'modal-section-variants', focusId: 'modal-variants-add-option' });
         }
 
+        var LISTING_QUALITY_MAX_RAW = 84;
+        var displayScore = Math.min(100, Math.round((score / LISTING_QUALITY_MAX_RAW) * 100));
+
         var scoreEl = document.getElementById('listing-quality-score');
         var barEl = document.getElementById('listing-quality-bar');
         var statusEl = document.getElementById('listing-quality-status');
         var summaryEl = document.getElementById('listing-quality-summary');
         var listEl = document.getElementById('listing-quality-improvements');
-        if (scoreEl) scoreEl.textContent = score;
+        if (scoreEl) scoreEl.textContent = String(displayScore);
         if (statusEl) {
-          if (score >= 80) statusEl.textContent = 'You\'re on track to publish. Your listing has the essentials.';
-          else if (score >= 50) statusEl.textContent = 'A few tweaks will improve visibility and conversion.';
+          if (displayScore >= 80) statusEl.textContent = 'You\'re on track to publish. Your listing has the essentials.';
+          else if (displayScore >= 50) statusEl.textContent = 'A few tweaks will improve visibility and conversion.';
           else statusEl.textContent = 'Complete the required fields below to get your listing ready.';
         }
         if (barEl) {
-          barEl.setAttribute('aria-valuenow', score);
+          barEl.setAttribute('aria-valuenow', displayScore);
           var segments = 60;
-          var filledCount = Math.round((score / 100) * segments);
+          var filledCount = Math.round((displayScore / 100) * segments);
           var gradientStops = [{ p: 0, r: 212, g: 212, b: 212 }, { p: 0.5, r: 234, g: 179, b: 8 }, { p: 1, r: 234, g: 179, b: 8 }];
           function interpColor(t) {
             var i = 0;
@@ -1118,10 +1393,7 @@
         if (improvements.length === 0) {
           if (summaryEl) { summaryEl.textContent = 'Your listing has the essentials.'; summaryEl.classList.remove('hidden'); }
           if (listEl) {
-            var optionalTip = (photoCount >= 2 && photoCount <= 5)
-              ? 'Optional: add more tags to boost visibility.'
-              : 'Optional: add more photos or tags to boost visibility.';
-            listEl.innerHTML = '<li class="quality-improve-row optional"><span class="quality-improve-icon" aria-hidden="true"><i data-lucide="check-circle" class="w-5 h-5 text-zinc-500"></i></span><span class="quality-improve-text font-medium text-zinc-700">Ready to publish.</span></li><li class="quality-improve-row optional"><span class="quality-improve-icon" aria-hidden="true"><i data-lucide="sparkles" class="w-5 h-5"></i></span><span class="quality-improve-text">' + optionalTip + '</span></li>';
+            listEl.innerHTML = '<li class="quality-improve-row optional ready-publish"><span class="quality-improve-icon" aria-hidden="true"><i data-lucide="check-circle" class="w-5 h-5"></i></span><span class="quality-improve-text font-medium">Ready to publish.</span></li>';
             if (typeof lucide !== 'undefined') lucide.createIcons();
           }
         } else {
@@ -1203,6 +1475,7 @@
       resizeDescTextarea();
       if (descInput) descInput.addEventListener('input', resizeDescTextarea);
       if (categoryInput) categoryInput.value = (draft.category || '').trim();
+      syncCategoryInputMode();
       if (priceInput) priceInput.value = (draft.price != null && draft.price !== '') ? String(draft.price).replace(/^\$|^£|^€|^CA\$|^A\$/g, '').trim() : '';
       var priceSourceLabel = document.getElementById('modal-price-source-label');
       var priceSection = document.getElementById('modal-section-price');
@@ -1265,7 +1538,10 @@
         var ws = draft.weight_source || (draft.extraction && draft.extraction.attributes && draft.extraction.attributes.weight_source) || '';
         weightSourceLabel.classList.toggle('hidden', ws !== 'estimated');
       }
-      if (productTypeInput) productTypeInput.value = (draft.product_type || draft.category || '').trim();
+      if (productTypeInput) {
+        var _attDraft = (draft.extraction && draft.extraction.attributes) || {};
+        productTypeInput.value = (draft.product_type || _attDraft.product_type || draft.category || '').trim();
+      }
       if (vendorInput) vendorInput.value = (draft.vendor || draft.brand || '').trim();
       var wm = (draft.who_made || 'i_did');
       var wMadeEl = document.querySelector('input[name="etsy-who-made"][value="' + wm + '"]');
@@ -1301,6 +1577,7 @@
         metaVal = title && desc ? (title + ' – ' + desc) : (desc || title);
         metaVal = metaVal.slice(0, 320);
       }
+      metaVal = clipMetaDescriptionForSeo(metaVal, SEO_META_DESC_MAX);
       if (metaDescInput) metaDescInput.value = metaVal;
       if (seoTitleInput) seoTitleInput.value = (draft.title || '').trim() || 'Uses product title';
       updateMetaDescCount();
@@ -1316,7 +1593,10 @@
       if (priceInput) priceInput.addEventListener('input', function() { updateListingQuality(); });
       var seoEditBtn = document.getElementById('modal-seo-edit-btn');
       if (seoEditBtn && seoTitleInput) seoEditBtn.addEventListener('click', function() { seoTitleInput.focus(); });
-      if (titleInput) titleInput.addEventListener('input', updateListingQuality);
+      if (titleInput) titleInput.addEventListener('input', function() {
+        updateListingQuality();
+        if (typeof window.syncVariantSizePresetVisibility === 'function') window.syncVariantSizePresetVisibility();
+      });
       if (descInput) descInput.addEventListener('input', updateListingQuality);
       updateListingQuality();
 
@@ -1341,7 +1621,12 @@
           if (!card) return;
           var wrap = card.querySelector('.variant-values-wrap');
           if (!wrap) return;
-          var uniq = values.filter(function(v, i, a) { return a.indexOf(v) === i && v; });
+          var uniq;
+          if (optionName === 'Color') {
+            uniq = normalizeProductTagsList((values || []).map(function(v) { return String(v || '').trim(); }).filter(Boolean));
+          } else {
+            uniq = values.filter(function(v, i, a) { return a.indexOf(v) === i && v; });
+          }
           wrap.innerHTML = uniq.map(function(val) {
             var safe = (val || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
             return '<span class="variant-pill inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-50 border border-[#eaeaea] text-[#111] text-xs font-medium" data-value="' + safe + '">' + safe + ' <button type="button" class="variant-pill-remove text-[#555] hover:text-[#111]" aria-label="Remove">×</button></span>';
@@ -1357,12 +1642,15 @@
         function addValueToOption(optionName, value) {
           var v = (value || '').trim();
           if (!v) return;
+          if (optionName === 'Color') v = normalizeProductTag(v);
           var card = listEl.querySelector('.variant-option-card[data-option-name="' + optionName + '"]');
           if (!card) return;
           var wrap = card.querySelector('.variant-values-wrap');
           if (!wrap) return;
           var existing = getValuesForOption(optionName);
-          if (existing.indexOf(v) !== -1) return;
+          if (optionName === 'Color') {
+            if (existing.some(function(x) { return String(x).toLowerCase() === v.toLowerCase(); })) return;
+          } else if (existing.indexOf(v) !== -1) return;
           existing.push(v);
           setValuesForOption(optionName, existing);
         }
@@ -1370,41 +1658,36 @@
           var card = listEl.querySelector('.variant-option-card[data-option-name="' + o.name + '"]');
           if (card) setValuesForOption(o.name, o.values || []);
         });
+        var SIZE_PRESETS = {
+          'apparel-letter': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+          'apparel-hoodie': ['XS', 'S', 'M', 'L', 'XL'],
+          'uk-shoes': ['UK 3', 'UK 4', 'UK 5', 'UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11', 'UK 12'],
+          'us-shoes': ['US 6', 'US 7', 'US 8', 'US 9', 'US 10', 'US 11', 'US 12', 'US 13'],
+          'eu-shoes': ['EU 36', 'EU 37', 'EU 38', 'EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44', 'EU 45', 'EU 46']
+        };
+        listEl.querySelectorAll('.variant-size-preset-btn').forEach(function(presetBtn) {
+          presetBtn.addEventListener('click', function() {
+            var key = presetBtn.getAttribute('data-preset');
+            var arr = SIZE_PRESETS[key];
+            if (!arr) return;
+            setValuesForOption('Size', arr.slice());
+            if (typeof updateListingQuality === 'function') updateListingQuality();
+          });
+        });
         listEl.querySelectorAll('.variant-value-input').forEach(function(inp) {
           var optionName = inp.getAttribute('data-option');
           inp.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') { e.preventDefault(); addValueToOption(optionName, inp.value); inp.value = ''; }
           });
         });
+        function afterVariantVoice() {
+          if (typeof updateListingQuality === 'function') updateListingQuality();
+        }
         listEl.querySelectorAll('.variant-mic-btn').forEach(function(btn) {
           var optionName = btn.getAttribute('data-option');
-          btn.addEventListener('click', function() {
-            var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-              alert('Voice input is not supported in this browser. Try Chrome or Edge.');
-              return;
-            }
-            var rec = new SpeechRecognition();
-            rec.continuous = false;
-            rec.interimResults = false;
-            rec.lang = navigator.language || 'en-GB';
-            btn.classList.add('opacity-70');
-            btn.querySelector('i') && (btn.querySelector('i').setAttribute('data-lucide', 'mic-off'));
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-            rec.onresult = function(event) {
-              var text = (event.results[0] && event.results[0][0]) ? event.results[0][0].transcript : '';
-              text.split(/[\s,;]+/).forEach(function(word) {
-                var w = word.trim();
-                if (w.length > 0 && w.length < 50) addValueToOption(optionName, w);
-              });
-            };
-            rec.onend = rec.onerror = function() {
-              btn.classList.remove('opacity-70');
-              btn.querySelector('i') && btn.querySelector('i').setAttribute('data-lucide', 'mic');
-              if (typeof lucide !== 'undefined') lucide.createIcons();
-            };
-            try { rec.start(); } catch (err) {}
-          });
+          if (typeof window.bindVariantMicButton === 'function') {
+            window.bindVariantMicButton(btn, optionName, addValueToOption, afterVariantVoice);
+          }
         });
         listEl.querySelectorAll('.variant-option-remove').forEach(function(btn) {
           btn.addEventListener('click', function() {
@@ -1436,33 +1719,15 @@
             var div = document.createElement('div');
             div.className = 'variant-option-card rounded-lg border border-[#eaeaea] bg-white p-3';
             div.setAttribute('data-option-name', name);
-            div.innerHTML = '<div class="flex items-center justify-between gap-2 mb-2"><span class="text-xs font-medium text-[#555]">' + name.replace(/</g, '&lt;') + '</span><button type="button" class="variant-option-remove p-1 rounded text-[#555] hover:bg-zinc-100 hover:text-[#111] text-[10px]" aria-label="Remove option">Remove</button></div><div class="flex flex-wrap items-center gap-2 mb-2"><div class="variant-values-wrap flex flex-wrap gap-1.5" data-option="' + name.replace(/"/g, '&quot;') + '"></div><div class="flex items-center gap-1 flex-wrap"><input type="text" class="variant-value-input text-sm border border-[#eaeaea] rounded-lg px-2.5 py-1.5 w-24 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Add value" data-option="' + name.replace(/"/g, '&quot;') + '" /><button type="button" class="variant-mic-btn flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-100 text-zinc-500 border border-[#eaeaea] hover:bg-zinc-200 transition-colors" title="Dictate" data-option="' + name.replace(/"/g, '&quot;') + '" aria-label="Dictate"><i data-lucide="mic" class="w-4 h-4"></i></button></div></div>';
+            div.innerHTML = '<div class="flex items-center justify-between gap-2 mb-2"><span class="text-xs font-medium text-[#555]">' + name.replace(/</g, '&lt;') + '</span><button type="button" class="variant-option-remove p-1 rounded text-[#555] hover:bg-zinc-100 hover:text-[#111] text-[10px]" aria-label="Remove option">Remove</button></div><div class="space-y-2 mb-2"><div class="variant-values-wrap flex flex-wrap gap-1.5 w-full" data-option="' + name.replace(/"/g, '&quot;') + '"></div><div class="flex flex-nowrap items-center gap-2 w-full min-w-0"><input type="text" class="variant-value-input text-sm border border-[#eaeaea] rounded-lg px-2.5 py-1.5 min-w-0 flex-1 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Add value" data-option="' + name.replace(/"/g, '&quot;') + '" /><button type="button" class="variant-mic-btn flex items-center justify-center w-9 h-9 shrink-0 rounded-lg bg-zinc-100 text-zinc-500 border border-[#eaeaea] hover:bg-zinc-200 transition-colors" title="Dictate" data-option="' + name.replace(/"/g, '&quot;') + '" aria-label="Dictate"><i data-lucide="mic" class="w-4 h-4"></i></button></div><p class="variant-voice-hint text-xs text-[#525252]">Tap the mic to dictate your selection. Tap again to add.</p></div>';
             listEl.appendChild(div);
             var wrap = div.querySelector('.variant-values-wrap');
             var inp = div.querySelector('.variant-value-input');
             var micBtn = div.querySelector('.variant-mic-btn');
             inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addValueToOption(name, inp.value); inp.value = ''; } });
-            micBtn.addEventListener('click', function() {
-              var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-              if (!SpeechRecognition) { alert('Voice input is not supported in this browser.'); return; }
-              var rec = new SpeechRecognition();
-              rec.continuous = false;
-              rec.interimResults = false;
-              rec.lang = navigator.language || 'en-GB';
-              micBtn.classList.add('opacity-70');
-              micBtn.querySelector('i') && micBtn.querySelector('i').setAttribute('data-lucide', 'mic-off');
-              if (typeof lucide !== 'undefined') lucide.createIcons();
-              rec.onresult = function(event) {
-                var text = (event.results[0] && event.results[0][0]) ? event.results[0][0].transcript : '';
-                text.split(/[\s,;]+/).forEach(function(word) { var w = word.trim(); if (w.length > 0 && w.length < 50) addValueToOption(name, w); });
-              };
-              rec.onend = rec.onerror = function() {
-                micBtn.classList.remove('opacity-70');
-                micBtn.querySelector('i') && micBtn.querySelector('i').setAttribute('data-lucide', 'mic');
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-              };
-              try { rec.start(); } catch (err) {}
-            });
+            if (typeof window.bindVariantMicButton === 'function') {
+              window.bindVariantMicButton(micBtn, name, addValueToOption, afterVariantVoice);
+            }
             div.querySelector('.variant-option-remove').addEventListener('click', function() {
               var total = listEl.querySelectorAll('.variant-option-card').length;
               if (total > 1) div.remove();
@@ -1470,6 +1735,7 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
           });
         }
+        if (typeof window.syncVariantSizePresetVisibility === 'function') window.syncVariantSizePresetVisibility();
       })();
 
       (function initSuggestFromPhoto() {
@@ -1511,37 +1777,27 @@
               }
               var category = (tags.category || '').trim();
               var vendor = (att.brand || '').trim();
-              var metaDesc = (copy.description || desc || '').trim().slice(0, 155);
+              var metaDesc = clipMetaDescriptionForSeo((copy.description || desc || '').trim(), SEO_META_DESC_MAX);
               if (title && titleInput) { titleInput.value = title; if (seoTitleInput) seoTitleInput.value = title; }
               if (desc && descInput) descInput.value = desc;
-              if (category && categoryInput) categoryInput.value = category;
+              if (category && categoryInput) { categoryInput.value = category; syncCategoryInputMode(); }
               if (vendor && vendorInput) vendorInput.value = vendor;
-              if (productTypeInput) productTypeInput.value = category || productTypeInput.value;
-              if (metaDesc && metaDescInput) { metaDescInput.value = metaDesc; updateMetaDescCount(); resizeMetaDescTextarea(); }
-              var sizeVals = [];
-              var colorVals = [];
-              if (att.detected_sizes && Array.isArray(att.detected_sizes) && att.detected_sizes.length > 0) {
-                sizeVals = att.detected_sizes.map(function(s) { return String(s).trim(); }).filter(Boolean);
-              } else if (att.size && typeof att.size === 'string') sizeVals = att.size.split(/[,;\/]/).map(function(s) { return s.trim(); }).filter(Boolean);
-              else if (att.sizes && Array.isArray(att.sizes)) sizeVals = att.sizes.map(function(s) { return String(s).trim(); }).filter(Boolean);
-              else {
-                var pt = (att.product_type || category || '').toLowerCase();
-                if (/dog collar|cat collar|lead|hoodie|t-shirt|shirt|clothing|apparel|dress|jacket|jeans/.test(pt)) {
-                  sizeVals = ['XS', 'S', 'M', 'L', 'XL', pt.indexOf('hoodie') !== -1 ? '' : 'XXL'].filter(Boolean);
-                } else if (/shoes|trainers|footwear/.test(pt)) {
-                  sizeVals = ['UK 3', 'UK 4', 'UK 5', 'UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11', 'UK 12'];
-                }
+              if (productTypeInput) {
+                var ptEx = (att.product_type || '').trim();
+                productTypeInput.value = ptEx || category || productTypeInput.value;
               }
-              if (att.detected_colors && Array.isArray(att.detected_colors) && att.detected_colors.length > 0) {
-                colorVals = att.detected_colors.map(function(c) { return String(c).trim(); }).filter(Boolean);
-              } else if (att.color && typeof att.color === 'string') colorVals = att.color.split(/[,;\/]/).map(function(s) { return s.trim(); }).filter(Boolean);
-              else if (att.colors && Array.isArray(att.colors)) colorVals = att.colors.map(function(c) { return String(c).trim(); }).filter(Boolean);
+              if (metaDesc && metaDescInput) { metaDescInput.value = metaDesc; updateMetaDescCount(); resizeMetaDescTextarea(); }
+              var ocrSnippets = data.raw_ocr_snippets || [];
+              var suggestTextBlob = [desc, title, category].filter(Boolean).join('\n');
+              var sizeVals = mergeVariantSizesFromEvidence(att, suggestTextBlob, ocrSnippets);
+              var colorVals = normalizeProductTagsList(mergeVariantColorsFromExtraction(att));
               if (typeof window.applyVariantOptionsFromExtraction === 'function') {
                 window.applyVariantOptionsFromExtraction([
                   { name: 'Size', values: sizeVals },
                   { name: 'Color', values: colorVals }
                 ]);
               }
+              if (typeof window.syncVariantSizePresetVisibility === 'function') window.syncVariantSizePresetVisibility();
               var priceSrc = att.price_source || '';
               if (priceSrc === 'found_in_image' && att.price_value != null && priceInput) {
                 priceInput.value = String(att.price_value);
@@ -1668,14 +1924,21 @@
 
       if (tagAddBtn && tagInput) {
         tagAddBtn.addEventListener('click', function() {
-          var t = (tagInput.value || '').trim();
+          var t = normalizeProductTag((tagInput.value || '').trim());
           if (!t) return;
           if (modalTags.length >= 13) { if (document.getElementById('modal-tags-left')) document.getElementById('modal-tags-left').textContent = '0 left'; return; }
-          if (modalTags.indexOf(t) === -1) { modalTags.push(t); tagInput.value = ''; renderTags(); if (typeof updateListingQuality === 'function') updateListingQuality(); }
+          if (!modalTags.some(function(x) { return x.toLowerCase() === t.toLowerCase(); })) { modalTags.push(t); tagInput.value = ''; renderTags(); if (typeof updateListingQuality === 'function') updateListingQuality(); }
         });
         tagInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); tagAddBtn.click(); } });
       }
       if (metaDescInput) metaDescInput.addEventListener('input', function() { updateMetaDescCount(); resizeMetaDescTextarea(); });
+      if (metaDescInput) metaDescInput.addEventListener('blur', function() {
+        var v = (metaDescInput.value || '').trim();
+        if (!v) return;
+        metaDescInput.value = clipMetaDescriptionForSeo(v, SEO_META_DESC_MAX);
+        updateMetaDescCount();
+        resizeMetaDescTextarea();
+      });
       if (titleInput && seoTitleInput) titleInput.addEventListener('input', function() { seoTitleInput.value = (titleInput.value || '').trim() || 'Uses product title'; });
 
       function runAutoSeoOptimize() {
@@ -1705,7 +1968,7 @@
               if (seoTitleInput) seoTitleInput.value = data.seo_title;
             }
             if (data.meta_description && metaDescInput) {
-              metaDescInput.value = data.meta_description;
+              metaDescInput.value = clipMetaDescriptionForSeo(data.meta_description, SEO_META_DESC_MAX);
               updateMetaDescCount();
               resizeMetaDescTextarea();
             }
@@ -1749,7 +2012,7 @@
         d.height = (document.getElementById('etsy-height') || {}).value || '';
         d.height_unit = (document.getElementById('etsy-height-unit') || {}).value || 'cm';
         d.renewal = (document.querySelector('input[name="etsy-renewal"]:checked') || {}).value || 'automatic';
-        d.meta_description = (metaDescInput && metaDescInput.value) ? metaDescInput.value.trim() : '';
+        d.meta_description = (metaDescInput && metaDescInput.value) ? clipMetaDescriptionForSeo(metaDescInput.value.trim(), SEO_META_DESC_MAX) : '';
         d.status = 'draft';
         if (!d.brand && d.vendor) d.brand = d.vendor;
         d.variant_options = (typeof getVariantOptionsFromDOM === 'function' && getVariantOptionsFromDOM()) || d.variant_options || [];
@@ -1798,7 +2061,7 @@
           weight_kg: weightKgNum,
           condition: d.condition || 'new',
           meta_title: (seoTitleInput && seoTitleInput.value) ? seoTitleInput.value.trim() : (d.title || '').trim().slice(0, 140),
-          meta_description: d.meta_description || '',
+          meta_description: clipMetaDescriptionForSeo((d.meta_description || '').trim(), SEO_META_DESC_MAX) || '',
           variant_options: Array.isArray(d.variant_options) ? d.variant_options : [],
           product_type: d.product_type || d.category || '',
           who_made: (document.querySelector('input[name="etsy-who-made"]:checked') || {}).value || 'i_did',
@@ -1896,7 +2159,7 @@
           .then(function(result) {
             clearTimeout(timeoutId);
             if (result === undefined) return;
-            window.location.href = '/flow-success.html';
+            window.location.href = '/listing/published';
           })
           .catch(function(err) {
             clearTimeout(timeoutId);

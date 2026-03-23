@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="auralink-api-url" content="http://localhost:8000" />
     <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
     <!-- If this file is served from a static host (repo root) while the Next.js app lives elsewhere, set the Next deployment origin (no trailing slash). Injected at build via  or edit manually. Empty = same host as this page. -->
-    <meta name="synclyst-app-origin" content="__SYNCLYST_APP_ORIGIN__" />
+    <meta name="synclyst-app-origin" content="" />
     <title>SyncLyst - List products. In seconds.</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="view-transition" content="same-origin" />
+    <link rel="stylesheet" href="/css/flow-page-transition.css" />
+    <script src="/js/flow-page-transition.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -65,11 +68,13 @@
         }
         @keyframes videoMarquee {
             0% { transform: translateX(0); }
-            100% { transform: translateX(calc(-320px * 5 - 24px * 5)); }
+            100% { transform: translateX(-33.333%); }
         }
         .animate-video-marquee {
             display: flex;
-            animation: videoMarquee 30s linear infinite;
+            width: max-content;
+            gap: 1.5rem;
+            animation: videoMarquee 55s linear infinite;
         }
         .animate-video-marquee:hover {
             animation-play-state: paused;
@@ -82,17 +87,6 @@
             animation: scanSweep 2s ease-in-out infinite;
         }
         
-        /* Zoom effect styles */
-        #main-content {
-            transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), border-radius 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-            transform-origin: center;
-        }
-        .scrolling #main-content {
-            transform: scale(0.96);
-            opacity: 0.9;
-            border-radius: 24px;
-            overflow: hidden;
-        }
         /* Scan view: full-screen camera / result (when ?mode=scan) */
         #scan-view { display: none; }
         #scan-view.flex { display: flex; }
@@ -100,16 +94,20 @@
         @media (max-width: 640px) {
             #scan-view { background: #0a0a0a; }
             #scan-view #scan-step-result { background: #fafafa; }
-            /* Header stays white with black SyncLyst (no grey bar) */
-            #scan-view .scan-view-header { padding-top: max(0.75rem, env(safe-area-inset-top)); }
             #scan-view #scan-step-camera { padding: 0; justify-content: stretch; }
             #scan-view #scan-step-camera .section-label, #scan-view #scan-step-camera > p.text-zinc-500, #scan-view #scan-step-camera > p.text-zinc-400, #scan-view #scan-step-camera #scan-upload-btn { display: none; }
-            #scan-view #scan-step-camera .scan-upload-link { display: block !important; position: absolute; bottom: 5.5rem; left: 50%; transform: translateX(-50%); font-size: 0.875rem; font-weight: 600; color: #fff; z-index: 15; text-decoration: underline; padding: 0.5rem 1rem; white-space: nowrap; }
-            #scan-view #scan-step-camera .scan-upload-link.hidden { display: block !important; }
+            #scan-view #scan-step-camera .scan-upload-link {
+                display: flex !important; align-items: center; justify-content: center;
+                position: absolute;
+                bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px));
+                left: 50%; transform: translateX(-50%); z-index: 15;
+                white-space: nowrap;
+            }
+            #scan-view #scan-step-camera .scan-upload-link.hidden { display: flex !important; }
             #scan-view #scan-step-camera.camera-unavailable #scan-upload-btn { display: block !important; }
             #scan-view #scan-step-camera .scan-camera-viewport { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; aspect-ratio: auto; border-radius: 0; border: none; }
-            #scan-view #scan-step-camera .scan-camera-viewport .flex.items-end { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
-            #scan-view #scan-step-camera #scan-camera-error { position: absolute; bottom: 5rem; left: 1rem; right: 1rem; max-width: none; }
+            #scan-view #scan-step-camera .scan-camera-viewport .flex.items-end { padding-bottom: max(1.25rem, env(safe-area-inset-bottom)); }
+            #scan-view #scan-step-camera #scan-camera-error { position: absolute; bottom: 6rem; left: 1rem; right: 1rem; max-width: none; }
         }
         .btn-loading-spin { animation: spin 0.7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -123,20 +121,6 @@
             background: linear-gradient(180deg, #f5f5f5 0%, #fafafa 50%, #f5f5f5 100%);
             border-top: 1px solid #eee;
             border-bottom: 1px solid #eee;
-        }
-        .features-benefits-section .features-benefits-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.375rem 0.75rem;
-            border-radius: 9999px;
-            background: #111;
-            color: #fff;
-            font-size: 0.6875rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            margin-bottom: 1rem;
         }
         .features-benefits-section .feature-benefit-card {
             background: #fff;
@@ -168,7 +152,11 @@
             background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
             border: 1px solid #eee;
         }
-        .vercel-dot-pattern { background-image: radial-gradient(circle at 1px 1px, #e5e5e5 1px, transparent 0); background-size: 24px 24px; background-position: 0 0; }
+        .features-steps-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
         .scan-hero-btn:hover { background-color: #1a1a1a !important; border-color: #1a1a1a; }
         /* Live integration icon: subtle pulse */
         @keyframes live-icon-pulse {
@@ -199,28 +187,29 @@
 
   <!-- Scan view: product capture → SyncLyst extract (shown when ?mode=scan) -->
   <div id="scan-view" class="fixed inset-0 z-[80] hidden flex-col bg-[#fafafa] text-[#111]">
-    <div class="scan-view-header flex items-center justify-between px-4 h-14 border-b border-[#eaeaea] bg-white shrink-0">
+    <!-- Header: same logo + white band as flow-3.html -->
+    <div class="scan-view-header shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
       <div></div>
-      <a href="/landing.html" class="inline-flex items-center"><img src="/synclyst-logo.png" alt="SyncLyst®" class="h-7 w-auto" /></a>
-      <a href="/flow-batch-upload.html" class="text-xs font-medium text-amber-600 hover:text-amber-700">Batch</a>
+      <a href="/" class="inline-flex items-center justify-self-center no-underline text-[#111] leading-none py-0.5"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <div class="justify-self-end"></div>
     </div>
     <p id="scan-api-hint" class="hidden text-[10px] text-zinc-400 px-4 py-1 bg-zinc-100 border-b border-zinc-200 truncate" title="API URL used for extraction"></p>
     <div id="scan-step-camera" class="flex-1 flex flex-col items-center justify-center p-4 overflow-auto relative">
-      <p class="section-label text-center mb-4 text-xs font-semibold uppercase tracking-widest text-zinc-500">[ scan product ]</p>
+      <p class="section-label text-center mb-5 text-sm font-medium text-[#525252]">Scan product</p>
       <div class="scan-camera-viewport w-full max-w-md aspect-[3/4] rounded-2xl border border-zinc-200 bg-white overflow-hidden relative">
         <video id="scan-video" class="w-full h-full object-cover" playsinline muted autoplay></video>
-        <div class="absolute inset-0 flex items-end justify-center p-4">
-          <button type="button" id="scan-capture-btn" class="w-16 h-16 rounded-full bg-white border-2 border-zinc-300 hover:border-zinc-900 hover:bg-zinc-50 transition-all">Capture</button>
+        <div class="absolute inset-0 flex items-end justify-center p-4 sm:p-6 bg-gradient-to-t from-black/25 via-transparent to-transparent">
+          <button type="button" id="scan-capture-btn" aria-label="Capture photo" class="w-[4.5rem] h-[4.5rem] rounded-full bg-white border-2 border-[#e5e5e5] hover:scale-[0.98] active:scale-95 transition-transform shadow-[0_1px_3px_rgba(0,0,0,0.12)] ring-4 ring-white/30"></button>
         </div>
       </div>
       <p class="text-zinc-500 text-sm mt-4">Point at a product—we extract attributes, copy, and tags.</p>
       <div id="scan-camera-error" class="text-red-600 text-sm mt-2 hidden max-w-md text-center rounded-xl bg-red-50 border border-red-200 p-3"></div>
       <input type="file" id="scan-upload-input" accept="image/*" class="hidden" />
-      <button type="button" id="scan-upload-btn" class="mt-4 px-5 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-700 text-sm font-semibold hover:bg-zinc-50">
+      <button type="button" id="scan-upload-btn" class="mt-4 px-5 py-3 rounded-xl border border-[#e5e5e5] bg-white text-[#0a0a0a] text-sm font-semibold hover:bg-[#fafafa] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         Upload photo
       </button>
-      <button type="button" id="scan-upload-link-mobile" class="scan-upload-link hidden mt-4 text-sm font-medium" aria-label="Upload photo">Upload photo</button>
-      <p class="text-zinc-400 text-xs mt-2 max-w-md text-center">Works on all devices. Use when camera is unavailable (e.g. on some connections).</p>
+      <button type="button" id="scan-upload-link-mobile" class="scan-upload-link hidden mt-4 text-sm font-semibold text-[#0a0a0a] bg-white/95 backdrop-blur-sm border border-[#e5e5e5] rounded-xl px-5 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] no-underline hover:bg-white" aria-label="Upload photo">Upload photo</button>
+      <p class="text-[#71717a] text-xs mt-3 max-w-md text-center">Use upload if the camera isn’t available.</p>
     </div>
     <div id="scan-step-result" class="flex-1 hidden flex-col p-4 overflow-auto">
       <div class="max-w-md w-full mx-auto py-4">
@@ -287,7 +276,7 @@
           </div>
         </div>
         <p id="scan-toast" class="text-sm text-emerald-600 hidden text-center mt-3"></p>
-        <p class="text-center text-zinc-500 text-xs mt-4"><a href="/landing.html" class="font-medium text-zinc-900 hover:underline">Exit to main page</a></p>
+        <p class="text-center text-zinc-500 text-xs mt-4"><a href="/" class="font-medium text-zinc-900 hover:underline">Exit to main page</a></p>
       </div>
     </div>
   </div>
@@ -331,44 +320,45 @@
         <nav class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between relative">
             <div class="flex items-center gap-6 flex-1 justify-start min-w-0">
                 <div class="hidden md:flex items-center gap-6">
-                    <a href="#features" onclick="handleNavigate(event, 'features')" class="text-sm text-[#555] hover:text-[#111] transition-colors">Features</a>
-                    <a href="#comparison" onclick="handleNavigate(event, 'comparison')" class="text-sm text-[#555] hover:text-[#111] transition-colors">Comparison</a>
+                    <a href="#features" onclick="handleNavigate(event, 'features')" class="text-sm text-[#555] hover:text-[#111] transition-colors">How it works</a>
+                    <a href="#comparison" onclick="handleNavigate(event, 'comparison')" class="text-sm text-[#555] hover:text-[#111] transition-colors">Benefits</a>
                     <a href="#pricing" onclick="handleNavigate(event, 'pricing')" class="text-sm text-[#555] hover:text-[#111] transition-colors">Pricing</a>
                 </div>
             </div>
-            <a href="#" class="flex items-center gap-2 flex-shrink-0 absolute left-1/2 -translate-x-1/2">
-                <img src="/synclyst-logo.png" alt="SyncLyst®" class="h-7 w-auto" />
+            <a href="#" class="flex items-center gap-2 flex-shrink-0 absolute left-1/2 -translate-x-1/2 no-underline">
+                <span class="text-lg font-semibold tracking-tight text-[#111]">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span>
             </a>
             <div class="hidden md:flex items-center gap-4 flex-1 justify-end min-w-0">
-                <a href="/dashboard" class="text-sm text-[#555] hover:text-[#111] transition-colors">Login</a>
-                <a href="/dashboard" class="bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition-all no-underline">
+                <a href="/sign-in?redirect_url=/dashboard" class="text-sm text-[#555] hover:text-[#111] transition-colors">Login</a>
+                <a href="/sign-up?redirect_url=/dashboard" class="bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition-all no-underline">
                     Sign up
                 </a>
             </div>
         </nav>
     </header>
 
-    <div id="main-content">
+    <div id="main-content" data-synclyst-page-transition-root>
         <main id="main-landing">
         <!-- Hero -->
-        <section class="relative pt-32 pb-20 px-6 overflow-hidden vercel-dot-pattern">
+        <section class="relative pt-32 pb-20 px-6 overflow-hidden bg-white">
             <div class="max-w-5xl mx-auto text-center">
                 <div class="inline-flex items-center gap-2 p-1.5 md:p-2 mb-8 bg-white border border-[#eaeaea] rounded-lg md:rounded-xl mx-auto text-left">
                     <div class="flex-shrink-0 w-6 h-6 md:w-7 md:h-7 rounded-md bg-zinc-100 flex items-center justify-center">
                         <i data-lucide="sparkles" class="w-3 h-3 md:w-4 md:h-4 text-zinc-600"></i>
                     </div>
-                    <p class="text-[10px] md:text-xs text-[#555] leading-tight vercel-body whitespace-nowrap">
-                        <span class="font-semibold text-[#111]">Smart Suggest:</span> AI gets smarter the more you use it—it gets to know your products.
+                    <p class="text-[10px] md:text-xs text-[#555] leading-tight vercel-body text-left whitespace-nowrap max-[380px]:whitespace-normal max-[380px]:text-[9px]">
+                        <span class="font-semibold text-[#111]">Smart Suggest:</span> Your AI builds a memory. Every scan gets faster and smarter
                     </p>
                 </div>
                 <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-8 text-[#000]">
-                    One photo. List everywhere.
+                    Stop listing manually
                 </h1>
                 <p class="text-lg md:text-xl text-[#555] max-w-2xl mx-auto mb-10 text-balance leading-relaxed vercel-body">
-                    SyncLyst is the platform for sellers who list on multiple marketplaces. Turn product photos into SEO-ready listings for Shopify, Etsy, eBay, TikTok Shop, and Amazon—instantly.
+                    Snap a photo. AI writes the title, description, price and tags.<br>
+                    Live on Shopify in one tap.
                 </p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="/home.html?mode=scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center gap-2.5 group inline-flex bg-black">
+                    <a href="/scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center gap-2.5 group inline-flex bg-black">
                         <div class="relative flex items-center justify-center w-5 h-5 overflow-hidden">
                             <i data-lucide="camera" class="w-5 h-5 relative z-10"></i>
                             <div class="absolute left-0 right-0 h-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] animate-scan-sweep z-20"></div>
@@ -377,7 +367,7 @@
                     </a>
                     <a href="/flow-batch-upload.html" class="bg-white text-[#111] px-8 py-3.5 rounded-xl font-semibold border border-[#eaeaea] hover:bg-zinc-50 transition-all inline-flex items-center gap-2">
                         <i data-lucide="layers" class="w-5 h-5"></i>
-                        Batch upload
+                        Batch Upload
                         <span class="text-[10px] font-semibold text-amber-600 uppercase">Premium</span>
                     </a>
                 </div>
@@ -397,7 +387,7 @@
                     <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded text-white"><span>SHOPIFY </span><span class="text-emerald-500">LIVE NOW</span></span>
                 </div>
             </div>
-            <p class="text-center text-xs text-zinc-400 mt-2 mb-4 vercel-body">List to your connected stores in one flow</p>
+            <p class="text-center text-xs text-zinc-400 mt-2 mb-4 vercel-body">More integrations coming soon</p>
             <div class="animate-marquee whitespace-nowrap" id="marquee-content">
                 <!-- Content generated by JS -->
             </div>
@@ -406,52 +396,40 @@
         <!-- Features: How it works (step process) -->
         <section id="features" class="py-24 px-6 vercel-section-alt features-benefits-section">
             <div class="max-w-7xl mx-auto">
-                <div class="text-center mb-16">
-                    <div class="features-benefits-label">
-                        <i data-lucide="list-ordered" class="w-3.5 h-3.5"></i>
-                        How it works
-                    </div>
-                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">From photo to live listing in 4 steps.</h2>
+                <div class="text-center mb-10 md:mb-12">
+                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">From photo to live listing in 4 steps</h2>
                     <p class="text-[#555] text-lg max-w-xl mx-auto vercel-body">Do this to get your products on your stores—no typing required.</p>
                 </div>
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
-                                <i data-lucide="camera" class="w-5 h-5 text-[#111]"></i>
-                            </div>
+                <ol class="features-steps-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-5">
+                    <li class="h-full">
+                        <div class="feature-benefit-card vercel-card p-7 md:p-8 rounded-2xl h-full flex flex-col">
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3 relative z-10">Step 1 of 4</p>
+                            <h3 class="text-lg font-semibold text-[#111] leading-snug mb-3 relative z-10">Snap or upload a photo</h3>
+                            <p class="text-sm text-[#555] leading-relaxed vercel-body mt-auto relative z-10">Take a picture of your product or upload one from your device. One photo is enough to get started.</p>
                         </div>
-                        <h3 class="text-lg font-semibold mb-3 text-[#111]">Snap or upload a photo</h3>
-                        <p class="text-sm text-[#555] leading-relaxed vercel-body">Take a picture of your product or upload one from your device. One photo is enough to get started.</p>
-                    </div>
-                    <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
-                                <i data-lucide="file-text" class="w-5 h-5 text-[#111]"></i>
-                            </div>
+                    </li>
+                    <li class="h-full">
+                        <div class="feature-benefit-card vercel-card p-7 md:p-8 rounded-2xl h-full flex flex-col">
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3 relative z-10">Step 2 of 4</p>
+                            <h3 class="text-lg font-semibold text-[#111] leading-snug mb-3 relative z-10">Review your draft listing</h3>
+                            <p class="text-sm text-[#555] leading-relaxed vercel-body mt-auto relative z-10">AI fills in title, description, category, and tags. Check the result and edit anything you want before pushing to your store.</p>
                         </div>
-                        <h3 class="text-lg font-semibold mb-3 text-[#111]">Review your draft listing</h3>
-                        <p class="text-sm text-[#555] leading-relaxed vercel-body">AI fills in title, description, category, and tags. Check the result and edit anything you want before pushing to your store.</p>
-                    </div>
-                    <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
-                                <i data-lucide="upload" class="w-5 h-5 text-[#111]"></i>
-                            </div>
+                    </li>
+                    <li class="h-full">
+                        <div class="feature-benefit-card vercel-card p-7 md:p-8 rounded-2xl h-full flex flex-col">
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3 relative z-10">Step 3 of 4</p>
+                            <h3 class="text-lg font-semibold text-[#111] leading-snug mb-3 relative z-10">Push to your store as draft</h3>
+                            <p class="text-sm text-[#555] leading-relaxed vercel-body mt-auto relative z-10">Send the listing to your connected store (Shopify, Etsy, eBay, TikTok Shop, or Amazon) as a draft. It won’t go live until you say so—you’re in control.</p>
                         </div>
-                        <h3 class="text-lg font-semibold mb-3 text-[#111]">Push to your store as draft</h3>
-                        <p class="text-sm text-[#555] leading-relaxed vercel-body">Send the listing to your connected store (Shopify, Etsy, eBay, TikTok Shop, or Amazon) as a draft. It won’t go live until you say so—you’re in control.</p>
-                    </div>
-                    <div class="feature-benefit-card vercel-card p-8 rounded-2xl">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="icon-wrap w-10 h-10 rounded-lg flex items-center justify-center">
-                                <i data-lucide="send" class="w-5 h-5 text-[#111]"></i>
-                            </div>
+                    </li>
+                    <li class="h-full">
+                        <div class="feature-benefit-card vercel-card p-7 md:p-8 rounded-2xl h-full flex flex-col ring-1 ring-zinc-900/5">
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3 relative z-10">Step 4 of 4</p>
+                            <h3 class="text-lg font-semibold text-[#111] leading-snug mb-3 relative z-10">Publish when you’re ready</h3>
+                            <p class="text-sm text-[#555] leading-relaxed vercel-body mt-auto relative z-10">In your store admin, review the draft, make any final tweaks, then hit Publish. Your product is live and ready for buyers.</p>
                         </div>
-                        <h3 class="text-lg font-semibold mb-3 text-[#111]">Publish when you’re ready</h3>
-                        <p class="text-sm text-[#555] leading-relaxed vercel-body">In your store admin, review the draft, make any final tweaks, then hit Publish. Your product is live and ready for buyers.</p>
-                    </div>
-                </div>
+                    </li>
+                </ol>
             </div>
         </section>
 
@@ -459,12 +437,8 @@
         <section id="comparison" class="py-32 px-6 bg-white border-y border-[#eaeaea]">
             <div class="max-w-5xl mx-auto">
                 <div class="text-center mb-20">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-[10px] font-bold uppercase tracking-widest mb-4">
-                        <i data-lucide="zap" class="w-3 h-3 text-black"></i>
-                        Efficiency
-                    </div>
-                    <h2 class="text-4xl md:text-6xl font-bold tracking-tight mb-6 vercel-headline">Built for speed</h2>
-                    <p class="text-[#555] text-lg max-w-xl mx-auto vercel-body">SyncLyst automates the tedious parts of selling, so you can focus on growing your brand.</p>
+                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">Built for speed</h2>
+                    <p class="text-[#555] vercel-body">SyncLyst automates the tedious parts of selling, so you can focus on growing your brand.</p>
                 </div>
                 
                 <!-- Bento grid -->
@@ -517,21 +491,21 @@
                             <div class="flex items-baseline justify-between">
                                 <span class="text-xs font-bold text-zinc-500 uppercase tracking-wider">Total time</span>
                                 <div class="flex items-baseline gap-1.5">
-                                    <span class="text-3xl font-black text-white tracking-tighter">3s</span>
+                                    <span class="text-3xl font-black text-white tracking-tighter">1m</span>
                                     <span class="text-xs font-bold text-emerald-400">Instant</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Summary cell: 35m → 3s - small accent card -->
+                    <!-- Summary cell: 35m → 1m - small accent card -->
                     <div class="flex flex-col">
                         <div class="h-full min-h-[180px] rounded-2xl border border-[#eaeaea] bg-zinc-50 shadow-sm p-6 flex flex-col justify-center items-center text-center">
                             <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Total time</p>
                             <div class="flex items-baseline gap-2 flex-wrap justify-center">
                                 <span class="text-2xl font-black text-zinc-300 tracking-tighter line-through">35m</span>
                                 <span class="text-zinc-400">→</span>
-                                <span class="text-2xl font-black text-black tracking-tighter">3s</span>
+                                <span class="text-2xl font-black text-black tracking-tighter">1m</span>
                             </div>
                             <p class="text-xs font-semibold text-emerald-600 mt-2">Instant</p>
                         </div>
@@ -545,19 +519,12 @@
             <div class="max-w-7xl mx-auto">
                 <div class="mb-12">
                     <div class="flex items-end justify-center">
-                        <div class="w-full text-center">
-                            <p class="text-xs font-bold text-[#555] uppercase tracking-widest mb-4 vercel-body">[ testimonials ]</p>
-                            
-                            <h2 class="text-4xl md:text-6xl font-bold tracking-tight leading-[0.95] vercel-headline">
-                                Loved by sellers.<br />
-                                <span class="text-[#555] font-normal">Everywhere.</span>
-                            </h2>
-                        </div>
+                        <div class="w-full text-center"></div>
                     </div>
                 </div>
 
                 <div class="overflow-hidden">
-                    <div id="video-carousel" class="animate-video-marquee gap-6">
+                    <div id="video-carousel" class="animate-video-marquee">
                         <!-- Content generated by JS -->
                     </div>
                 </div>
@@ -568,9 +535,9 @@
         <section id="roadmap" class="py-24 px-6 bg-white">
             <div class="max-w-6xl mx-auto">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">More apps and integrations coming soon</h2>
+                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">More apps &amp; integrations coming soon</h2>
                     <p class="text-[#555] max-w-2xl mx-auto vercel-body">
-                        Shopify, Etsy, eBay, TikTok Shop, and Amazon are live now. More marketplaces are on the way—vote below to shape what we build next.
+                        Shopify is live now. eBay, Etsy, TikTok Shop, Amazon, Shopee and more coming soon.<br />Vote below to shape what we build next
                     </p>
                 </div>
 
@@ -603,8 +570,8 @@
         <section id="pricing" class="py-24 px-6">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center mb-16">
-                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">Pricing</h2>
-                    <p class="text-[#555] vercel-body">Choose the plan that fits your scale. Pay by scans—no surprise API bills.</p>
+                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">Simple pricing. No surprises</h2>
+                    <p class="text-[#555] vercel-body">Start free, upgrade when ready — no contracts, cancel anytime</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="pricing-cards">
                     <!-- Starter (free tier: always greyed out) -->
@@ -653,7 +620,7 @@
                     </div>
                     <!-- Growth (Most popular) - black accent -->
                     <div class="pricing-card vercel-card p-8 flex flex-col border-2 border-black shadow-[0_0_40px_rgba(0,0,0,0.06)] relative transition-all duration-200" data-tier="growth">
-                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-zinc-100 text-zinc-900 border border-zinc-300">Most popular</span>
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap px-3 py-1 rounded-full bg-white border border-black text-amber-600">MOST POPULAR</span>
                         <div class="mb-6 mt-2">
                             <h3 class="text-xl font-bold mb-2">Growth</h3>
                             <p class="text-sm text-[#666]">For active sellers listing regularly.</p>
@@ -705,8 +672,8 @@
         <section id="faq" class="py-24 px-6">
             <div class="max-w-3xl mx-auto">
                 <div class="text-center mb-16">
-                    <p class="text-xs font-bold text-[#555] uppercase tracking-widest mb-4 vercel-body">[ faq ]</p>
-                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight vercel-headline">Got questions?</h2>
+                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 vercel-headline">Questions sellers ask us most</h2>
+                    <p class="text-[#555] vercel-body">Everything about the product, pricing and getting started</p>
                 </div>
                 <div class="space-y-4" id="faq-container">
                     <!-- Content generated by JS -->
@@ -720,8 +687,8 @@
         <div class="max-w-7xl mx-auto">
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 md:gap-12 mb-16">
                 <div class="col-span-2">
-                    <a href="#" class="inline-flex items-center gap-2 mb-4">
-                        <img src="/synclyst-logo.png" alt="SyncLyst®" class="h-7 w-auto" />
+                    <a href="#" class="inline-flex items-center gap-2 mb-4 no-underline">
+                        <span class="text-lg font-semibold tracking-tight text-[#111]">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span>
                     </a>
                     <p class="text-sm text-[#555] max-w-xs leading-relaxed vercel-body">
                         The high-performance listing machine for modern sellers. Built for speed, optimized for SEO.
@@ -730,24 +697,22 @@
                 <div>
                     <h4 class="text-xs font-semibold text-[#111] uppercase tracking-wider mb-4">Get Started</h4>
                     <ul class="space-y-3 text-sm text-[#555]">
-                        <li><a href="/home.html?mode=scan" class="hover:text-[#111] transition-colors">Scan your first item</a></li>
-                        <li><a href="/flow-batch-upload.html" class="hover:text-[#111] transition-colors">Batch upload <span class="text-[10px] font-semibold text-amber-600 uppercase">Premium</span></a></li>
+                        <li><a href="/scan" class="hover:text-[#111] transition-colors">Scan your first item</a></li>
+                        <li><a href="/flow-batch-upload.html" class="hover:text-[#111] transition-colors">Batch Upload <span class="text-[10px] font-semibold text-amber-600 uppercase">Premium</span></a></li>
                         <li><a href="#pricing" onclick="handleNavigate(event, 'pricing')" class="hover:text-[#111] transition-colors">Pricing</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="text-xs font-semibold text-[#111] uppercase tracking-wider mb-4">Product</h4>
                     <ul class="space-y-3 text-sm text-[#555]">
-                        <li><a href="#features" onclick="handleNavigate(event, 'features')" class="hover:text-[#111] transition-colors">Features</a></li>
-                        <li><a href="#comparison" onclick="handleNavigate(event, 'comparison')" class="hover:text-[#111] transition-colors">Comparison</a></li>
+                        <li><a href="#features" onclick="handleNavigate(event, 'features')" class="hover:text-[#111] transition-colors">How it works</a></li>
+                        <li><a href="#comparison" onclick="handleNavigate(event, 'comparison')" class="hover:text-[#111] transition-colors">Benefits</a></li>
                         <li><a href="#roadmap" onclick="handleNavigate(event, 'roadmap')" class="hover:text-[#111] transition-colors">Integrations</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="text-xs font-semibold text-[#111] uppercase tracking-wider mb-4">Resources</h4>
                     <ul class="space-y-3 text-sm text-[#555]">
-                        <li><a href="#" class="hover:text-[#111] transition-colors">Docs</a></li>
-                        <li><a href="#" class="hover:text-[#111] transition-colors">Blog</a></li>
                         <li><button onclick="openModal('privacy')" class="hover:text-[#111] transition-colors text-left">Privacy</button></li>
                         <li><button onclick="openModal('terms')" class="hover:text-[#111] transition-colors text-left">Terms</button></li>
                     </ul>
@@ -762,9 +727,9 @@
             </div>
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-[#eaeaea] text-xs text-[#555]">
                 <p>© 2026 SyncLyst AI. All rights reserved.</p>
-                <div class="flex gap-6">
-                    <a href="#" class="hover:text-[#111] transition-colors"><i data-lucide="twitter" class="w-4 h-4 inline"></i></a>
-                    <a href="#" class="hover:text-[#111] transition-colors"><i data-lucide="github" class="w-4 h-4 inline"></i></a>
+                <div class="flex gap-6 items-center text-[#555]">
+                    <a href="#" class="hover:text-[#111] transition-colors inline-flex items-center justify-center" aria-label="Product Hunt"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M9.5 7.5V16.5M9.5 7.5h2.75C14.05 7.5 15.75 8.9 15.75 10.25S14.05 13 12.25 13H9.5"/></svg></a>
+                    <a href="https://www.instagram.com/synclyst/" target="_blank" rel="noopener noreferrer" class="hover:text-[#111] transition-colors" aria-label="Instagram"><i data-lucide="instagram" class="w-4 h-4 inline"></i></a>
                 </div>
             </div>
         </div>
@@ -805,7 +770,7 @@
         (function initSynclystAppOrigin() {
           var m = document.querySelector('meta[name="synclyst-app-origin"]');
           var raw = (m && m.getAttribute('content')) ? String(m.getAttribute('content')).trim() : '';
-          // Empty, unreplaced template, or mistaken Vercel env (literal __ or ___SYNCLYST_APP_ORIGIN___) → same host
+          // Empty, unreplaced template, or mistaken Vercel env (literal __ or __) → same host
           if (!raw || /SYNCLYST_APP_ORIGIN/.test(raw)) {
             window.SYNCLYST_APP_ORIGIN = '';
           } else {
@@ -824,7 +789,7 @@
           function needsRewrite(href) {
             if (!href || typeof href !== 'string' || href.charAt(0) !== '/') return false;
             if (href.indexOf('/synclyst-logo') === 0) return false;
-            var appPaths = ['/dashboard', '/sign-in', '/sign-up', '/home.html', '/review'];
+            var appPaths = ['/dashboard', '/sign-in', '/sign-up', '/home.html', '/scan', '/review'];
             for (var i = 0; i < appPaths.length; i++) {
               var pre = appPaths[i];
               if (href === pre || href.indexOf(pre + '?') === 0 || href.indexOf(pre + '/') === 0) return true;
@@ -840,12 +805,11 @@
 
         document.addEventListener('DOMContentLoaded', function() {
         rewriteSynclystAppLinks();
-        // Fast smooth scroll (zoom) to section
+        // Smooth scroll to section (no page scale / “zoom” on #main-content)
         function handleNavigate(e, id) {
             e.preventDefault();
             const element = document.getElementById(id);
             if (!element) return;
-            document.body.classList.add('scrolling');
             const start = window.scrollY || window.pageYOffset;
             const target = element.getBoundingClientRect().top + start;
             const duration = 500;
@@ -855,12 +819,10 @@
                 const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
                 window.scrollTo(0, start + (target - start) * eased);
                 if (t < 1) requestAnimationFrame(step);
-                else {
-                    document.body.classList.remove('scrolling');
-                }
             }
             requestAnimationFrame(step);
         }
+        window.handleNavigate = handleNavigate;
 
         // Initialize Lucide icons
         lucide.createIcons();
@@ -892,38 +854,52 @@
             const div = document.createElement('div');
             div.className = 'mx-12 flex items-center justify-center';
             const imgSrc = m.logoUrl || `https://www.google.com/s2/favicons?domain=${m.domain}&sz=128`;
-            div.innerHTML = `<img src="${imgSrc}" alt="${m.name}" class="h-8 w-auto hover:scale-110 transition-all duration-300" referrerPolicy="no-referrer">`;
+            const imgCls = 'h-8 w-auto max-h-8 object-contain hover:scale-110 transition-all duration-300';
+            div.innerHTML = `<img src="${imgSrc}" alt="${m.name}" class="${imgCls}" referrerPolicy="no-referrer">`;
             marqueeContent.appendChild(div);
         });
 
-        // Video Carousel
+        // Video Carousel (7 testimonials × 3 for seamless loop; videos play muted + loop when in view)
+        const DEFAULT_TESTIMONIAL_VIDEO = 'https://cdn.shopify.com/videos/c/o/v/fd32bb276dc64999a7a3bc00066f58ef.mp4';
         const videos = [
-            { title: 'Sarah, Vintage Reseller', desc: '"I listed 50 items in one afternoon. It\'s a total game changer for my shop."', tag: 'Verified Seller' },
-            { title: 'Marcus, Tech Store', desc: '"The SEO titles are actually better than what I write myself. My traffic is up 30%."', tag: 'Verified Seller' },
-            { title: 'Elena, Handmade Goods', desc: '"One tap and it\'s on my store. I\'ve saved hours of manual data entry every week."', tag: 'Verified Seller', videoUrl: 'https://filedn.com/l5QYSkI1OgKbR01Pfg3dRGh/This%20App%20Revolutionizes%20Scanning%20Documents!%20-%20Sam%20Beckman%20(1080p%2C%20h264%2C%20youtube).mp4', thumbnailUrl: '/assets/elena-video-thumbnail.png' },
-            { title: 'David, Sneaker Head', desc: '"Finally, an app that understands sneaker specs and colorways from just a photo."', tag: 'Verified Seller' },
-            { title: 'Chloe, Fashion Brand', desc: '"It reads the tiny care labels and fabric compositions perfectly every single time."', tag: 'Verified Seller' },
+            { tag: 'Sneaker resellers', title: 'SNEAKER RESELLERS', desc: 'AI identifies model, colourway and condition instantly. No more looking up spec sheets. Listed in under 40 seconds.' },
+            { tag: 'Vintage resellers', title: 'VINTAGE RESELLERS', desc: 'Reads the graphic, identifies the band, era and tag type automatically. Saves 35 minutes of research per listing.' },
+            { tag: 'Tech resellers', title: 'TECH RESELLERS', desc: 'Extracts model number, specs and condition from one photo. SEO titles written better than you could manually.' },
+            { tag: 'Handmade sellers', title: 'HANDMADE SELLERS', desc: 'Describes materials, dimensions and craft detail automatically. Spend your time making, not listing.' },
+            { tag: 'Clothing brands', title: 'CLOTHING BRANDS', desc: 'New season drops listed in minutes not hours. Size, material, colour and description all extracted instantly.' },
+            { tag: 'Collectibles sellers', title: 'COLLECTIBLES SELLERS', desc: 'Reads title, author, edition and condition from the cover alone. Your entire stock listed in one sitting.' },
+            { tag: 'Streetwear sellers', title: 'STREETWEAR SELLERS', desc: 'Team, size, brand and condition identified in seconds. List an entire new drop before your competitors do.' },
         ];
         const carousel = document.getElementById('video-carousel');
         const displayVideos = [...videos, ...videos, ...videos];
-        
+        const testimonialVideoObserver =
+            typeof IntersectionObserver !== 'undefined'
+                ? new IntersectionObserver(
+                      (entries) => {
+                          entries.forEach((entry) => {
+                              const vid = entry.target.querySelector('.testimonial-video');
+                              if (!vid) return;
+                              if (entry.isIntersecting) vid.play().catch(() => {});
+                              else vid.pause();
+                          });
+                      },
+                      { threshold: 0.15, rootMargin: '60px' }
+                  )
+                : null;
+
         displayVideos.forEach((v, i) => {
             const div = document.createElement('div');
             div.className = 'flex-none w-[280px] md:w-[320px] video-card';
-            const thumbSrc = v.thumbnailUrl || `https://picsum.photos/seed/vibe${i % 5}/400/700`;
+            const slot = i % videos.length;
+            const posterSrc = v.thumbnailUrl || `https://picsum.photos/seed/synclyst-v${slot}/400/700`;
+            const videoSrc = v.videoUrl || DEFAULT_TESTIMONIAL_VIDEO;
             div.innerHTML = `
                 <div class="vercel-card overflow-hidden flex flex-col h-full">
-                    <div class="aspect-[9/16] bg-zinc-100 relative group cursor-pointer overflow-hidden video-container">
+                    <div class="aspect-[9/16] bg-zinc-100 relative overflow-hidden video-container">
                         <div class="absolute top-4 left-4 z-20">
                             <span class="bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-full">${v.tag}</span>
                         </div>
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/5 group-hover:bg-black/10 transition-all z-10 play-icon">
-                            <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                                <i data-lucide="play" class="w-6 h-6 text-white fill-white"></i>
-                            </div>
-                        </div>
-                        <img src="${thumbSrc}" alt="${v.title}" class="w-full h-full object-cover transition-all duration-500 thumbnail" referrerPolicy="no-referrer">
-                        <video src="${v.videoUrl || 'https://cdn.shopify.com/videos/c/o/v/fd32bb276dc64999a7a3bc00066f58ef.mp4'}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 preview-video" muted loop playsinline></video>
+                        <video src="${videoSrc}" poster="${posterSrc}" class="testimonial-video absolute inset-0 w-full h-full object-cover" muted loop playsinline autoplay preload="metadata"></video>
                     </div>
                     <div class="p-6">
                         <h3 class="text-sm font-bold uppercase tracking-wider mb-1">${v.title}</h3>
@@ -931,70 +907,25 @@
                     </div>
                 </div>
             `;
-            
             const container = div.querySelector('.video-container');
-            const video = div.querySelector('.preview-video');
-            const thumbnail = div.querySelector('.thumbnail');
-            const playIcon = div.querySelector('.play-icon');
-            
-            // Use video first frame as thumbnail when this card has a custom videoUrl
-            if (v.videoUrl) {
-                const captureFirstFrame = () => {
-                    try {
-                        video.currentTime = 0;
-                    } catch (e) {}
-                };
-                const drawFrame = () => {
-                    try {
-                        if (video.videoWidth === 0 || video.videoHeight === 0) return;
-                        const canvas = document.createElement('canvas');
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(video, 0, 0);
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-                        if (dataUrl && dataUrl.length > 100) thumbnail.src = dataUrl;
-                    } catch (e) {}
-                };
-                video.addEventListener('loadeddata', captureFirstFrame);
-                video.addEventListener('seeked', drawFrame);
-                video.addEventListener('loadeddata', drawFrame, { once: true });
-            }
-            
-            container.addEventListener('mouseenter', () => {
-                video.style.opacity = '1';
-                thumbnail.style.filter = 'blur(4px)';
-                thumbnail.style.transform = 'scale(1.1)';
-                playIcon.style.opacity = '0';
-                video.play().catch(() => {});
-            });
-            
-            container.addEventListener('mouseleave', () => {
-                video.style.opacity = '0';
-                thumbnail.style.filter = 'none';
-                thumbnail.style.transform = 'scale(1)';
-                playIcon.style.opacity = '1';
-                video.pause();
-                video.currentTime = 0;
-            });
-            
+            if (testimonialVideoObserver && container) testimonialVideoObserver.observe(container);
+            else div.querySelector('.testimonial-video')?.play?.().catch(() => {});
             carousel.appendChild(div);
         });
-        lucide.createIcons(); // Re-init for new icons
 
         // Roadmap Voting
-        const votes = { etsy: 1, ebay: 6, tiktok: 0, amazon: 0, depop: 0, vinted: 4, bigcommerce: 0, walmart: 0, mercari: 0, poshmark: 0, facebook: 0 };
+        const votes = { etsy: 1, ebay: 6, tiktok: 0, amazon: 0, depop: 0, vinted: 4, lazada: 0, walmart: 0, shopee: 0, poshmark: 0, facebook: 0 };
         const connectors = [
             { id: 'shopify', name: 'Shopify', status: 'Active', icon: 'shopify.com' },
-            { id: 'etsy', name: 'Etsy', status: 'Active', icon: 'etsy.com' },
-            { id: 'ebay', name: 'eBay', status: 'Active', icon: 'ebay.com', logoUrl: '/assets/ebay-logo.png' },
-            { id: 'tiktok', name: 'TikTok Shop', status: 'Active', icon: 'tiktok.com' },
-            { id: 'amazon', name: 'Amazon SP-API', status: 'Active', icon: 'amazon.com' },
+            { id: 'etsy', name: 'Etsy', status: 'Coming Soon', icon: 'etsy.com' },
+            { id: 'ebay', name: 'eBay', status: 'Coming Soon', icon: 'ebay.com', logoUrl: '/assets/ebay-logo.png' },
+            { id: 'tiktok', name: 'TikTok Shop', status: 'Coming Soon', icon: 'tiktok.com' },
+            { id: 'amazon', name: 'Amazon SP-API', status: 'Coming Soon', icon: 'amazon.com' },
             { id: 'depop', name: 'Depop', status: 'Coming Soon', icon: 'depop.com' },
             { id: 'vinted', name: 'Vinted', status: 'Coming Soon', icon: 'vinted.com' },
-            { id: 'bigcommerce', name: 'BigCommerce', status: 'Coming Soon', icon: 'bigcommerce.com' },
+            { id: 'lazada', name: 'Lazada', status: 'Coming Soon', icon: 'lazada.com' },
             { id: 'walmart', name: 'Walmart', status: 'Coming Soon', icon: 'walmart.com' },
-            { id: 'mercari', name: 'Mercari', status: 'Coming Soon', icon: 'mercari.com' },
+            { id: 'shopee', name: 'Shopee', status: 'Coming Soon', icon: 'shopee.com' },
             { id: 'poshmark', name: 'Poshmark', status: 'Coming Soon', icon: 'poshmark.com' },
             { id: 'facebook', name: 'Facebook Marketplace', status: 'Coming Soon', icon: 'facebook.com' },
         ];
@@ -1014,12 +945,13 @@
             const btn = document.createElement(isActive ? 'a' : 'button');
             btn.className = `vercel-card p-6 flex flex-col items-center justify-center text-center group transition-all duration-200 ${isActive ? 'cursor-pointer hover:scale-[1.02] hover:border-black hover:shadow-lg' : 'cursor-pointer hover:scale-[1.02]'}`;
             if (isActive) {
-                btn.href = window.synclystAppUrl('/home.html?mode=scan');
+                btn.href = window.synclystAppUrl('/scan');
                 btn.setAttribute('aria-label', `List on ${c.name}`);
             }
+            const gridImgCls = 'w-10 h-10 rounded-lg object-contain transition-transform duration-200 block group-hover:scale-105';
             btn.innerHTML = `
                 <span class="inline-block mb-4 ${isActive ? 'integration-icon-live' : ''}">
-                    <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="w-10 h-10 rounded-lg transition-transform duration-200 block group-hover:scale-105" referrerPolicy="no-referrer">
+                    <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="${gridImgCls}" referrerPolicy="no-referrer">
                 </span>
                 <span class="text-sm font-bold mb-2">${c.name}</span>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-zinc-50 text-zinc-500 border-zinc-100'}">
@@ -1039,13 +971,17 @@
 
         // FAQ
         const faqs = [
-            { q: "How does the scanning process actually work?", a: "Simply snap a photo of your product. Our vision models instantly identify the item, read any labels (OCR), and extract key attributes like brand, material, color, and dimensions to build a complete draft." },
-            { q: "Can I customize the 'voice' of the AI-generated descriptions?", a: "Yes. Pro users can set custom brand guidelines. Whether you want your listings to sound luxury, minimalist, or high-energy, the AI adapts its writing style to match your store's personality." },
-            { q: "Does SyncLyst handle product variations like sizes and colors?", a: "Absolutely. The AI can detect multiple variations from a single scan or a series of photos, automatically grouping them into a single listing with the correct variant options." },
+            { q: "How does the scanning process actually work?", a: "Take a photo of any product on your phone.<br>Synclyst's AI reads the image and instantly writes the title, description, price, category and SEO tags.<br>You review, approve and it goes live on Shopify in one tap." },
+            { q: "Can I use it on my phone or do I need a desktop?", a: "Designed for your phone first.<br>Scan products anywhere — a market, a storage unit, your living room floor. No desktop needed." },
+            { q: "Does it work for any product category?", a: "Yes. Clothing, electronics, shoes, bags,<br>books, toys, homeware — if you can photograph it, Synclyst can list it." },
+            { q: "How long does a scan actually take?", a: "Under 60 seconds from photo to a complete ready to publish listing.<br>Most scans complete in 20 to 40 seconds." },
             { q: "Can I edit the listing before it goes live on my store?", a: "Of course. Every scan creates a 'Draft' first. You can review, tweak the SEO title, adjust the price, or swap tags before hitting 'Publish' to sync it to your connected store." },
-            { q: "How does it handle messy backgrounds or poor lighting?", a: "Our vision models are trained on real-world seller environments. While good lighting helps, the AI is excellent at isolating the product from busy backgrounds and correcting for minor lighting issues." },
-            { q: "Which marketplaces are supported right now?", a: "We're live with Shopify, Etsy, eBay, TikTok Shop, and Amazon SP-API. More marketplaces are in the pipeline." },
-            { q: "Is there a limit to how many products I can scan?", a: "Starter includes 10 scans per month; Pro includes 100; Growth includes 500; Scale includes unlimited scans. When you hit your limit, we'll prompt you to upgrade." },
+            { q: "Which marketplaces are supported right now?", a: "Shopify is live now. The rest (eBay, Etsy, TikTok Shop, Amazon, Shopee, Lazada, and others) are coming soon." },
+            { q: "Do I need a Shopify account to use Synclyst?", a: "Yes, currently Synclyst connects directly to Shopify. Create a free Shopify account and connect it in under 2 minutes. More platforms coming soon." },
+            { q: "Is my Shopify store safe when I connect it?", a: "Yes. Synclyst connects via Shopify's official<br>OAuth system — the same secure method used by thousands of Shopify apps.<br>We only request the permissions needed to create listings." },
+            { q: "Can I cancel my subscription anytime?", a: "Yes. No contracts, no cancellation fees.<br>Cancel from your account settings<br>and you keep access until the end of your billing period." },
+            { q: "Do unused scans roll over to next month?", a: "No, scans reset monthly.<br>If you regularly hit your limit early<br>it's a sign the next plan up will save you more time and money." },
+            { q: "Is there a limit to how many products I can scan?", a: "Starter includes 10 free scans per month; Pro includes 100; Growth includes 500; Scale includes unlimited scans. When you hit your limit, we'll prompt you to upgrade." },
             { q: "Is my store data and product imagery secure?", a: "Security is our priority. We use enterprise-grade encryption and never share your product data or images with third parties. Your data is used only to generate your specific listings." }
         ];
         const faqContainer = document.getElementById('faq-container');
@@ -1307,7 +1243,7 @@
             }
             // Starter: sign up then dashboard (free tier)
             if (tier === 'starter') {
-              window.location.href = window.synclystAppUrl('/sign-up');
+              window.location.href = window.synclystAppUrl('/sign-up?redirect_url=/dashboard');
               return;
             }
             if (getTier() !== tier) setTier(tier);
@@ -1412,7 +1348,7 @@
                 sessionStorage.removeItem('auralink_review_draft');
                 sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
                 sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-                window.location.href = window.synclystAppUrl('/flow-2.html');
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(window.synclystAppUrl('/reading-product')); else window.location.href = window.synclystAppUrl('/reading-product');
                 return true;
               } catch (err) { return false; }
             }
@@ -1422,7 +1358,7 @@
               delete payload.imageDataUrl;
               if (!saveAndGo(payload)) {
                 try { sessionStorage.removeItem('auralink_review_draft'); sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); sessionStorage.setItem('synclyst_selected_platform', 'shopify'); } catch (e) {}
-                window.location.href = window.synclystAppUrl('/flow-2.html');
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(window.synclystAppUrl('/reading-product')); else window.location.href = window.synclystAppUrl('/reading-product');
               }
             }
           }
@@ -1465,7 +1401,7 @@
               fetch(apiUrl + '/api/v1/vision/extract', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image_base64: b64, mime_type: 'image/jpeg', include_ocr: true, skip_web_enrichment: true }),
+                body: JSON.stringify({ image_base64: b64, mime_type: 'image/jpeg', include_ocr: true, skip_web_enrichment: false }),
                 signal: extractAbortController.signal
               })
                 .then(function(r) {
@@ -1537,7 +1473,7 @@
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: b64 }));
                 sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-                window.location.href = window.synclystAppUrl('/flow-2.html');
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(window.synclystAppUrl('/reading-product')); else window.location.href = window.synclystAppUrl('/reading-product');
               } catch (e) {
                 if (onError) onError(e);
               }
@@ -1546,7 +1482,7 @@
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: rawB64 }));
                 sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-                window.location.href = window.synclystAppUrl('/flow-2.html');
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(window.synclystAppUrl('/reading-product')); else window.location.href = window.synclystAppUrl('/reading-product');
               } catch (e) {
                 if (onError) onError(e);
               }
@@ -1699,9 +1635,9 @@
               sessionStorage.removeItem('auralink_review_draft');
               sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
               sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-              window.location.href = window.synclystAppUrl('/flow-2.html');
+              if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(window.synclystAppUrl('/reading-product')); else window.location.href = window.synclystAppUrl('/reading-product');
             } catch (e) {
-              if (e.name === 'QuotaExceededError') { delete payload.imageDataUrl; try { sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); sessionStorage.setItem('synclyst_selected_platform', 'shopify'); window.location.href = window.synclystAppUrl('/flow-2.html'); } catch (e2) {} }
+              if (e.name === 'QuotaExceededError') { delete payload.imageDataUrl; try { sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); sessionStorage.setItem('synclyst_selected_platform', 'shopify'); if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(window.synclystAppUrl('/reading-product')); else window.location.href = window.synclystAppUrl('/reading-product'); } catch (e2) {} }
             }
           });
 

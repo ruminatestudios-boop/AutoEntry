@@ -30,9 +30,10 @@ class VisionServiceError(Exception):
 def _genai_client(api_key: str):
     try:
         import google.genai as genai
-    except ModuleNotFoundError as e:
+    except ImportError as e:
         raise VisionServiceError(
-            "Gemini SDK missing in backend environment. Install with: pip install google-genai"
+            "Gemini SDK missing for the Python process running uvicorn. "
+            "From auralink-ai/backend: source .venv/bin/activate && pip install -r requirements.txt, then restart the API."
         ) from e
     return genai.Client(api_key=api_key)
 
@@ -40,9 +41,10 @@ def _genai_client(api_key: str):
 def _genai_types():
     try:
         from google.genai import types
-    except ModuleNotFoundError as e:
+    except ImportError as e:
         raise VisionServiceError(
-            "Gemini SDK missing in backend environment. Install with: pip install google-genai"
+            "Gemini SDK missing for the Python process running uvicorn. "
+            "From auralink-ai/backend: source .venv/bin/activate && pip install -r requirements.txt, then restart the API."
         ) from e
     return types
 
@@ -185,6 +187,54 @@ def _ocr_text_contains(ocr_snippets: list[str], value: Optional[str]) -> bool:
     return value.strip().lower() in combined
 
 
+def _apply_weak_title_composite_fallback(result: VisionExtractionResponse) -> VisionExtractionResponse:
+    """If seo_title is weak (material line, brand-only, etc.), build brand + type + keywords — never brand alone."""
+    from app.services.product_title_heuristics import is_weak_listing_title
+
+    copy = result.extraction_copy
+    att = result.attributes
+    tags = result.tags
+    if not is_weak_listing_title(copy.seo_title, att.brand):
+        return result
+    parts: list[str] = []
+    if att.brand and str(att.brand).strip():
+        parts.append(str(att.brand).strip())
+    pt = (att.product_type or tags.category or "").strip()
+    if pt:
+        brand_low = (att.brand or "").lower()
+        pl = pt.lower()
+        if pl not in brand_low and brand_low not in pl:
+            parts.append(pt)
+    brand_key = (att.brand or "").lower()
+    if len(parts) < 2:
+        for k in tags.search_keywords or []:
+            ks = str(k).strip()
+            if not ks or len(ks) < 2:
+                continue
+            kl = ks.lower()
+            if brand_key and (kl == brand_key or kl in brand_key or brand_key in kl):
+                continue
+            if any(kl == p.lower() for p in parts):
+                continue
+            parts.append(ks)
+            if len(parts) >= 2:
+                break
+    composite = " ".join(parts).strip()[:200]
+    cur = (copy.seo_title or "").strip()
+    if len(composite.split()) < 2:
+        return result
+    if composite.lower() == (att.brand or "").strip().lower():
+        return result
+    if composite and len(composite) > len(cur):
+        copy.seo_title = composite
+        sources = dict(result.sources or {})
+        prev = sources.get("seo_title")
+        if prev not in ("web", "web_page"):
+            sources["seo_title"] = "derived"
+        result.sources = sources
+    return result
+
+
 def apply_blocklist_and_ocr_validation(
     result: VisionExtractionResponse,
     ocr_snippets: list[str],
@@ -213,6 +263,7 @@ def apply_blocklist_and_ocr_validation(
         sources["seo_title"] = "ocr"
 
     result.sources = sources if sources else None
+    result = _apply_weak_title_composite_fallback(result)
     return result
 
 
@@ -343,6 +394,7 @@ def apply_verification_pass(
         result.attributes.model_year = str(corrections["model_year"]).strip()[:20]
         sources["model_year"] = "ocr"
     result.sources = sources
+    result = _apply_weak_title_composite_fallback(result)
     return result
 
 

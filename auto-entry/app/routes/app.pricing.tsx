@@ -210,13 +210,14 @@ export default function Pricing() {
                       {plan.popular && (
                         <span
                           style={{
-                            background: "rgba(107, 229, 117, 0.25)",
-                            color: darkTeal,
+                            background: "#f97316",
+                            color: "#ffffff",
                             fontSize: "11px",
                             fontWeight: "600",
                             padding: "2px 8px",
                             borderRadius: "100px",
                             whiteSpace: "nowrap",
+                            border: "1px solid #ea580c",
                           }}
                         >
                           Popular

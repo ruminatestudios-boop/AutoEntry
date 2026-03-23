@@ -25,15 +25,7 @@ function Hero() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                One photo.
-              </motion.span>{" "}
-              <motion.span
-                className="text-zinc-500 font-medium"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              >
-                List on eBay.
+                Stop listing manually
               </motion.span>
             </h1>
 

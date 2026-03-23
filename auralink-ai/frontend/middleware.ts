@@ -8,30 +8,25 @@ const isProtectedRoute = createRouteMatcher([
   "/api/stripe/checkout",
 ]);
 
+// In local dev we want the app to be navigable even when Clerk keys are present
+// (e.g. test keys). Clerk middleware can otherwise short-circuit routes.
 const clerkEnabled =
+  process.env.NODE_ENV === "production" &&
   Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) &&
   Boolean(process.env.CLERK_SECRET_KEY);
 
-/** Production home: serve public/landing.html at `/` (URL bar stays `/`). */
-function rewriteRootToLanding(req: NextRequest): NextResponse | null {
-  if (req.nextUrl.pathname === "/") {
-    return NextResponse.rewrite(new URL("/landing.html", req.url));
-  }
-  return null;
-}
-
 export default clerkEnabled
   ? clerkMiddleware(async (auth, req) => {
-      const landing = rewriteRootToLanding(req);
-      if (landing) return landing;
       // Keep upgrade page public so users can always see plan options from landing links.
       if (req.nextUrl.pathname.startsWith("/dashboard/upgrade")) return;
-      if (!isProtectedRoute(req)) return;
+      // Static listings hub (rewritten to dashboard-home.html); not the Clerk React /dashboard root.
+      if (req.nextUrl.pathname === "/dashboard/home") return;
+      // For non-protected routes we must explicitly continue, otherwise Next
+      // can treat the middleware as returning no response (leading to 404s).
+      if (!isProtectedRoute(req)) return NextResponse.next();
       await auth.protect();
     })
   : function middleware(req: NextRequest) {
-      const landing = rewriteRootToLanding(req);
-      if (landing) return landing;
       // Dev fallback when Clerk keys aren't set:
       // allow /dashboard and other routes to load without auth.
       return NextResponse.next();

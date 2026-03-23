@@ -33,17 +33,11 @@
       <p class="text-sm text-zinc-500 mb-8" id="success-count-text">Listed on 1 store in 2.4 seconds</p>
 
       <!-- Store cards: filled from selected marketplaces -->
-      <div class="w-full space-y-3 mb-6" id="success-stores-list"></div>
-
-      <!-- Info box -->
-      <div class="rounded-xl bg-zinc-100 border border-zinc-200 p-4 flex gap-3 text-left mb-8">
-        <span class="w-6 h-6 rounded border border-zinc-300 flex items-center justify-center text-zinc-500 text-xs font-bold shrink-0">◆</span>
-        <p class="text-sm text-zinc-700">AI saved this listing to your brain. It now knows more about your pricing sweet spot for electronics.</p>
-      </div>
+      <div class="w-full space-y-3 mb-8" id="success-stores-list"></div>
 
       <!-- Buttons -->
       <div class="w-full flex flex-col sm:flex-row gap-3">
-        <a href="/dashboard-home.html" class="flex-1 py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline">
+        <a href="/dashboard/home" class="flex-1 py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline">
           View listings
         </a>
         <a href="/?mode=scan" class="flex-1 py-3.5 rounded-2xl bg-white border border-zinc-200 text-zinc-600 font-semibold text-[15px] text-center no-underline hover:bg-zinc-50 transition-colors">
@@ -51,7 +45,7 @@
         </a>
       </div>
       <p class="text-xs text-zinc-500 mt-4">
-        <a href="/stores-connect-shopify.html" class="font-medium text-zinc-700 hover:underline">Connect or reconnect Shopify</a>
+        <a href="/connect-store" class="font-medium text-zinc-700 hover:underline">Connect or reconnect Shopify</a>
       </p>
     </main>
   </div>
@@ -62,7 +56,7 @@
         tiktok_shop: { name: 'TikTok Shop', domain: 'tiktok.com', letter: 'T' },
         amazon: { name: 'Amazon', domain: 'amazon.com', letter: 'A' },
         shopify: { name: 'Shopify', domain: 'shopify.com', letter: 'S' },
-        ebay: { name: 'eBay', domain: 'ebay.com', letter: 'E' },
+        ebay: { name: 'eBay', domain: 'ebay.com', letter: 'E', logoUrl: '/assets/ebay-logo.png' },
         etsy: { name: 'Etsy', domain: 'etsy.com', letter: 'E' },
         depop: { name: 'Depop', domain: 'depop.com', letter: 'D' },
         walmart: { name: 'Walmart', domain: 'walmart.com', letter: 'W' },

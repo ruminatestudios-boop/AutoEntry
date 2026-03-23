@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="view-transition" content="same-origin" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
   <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
   <title>Listings | SyncLyst</title>
@@ -10,6 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };</script>
   <style>
@@ -17,41 +23,39 @@
     .vercel-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
     .vercel-headline { font-weight: 700; color: #0a0a0a; letter-spacing: -0.025em; }
     .vercel-body { font-weight: 400; color: #525252; }
-    .tab-btn.active { background: #0a0a0a; color: #fff; border-color: #0a0a0a; }
-    .tab-btn:not(.active) { background: #fff; color: #525252; border-color: #e5e5e5; }
   </style>
 </head>
 <body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
   <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
-    <header class="shrink-0 border-b border-[#e5e5e5] bg-white px-4 h-14 grid grid-cols-3 items-center">
-      <a href="/dashboard-home.html" class="text-sm font-medium text-[#525252] no-underline flex items-center gap-1"><i data-lucide="chevron-left" class="w-4 h-4"></i> Back</a>
-      <img src="/synclyst-logo.png" alt="SyncLyst" class="h-6 w-auto justify-self-center" />
-      <a href="/landing.html?mode=scan" class="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center text-lg font-bold leading-none no-underline justify-self-end" aria-label="Scan">+</a>
+    <!-- Header: same as flow-3.html -->
+    <header class="shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+      <div></div>
+      <a href="/landing.html" class="inline-flex items-center justify-self-center no-underline text-[#111] leading-none py-0.5"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <div class="justify-self-end"></div>
     </header>
-    <main class="flex-1 px-5 pt-6 pb-8 overflow-auto">
-      <div class="flex items-center justify-between gap-3 mb-4">
-        <p id="listings-total" class="text-sm text-[#525252] vercel-body">— listings</p>
-      </div>
-      <div class="flex gap-2 mb-5">
-        <button type="button" class="tab-btn px-4 py-2 rounded-full text-sm font-semibold border transition-colors" data-tab="all">All</button>
-        <button type="button" class="tab-btn px-4 py-2 rounded-full text-sm font-medium border transition-colors" data-tab="draft">Drafts</button>
-        <button type="button" class="tab-btn px-4 py-2 rounded-full text-sm font-medium border transition-colors" data-tab="published">Published</button>
-      </div>
-      <div id="listings-container" class="space-y-3">
+    <main class="flex-1 flex flex-col px-5 pt-6 pb-8 overflow-auto min-h-0">
+      <h1 class="vercel-headline text-xl font-bold text-[#0a0a0a] mb-1 text-center">Your listings</h1>
+      <p class="text-center text-sm text-[#525252] mb-4 vercel-body">Every listing Synclyst created or synced—one place to browse.</p>
+      <p id="listings-total" class="text-center text-sm text-[#71717a] mb-6 vercel-body">— listings</p>
+      <div id="listings-container" class="space-y-3 flex-1 min-h-0">
         <p id="listings-loading" class="text-sm text-[#71717a]">Loading…</p>
       </div>
-      <div id="listings-empty" class="hidden text-center py-12">
+      <div id="listings-empty" class="hidden text-center py-12 flex-1">
         <p class="text-sm text-[#525252] mb-4">No listings yet.</p>
-        <a href="/landing.html?mode=scan" class="inline-flex items-center gap-2 py-3 px-5 rounded-xl bg-black text-white font-semibold text-sm no-underline">
+        <a href="/scan" class="inline-flex items-center gap-2 py-3 px-5 rounded-xl bg-black text-white font-semibold text-sm no-underline">
           <i data-lucide="camera" class="w-4 h-4"></i>
           Scan your first product
+        </a>
+      </div>
+      <div class="mt-auto pt-6 shrink-0">
+        <a href="/dashboard/home" class="block w-full py-3.5 rounded-xl bg-black text-white font-semibold text-[15px] text-center no-underline hover:opacity-95 transition-opacity">
+          Return to dashboard
         </a>
       </div>
     </main>
   </div>
   <script>
     (function() {
-      var currentTab = 'all';
       var allListings = [];
 
       function getPublishingUrl() {
@@ -75,7 +79,8 @@
         if (val == null || val === '') return '—';
         var n = Number(val);
         if (isNaN(n)) return String(val);
-        return '£' + n.toFixed(2);
+        // Matches publishing API + flow-3: price is minor units (pence for GBP), not decimal pounds
+        return '£' + (n / 100).toFixed(2);
       }
 
       function getPlatformsFromListing(listing) {
@@ -86,22 +91,12 @@
       }
 
       function renderListings() {
-        var filtered = allListings;
-        if (currentTab === 'draft') filtered = allListings.filter(function(l) { return l.status === 'draft'; });
-        if (currentTab === 'published') filtered = allListings.filter(function(l) { return l.status === 'published'; });
-
         var totalEl = document.getElementById('listings-total');
         var container = document.getElementById('listings-container');
         var emptyEl = document.getElementById('listings-empty');
         if (totalEl) totalEl.textContent = allListings.length + ' listing' + (allListings.length !== 1 ? 's' : '');
 
-        document.querySelectorAll('.tab-btn').forEach(function(btn) {
-          btn.classList.toggle('active', btn.getAttribute('data-tab') === currentTab);
-          btn.classList.toggle('font-semibold', btn.getAttribute('data-tab') === currentTab);
-          btn.classList.toggle('font-medium', btn.getAttribute('data-tab') !== currentTab);
-        });
-
-        if (filtered.length === 0) {
+        if (allListings.length === 0) {
           container.classList.add('hidden');
           emptyEl.classList.remove('hidden');
           if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -110,7 +105,7 @@
         emptyEl.classList.add('hidden');
         container.classList.remove('hidden');
         container.innerHTML = '';
-        filtered.forEach(function(l) {
+        allListings.forEach(function(l) {
           var u = l.universal_data || l;
           var title = (u.title || '').trim() || 'Untitled';
           var price = formatPrice(u.price);
@@ -160,13 +155,6 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
           });
       }).catch(function() { if (typeof lucide !== 'undefined') lucide.createIcons(); });
-
-      document.querySelectorAll('.tab-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          currentTab = btn.getAttribute('data-tab');
-          renderListings();
-        });
-      });
     })();
   </script>
 </body>

@@ -25,10 +25,15 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+    # Browsers forbid Access-Control-Allow-Origin: * together with credentials.
+    # We keep credentials for explicit origin lists; with wildcard, use credentials=False
+    # (Bearer tokens in Authorization still work).
+    _cors_origins = settings.get_cors_origins_list()
+    _cors_credentials = False if _cors_origins == ["*"] else True
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.get_cors_origins_list(),
-        allow_credentials=True,
+        allow_origins=_cors_origins,
+        allow_credentials=_cors_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
     )

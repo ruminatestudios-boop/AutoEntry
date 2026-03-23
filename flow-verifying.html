@@ -8,7 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/normalize-product-tag.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -56,7 +58,7 @@
     <div class="bg-white rounded-2xl border border-zinc-200 shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
       <div class="p-5 border-b border-zinc-100 shrink-0">
         <h2 class="font-serif text-lg font-bold text-zinc-900">Confirm your listing</h2>
-        <p class="text-xs text-zinc-500 mt-0.5">Review and edit any field, then push live.</p>
+        <p class="text-xs text-zinc-500 mt-0.5">Review and edit any field, then push live</p>
       </div>
       <div class="flex-1 overflow-y-auto p-5 space-y-4">
         <!-- Stores -->
@@ -81,9 +83,10 @@
             </div>
             <div data-field="category">
               <label for="modal-category" class="block text-xs font-medium text-zinc-600 mb-0.5">Category</label>
-              <p class="text-[11px] text-zinc-500 mt-0.5 mb-1">Determines tax rates and adds metafields to improve search, filters, and cross-channel sales.</p>
-              <input type="text" id="modal-category" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Choose a product category" list="modal-category-list" />
-              <datalist id="modal-category-list">
+              <p class="text-[10px] text-zinc-500 mb-1.5">Use the menu for standard categories, or type below.</p>
+              <select id="modal-category-preset" class="synclyst-select-chevron w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg pl-3 pr-10 py-2 mb-1.5 focus:outline-none focus:ring-2 focus:ring-zinc-400 cursor-pointer" aria-label="Pick a common product category"></select>
+              <input type="text" id="modal-category" class="w-full text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="Choose a product category" autocomplete="off" />
+              <datalist id="modal-category-list" class="hidden" aria-hidden="true">
                 <option value="Apparel &amp; accessories" /><option value="Electronics" /><option value="Home &amp; garden" /><option value="Health &amp; beauty" /><option value="Sports &amp; recreation" /><option value="Toys &amp; games" /><option value="Food &amp; beverage" /><option value="Other" />
               </datalist>
             </div>
@@ -492,6 +495,68 @@
       var priceInput = document.getElementById('modal-price');
       var descInput = document.getElementById('modal-description');
       var categoryInput = document.getElementById('modal-category');
+      var categoryPresetSelect = document.getElementById('modal-category-preset');
+      (function populateCategoryPresetSelect() {
+        var sel = categoryPresetSelect;
+        var dl = document.getElementById('modal-category-list');
+        if (!sel || !dl) return;
+        sel.innerHTML = '';
+        var z = document.createElement('option');
+        z.value = '';
+        z.textContent = 'Pick a category…';
+        sel.appendChild(z);
+        Array.prototype.forEach.call(dl.querySelectorAll('option'), function(o) {
+          var v = (o.getAttribute('value') || '').trim();
+          if (!v) return;
+          var opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          sel.appendChild(opt);
+        });
+      })();
+      function syncCategoryPresetFromInput() {
+        if (!categoryPresetSelect || !categoryInput) return;
+        var cv = (categoryInput.value || '').trim();
+        var found = '';
+        for (var i = 0; i < categoryPresetSelect.options.length; i++) {
+          var o = categoryPresetSelect.options[i];
+          if (o.value && o.value === cv) {
+            found = o.value;
+            break;
+          }
+        }
+        categoryPresetSelect.value = found;
+      }
+      function isPredeterminedCategoryPath(s) {
+        var t = (s || '').trim();
+        return t.length > 0 && /[>›▸]/.test(t);
+      }
+      function syncCategoryInputMode() {
+        if (!categoryInput) return;
+        var v = (categoryInput.value || '').trim();
+        categoryInput.removeAttribute('list');
+        categoryInput.readOnly = false;
+        categoryInput.removeAttribute('aria-readonly');
+        categoryInput.classList.add('cursor-text');
+        categoryInput.classList.remove('cursor-default');
+        if (isPredeterminedCategoryPath(v)) {
+          categoryInput.classList.add('bg-zinc-50');
+        } else {
+          categoryInput.classList.remove('bg-zinc-50');
+        }
+        syncCategoryPresetFromInput();
+      }
+      if (categoryPresetSelect && categoryInput) {
+        categoryPresetSelect.addEventListener('change', function() {
+          var val = categoryPresetSelect.value;
+          if (val) categoryInput.value = val;
+          syncCategoryInputMode();
+        });
+      }
+      if (categoryInput) {
+        categoryInput.addEventListener('input', function() { syncCategoryInputMode(); });
+        categoryInput.addEventListener('blur', function() { syncCategoryInputMode(); });
+      }
       var compareAtInput = document.getElementById('modal-compare-at');
       var costPerItemInput = document.getElementById('modal-cost-per-item');
       var chargeTaxCheck = document.getElementById('modal-charge-tax');
@@ -575,6 +640,7 @@
           descInput.style.height = Math.max(96, descInput.scrollHeight) + 'px';
         }
         if (categoryInput) categoryInput.value = (draft.category || '').trim();
+        syncCategoryInputMode();
         if (priceInput) priceInput.value = (draft.price != null && draft.price !== '') ? String(draft.price).replace(/^\$|^£/, '').trim() : '';
         var priceFromWebHint = document.getElementById('modal-price-from-web-hint');
         if (priceFromWebHint) priceFromWebHint.classList.toggle('hidden', !(draft.extraction && draft.extraction.price_from_web));
@@ -604,7 +670,7 @@
         if (seoTitleInput) seoTitleInput.value = (draft.title || '').trim() || 'Uses product title';
         updateMetaDescCount();
 
-        modalTags = Array.isArray(draft.tags) ? draft.tags.slice() : [];
+        modalTags = normalizeProductTagsList(Array.isArray(draft.tags) ? draft.tags : []);
         renderModalTags();
 
         var selected = loadSelected();
@@ -616,7 +682,7 @@
             var isConnected = !!connected[id];
             var name = marketplaceNames[id] || id;
             var domain = marketplaceDomains[id];
-            var logoUrl = domain ? 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=32' : '';
+            var logoUrl = domain === 'ebay.com' ? '/assets/ebay-logo.png' : (domain ? 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=32' : '');
             span.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium ' +
               (isConnected ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-amber-50 border border-amber-200 text-amber-800');
             span.innerHTML = (logoUrl ? '<img src="' + logoUrl + '" alt="" class="w-3.5 h-3.5 rounded-sm object-contain shrink-0" onerror="this.style.display=\'none\'" />' : '') +
@@ -730,7 +796,7 @@
           if (!token) {
             pushLiveBtn.disabled = false;
             pushLiveBtn.textContent = 'Push live';
-            window.location.href = '/stores-connect-shopify.html?return=flow-3';
+            window.location.href = '/connect-store?return=flow-3';
             return;
           }
           var base = pubUrl.replace(/\/$/, '');
@@ -743,7 +809,7 @@
               if (!stores.shopify || stores.shopify.status !== 'connected') {
                 pushLiveBtn.disabled = false;
                 pushLiveBtn.textContent = 'Push live';
-                window.location.href = '/stores-connect-shopify.html?return=flow-3';
+                window.location.href = '/connect-store?return=flow-3';
                 return null;
               }
               return token;
@@ -800,8 +866,8 @@
       var tagInputInline = document.getElementById('modal-tag-input-inline');
       if (tagAddBtnInline && tagInputInline) {
         tagAddBtnInline.addEventListener('click', function() {
-          var t = (tagInputInline.value || '').trim();
-          if (t && modalTags.indexOf(t) === -1) { modalTags.push(t); tagInputInline.value = ''; renderModalTags(); }
+          var t = normalizeProductTag((tagInputInline.value || '').trim());
+          if (t && !modalTags.some(function(x) { return x.toLowerCase() === t.toLowerCase(); })) { modalTags.push(t); tagInputInline.value = ''; renderModalTags(); }
         });
         tagInputInline.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); tagAddBtnInline.click(); } });
       }

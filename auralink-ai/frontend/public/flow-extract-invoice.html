@@ -3,15 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <title>Invoice extracted | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
 </head>
 <body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
   <div class="max-w-md mx-auto min-h-screen flex flex-col px-5 py-6">
-    <a href="/landing.html?mode=scan" class="text-zinc-600 hover:text-zinc-900 text-sm font-medium mb-4 inline-flex items-center gap-1 no-underline">
+    <a href="/scan" class="text-zinc-600 hover:text-zinc-900 text-sm font-medium mb-4 inline-flex items-center gap-1 no-underline">
       <span>←</span> Scan another
     </a>
     <h1 class="font-semibold text-lg text-zinc-900 mb-2">Extracted <span id="doc-type-label">invoice</span></h1>
@@ -57,7 +63,7 @@
         if (raw) data = JSON.parse(raw);
       } catch (e) {}
       if (!data || !data.extraction_type) {
-        window.location.href = '/landing.html?mode=scan';
+        window.location.href = '/scan';
         return;
       }
       var type = data.extraction_type === 'receipt' ? 'receipt' : 'invoice';

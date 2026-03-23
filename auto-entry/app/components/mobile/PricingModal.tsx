@@ -93,15 +93,19 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
                                         position: "absolute",
                                         top: "12px",
                                         right: "12px",
-                                        background: "var(--mobile-accent)",
-                                        color: "#1a1a1a",
+                                        background: "#ffffff",
+                                        border: "1px solid #000000",
+                                        color: "#ea580c",
                                         fontSize: "11px",
-                                        fontWeight: "600",
-                                        padding: "4px 10px",
-                                        borderRadius: "999px"
+                                        fontWeight: "700",
+                                        letterSpacing: "0.06em",
+                                        textTransform: "uppercase",
+                                        padding: "4px 12px",
+                                        borderRadius: "999px",
+                                        whiteSpace: "nowrap",
                                     }}
                                 >
-                                    Most Popular
+                                    MOST POPULAR
                                 </div>
                             )}
 

@@ -59,7 +59,7 @@ User journey and application logic only (no deployment steps). Use this to see *
 | Landing (scan view) | Camera/upload → extract → redirect to flow-2. |
 | flow-2 | “Reading your product”; progress → auto to flow-3. |
 | flow-3 | Confirm your listing; edit draft; Next = publish (or go to Connect). |
-| stores-connect-shopify | Enter store → OAuth → return to flow. |
+| `/connect-store` | Enter store → OAuth → return to flow. |
 | flow-connect-done | “All connected!” → link to verifying/confirm. |
 | flow-verifying | Confirm modal; “Push live” = create + publish. |
 | flow-marketplaces | Choose Shopify (or others when enabled); Connect. |

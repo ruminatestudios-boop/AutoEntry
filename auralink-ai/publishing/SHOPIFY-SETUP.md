@@ -65,7 +65,7 @@ Deploy the new revision after any change.
 
 ## 5. Try again
 
-1. Open **https://www.synclyst.app/stores-connect-shopify.html?return=flow-3**
+1. Open **https://www.synclyst.app/connect-store?return=flow-3**
 2. Enter **fightlore** and click **Connect store**.
 3. You should get the normal “Allow this app” screen and then be redirected back to SyncLyst.
 

@@ -89,12 +89,13 @@ def _create_checkout_session_direct(
     if email:
         data["customer_email"] = email
 
-    with httpx.Client(timeout=30.0, trust_env=False) as client:
-        resp = client.post(
-            "https://api.stripe.com/v1/checkout/sessions",
-            headers={"Authorization": f"Bearer {stripe_secret_key}"},
-            data=data,
-        )
+    with _without_proxy_env():
+        with httpx.Client(timeout=30.0, trust_env=False) as client:
+            resp = client.post(
+                "https://api.stripe.com/v1/checkout/sessions",
+                headers={"Authorization": f"Bearer {stripe_secret_key}"},
+                data=data,
+            )
     if resp.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Stripe error: {resp.text}")
     body = resp.json()
@@ -110,15 +111,16 @@ def _create_portal_session_direct(
     customer_id: str,
     return_url: str,
 ):
-    with httpx.Client(timeout=30.0, trust_env=False) as client:
-        resp = client.post(
-            "https://api.stripe.com/v1/billing_portal/sessions",
-            headers={"Authorization": f"Bearer {stripe_secret_key}"},
-            data={
-                "customer": customer_id,
-                "return_url": return_url,
-            },
-        )
+    with _without_proxy_env():
+        with httpx.Client(timeout=30.0, trust_env=False) as client:
+            resp = client.post(
+                "https://api.stripe.com/v1/billing_portal/sessions",
+                headers={"Authorization": f"Bearer {stripe_secret_key}"},
+                data={
+                    "customer": customer_id,
+                    "return_url": return_url,
+                },
+            )
     if resp.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Stripe error: {resp.text}")
     body = resp.json()
@@ -133,12 +135,13 @@ def _fetch_checkout_session_direct(
     stripe_secret_key: str,
     session_id: str,
 ) -> dict:
-    with httpx.Client(timeout=30.0, trust_env=False) as client:
-        resp = client.get(
-            f"https://api.stripe.com/v1/checkout/sessions/{session_id}",
-            headers={"Authorization": f"Bearer {stripe_secret_key}"},
-            params={"expand[]": "subscription"},
-        )
+    with _without_proxy_env():
+        with httpx.Client(timeout=30.0, trust_env=False) as client:
+            resp = client.get(
+                f"https://api.stripe.com/v1/checkout/sessions/{session_id}",
+                headers={"Authorization": f"Bearer {stripe_secret_key}"},
+                params={"expand[]": "subscription"},
+            )
     if resp.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Stripe error: {resp.text}")
     body = resp.json()

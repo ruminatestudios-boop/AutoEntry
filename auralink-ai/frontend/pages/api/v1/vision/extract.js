@@ -1,7 +1,7 @@
 /**
  * Proxies POST /api/v1/vision/extract to the SyncLyst backend.
  * Use NEXT_PUBLIC_API_URL for local dev (e.g. http://localhost:8000) so the
- * static flow (flow-2 → flow-3) and app flow both hit your local backend.
+ * static flow (reading-product → review) and app flow both hit your local backend.
  */
 const BACKEND =
   process.env.NEXT_PUBLIC_API_URL ||

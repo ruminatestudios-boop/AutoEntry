@@ -3,17 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="refresh" content="0; url=/landing.html?mode=scan" />
+    <meta name="view-transition" content="same-origin" />
+  <meta http-equiv="refresh" content="0; url=/scan" />
   <title>Capture | Listing Flow | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
         },
       },
     };
@@ -26,8 +32,8 @@
   </style>
 </head>
 <body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
-  <p class="p-4 text-center text-sm text-zinc-600">Redirecting to <a href="/landing.html?mode=scan" class="font-medium text-zinc-900 underline">scan</a>…</p>
-  <script>window.location.replace('/landing.html?mode=scan');</script>
+  <p class="p-4 text-center text-sm text-zinc-600">Redirecting to <a href="/scan" class="font-medium text-zinc-900 underline">scan</a>…</p>
+  <script>window.location.replace('/scan');</script>
   <div class="max-w-md mx-auto min-h-screen flex flex-col" style="display:none;">
     <div class="flex-1 flex flex-col min-h-0">
       <div class="flex-1 flex flex-col min-h-0 rounded-2xl overflow-hidden bg-zinc-950 mx-4">
@@ -49,16 +55,16 @@
         </div>
         <div class="flex items-center justify-between px-6 py-5 bg-zinc-950">
           <button type="button" class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 text-xs font-medium">Gallery</button>
-          <a href="/flow-2.html" class="w-16 h-16 rounded-full bg-white border-2 border-white/30 flex items-center justify-center active:scale-95 transition-transform"></a>
+          <a href="/reading-product" class="w-16 h-16 rounded-full bg-white border-2 border-white/30 flex items-center justify-center active:scale-95 transition-transform"></a>
           <button type="button" class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 text-xs font-medium">Flip</button>
         </div>
       </div>
       <div class="px-5 pt-4 pb-6">
-        <a href="/flow-2.html" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] hover:bg-zinc-800 transition-colors text-center no-underline">
+        <a href="/reading-product" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] hover:bg-zinc-800 transition-colors text-center no-underline">
           Continue
         </a>
         <p class="text-center mt-4">
-          <a href="/flow-2.html" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 underline">Skip for now</a>
+          <a href="/reading-product" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 underline">Skip for now</a>
         </p>
       </div>
     </div>

@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
   <title>Review batch | SyncLyst</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
   <script>
     tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
   </script>
@@ -87,7 +93,8 @@
         if (raw) drafts = JSON.parse(raw);
       } catch (e) {}
       if (!Array.isArray(drafts) || drafts.length === 0) {
-        window.location.href = '/flow-batch-upload.html';
+        if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/flow-batch-upload.html');
+        else window.location.href = '/flow-batch-upload.html';
         return;
       }
 
@@ -169,7 +176,9 @@
         cardBody.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
-          window.location.href = '/flow-3.html?batch=1&index=' + i;
+          var batchUrl = '/review?batch=1&index=' + i;
+          if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(batchUrl);
+          else window.location.href = batchUrl;
         });
         card.appendChild(cbWrap);
         card.appendChild(cardBody);
@@ -232,7 +241,7 @@
           if (!token) {
             publishBtn.disabled = false;
             publishBtn.textContent = 'Publish selected to Shopify';
-            window.location.href = '/stores-connect-shopify.html?return=flow-batch-review';
+            window.location.href = '/connect-store?return=flow-batch-review';
             return;
           }
           var base = pubUrl.replace(/\/$/, '');
@@ -242,7 +251,7 @@
               if (!stores || !stores.shopify || stores.shopify.status !== 'connected') {
                 publishBtn.disabled = false;
                 publishBtn.textContent = 'Publish selected to Shopify';
-                window.location.href = '/stores-connect-shopify.html?return=flow-batch-review';
+                window.location.href = '/connect-store?return=flow-batch-review';
                 return null;
               }
               return token;
@@ -278,7 +287,10 @@
           return chain;
         }).then(function() {
           publishBtn.textContent = 'Done';
-          setTimeout(function() { window.location.href = '/flow-success.html'; }, 500);
+          setTimeout(function() {
+            if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/listing/published');
+            else window.location.href = '/listing/published';
+          }, 500);
         }).catch(function(err) {
           publishBtn.disabled = false;
           publishBtn.textContent = 'Publish selected to Shopify';

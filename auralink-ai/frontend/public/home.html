@@ -1,10 +1,16 @@
 <html lang="en"><head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="view-transition" content="same-origin" />
     <meta name="auralink-api-url" content="http://localhost:8000">
     <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app">
     <title>SyncLyst - List products. In seconds.</title>
     <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
     <style>
@@ -17,7 +23,16 @@
         }
         @keyframes videoMarquee {
             0% { transform: translateX(0); }
-            100% { transform: translateX(calc(-320px * 5 - 24px * 5)); }
+            100% { transform: translateX(-33.333%); }
+        }
+        .video-carousel-track {
+            display: flex;
+            gap: 1.5rem;
+            width: max-content;
+            animation: videoMarquee 55s linear infinite;
+        }
+        .video-carousel-track:hover {
+            animation-play-state: paused;
         }
         @keyframes scanSweep {
             0%, 100% { top: 0; opacity: 0.6; }
@@ -61,26 +76,6 @@
             background: white;
         }
 
-        /* Vertical text marquee (hero) */
-        @keyframes slide-vertical {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-50%); }
-        }
-        .hero-marquee-viewport {
-            mask-image: linear-gradient(rgba(0,0,0,0) 0%, rgb(0,0,0) 43.7%, rgba(0,0,0,0) 100%);
-            -webkit-mask-image: linear-gradient(rgba(0,0,0,0) 0%, rgb(0,0,0) 43.7%, rgba(0,0,0,0) 100%);
-        }
-        .hero-marquee-track {
-            animation: slide-vertical 16s linear infinite;
-        }
-        .hero-marquee-item {
-            height: 1.15em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1.05;
-        }
-
         /* Comparison animated list (vanilla) */
         .comparison-animated-list {
             overflow: hidden;
@@ -103,30 +98,26 @@
             pointer-events: auto;
         }
 
-        #main-content {
-            transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), border-radius 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-            transform-origin: center;
-        }
-        .scrolling #main-content {
-            transform: scale(0.96);
-            opacity: 0.9;
-            border-radius: 24px;
-            overflow: hidden;
-        }
         #batch-view { display: none; }
         #batch-view.flex { display: flex; }
         @media (max-width: 640px) {
             #scan-view { background: #0a0a0a; }
             #scan-view #scan-step-result { background: #fafafa; }
-            #scan-view .scan-view-header { padding-top: max(0.75rem, env(safe-area-inset-top)); }
             #scan-view #scan-step-camera { padding: 0; justify-content: stretch; }
             #scan-view #scan-step-camera .section-label, #scan-view #scan-step-camera > p.text-zinc-500, #scan-view #scan-step-camera > p.text-zinc-400, #scan-view #scan-step-camera #scan-upload-btn { display: none; }
-            #scan-view #scan-step-camera .scan-upload-link { display: block !important; position: absolute; bottom: 5.5rem; left: 50%; transform: translateX(-50%); z-index: 15; text-decoration: underline; white-space: nowrap; }
-            #scan-view #scan-step-camera .scan-upload-link.hidden { display: block !important; }
+            /* Flow-3–style pill above shutter; spacing from safe area */
+            #scan-view #scan-step-camera .scan-upload-link {
+                display: flex !important; align-items: center; justify-content: center;
+                position: absolute;
+                bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px));
+                left: 50%; transform: translateX(-50%); z-index: 15;
+                white-space: nowrap;
+            }
+            #scan-view #scan-step-camera .scan-upload-link.hidden { display: flex !important; }
             #scan-view #scan-step-camera.camera-unavailable #scan-upload-btn { display: block !important; }
             #scan-view #scan-step-camera .scan-camera-viewport { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; aspect-ratio: auto; border-radius: 0; border: none; }
-            #scan-view #scan-step-camera .scan-camera-viewport .flex.items-end { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
-            #scan-view #scan-step-camera #scan-camera-error { position: absolute; bottom: 5rem; left: 1rem; right: 1rem; max-width: none; }
+            #scan-view #scan-step-camera .scan-camera-viewport .flex.items-end { padding-bottom: max(1.25rem, env(safe-area-inset-bottom)); }
+            #scan-view #scan-step-camera #scan-camera-error { position: absolute; bottom: 6rem; left: 1rem; right: 1rem; max-width: none; }
         }
     </style>
 </head>
@@ -134,31 +125,32 @@
 
   <!-- Scan view -->
   <div id="scan-view" class="fixed inset-0 z-[80] hidden flex-col bg-zinc-50 text-zinc-900">
-    <div class="scan-view-header flex items-center justify-between px-6 h-16 border-b border-zinc-200 bg-white/80 backdrop-blur-md shrink-0">
+    <!-- Header: same logo + white band as flow-3.html (min-height + safe-area; no fixed h-14 + extra padding clash) -->
+    <div class="scan-view-header shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
       <div></div>
-      <a href="#" id="scan-view-exit" class="no-underline"><img src="/synclyst-logo.png" alt="SyncLyst®" class="h-7 w-auto" /></a>
-      <a href="/home.html?mode=batch" class="text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors no-underline">Batch</a>
+      <a href="#" id="scan-view-exit" class="inline-flex items-center justify-self-center no-underline text-[#111] leading-none py-0.5"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <div class="justify-self-end"></div>
     </div>
     <p id="scan-api-hint" class="hidden text-xs text-zinc-400 px-4 py-2 bg-zinc-100 border-b border-zinc-200 truncate" title="API URL used for extraction"></p>
     
     <div id="scan-step-camera" class="flex-1 flex flex-col items-center justify-center p-6 overflow-auto relative">
-      <p class="section-label text-center mb-6 text-xs font-semibold uppercase tracking-widest text-zinc-400">Scan Product</p>
+      <p class="section-label text-center mb-5 text-sm font-medium text-[#525252]">Scan product</p>
       <div class="scan-camera-viewport w-full max-w-md aspect-[3/4] rounded-2xl border border-zinc-200 bg-zinc-100 overflow-hidden relative shadow-inner">
         <video id="scan-video" class="w-full h-full object-cover" playsinline="" muted="" autoplay=""></video>
-        <div class="absolute inset-0 flex items-end justify-center p-6 bg-gradient-to-t from-black/40 to-transparent">
-          <button type="button" id="scan-capture-btn" class="w-16 h-16 rounded-full bg-white border-[4px] border-zinc-300 hover:scale-95 transition-transform flex items-center justify-center shadow-lg"></button>
+        <div class="absolute inset-0 flex items-end justify-center p-6 bg-gradient-to-t from-black/25 via-transparent to-transparent">
+          <button type="button" id="scan-capture-btn" aria-label="Capture photo" class="w-[4.5rem] h-[4.5rem] rounded-full bg-white border-2 border-[#e5e5e5] hover:scale-[0.98] active:scale-95 transition-transform flex items-center justify-center shadow-[0_1px_3px_rgba(0,0,0,0.12)] ring-4 ring-white/30"></button>
         </div>
       </div>
-      <p class="text-zinc-500 text-base mt-6 font-medium">Point at a product—we extract attributes, copy, and tags.</p>
+      <p class="text-[#525252] text-sm mt-5 text-center max-w-sm leading-relaxed">Point at a product—we extract attributes, copy, and tags.</p>
       <div id="scan-camera-error" class="text-red-600 text-base mt-4 hidden max-w-md text-center rounded-2xl bg-red-50 border border-red-100 p-4"></div>
       
       <input type="file" id="scan-upload-input" accept="image/*" class="hidden">
-      <button type="button" id="scan-upload-btn" class="mt-6 px-6 py-3 rounded-xl border border-zinc-200 bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 transition-colors shadow-sm inline-flex items-center gap-2">
+      <button type="button" id="scan-upload-btn" class="mt-6 px-6 py-3 rounded-xl border border-[#e5e5e5] bg-white text-[#0a0a0a] text-sm font-semibold hover:bg-[#fafafa] transition-colors shadow-[0_1px_3px_rgba(0,0,0,0.04)] inline-flex items-center gap-2">
         <i data-lucide="upload" stroke-width="1.5" class="w-5 h-5"></i>
         Upload photo
       </button>
-      <button type="button" id="scan-upload-link-mobile" class="scan-upload-link hidden mt-4 text-sm font-medium text-white" aria-label="Upload photo">Upload photo</button>
-      <p class="text-zinc-400 text-xs mt-4 max-w-xs text-center leading-relaxed">Works on all devices. Use when camera is unavailable.</p>
+      <button type="button" id="scan-upload-link-mobile" class="scan-upload-link hidden mt-4 text-sm font-semibold text-[#0a0a0a] bg-white/95 backdrop-blur-sm border border-[#e5e5e5] rounded-xl px-5 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] no-underline hover:bg-white" aria-label="Upload photo">Upload photo</button>
+      <p class="text-[#71717a] text-xs mt-3 max-w-xs text-center leading-relaxed">Use upload if the camera isn’t available.</p>
     </div>
 
     <div id="scan-step-result" class="flex-1 hidden flex-col p-6 overflow-auto">
@@ -257,10 +249,10 @@
     <div class="flex items-center justify-between px-6 h-16 border-b border-zinc-200 bg-white/80 backdrop-blur-md shrink-0">
       <div></div>
       <a href="#" id="batch-view-exit" class="text-xl font-semibold tracking-tight text-zinc-900 uppercase no-underline">SYNCLYST</a>
-      <a href="/home.html?mode=scan" class="text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors no-underline">Scan</a>
+      <a href="/scan" class="text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors no-underline">Scan</a>
     </div>
     <main class="flex-1 px-5 pt-6 pb-6 overflow-auto max-w-md mx-auto w-full">
-      <h1 class="text-xl font-bold text-zinc-900 mb-1 text-center" style="letter-spacing: -0.025em;">Batch upload</h1>
+      <h1 class="text-xl font-bold text-zinc-900 mb-1 text-center" style="letter-spacing: -0.025em;">Batch Upload</h1>
       <p class="text-center text-sm text-zinc-500 mb-6">Upload multiple product photos. We extract details in parallel, then you review and publish.</p>
       <p id="batch-add-more-hint" class="hidden text-center text-sm text-emerald-700 font-medium mb-4 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200">Adding to your existing batch — new listings will be merged. Review and deploy all in one go.</p>
       <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -287,24 +279,24 @@
         <nav class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between relative">
             <div class="flex items-center gap-8 flex-1 justify-start min-w-0">
                 <div class="hidden md:flex items-center gap-8">
-                    <a href="#features" onclick="handleNavigate(event, 'features')" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">Features</a>
-                    <a href="#comparison" onclick="handleNavigate(event, 'comparison')" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">Comparison</a>
+                    <a href="#features" onclick="handleNavigate(event, 'features')" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">How it works</a>
+                    <a href="#comparison" onclick="handleNavigate(event, 'comparison')" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">Benefits</a>
                     <a href="#pricing" onclick="handleNavigate(event, 'pricing')" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">Pricing</a>
                 </div>
             </div>
-            <a href="#" class="flex items-center gap-2 flex-shrink-0 absolute left-1/2 -translate-x-1/2">
-                <img src="/synclyst-logo.png" alt="SyncLyst®" class="h-7 w-auto" />
+            <a href="#" class="flex items-center gap-2 flex-shrink-0 absolute left-1/2 -translate-x-1/2 no-underline">
+                <span class="text-lg font-semibold tracking-tight text-zinc-900">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span>
             </a>
             <div class="hidden md:flex items-center gap-4 flex-1 justify-end min-w-0">
-                <a href="/dashboard" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">Login</a>
-                <a href="/dashboard" class="bg-zinc-900 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-zinc-800 transition-all shadow-sm">
+                <a href="/sign-in?redirect_url=/dashboard" class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors">Login</a>
+                <a href="/sign-up?redirect_url=/dashboard" class="bg-zinc-900 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-zinc-800 transition-all shadow-sm">
                     Sign up
                 </a>
             </div>
         </nav>
     </header>
 
-    <div id="main-content">
+    <div id="main-content" data-synclyst-page-transition-root>
         <main id="main-landing">
         
         <!-- Hero -->
@@ -313,30 +305,19 @@
             <div class="max-w-4xl mx-auto text-center relative z-10">
                 <div class="inline-flex items-center gap-2 px-4 py-1.5 mb-8 bg-zinc-50 border border-zinc-200 rounded-xl mx-auto shadow-sm">
                     <i data-lucide="sparkles" stroke-width="1.5" class="text-zinc-500 w-4 h-4"></i>
-                    <p class="text-xs text-zinc-600 font-medium tracking-wide">
-                        <span class="text-zinc-900 font-semibold">Smart Suggest:</span> AI gets smarter the more you use it.
+                    <p class="text-xs text-zinc-600 font-medium tracking-wide leading-tight text-left whitespace-nowrap max-[380px]:whitespace-normal">
+                        <span class="text-zinc-900 font-semibold">Smart Suggest:</span> Your AI builds a memory. Every scan gets faster and smarter
                     </p>
                 </div>
-                <h1 class="text-5xl md:text-7xl font-semibold tracking-tighter leading-[1.05] mb-8 text-zinc-900 flex flex-wrap items-center justify-center gap-x-2 gap-y-0">
-                    <span>One photo.</span>
-                    <span class="hero-marquee-viewport inline-block overflow-hidden align-middle text-left" style="height: 1.15em; width: auto; min-width: 10ch;">
-                        <span class="hero-marquee-track block">
-                            <span class="hero-marquee-item block text-zinc-900 font-semibold">List on Shopify.</span>
-                            <span class="hero-marquee-item block text-zinc-900 font-semibold">List on Etsy.</span>
-                            <span class="hero-marquee-item block text-zinc-900 font-semibold">List on eBay.</span>
-                            <span class="hero-marquee-item block text-zinc-900 font-semibold">List everywhere.</span>
-                            <span class="hero-marquee-item block text-zinc-900 font-semibold">List on Shopify.</span>
-                            <span class="hero-marquee-item block text-zinc-900 font-semibold">List on Etsy.</span>
-                            <span class="hero-marquee-item block text-zinc-900 font-semibold">List on eBay.</span>
-                            <span class="hero-marquee-item block text-zinc-900 font-semibold">List everywhere.</span>
-                        </span>
-                    </span>
+                <h1 class="text-5xl md:text-7xl font-semibold tracking-tighter leading-[1.05] mb-8 text-zinc-900 text-center">
+                    Stop listing manually
                 </h1>
                 <p class="text-lg md:text-xl text-zinc-500 max-w-2xl mx-auto mb-10 leading-relaxed font-normal tracking-tight">
-                    The platform for sellers who list on multiple marketplaces. Turn photos into SEO-ready listings for Shopify, Etsy, eBay, TikTok Shop, and Amazon—instantly.
+                    Snap a photo. AI writes the title, description, price and tags.<br>
+                    Live on Shopify in one tap.
                 </p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="/?mode=scan" id="hero-scan-btn" class="bg-zinc-900 text-white px-8 py-4 rounded-xl text-sm font-medium hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 shadow-lg shadow-zinc-900/10 w-full sm:w-auto relative overflow-hidden group no-underline">
+                    <a href="/scan" id="hero-scan-btn" class="bg-zinc-900 text-white px-8 py-4 rounded-xl text-sm font-medium hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 shadow-lg shadow-zinc-900/10 w-full sm:w-auto relative overflow-hidden group no-underline">
                         <div class="relative flex items-center justify-center w-5 h-5">
                             <i data-lucide="camera" stroke-width="1.5" class="w-5 h-5 relative z-10 text-white/90"></i>
                             <div class="absolute left-0 right-0 h-[2px] bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] z-20" style="animation: scanSweep 2s ease-in-out infinite;"></div>
@@ -345,7 +326,7 @@
                     </a>
                     <a href="/home.html?mode=batch" class="bg-white text-zinc-900 px-8 py-4 rounded-xl text-sm font-medium border border-zinc-200 hover:bg-zinc-50 transition-all flex items-center justify-center gap-3 w-full sm:w-auto shadow-sm no-underline">
                         <i data-lucide="layers" stroke-width="1.5" class="w-5 h-5 text-zinc-500"></i>
-                        Batch upload
+                        Batch Upload
                         <span class="text-xs font-semibold text-zinc-400 uppercase tracking-widest ml-1">Premium</span>
                     </a>
                 </div>
@@ -373,7 +354,7 @@
         <section id="features" class="py-32 px-6 bg-white">
             <div class="max-w-6xl mx-auto">
                 <div class="text-center mb-20">
-                    <h2 class="text-3xl md:text-5xl font-semibold tracking-tight mb-6 text-zinc-900">From photo to live in 4 steps.</h2>
+                    <h2 class="text-3xl md:text-5xl font-semibold tracking-tight mb-6 text-zinc-900">From photo to live in 4 steps</h2>
                     <p class="text-zinc-500 text-lg max-w-xl mx-auto tracking-tight">Do this to get your products on your stores—no typing required.</p>
                 </div>
                 <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -413,8 +394,8 @@
         <section id="comparison" class="py-32 px-6 bg-zinc-50">
             <div class="max-w-5xl mx-auto">
                 <div class="text-center mb-20">
-                    <h2 class="text-4xl md:text-6xl font-semibold tracking-tighter mb-6 text-zinc-900">Built for speed</h2>
-                    <p class="text-zinc-500 text-lg max-w-xl mx-auto tracking-tight">Automate the tedious parts of selling, so you can focus on growing.</p>
+                    <h2 class="text-4xl md:text-5xl font-semibold tracking-tighter mb-6 text-zinc-900">Built for speed</h2>
+                    <p class="text-zinc-500 tracking-tight text-lg">Automate the tedious parts of selling, so you can focus on growing.</p>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
@@ -469,7 +450,7 @@
                                 <div>
                                     <span class="block text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-2">Total time</span>
                                     <div class="flex items-baseline gap-3">
-                                        <span class="text-4xl font-semibold text-white tracking-tighter">3 secs</span>
+                                        <span class="text-4xl font-semibold text-white tracking-tighter">1 minute</span>
                                         <span class="text-xs font-semibold text-zinc-400 tracking-wide">Instant</span>
                                     </div>
                                 </div>
@@ -494,7 +475,7 @@
                                     <p class="text-xs text-zinc-500 mt-0.5">Push to store</p>
                                 </div>
                                 <div class="comparison-item rounded-2xl border border-zinc-200 bg-white p-4 w-full text-left shadow-sm">
-                                    <p class="text-sm font-semibold text-zinc-900"><span class="text-zinc-400 line-through">35 mins</span> <span class="mx-1.5 text-zinc-300">→</span> <span>3 secs</span></p>
+                                    <p class="text-sm font-semibold text-zinc-900"><span class="text-zinc-400 line-through">35 mins</span> <span class="mx-1.5 text-zinc-300">→</span> <span>1 minute</span></p>
                                     <p class="text-xs text-zinc-500 mt-0.5">Total time</p>
                                 </div>
                             </div>
@@ -507,16 +488,10 @@
         <!-- Video Carousel -->
         <section class="py-32 px-6 bg-white overflow-hidden border-t border-zinc-100">
             <div class="max-w-6xl mx-auto">
-                <div class="mb-16 text-center">
-                    <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-6">Testimonials</p>
-                    <h2 class="text-4xl md:text-6xl font-semibold tracking-tighter leading-[1.05] text-zinc-900">
-                        Loved by sellers. <br class="hidden sm:block">
-                        <span class="text-zinc-400">Everywhere.</span>
-                    </h2>
-                </div>
+                <div class="mb-16 text-center"></div>
 
                 <div class="overflow-hidden mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent)">
-                    <div id="video-carousel" class="flex gap-6" style="animation: videoMarquee 40s linear infinite; width: max-content;">
+                    <div id="video-carousel" class="video-carousel-track">
                         <!-- Generated by JS -->
                     </div>
                 </div>
@@ -529,7 +504,7 @@
                 <div class="text-center mb-16">
                     <h2 class="text-3xl md:text-5xl font-semibold tracking-tight mb-6 text-zinc-900">Integrations</h2>
                     <p class="text-zinc-500 max-w-2xl mx-auto tracking-tight text-lg">
-                        Shopify, Etsy, eBay, TikTok, and Amazon are live. More are on the way. Vote to shape what we build next.
+                        Shopify is live now. eBay, Etsy, TikTok Shop, Amazon, Shopee and more coming soon.<br />Vote below to shape what we build next
                     </p>
                 </div>
 
@@ -562,8 +537,8 @@
         <section id="pricing" class="py-32 px-6 bg-white">
             <div class="max-w-6xl mx-auto">
                 <div class="text-center mb-20">
-                    <h2 class="text-4xl md:text-5xl font-semibold tracking-tighter mb-6 text-zinc-900">Pricing</h2>
-                    <p class="text-zinc-500 tracking-tight text-lg">Choose the plan that fits your scale. Pay by scans.</p>
+                    <h2 class="text-4xl md:text-5xl font-semibold tracking-tighter mb-6 text-zinc-900">Simple pricing. No surprises</h2>
+                    <p class="text-zinc-500 tracking-tight text-lg">Start free, upgrade when ready — no contracts, cancel anytime</p>
                 </div>
                 <div class="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
                     
@@ -584,7 +559,7 @@
                     </div>
                     
                     <div class="border-2 border-zinc-900 rounded-2xl p-10 flex flex-col bg-white shadow-xl relative scale-105 z-10">
-                        <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1 bg-zinc-900 text-white text-xs font-semibold tracking-widest uppercase rounded-lg">Most Popular</div>
+                        <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] font-semibold tracking-widest uppercase whitespace-nowrap px-4 py-1 rounded-full bg-white border border-black text-amber-600">MOST POPULAR</div>
                         <div class="mb-8">
                             <h3 class="text-xl font-semibold tracking-tight mb-2">Pro</h3>
                             <p class="text-base text-zinc-500">For professional sellers.</p>
@@ -657,7 +632,8 @@
             <div class="max-w-3xl mx-auto">
                 <div class="text-center mb-16">
                     <p class="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-4">FAQ</p>
-                    <h2 class="text-4xl md:text-5xl font-semibold tracking-tighter text-zinc-900">Got questions?</h2>
+                    <h2 class="text-4xl md:text-5xl font-semibold tracking-tighter text-zinc-900">Questions sellers ask us most</h2>
+                    <p class="text-zinc-500 tracking-tight text-lg mt-2">Everything about the product, pricing and getting started</p>
                 </div>
                 <div class="space-y-2" id="faq-container">
                     <!-- Generated by JS -->
@@ -682,15 +658,15 @@
                     <h4 class="text-xs font-semibold text-zinc-900 uppercase tracking-widest mb-6">Start</h4>
                     <ul class="space-y-4 text-base text-zinc-500 font-medium">
                         <li><a href="?mode=scan" class="hover:text-zinc-900 transition-colors">Scan item</a></li>
-                        <li><a href="/home.html?mode=batch" class="hover:text-zinc-900 transition-colors">Batch upload</a></li>
+                        <li><a href="/home.html?mode=batch" class="hover:text-zinc-900 transition-colors">Batch Upload</a></li>
                         <li><a href="#pricing" onclick="handleNavigate(event, 'pricing')" class="hover:text-zinc-900 transition-colors">Pricing</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="text-xs font-semibold text-zinc-900 uppercase tracking-widest mb-6">Product</h4>
                     <ul class="space-y-4 text-base text-zinc-500 font-medium">
-                        <li><a href="#features" onclick="handleNavigate(event, 'features')" class="hover:text-zinc-900 transition-colors">Features</a></li>
-                        <li><a href="#comparison" onclick="handleNavigate(event, 'comparison')" class="hover:text-zinc-900 transition-colors">Compare</a></li>
+                        <li><a href="#features" onclick="handleNavigate(event, 'features')" class="hover:text-zinc-900 transition-colors">How it works</a></li>
+                        <li><a href="#comparison" onclick="handleNavigate(event, 'comparison')" class="hover:text-zinc-900 transition-colors">Benefits</a></li>
                         <li><a href="#roadmap" onclick="handleNavigate(event, 'roadmap')" class="hover:text-zinc-900 transition-colors">Integrations</a></li>
                     </ul>
                 </div>
@@ -757,7 +733,6 @@
             e.preventDefault();
             const element = document.getElementById(id);
             if (!element) return;
-            document.body.classList.add('scrolling');
             const start = window.scrollY || window.pageYOffset;
             const target = element.getBoundingClientRect().top + start;
             const duration = 500;
@@ -767,9 +742,6 @@
                 const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
                 window.scrollTo(0, start + (target - start) * eased);
                 if (t < 1) requestAnimationFrame(step);
-                else {
-                    document.body.classList.remove('scrolling');
-                }
             }
             requestAnimationFrame(step);
         }
@@ -793,7 +765,8 @@
                 const div = document.createElement('div');
                 div.className = 'mx-8 flex items-center justify-center bg-white border border-zinc-200 px-6 py-3 rounded-xl shadow-sm';
                 const imgSrc = m.logoUrl || `https://www.google.com/s2/favicons?domain=${m.domain}&sz=128`;
-                div.innerHTML = `<img src="${imgSrc}" alt="${m.name}" class="h-6 w-auto transition-all duration-300" referrerPolicy="no-referrer">`;
+                const imgCls = 'h-6 w-auto max-h-6 object-contain transition-all duration-300';
+                div.innerHTML = `<img src="${imgSrc}" alt="${m.name}" class="${imgCls}" referrerPolicy="no-referrer">`;
                 marqueeContent.appendChild(div);
             });
         }
@@ -813,98 +786,68 @@
             setInterval(showNext, 1200);
         })();
 
+        const DEFAULT_TESTIMONIAL_VIDEO_HOME = 'https://cdn.shopify.com/videos/c/o/v/fd32bb276dc64999a7a3bc00066f58ef.mp4';
         const videos = [
-            { title: 'Sarah, Vintage Reseller', desc: '"I listed 50 items in one afternoon. It\'s a total game changer for my shop."', tag: 'Verified' },
-            { title: 'Marcus, Tech Store', desc: '"The SEO titles are actually better than what I write myself. Traffic is up 30%."', tag: 'Verified' },
-            { title: 'Elena, Handmade Goods', desc: '"One tap and it\'s on my store. I\'ve saved hours of manual data entry every week."', tag: 'Verified', videoUrl: 'https://filedn.com/l5QYSkI1OgKbR01Pfg3dRGh/This%20App%20Revolutionizes%20Scanning%20Documents!%20-%20Sam%20Beckman%20(1080p%2C%20h264%2C%20youtube).mp4', thumbnailUrl: '/assets/elena-video-thumbnail.png' },
-            { title: 'David, Sneaker Head', desc: '"Finally, an app that understands sneaker specs and colorways from just a photo."', tag: 'Verified' },
-            { title: 'Chloe, Fashion Brand', desc: '"It reads the tiny care labels and fabric compositions perfectly every single time."', tag: 'Verified' },
+            { tag: 'Sneaker resellers', title: 'SNEAKER RESELLERS', desc: 'AI identifies model, colourway and condition instantly. No more looking up spec sheets. Listed in under 40 seconds.' },
+            { tag: 'Vintage resellers', title: 'VINTAGE RESELLERS', desc: 'Reads the graphic, identifies the band, era and tag type automatically. Saves 35 minutes of research per listing.' },
+            { tag: 'Tech resellers', title: 'TECH RESELLERS', desc: 'Extracts model number, specs and condition from one photo. SEO titles written better than you could manually.' },
+            { tag: 'Handmade sellers', title: 'HANDMADE SELLERS', desc: 'Describes materials, dimensions and craft detail automatically. Spend your time making, not listing.' },
+            { tag: 'Clothing brands', title: 'CLOTHING BRANDS', desc: 'New season drops listed in minutes not hours. Size, material, colour and description all extracted instantly.' },
+            { tag: 'Collectibles sellers', title: 'COLLECTIBLES SELLERS', desc: 'Reads title, author, edition and condition from the cover alone. Your entire stock listed in one sitting.' },
+            { tag: 'Streetwear sellers', title: 'STREETWEAR SELLERS', desc: 'Team, size, brand and condition identified in seconds. List an entire new drop before your competitors do.' },
         ];
         const carousel = document.getElementById('video-carousel');
-        if(carousel) {
+        if (carousel) {
             const displayVideos = [...videos, ...videos, ...videos];
+            const testimonialVideoObserverHome = typeof IntersectionObserver !== 'undefined'
+                ? new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        const vid = entry.target.querySelector('.testimonial-video');
+                        if (!vid) return;
+                        if (entry.isIntersecting) vid.play().catch(() => {});
+                        else vid.pause();
+                    });
+                }, { threshold: 0.15, rootMargin: '60px' })
+                : null;
             displayVideos.forEach((v, i) => {
                 const div = document.createElement('div');
                 div.className = 'flex-none w-[280px] md:w-[320px] video-card';
-                const thumbSrc = v.thumbnailUrl || `https://picsum.photos/seed/vibe${i % 5}/400/700`;
+                const slot = i % videos.length;
+                const posterSrc = v.thumbnailUrl || `https://picsum.photos/seed/synclyst-v${slot}/400/700`;
+                const videoSrc = v.videoUrl || DEFAULT_TESTIMONIAL_VIDEO_HOME;
                 div.innerHTML = `
                     <div class="bg-white border border-zinc-200 rounded-2xl overflow-hidden flex flex-col h-full shadow-sm">
-                        <div class="aspect-[9/16] bg-zinc-100 relative group cursor-pointer overflow-hidden video-container">
+                        <div class="aspect-[9/16] bg-zinc-100 relative overflow-hidden video-container">
                             <div class="absolute top-4 left-4 z-20">
-                                <span class="bg-white/90 backdrop-blur-md text-zinc-900 text-xs font-semibold px-3 py-1 rounded-lg shadow-sm">${v.tag}</span>
+                                <span class="bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-full">${v.tag}</span>
                             </div>
-                            <div class="absolute inset-0 flex items-center justify-center bg-black/5 group-hover:bg-black/20 transition-all z-10 play-icon">
-                                <div class="w-14 h-14 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center border border-white/40">
-                                    <i data-lucide="play" stroke-width="1.5" class="text-white w-6 h-6 ml-1 fill-current"></i>
-                                </div>
-                            </div>
-                            <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" alt="${v.title}" class="w-full h-full object-cover transition-all duration-700 thumbnail" referrerPolicy="no-referrer">
-                            <video src="${v.videoUrl || 'https://cdn.shopify.com/videos/c/o/v/fd32bb276dc64999a7a3bc00066f58ef.mp4'}" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500 preview-video" muted loop playsinline></video>
+                            <video src="${videoSrc}" poster="${posterSrc}" class="testimonial-video absolute inset-0 w-full h-full object-cover" muted loop playsinline autoplay preload="metadata"></video>
                         </div>
                         <div class="p-6">
-                            <h3 class="text-sm font-semibold tracking-tight mb-2 text-zinc-900">${v.title}</h3>
-                            <p class="text-base text-zinc-500 font-medium leading-relaxed">${v.desc}</p>
+                            <h3 class="text-sm font-bold uppercase tracking-wider mb-2 text-zinc-900">${v.title}</h3>
+                            <p class="text-sm text-zinc-500 font-medium leading-relaxed">${v.desc}</p>
                         </div>
                     </div>
                 `;
-                
                 const container = div.querySelector('.video-container');
-                const video = div.querySelector('.preview-video');
-                const thumbnail = div.querySelector('.thumbnail');
-                const playIcon = div.querySelector('.play-icon');
-                
-                if (v.videoUrl) {
-                    const captureFirstFrame = () => { try { video.currentTime = 0; } catch (e) {} };
-                    const drawFrame = () => {
-                        try {
-                            if (video.videoWidth === 0 || video.videoHeight === 0) return;
-                            const canvas = document.createElement('canvas');
-                            canvas.width = video.videoWidth;
-                            canvas.height = video.videoHeight;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(video, 0, 0);
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-                            if (dataUrl && dataUrl.length > 100) thumbnail.src = dataUrl;
-                        } catch (e) {}
-                    };
-                    video.addEventListener('loadeddata', captureFirstFrame);
-                    video.addEventListener('seeked', drawFrame);
-                    video.addEventListener('loadeddata', drawFrame, { once: true });
-                }
-                
-                container.addEventListener('mouseenter', () => {
-                    video.style.opacity = '1';
-                    thumbnail.style.filter = 'blur(8px)';
-                    thumbnail.style.transform = 'scale(1.05)';
-                    playIcon.style.opacity = '0';
-                    video.play().catch(() => {});
-                });
-                
-                container.addEventListener('mouseleave', () => {
-                    video.style.opacity = '0';
-                    thumbnail.style.filter = 'none';
-                    thumbnail.style.transform = 'scale(1)';
-                    playIcon.style.opacity = '1';
-                    video.pause();
-                    video.currentTime = 0;
-                });
-                
+                if (testimonialVideoObserverHome && container) testimonialVideoObserverHome.observe(container);
+                else div.querySelector('.testimonial-video')?.play?.().catch(() => {});
                 carousel.appendChild(div);
             });
         }
 
-        const votes = { etsy: 1, ebay: 6, tiktok: 0, amazon: 0, depop: 0, vinted: 4, bigcommerce: 0, walmart: 0, mercari: 0, poshmark: 0, facebook: 0 };
+        const votes = { etsy: 1, ebay: 6, tiktok: 0, amazon: 0, depop: 0, vinted: 4, lazada: 0, walmart: 0, shopee: 0, poshmark: 0, facebook: 0 };
         const connectors = [
             { id: 'shopify', name: 'Shopify', status: 'Active', icon: 'shopify.com' },
-            { id: 'etsy', name: 'Etsy', status: 'Active', icon: 'etsy.com' },
-            { id: 'ebay', name: 'eBay', status: 'Active', icon: 'ebay.com', logoUrl: '/assets/ebay-logo.png' },
-            { id: 'tiktok', name: 'TikTok Shop', status: 'Active', icon: 'tiktok.com' },
-            { id: 'amazon', name: 'Amazon SP-API', status: 'Active', icon: 'amazon.com' },
+            { id: 'etsy', name: 'Etsy', status: 'Coming Soon', icon: 'etsy.com' },
+            { id: 'ebay', name: 'eBay', status: 'Coming Soon', icon: 'ebay.com', logoUrl: '/assets/ebay-logo.png' },
+            { id: 'tiktok', name: 'TikTok Shop', status: 'Coming Soon', icon: 'tiktok.com' },
+            { id: 'amazon', name: 'Amazon SP-API', status: 'Coming Soon', icon: 'amazon.com' },
             { id: 'depop', name: 'Depop', status: 'Coming Soon', icon: 'depop.com' },
             { id: 'vinted', name: 'Vinted', status: 'Coming Soon', icon: 'vinted.com' },
-            { id: 'bigcommerce', name: 'BigCommerce', status: 'Coming Soon', icon: 'bigcommerce.com' },
+            { id: 'lazada', name: 'Lazada', status: 'Coming Soon', icon: 'lazada.com' },
             { id: 'walmart', name: 'Walmart', status: 'Coming Soon', icon: 'walmart.com' },
-            { id: 'mercari', name: 'Mercari', status: 'Coming Soon', icon: 'mercari.com' },
+            { id: 'shopee', name: 'Shopee', status: 'Coming Soon', icon: 'shopee.com' },
             { id: 'poshmark', name: 'Poshmark', status: 'Coming Soon', icon: 'poshmark.com' },
             { id: 'facebook', name: 'Facebook Market', status: 'Coming Soon', icon: 'facebook.com' },
         ];
@@ -926,12 +869,13 @@
                 const btn = document.createElement(isActive ? 'a' : 'button');
                 btn.className = `bg-white border border-zinc-200 rounded-xl p-6 flex flex-col items-center justify-center text-center group transition-all duration-300 ${isActive ? 'cursor-pointer hover:-translate-y-1 hover:border-zinc-400 hover:shadow-md' : 'cursor-pointer hover:bg-zinc-50'}`;
                 if (isActive) {
-                    btn.href = '/home.html?mode=scan';
+                    btn.href = '/scan';
                     btn.setAttribute('aria-label', `List on ${c.name}`);
                 }
+                const gridImgCls = 'w-10 h-10 rounded-xl object-contain transition-transform duration-300 block group-hover:scale-105';
                 btn.innerHTML = `
                     <span class="inline-block mb-4 relative ${isActive ? 'animate-[live-icon-pulse_2.2s_ease-in-out_infinite]' : ''}">
-                        <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="w-10 h-10 rounded-xl transition-transform duration-300 block group-hover:scale-105" referrerPolicy="no-referrer">
+                        <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="${gridImgCls}" referrerPolicy="no-referrer">
                         ${isActive ? '<span class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>' : ''}
                     </span>
                     <span class="text-sm font-semibold tracking-tight mb-2 text-zinc-900">${c.name}</span>
@@ -952,11 +896,17 @@
         }
 
         const faqs = [
-            { q: "How does the scanning process actually work?", a: "Simply snap a photo of your product. Our vision models instantly identify the item, read any labels (OCR), and extract key attributes like brand, material, color, and dimensions to build a complete draft." },
-            { q: "Can I customize the 'voice' of the AI descriptions?", a: "Yes. Pro users can set custom brand guidelines. Whether you want your listings to sound luxury, minimalist, or high-energy, the AI adapts its writing style to match your store's personality." },
+            { q: "How does the scanning process actually work?", a: "Take a photo of any product on your phone.<br>Synclyst's AI reads the image and instantly writes the title, description, price, category and SEO tags.<br>You review, approve and it goes live on Shopify in one tap." },
+            { q: "Can I use it on my phone or do I need a desktop?", a: "Designed for your phone first.<br>Scan products anywhere — a market, a storage unit, your living room floor. No desktop needed." },
+            { q: "Does it work for any product category?", a: "Yes. Clothing, electronics, shoes, bags,<br>books, toys, homeware — if you can photograph it, Synclyst can list it." },
+            { q: "How long does a scan actually take?", a: "Under 60 seconds from photo to a complete ready to publish listing.<br>Most scans complete in 20 to 40 seconds." },
             { q: "Does SyncLyst handle product variations?", a: "Absolutely. The AI can detect multiple variations from a single scan or a series of photos, automatically grouping them into a single listing with the correct variant options." },
             { q: "Can I edit the listing before it goes live?", a: "Of course. Every scan creates a 'Draft' first. You can review, tweak the SEO title, adjust the price, or swap tags before hitting 'Publish' to sync it to your connected store." },
-            { q: "Which marketplaces are supported right now?", a: "We're live with Shopify, Etsy, eBay, TikTok Shop, and Amazon SP-API. More marketplaces are in the pipeline." }
+            { q: "Which marketplaces are supported right now?", a: "Shopify is live now. The rest (eBay, Etsy, TikTok Shop, Amazon, Shopee, Lazada, and others) are coming soon." },
+            { q: "Do I need a Shopify account to use Synclyst?", a: "Yes, currently Synclyst connects directly to Shopify. Create a free Shopify account and connect it in under 2 minutes. More platforms coming soon." },
+            { q: "Is my Shopify store safe when I connect it?", a: "Yes. Synclyst connects via Shopify's official<br>OAuth system — the same secure method used by thousands of Shopify apps.<br>We only request the permissions needed to create listings." },
+            { q: "Can I cancel my subscription anytime?", a: "Yes. No contracts, no cancellation fees.<br>Cancel from your account settings<br>and you keep access until the end of your billing period." },
+            { q: "Do unused scans roll over to next month?", a: "No, scans reset monthly.<br>If you regularly hit your limit early<br>it's a sign the next plan up will save you more time and money." }
         ];
         const faqContainer = document.getElementById('faq-container');
         if(faqContainer) {
@@ -1012,9 +962,11 @@
         window.openModal = openModal;
         window.closeModal = closeModal;
 
-        // Scan mode logic: extract then go straight to flow-2 → flow-3 (Shopify)
+        // Scan mode: ?mode=scan on home.html, or pretty URL /scan (Next rewrites to this file)
         var urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('mode') === 'scan') {
+        var pathNorm = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+        var isScanPath = pathNorm === '/scan';
+        if (urlParams.get('mode') === 'scan' || isScanPath) {
           var mainLanding = document.getElementById('main-landing');
           if (mainLanding) mainLanding.style.display = 'none';
           var mainHeader = document.getElementById('main-header');
@@ -1044,7 +996,11 @@
           function exitScanView() {
             var u = new URL(window.location.href);
             u.searchParams.delete('mode');
-            window.history.replaceState({}, '', u.pathname + (u.search || ''));
+            if (isScanPath) {
+              u.pathname = '/';
+              u.search = '';
+            }
+            window.history.replaceState({}, '', u.pathname + (u.search || '') + (u.hash || ''));
             if (mainLanding) mainLanding.style.display = '';
             if (mainHeader) mainHeader.style.display = '';
             if (scanView) { scanView.classList.add('hidden'); scanView.classList.remove('flex'); }
@@ -1093,14 +1049,20 @@
               sessionStorage.removeItem('auralink_review_draft');
               sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
               sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-              window.location.href = '/flow-2.html';
+              if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/reading-product');
+              else window.location.href = '/reading-product';
             } catch (e) {
               delete payload.imageDataUrl;
-              try { sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); sessionStorage.setItem('synclyst_selected_platform', 'shopify'); window.location.href = '/flow-2.html'; } catch (e2) {}
+              try {
+                sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
+                sessionStorage.setItem('synclyst_selected_platform', 'shopify');
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/reading-product');
+                else window.location.href = '/reading-product';
+              } catch (e2) {}
             }
           }
 
-          /** Store image and go to flow-2 (progress bar + ticks "Reading your product"). */
+          /** Store image and go to /reading-product (progress + “Reading your product”). */
           function goToFlow2(base64) {
             var rawB64 = base64.indexOf(',') >= 0 ? base64.split(',')[1] : base64;
             var dataUrl = (base64.indexOf('data:') === 0) ? base64 : ('data:image/jpeg;base64,' + base64);
@@ -1121,7 +1083,8 @@
               }
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: b64 }));
-                window.location.href = '/flow-2.html';
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/reading-product');
+                else window.location.href = '/reading-product';
               } catch (e) {
                 showExtractError('Could not save image. Try again.');
               }
@@ -1129,7 +1092,8 @@
             img.onerror = function() {
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: rawB64 }));
-                window.location.href = '/flow-2.html';
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/reading-product');
+                else window.location.href = '/reading-product';
               } catch (e) {
                 showExtractError('Invalid image. Try again.');
               }

@@ -29,7 +29,7 @@ function getLocalIP() {
 
 const ip = getLocalIP() || '192.168.1.5';
 const apiUrl = `http://${ip}:8000`;
-const landingUrl = `http://${ip}:3000/landing.html?mode=scan`;
+const landingUrl = `http://${ip}:3000/scan`;
 const healthUrl = `http://${ip}:8000/health`;
 
 console.log('');

@@ -38,7 +38,7 @@ Flow-3 **does not** call the backend to create a product. It builds `universal_d
    - Loads draft from sessionStorage, builds/edits listing (title, price, description, image, etc.).
    - “Publish to Shopify”:
      - Gets JWT from `sessionStorage.auralink_jwt` (from dev-token or after Shopify connect).
-     - Checks **publishing** `GET /api/user/connected-stores`; if Shopify not connected → redirect to `stores-connect-shopify.html?return=flow-3`.
+     - Checks **publishing** `GET /api/user/connected-stores`; if Shopify not connected → redirect to `/connect-store?return=flow-3`.
      - **Publishing** `POST /api/listings` with `universal_data` → returns `listing_id`.
      - **Publishing** `POST /api/listings/publish` with `listing_id` and `platforms: ['shopify']` → product created in Shopify.
    - Success → redirect to `flow-success.html`.
@@ -57,7 +57,7 @@ So: **extract** and **Save as draft** use the **backend**; **create listing** an
 
 ---
 
-### 1.4 Connect Shopify (stores-connect-shopify)
+### 1.4 Connect Shopify (`/connect-store`)
 
 - User enters store domain (e.g. `your-store`).
 - Page calls **publishing** `GET /auth/dev-token` to get a JWT and `user_id` (in dev: in-memory user `dev-local` if Supabase not set).

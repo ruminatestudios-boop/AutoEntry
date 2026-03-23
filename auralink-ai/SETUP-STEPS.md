@@ -102,7 +102,7 @@ If any of those fail, see "Troubleshooting" at the bottom.
 1. Open **http://localhost:3000** in your browser.
 2. Go to the **Connect Shopify** page. You can:
    - Use the dashboard link for “Connect Shopify” or “Connect store”, or  
-   - Go directly to: **http://localhost:3000/stores-connect-shopify.html**
+   - Go directly to: **http://localhost:3000/connect-store**
 3. Enter your store domain:  
    - Either `your-store-name`  
    - Or `your-store-name.myshopify.com`

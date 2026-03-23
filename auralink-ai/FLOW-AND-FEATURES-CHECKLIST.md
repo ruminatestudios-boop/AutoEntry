@@ -12,15 +12,15 @@ Use this to see **what’s working**, **what’s not**, and what to fix or imple
 | **2** | Scan view: **camera or upload** | User captures/uploads photo. | ✅ Working |
 | **3** | **Extract** | Frontend sends image to backend `POST /api/v1/vision/extract` (port 8000). Saves result to `auralink_draft_listing` in sessionStorage, then redirects to **flow-2**. | ✅ Working (if backend running + CORS + GEMINI_API_KEY) |
 | **4** | **flow-2** “Reading your product” | Progress bar runs to 100%, steps tick; then **auto-redirect** to flow-3. | ✅ Working |
-| **5** | **flow-3** “Confirm your listing” | Loads draft from `auralink_draft_listing` / `auralink_review_draft`. User edits title, description, price, photos, category, tags, etc. **Next** = “Publish to Shopify”: creates listing (POST /api/listings) and publishes (POST /api/listings/publish) on **publishing API (8001)**, then redirects to **flow-success**. If no JWT or Shopify not connected → redirects to **stores-connect-shopify**. | ✅ Working (if publishing API running + Shopify connected) |
-| **6** | **stores-connect-shopify** | User enters store domain. Page gets **dev-token** from 8001, redirects to `GET /auth/shopify?shop=...&user_id=...&return_to=flow-connect-done.html`. Shopify OAuth → callback on 8001 → redirect back to frontend with `?shopify=connected&shop=...`. | ✅ Working (if publishing API + Shopify app credentials + Supabase or dev user) |
+| **5** | **flow-3** “Confirm your listing” | Loads draft from `auralink_draft_listing` / `auralink_review_draft`. User edits title, description, price, photos, category, tags, etc. **Next** = “Publish to Shopify”: creates listing (POST /api/listings) and publishes (POST /api/listings/publish) on **publishing API (8001)**, then redirects to **flow-success**. If no JWT or Shopify not connected → redirects to **`/connect-store`**. | ✅ Working (if publishing API running + Shopify connected) |
+| **6** | **`/connect-store`** | User enters store domain. Page gets **dev-token** from 8001, redirects to `GET /auth/shopify?shop=...&user_id=...&return_to=flow-connect-done.html`. Shopify OAuth → callback on 8001 → redirect back to frontend with `?shopify=connected&shop=...`. | ✅ Working (if publishing API + Shopify app credentials + Supabase or dev user) |
 | **7** | **flow-success** “You’re live!” | Shows success message and “List another” / “View listings”. | ✅ Working (small UX gap: see below) |
 
 **Other pages in the repo (optional / alternate paths):**
 
 - **flow-1.html** – No camera or extraction; “Continue” just goes to flow-2. Not used in the main “Scan Your First Item” path (that uses landing scan view).
 - **flow-verifying.html** – Alternative confirm modal; “Push live” does the same create + publish. Can be reached from flow-connect-done.
-- **flow-marketplaces.html** – Choose where to list (Shopify active, others “Coming soon”); Connect → stores-connect-shopify.
+- **flow-marketplaces.html** – Choose where to list (Shopify active, others “Coming soon”); Connect → `/connect-store`.
 - **flow-connect-done.html** – “All connected!” → link to flow-verifying.
 - **flow-choose-listing.html** – Copy / Download draft; “Connect and publish” → plans.
 
@@ -43,7 +43,7 @@ Use this to see **what’s working**, **what’s not**, and what to fix or imple
 | **Publishing API: create listing** | ✅ | `POST /api/listings` with `universal_data`, JWT; returns `listing_id`. |
 | **Publishing API: publish** | ✅ | `POST /api/listings/publish` with `listing_id`, `platforms`; creates product in Shopify as **draft**. |
 | **Shopify OAuth (connect store)** | ✅ | `/auth/shopify`, `/auth/shopify/callback` on 8001; `return_to` brings user back to flow page. |
-| **stores-connect-shopify** | ✅ | Uses publishing URL (8001), dev-token, builds auth URL with `return_to`. |
+| **`/connect-store`** | ✅ | Uses publishing URL (8001), dev-token, builds auth URL with `return_to`. |
 | **flow-success** | ✅ | “List another” links to **flow-1** (no camera there). “View listings” → dashboard-home. |
 | **Flow after new scan** | ✅ | New scan clears `auralink_review_draft` so flow-3 shows the new product. |
 | **Production / phone** | ❌ | Backend and publishing must be reachable (not localhost). Deploy or use ngrok. |
@@ -59,7 +59,7 @@ Use this to see **what’s working**, **what’s not**, and what to fix or imple
 | # | Task | Why |
 |---|------|-----|
 | 1 | **Fix “List another” on flow-success** | It currently links to `flow-1.html`, which has no camera or extraction. Change to `landing.html?mode=scan` so “List another” runs the full scan flow again. |
-| 2 | **Check “View listings”** | flow-success links to `dashboard-home.html`. Confirm that file exists and shows listings or dashboard; if not, point to an existing dashboard or placeholder. |
+| 2 | **Check “View listings”** | flow-success links to `/dashboard/home` (static hub). Confirm that route works and shows listings or dashboard. |
 | 3 | **Local run checklist** | Ensure three things running: (1) Backend 8000, (2) Frontend 3000, (3) Publishing 8001. Backend `.env`: `CORS_ORIGINS=http://localhost:3000` (or empty). See `STEP-BY-STEP.md`. |
 | 4 | **Env checklist** | **Backend:** `GEMINI_API_KEY`, `CORS_ORIGINS`. **Publishing:** `FRONTEND_URL`, `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`, `JWT_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (or dev store for dev user). |
 
@@ -86,7 +86,7 @@ Use this to see **what’s working**, **what’s not**, and what to fix or imple
 1. **Backend:** `http://localhost:8000/health` → `{"status":"ok",...}`  
 2. **Publishing:** `http://localhost:8001/health` or `http://localhost:8001/auth/dev-token` → JSON  
 3. **Frontend:** `http://localhost:3000` → click “Scan Your First Item” → capture/upload → extraction runs → flow-2 → flow-3  
-4. **Connect:** On flow-3, if not connected, “Next” sends you to stores-connect-shopify; enter store → OAuth → back to flow  
+4. **Connect:** On flow-3, if not connected, “Next” sends you to `/connect-store`; enter store → OAuth → back to flow  
 5. **Publish:** On flow-3, click Next (Publish to Shopify) → flow-success; product appears in Shopify Admin as **draft**
 
 ---

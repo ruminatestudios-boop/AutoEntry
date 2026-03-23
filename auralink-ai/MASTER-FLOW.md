@@ -12,14 +12,14 @@
 | 2    | Scan (camera/upload)   | `/home.html?mode=scan`       | `auralink-ai/frontend/public/home.html` |
 | 3    | Processing (extraction)| `/flow-2.html`               | `auralink-ai/frontend/public/flow-2.html` |
 | 4    | Review & publish       | `/flow-3.html`               | `auralink-ai/frontend/public/flow-3.html` |
-| 5a   | Connect Shopify (if needed) | `/stores-connect-shopify.html?return=flow-3` | `auralink-ai/frontend/public/stores-connect-shopify.html` |
+| 5a   | Connect Shopify (if needed) | `/connect-store?return=flow-3` | `auralink-ai/frontend/public/stores-connect-shopify.html` |
 | 5b   | Success                | `/flow-success.html`          | `auralink-ai/frontend/public/flow-success.html` |
 
 **Entry URL for the full flow:**  
 `http://localhost:3000/home.html?mode=scan`  
 (or `http://localhost:3000/landing.html` then click “Scan Your First Item”)
 
-**After success:** “List another” → `home.html?mode=scan`; “View listings” → `dashboard-home.html`.
+**After success:** “List another” → `home.html?mode=scan`; “View listings” → `/dashboard/home`.
 
 ---
 
@@ -52,7 +52,7 @@ auralink-ai/frontend/public/landing.html
 auralink-ai/frontend/public/home.html
 auralink-ai/frontend/public/flow-2.html
 auralink-ai/frontend/public/flow-3.html
-auralink-ai/frontend/public/stores-connect-shopify.html   (optional branch)
+auralink-ai/frontend/public/stores-connect-shopify.html   (optional branch; URL `/connect-store`)
 auralink-ai/frontend/public/flow-success.html
 ```
 

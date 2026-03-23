@@ -1,71 +1,43 @@
 # Flow URLs (localhost) and file paths
 
-Base URL: **http://localhost:3000** (or **http://localhost:3003** if port 3000 is in use — check terminal.)
+Base: **http://localhost:3000** with `npm run dev` in `auralink-ai/frontend` (Next serves `public/` and applies rewrites).
 
 ---
 
-## Step-by-step flow: URL → file
+## User order: scan → process → review → published
 
-| Step | Localhost URL | File path (in repo) |
-|------|----------------|---------------------|
-| **1. Landing** | http://localhost:3000/landing.html | `auralink-ai/frontend/public/landing.html` |
-| **2. Scan (camera/upload)** | http://localhost:3000/landing.html?mode=scan | Same file: `public/landing.html` (mode=scan shows scan UI) |
-| **3. Choose platform** | http://localhost:3000/flow-choose-platform.html | `auralink-ai/frontend/public/flow-choose-platform.html` |
-| **4. Processing** | http://localhost:3000/flow-2.html | `auralink-ai/frontend/public/flow-2.html` |
-| **5. Review (edit & publish)** | http://localhost:3000/flow-3.html | `auralink-ai/frontend/public/flow-3.html` |
-| **6. Success** | http://localhost:3000/flow-success.html | `auralink-ai/frontend/public/flow-success.html` |
+| Step | User-facing slug (Next) | Direct file URL | Repo file |
+|------|-------------------------|-----------------|-----------|
+| 1. Landing | `/landing.html` | same | `public/landing.html` |
+| 2. Scan | **`/scan`** | `/home.html` (rewrite) | `public/home.html` |
+| 3. Reading product | **`/reading-product`** | `/flow-2.html` (rewrite) | `public/flow-2.html` |
+| 4. Review (Shopify) | **`/listing/review`** or **`/review`** | `/flow-3.html` | `public/flow-3.html` |
+| 5. **Final — success** | **`/listing/published`** (canonical) | `/flow-success.html` | `public/flow-success.html` |
 
----
-
-## Other related pages (same flow)
-
-| Purpose | URL | File |
-|--------|-----|------|
-| Connect Shopify (if not connected) | http://localhost:3000/stores-connect-shopify.html | `public/stores-connect-shopify.html` |
-| View listings (after success) | http://localhost:3000/dashboard-home.html | `public/dashboard-home.html` |
-| Next.js home (CTA into flow) | http://localhost:3000/ | `app/page.tsx` |
-| Redirect to scan | http://localhost:3000/flow.html | `public/flow.html` → redirects to `landing.html?mode=scan` |
+**Other slugs for step 5:** `/flow/success` → same as above.
 
 ---
 
-## How the flow runs
+## Choose marketplace
 
-1. **landing.html** — Marketing page. Click “Scan Your First Item” → goes to `landing.html?mode=scan`.
-2. **landing.html?mode=scan** — Camera or upload. After capture, **extraction runs on this page** (calls backend). On success it **auto-redirects** to `flow-choose-platform.html` (no extra button).
-3. **flow-choose-platform.html** — Pick Shopify (or Etsy/eBay/TikTok). Click Shopify → goes to `flow-2.html` with draft in sessionStorage.
-4. **flow-2.html** — If draft already exists (from step 2), shows short progress then redirects to `flow-3.html`. If you had arrived with a pending image only, it would run extraction here.
-5. **flow-3.html** — Review/edit listing, then “Publish to Shopify” → publishing API creates draft → redirect to `flow-success.html`.
-6. **flow-success.html** — “You’re live!” → “View listings” (dashboard-home) or “List another” (landing.html?mode=scan).
+| Page | Slug | File |
+|------|------|------|
+| Pick Etsy / eBay / TikTok / Shopify | **`/flow/choose-platform`** | `flow-choose-platform.html` |
 
----
-
-## APIs used (for localhost)
-
-- **Extraction:** `http://localhost:3000/api/v1/vision/extract` (Next.js proxy → backend **http://localhost:8000**).  
-  Set `NEXT_PUBLIC_SYNCLYST_BACKEND_URL=http://localhost:8000` in `frontend/.env.local`.
-- **Publish to Shopify:** static HTML calls publishing API at **http://localhost:8001** (see meta `auralink-publishing-url` / script in flow-3).
+If the user already has scan data, choosing a platform sends them to **`/reading-product`** first; otherwise to the matching `flow-3-*.html`.
 
 ---
 
-## Start localhost (all three services)
+## Related
 
-**Terminal 1 – Backend (extraction):**
-```bash
-cd auralink-ai/backend
-pip install -r requirements.txt   # if needed
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
+| Purpose | URL |
+|---------|-----|
+| Standalone publish UI | **`/flow/publish`** → `flow-publishing.html` |
+| Connect Shopify (static) | `/connect-store` |
+| Dashboard / listings (static hub) | `/dashboard/home` (redirects from `/dashboard-home.html`) |
 
-**Terminal 2 – Publishing (Shopify drafts):**
-```bash
-cd auralink-ai/publishing
-node src/index.js
-```
+---
 
-**Terminal 3 – Frontend:**
-```bash
-cd auralink-ai/frontend
-npm run dev
-```
+## OAuth note (Shopify / Etsy)
 
-Then open: **http://localhost:3000/landing.html** (or http://localhost:3000/landing.html?mode=scan to start at scan).
+The publishing service redirects the browser to **`/listing/published?...`** after connect. In the Shopify Partners app settings, allowlisted **app URLs** point at the publishing API callback; the **user** is then redirected to this frontend path. If you whitelist exact success URLs, add `https://<your-domain>/listing/published` (and keep `/flow-success.html` if older clients use it).

@@ -46,11 +46,22 @@ function openBrowser() {
 
 runInjectApiUrl();
 
+/** Default to Watchpack polling on macOS to avoid EMFILE when file watchers exceed ulimits. */
+const nextDevEnv = {
+  ...process.env,
+  ...(process.env.WATCHPACK_POLLING === undefined
+    ? { WATCHPACK_POLLING: "true" }
+    : {}),
+  ...(process.env.CHOKIDAR_USEPOLLING === undefined
+    ? { CHOKIDAR_USEPOLLING: "1" }
+    : {}),
+};
+
 const child = spawn("npx", ["next", "dev", "--hostname", "0.0.0.0"], {
   stdio: "inherit",
   shell: true,
   cwd: path.join(__dirname, ".."),
-  env: process.env,
+  env: nextDevEnv,
 });
 
 (async () => {

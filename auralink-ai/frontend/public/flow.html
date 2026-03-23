@@ -3,11 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <title>Listing Flow | SyncLyst</title>
-  <meta http-equiv="refresh" content="0; url=/landing.html?mode=scan" />
-  <script>window.location.replace('/landing.html?mode=scan');</script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <meta http-equiv="refresh" content="0; url=/scan" />
+  <script>window.location.replace('/scan');</script>
+  <style>
+    body.synclyst-flow-body { display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+    body p { font-size: 0.875rem; color: var(--syn-muted); }
+    body a { color: var(--syn-text); font-weight: 500; }
+  </style>
 </head>
-<body>
-  <p>Redirecting to <a href="/landing.html?mode=scan">scan</a>…</p>
+<body class="synclyst-flow-body">
+  <p>Redirecting to <a href="/scan">scan</a>…</p>
 </body>
 </html>

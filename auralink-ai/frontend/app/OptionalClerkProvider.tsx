@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ClerkProvider as ClerkProviderBase } from "@clerk/nextjs";
+import { synclystClerkAppearance } from "@/lib/synclyst-clerk-appearance";
 
 const publishableKey = String(
   (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) ?? ""
@@ -14,5 +15,9 @@ const publishableKey = String(
  */
 export default function OptionalClerkProvider({ children }: { children: React.ReactNode }) {
   if (!publishableKey.trim()) return <>{children}</>;
-  return <ClerkProviderBase publishableKey={publishableKey}>{children}</ClerkProviderBase>;
+  return (
+    <ClerkProviderBase publishableKey={publishableKey} appearance={synclystClerkAppearance}>
+      {children}
+    </ClerkProviderBase>
+  );
 }

@@ -8,6 +8,7 @@
   <title>Extracting | Batch | SyncLyst</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/normalize-product-tag.js"></script>
   <script>
     tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
   </script>
@@ -167,6 +168,7 @@
         else if (att.size && typeof att.size === 'string') sizeVals = att.size.split(/[,;\/]/).map(function(s) { return s.trim(); }).filter(Boolean);
         if (att.detected_colors && Array.isArray(att.detected_colors) && att.detected_colors.length > 0) colorVals = att.detected_colors.map(function(c) { return String(c).trim(); }).filter(Boolean);
         else if (att.color && typeof att.color === 'string') colorVals = att.color.split(/[,;\/]/).map(function(s) { return s.trim(); }).filter(Boolean);
+        colorVals = normalizeProductTagsList(colorVals);
         return {
           title: seoTitle || 'Untitled listing',
           description: desc,
@@ -184,7 +186,7 @@
           vendor: (att.brand || '').trim(),
           status: 'draft',
           meta_description: metaDesc,
-          tags: keywords,
+          tags: normalizeProductTagsList(keywords),
           photos: imageDataUrl ? [imageDataUrl] : [],
           extraction: data,
           variant_options: [{ name: 'Size', values: sizeVals }, { name: 'Color', values: colorVals }]

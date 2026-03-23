@@ -225,7 +225,7 @@ Use this to test the full journey: listing → connect store → sign in on Shop
 
 **3. Connect Shopify**
 
-- On flow-3, click **Log in to Shopify** (or open http://localhost:3000/stores-connect-shopify.html?return=flow-3).
+- On flow-3, click **Log in to Shopify** (or open http://localhost:3000/connect-store?return=flow-3).
 - Enter your store (e.g. `your-store` or `your-store.myshopify.com`).
 - Click **Connect store**.
 
@@ -246,7 +246,7 @@ Use this to test the full journey: listing → connect store → sign in on Shop
 
 - Health: http://localhost:8000/health  
 - Listing: http://localhost:3000/flow-3.html  
-- Connect: http://localhost:3000/stores-connect-shopify.html?return=flow-3
+- Connect: http://localhost:3000/connect-store?return=flow-3
 
 ---
 

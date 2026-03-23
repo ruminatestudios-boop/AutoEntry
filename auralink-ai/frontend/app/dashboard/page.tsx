@@ -3,6 +3,11 @@
 import dynamic from "next/dynamic";
 import { RedirectToSignIn, SignedIn, SignedOut } from "@clerk/nextjs";
 
+const clerkPublishableKey =
+  typeof process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY === "string"
+    ? process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.trim()
+    : "";
+
 const DashboardGuest = dynamic(() => import("./DashboardGuest"), {
   loading: () => (
     <div style={{ minHeight: "100vh", padding: "2rem", fontFamily: "system-ui", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#f8fafc", color: "#18181b" }}>
@@ -31,6 +36,10 @@ const DashboardClient = dynamic(() => import("./DashboardClient"), {
 });
 
 export default function DashboardPage() {
+  if (!clerkPublishableKey) {
+    return <DashboardGuest />;
+  }
+
   return (
     <>
       <SignedIn>

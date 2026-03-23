@@ -232,7 +232,7 @@
           if (!token) {
             publishBtn.disabled = false;
             publishBtn.textContent = 'Publish selected to Shopify';
-            window.location.href = '/stores-connect-shopify.html?return=flow-batch-review';
+            window.location.href = '/connect-store?return=flow-batch-review';
             return;
           }
           var base = pubUrl.replace(/\/$/, '');
@@ -242,7 +242,7 @@
               if (!stores || !stores.shopify || stores.shopify.status !== 'connected') {
                 publishBtn.disabled = false;
                 publishBtn.textContent = 'Publish selected to Shopify';
-                window.location.href = '/stores-connect-shopify.html?return=flow-batch-review';
+                window.location.href = '/connect-store?return=flow-batch-review';
                 return null;
               }
               return token;

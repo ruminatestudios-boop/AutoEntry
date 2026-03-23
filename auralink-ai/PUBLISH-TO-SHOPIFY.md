@@ -75,7 +75,7 @@ npm run dev
 ### 2d. Connect the store in the app
 
 1. Open **http://localhost:3000** (or your frontend URL).
-2. Go to **Connect Shopify** (e.g. http://localhost:3000/stores-connect-shopify.html or the Connect store flow from the dashboard).
+2. Go to **Connect Shopify** (e.g. http://localhost:3000/connect-store or the Connect store flow from the dashboard).
 3. Enter your store domain (e.g. `your-store` or `your-store.myshopify.com`).
 4. Click **Connect store**.
 5. You’ll be sent to Shopify to sign in and **Install app** / **Allow**.

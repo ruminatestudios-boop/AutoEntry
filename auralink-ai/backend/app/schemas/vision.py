@@ -102,6 +102,24 @@ class FetchProductImagesRequest(BaseModel):
     brand: str = Field(default="", description="Product brand")
     title: str = Field(default="", description="Product title")
     exact_model: Optional[str] = Field(None, description="Exact model name if known")
+    reference_image_base64: Optional[str] = Field(
+        default=None,
+        description="Base64 image (with or without data URL prefix). Used to match the same photoshoot / PDP gallery.",
+    )
+    reference_image_mime_type: str = Field(
+        default="image/jpeg",
+        description="MIME type for reference_image_base64 when no data: prefix is present",
+    )
+    reference_image_url: Optional[str] = Field(
+        default=None,
+        description="Public https image URL to use as reference (server-side fetch). Alternative to reference_image_base64.",
+    )
+
+
+class ProxyImageJsonRequest(BaseModel):
+    """POST body to fetch a remote image through the server (avoids huge query strings on GET)."""
+
+    url: str = Field(..., min_length=10, description="Absolute http(s) image URL")
 
 
 class OptimizeSeoRequest(BaseModel):
@@ -114,8 +132,8 @@ class OptimizeSeoRequest(BaseModel):
 
 class OptimizeSeoResponse(BaseModel):
     """AI-suggested SEO optimizations and analysis."""
-    seo_title: str = Field(..., description="Optimised page title")
-    meta_description: str = Field(..., description="Optimised meta description (max 320 chars)")
+    seo_title: str = Field(..., description="Optimised page title (≤60 chars for SERP display)")
+    meta_description: str = Field(..., description="Optimised meta description (~155 chars for Google snippets)")
     analysis: str = Field(default="", description="Short summary of what was improved")
     improvements: list[str] = Field(default_factory=list, description="Bullet points of improvements")
 

@@ -5,6 +5,8 @@ import { upsertToken } from '../db/tokens.js';
 
 const authRouter = Router();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+/** Canonical frontend path after OAuth (Next rewrites to flow-success.html). */
+const LISTING_PUBLISHED_PATH = '/listing/published';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 const DEV_USER_ID = 'dev-local';
@@ -38,7 +40,7 @@ if (enabled.includes('shopify')) {
     const shop = (req.query.shop || '').trim().toLowerCase();
     const returnTo = req.query.return_to || req.query.returnTo || '';
     const base = FRONTEND_URL.replace(/\/$/, '');
-    const connectPage = '/stores-connect-shopify.html';
+    const connectPage = '/connect-store';
     const returnQ = returnTo ? `&return=${encodeURIComponent(returnTo)}` : '';
 
     if (!shop) {
@@ -59,9 +61,7 @@ if (enabled.includes('shopify')) {
       const result = await handleShopifyCallback(req.query.code, req.query.shop || '', req.query.state);
       const base = FRONTEND_URL.replace(/\/$/, '');
       const qs = `shopify=connected&shop=${encodeURIComponent(result.shop_domain)}`;
-      // After connecting Shopify, send user to success page (draft created / next steps)
-      const path = '/flow-success.html';
-      res.redirect(`${base}${path}?${qs}`);
+      res.redirect(`${base}${LISTING_PUBLISHED_PATH}?${qs}`);
     } catch (e) {
       const base = FRONTEND_URL.replace(/\/$/, '');
       let returnTo = '';
@@ -158,10 +158,10 @@ if (enabled.includes('etsy')) {
         shop_id: 'dev-shop',
         status: 'connected',
       }).then(() => {
-        res.redirect(`${base}/flow-success.html?etsy=connected&shop_id=dev-shop`);
+        res.redirect(`${base}${LISTING_PUBLISHED_PATH}?etsy=connected&shop_id=dev-shop`);
       }).catch((e) => {
         console.error('Dev bypass Etsy upsert', e);
-        res.redirect(`${base}/flow-success.html?error=etsy&message=${encodeURIComponent(e.message || 'Bypass failed')}`);
+        res.redirect(`${base}${LISTING_PUBLISHED_PATH}?error=etsy&message=${encodeURIComponent(e.message || 'Bypass failed')}`);
       });
       return;
     }
@@ -175,7 +175,7 @@ if (enabled.includes('etsy')) {
       const base = FRONTEND_URL.replace(/\/$/, '');
       const qs = `etsy=connected&shop_id=${encodeURIComponent(result.shop_id || '')}`;
       // After connecting Etsy, send user to success page (same flow as Shopify)
-      res.redirect(`${base}/flow-success.html?${qs}`);
+      res.redirect(`${base}${LISTING_PUBLISHED_PATH}?${qs}`);
     } catch (e) {
       const base = FRONTEND_URL.replace(/\/$/, '');
       let returnTo = '';

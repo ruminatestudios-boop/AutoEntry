@@ -112,7 +112,7 @@ Leave it running on port 8001. For production, deploy to Cloud Run and ensure th
 3. You should see **Install app** for your Custom app (no “This app is under review”).
 4. Click **Install app**.
 5. You should be redirected to your publishing callback, then to your frontend, e.g.:
-   - `https://synclyst.app/flow-success.html?shopify=connected&shop=yourstore.myshopify.com`
+   - `https://synclyst.app/listing/published?shopify=connected&shop=yourstore.myshopify.com` (canonical; `/flow-success.html` still works)
 
 If you get a redirect error, the Redirect URL in Step 2 does not match exactly. Fix it in Partners and try again.
 

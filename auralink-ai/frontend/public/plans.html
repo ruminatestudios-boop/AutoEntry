@@ -3,16 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <title>Plans | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
         },
       },
     };
@@ -33,7 +39,7 @@
         <span class="text-lg">←</span>
         <span class="font-semibold">Settings</span>
       </a>
-      <h1 class="font-serif text-lg font-bold text-zinc-900">Plans</h1>
+      <h1 class="text-lg font-bold text-zinc-900">Plans</h1>
       <span class="w-14"></span>
     </header>
 
@@ -49,7 +55,7 @@
               <p class="font-semibold text-zinc-900 leading-tight">Free</p>
               <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Try it out</p>
             </div>
-            <span class="font-serif text-lg font-bold text-zinc-900 shrink-0">$0/mo</span>
+            <span class="text-lg font-bold text-zinc-900 shrink-0">$0/mo</span>
             <span class="accordion-chevron text-zinc-400 transition-transform shrink-0 ml-1">▼</span>
           </button>
           <div class="accordion-panel border-t border-zinc-100 px-5 pb-4 pt-3">
@@ -70,7 +76,7 @@
               <p class="font-semibold text-zinc-900 leading-tight">Starter</p>
               <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Low-volume sellers</p>
             </div>
-            <span class="font-serif text-lg font-bold text-zinc-900 shrink-0">$12/mo</span>
+            <span class="text-lg font-bold text-zinc-900 shrink-0">$12/mo</span>
             <span class="accordion-chevron text-zinc-400 transition-transform shrink-0 ml-1">▼</span>
           </button>
           <div class="accordion-panel border-t border-zinc-100 px-5 pb-4 pt-3">
@@ -92,7 +98,7 @@
               <p class="font-semibold text-zinc-900 leading-tight">Pro</p>
               <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Active sellers</p>
             </div>
-            <span class="font-serif text-lg font-bold text-zinc-900 shrink-0">$29/mo</span>
+            <span class="text-lg font-bold text-zinc-900 shrink-0">$29/mo</span>
             <span class="accordion-chevron text-zinc-500 transition-transform shrink-0 ml-1">▼</span>
           </button>
           <div class="accordion-panel border-t border-amber-200/50 px-5 pb-4 pt-3">
@@ -114,7 +120,7 @@
               <p class="font-semibold text-zinc-900 leading-tight">Business</p>
               <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Power sellers & batch</p>
             </div>
-            <span class="font-serif text-lg font-bold text-zinc-900 shrink-0">$79/mo</span>
+            <span class="text-lg font-bold text-zinc-900 shrink-0">$79/mo</span>
             <span class="accordion-chevron text-zinc-400 transition-transform shrink-0 ml-1">▼</span>
           </button>
           <div class="accordion-panel border-t border-zinc-100 px-5 pb-4 pt-3">

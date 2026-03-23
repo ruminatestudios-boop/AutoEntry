@@ -8,7 +8,7 @@ const MARKETPLACES = [
   { id: "shopify", name: "Shopify", logo: "https://www.google.com/s2/favicons?domain=shopify.com&sz=128", connect: true },
   { id: "amazon", name: "Amazon", logo: "https://www.google.com/s2/favicons?domain=amazon.com&sz=128", connect: false },
   { id: "tiktok", name: "TikTok Shop", logo: "https://www.google.com/s2/favicons?domain=tiktok.com&sz=128", connect: false },
-  { id: "ebay", name: "eBay", logo: "/logos/ebay.svg", connect: false },
+  { id: "ebay", name: "eBay", logo: "/assets/ebay-logo.png", connect: false },
   { id: "etsy", name: "Etsy", logo: "https://www.google.com/s2/favicons?domain=etsy.com&sz=128", connect: false },
   { id: "vinted", name: "Vinted", logo: "https://www.google.com/s2/favicons?domain=vinted.com&sz=128", connect: false },
 ] as const;

@@ -3,55 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="view-transition" content="same-origin" />
   <title>Dashboard – SyncLyst AI</title>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #f8fafc;
-      color: #18181b;
+    .dash-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 2rem;
+      min-height: 100vh;
     }
-    a { color: #2563eb; font-weight: 600; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    p { color: #71717a; margin-top: 0.5rem; }
-    .box {
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      border-radius: 12px;
-      padding: 2rem;
+    .dash-card {
       max-width: 24rem;
+      width: 100%;
+      padding: 2rem;
       text-align: center;
     }
-    .btn {
-      display: inline-block;
-      margin-top: 1.5rem;
-      padding: 0.75rem 1.5rem;
-      background: #18181b;
-      color: #fff;
-      border-radius: 8px;
+    .dash-card h1 {
+      font-size: 1.25rem;
       font-weight: 600;
-      font-size: 1rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
     }
-    .btn:hover { opacity: 0.9; text-decoration: none; }
-    .links { margin-top: 1.5rem; font-size: 0.875rem; }
-    .links a + a { margin-left: 0.5rem; }
+    .dash-card p {
+      color: var(--syn-muted);
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+    .dash-card .dash-btn {
+      margin-top: 1.5rem;
+      width: 100%;
+      text-decoration: none;
+    }
+    .dash-links {
+      margin-top: 1.5rem;
+      font-size: 0.875rem;
+      color: var(--syn-muted);
+    }
+    .dash-links a {
+      color: var(--syn-muted);
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .dash-links a:hover {
+      color: var(--syn-text);
+      text-decoration: underline;
+    }
+    .dash-links a + a {
+      margin-left: 0.75rem;
+    }
   </style>
 </head>
-<body>
-  <div class="box">
-    <h1>SyncLyst Dashboard</h1>
-    <p>Use the button below to open the dashboard.</p>
-    <a href="/dashboard" class="btn">Open Dashboard</a>
-    <div class="links">
-      <a href="/">Home</a>
-      <a href="/landing.html">Landing page</a>
+<body class="synclyst-flow-body">
+  <div class="dash-wrap" data-synclyst-page-transition-root>
+    <div class="synclyst-card dash-card">
+      <h1>SyncLyst Dashboard</h1>
+      <p>Use the button below to open the dashboard.</p>
+      <a href="/dashboard" class="synclyst-btn-primary dash-btn">Open Dashboard</a>
+      <div class="dash-links">
+        <a href="/">Home</a>
+        <a href="/landing.html">Landing page</a>
+      </div>
     </div>
   </div>
 </body>
