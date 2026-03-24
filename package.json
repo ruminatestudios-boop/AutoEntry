@@ -2,7 +2,7 @@
   "name": "auto-entry-monorepo",
   "private": true,
   "scripts": {
-    "build": "cd auto-entry && npm ci && npm run setup && npm run build",
+    "build": "if [ \"$VERCEL\" = \"1\" ]; then cd auralink-ai/frontend && npm ci && npm run build; else cd auto-entry && npm ci && npm run setup && npm run build; fi",
     "start": "cd auto-entry && npm run start",
     "deploy": "npm run deploy --prefix auto-entry",
     "dev:auralink": "cd auralink-ai/frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 NEXT_PUBLIC_PUBLISHING_API_URL=http://localhost:8001 npm run dev",
