@@ -9,7 +9,6 @@
     <meta name="synclyst-app-origin" content="" />
     <title>SyncLyst - List products. In seconds.</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <meta name="view-transition" content="same-origin" />
     <link rel="stylesheet" href="/css/flow-page-transition.css" />
     <script src="/js/flow-page-transition.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -358,7 +357,7 @@
                     Live on Shopify in one tap.
                 </p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="/scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center gap-2.5 group inline-flex bg-black">
+                    <a href="/home.html?mode=scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center gap-2.5 group inline-flex bg-black">
                         <div class="relative flex items-center justify-center w-5 h-5 overflow-hidden">
                             <i data-lucide="camera" class="w-5 h-5 relative z-10"></i>
                             <div class="absolute left-0 right-0 h-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] animate-scan-sweep z-20"></div>
@@ -697,7 +696,7 @@
                 <div>
                     <h4 class="text-xs font-semibold text-[#111] uppercase tracking-wider mb-4">Get Started</h4>
                     <ul class="space-y-3 text-sm text-[#555]">
-                        <li><a href="/scan" class="hover:text-[#111] transition-colors">Scan your first item</a></li>
+                        <li><a href="/home.html?mode=scan" class="hover:text-[#111] transition-colors">Scan your first item</a></li>
                         <li><a href="/flow-batch-upload.html" class="hover:text-[#111] transition-colors">Batch Upload <span class="text-[10px] font-semibold text-amber-600 uppercase">Premium</span></a></li>
                         <li><a href="#pricing" onclick="handleNavigate(event, 'pricing')" class="hover:text-[#111] transition-colors">Pricing</a></li>
                     </ul>
@@ -945,7 +944,7 @@
             const btn = document.createElement(isActive ? 'a' : 'button');
             btn.className = `vercel-card p-6 flex flex-col items-center justify-center text-center group transition-all duration-200 ${isActive ? 'cursor-pointer hover:scale-[1.02] hover:border-black hover:shadow-lg' : 'cursor-pointer hover:scale-[1.02]'}`;
             if (isActive) {
-                btn.href = window.synclystAppUrl('/scan');
+                btn.href = window.synclystAppUrl('/home.html?mode=scan');
                 btn.setAttribute('aria-label', `List on ${c.name}`);
             }
             const gridImgCls = 'w-10 h-10 rounded-lg object-contain transition-transform duration-200 block group-hover:scale-105';

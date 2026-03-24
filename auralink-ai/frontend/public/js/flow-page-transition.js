@@ -44,6 +44,7 @@
   }
 
   function runEnter() {
+    if (document.documentElement.classList.contains("synclyst-scan-initial")) return;
     var root = getRoot();
     if (!root) return;
     if (reducedMotion()) return;

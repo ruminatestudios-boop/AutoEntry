@@ -1,6 +1,17 @@
 <html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script>
+    (function () {
+      try {
+        var q = window.location.search || "";
+        var path = (window.location.pathname || "").replace(/\/+$/, "") || "/";
+        if (q.indexOf("mode=scan") !== -1 || path === "/scan") {
+          document.documentElement.classList.add("synclyst-scan-initial");
+        }
+      } catch (e) {}
+    })();
+    </script>
     <meta name="view-transition" content="same-origin" />
     <meta name="auralink-api-url" content="http://localhost:8000">
     <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app">
@@ -96,6 +107,16 @@
             transform: scale(1);
             opacity: 1;
             pointer-events: auto;
+        }
+
+        /* First paint: avoid marketing shell flash when opening scan (?mode=scan) */
+        html.synclyst-scan-initial #main-header,
+        html.synclyst-scan-initial #main-content {
+            display: none !important;
+        }
+        html.synclyst-scan-initial #scan-view {
+            display: flex !important;
+            flex-direction: column;
         }
 
         #batch-view { display: none; }
@@ -1091,6 +1112,7 @@
           if (mainHeader) mainHeader.style.display = 'none';
           var scanView = document.getElementById('scan-view');
           if (scanView) { scanView.classList.remove('hidden'); scanView.classList.add('flex'); }
+          document.documentElement.classList.remove('synclyst-scan-initial');
 
           var video = document.getElementById('scan-video');
           var stepCamera = document.getElementById('scan-step-camera');
@@ -1124,6 +1146,7 @@
             if (mainLanding) mainLanding.style.display = '';
             if (mainHeader) mainHeader.style.display = '';
             if (scanView) { scanView.classList.add('hidden'); scanView.classList.remove('flex'); }
+            document.documentElement.classList.remove('synclyst-scan-initial');
           }
 
           var exitLink = document.getElementById('scan-exit-link');
