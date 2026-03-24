@@ -288,8 +288,8 @@ export default function ScrollMorphHero() {
                 <path d="M19 21l-2-6-2 2-2-2 2-2-2-6" />
               </svg>
               <p className="text-xs text-zinc-600 font-medium leading-tight text-left whitespace-nowrap max-[380px]:whitespace-normal">
-                <span className="text-zinc-900 font-semibold">Smart Suggest:</span> Your AI builds a
-                memory. Every scan gets faster and smarter
+                <span className="text-zinc-900 font-semibold">Smart Suggest:</span> The more you use
+                it, the smarter it gets
               </p>
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 md:text-4xl">
@@ -329,8 +329,8 @@ export default function ScrollMorphHero() {
               <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
             </svg>
             <p className="text-xs text-zinc-600 font-medium leading-tight text-left whitespace-nowrap max-[380px]:whitespace-normal">
-              <span className="text-zinc-900 font-semibold">Smart Suggest:</span> Your AI builds a
-              memory. Every scan gets faster and smarter
+              <span className="text-zinc-900 font-semibold">Smart Suggest:</span> The more you use
+              it, the smarter it gets
             </p>
           </div>
           <h2 className="text-3xl md:text-5xl font-semibold text-zinc-900 tracking-tight mb-4">
