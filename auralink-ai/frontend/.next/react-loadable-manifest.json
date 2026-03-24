@@ -1,1 +1,22 @@
-{}
+{
+  "app/dashboard/page.tsx -> ./DashboardClient": {
+    "id": 2053,
+    "files": [
+      "static/chunks/619-f406269a2841c962.js",
+      "static/chunks/53.a14d1aacad597cda.js"
+    ]
+  },
+  "app/dashboard/page.tsx -> ./DashboardGuest": {
+    "id": 8664,
+    "files": [
+      "static/chunks/619-f406269a2841c962.js",
+      "static/chunks/664.1f953335007c0549.js"
+    ]
+  },
+  "node_modules/@clerk/nextjs/dist/esm/app-router/client/ClerkProvider.js -> ./keyless-creator-reader.js": {
+    "id": 6909,
+    "files": [
+      "static/chunks/909.2095d36621123b0e.js"
+    ]
+  }
+}

@@ -3,7 +3,7 @@
 
 type AppRoutes = "/dashboard" | "/dashboard/products" | "/dashboard/upgrade" | "/dashboard/upload" | "/landing" | "/privacy" | "/sign-in/[[...sign-in]]" | "/sign-up/[[...sign-up]]" | "/terms"
 type AppRouteHandlerRoutes = "/api/clerk/token"
-type PageRoutes = "/404" | "/_error"
+type PageRoutes = "/404"
 type LayoutRoutes = "/" | "/dashboard"
 type RedirectRoutes = "/dashboard-home.html" | "/flow-2" | "/flow-2.html" | "/flow-3.html" | "/flow/processing" | "/home.html" | "/landing.html" | "/stores-connect-shopify.html"
 type RewriteRoutes = "/" | "/__synclyst_publishing/[[...path]]" | "/connect-store" | "/dashboard/home" | "/flow-3" | "/flow-publishing" | "/flow/choose-platform" | "/flow/publish" | "/flow/success" | "/listing/published" | "/listing/review" | "/reading-product" | "/review" | "/scan"
@@ -13,7 +13,6 @@ type Routes = AppRoutes | PageRoutes | LayoutRoutes | RedirectRoutes | RewriteRo
 interface ParamMap {
   "/": {}
   "/__synclyst_publishing/[[...path]]": { "path"?: string[]; }
-  "/_error": {}
   "/404": {}
   "/api/clerk/token": {}
   "/connect-store": {}
