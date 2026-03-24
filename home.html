@@ -1000,7 +1000,7 @@
             }
           }
 
-          /** Store image and go to /reading-product (progress + "Reading your product"). */
+          /** Store image and go to static "Reading your product" page. */
           function goToFlow2(base64) {
             lastCapturedBase64 = base64;
             var rawB64 = base64.indexOf(',') >= 0 ? base64.split(',')[1] : base64;
@@ -1022,8 +1022,8 @@
               }
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: b64 }));
-                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/reading-product');
-                else window.location.href = '/reading-product';
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/flow-2.html');
+                else window.location.href = '/flow-2.html';
               } catch (e) {
                 showExtractError('Could not save image. Try again.');
               }
@@ -1031,8 +1031,8 @@
             img.onerror = function() {
               try {
                 sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: rawB64 }));
-                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/reading-product');
-                else window.location.href = '/reading-product';
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/flow-2.html');
+                else window.location.href = '/flow-2.html';
               } catch (e) {
                 showExtractError('Invalid image. Try again.');
               }
