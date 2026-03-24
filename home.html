@@ -1000,12 +1000,9 @@
             }
           }
 
-          function runExtraction(base64) {
+          /** Store image and go to /reading-product (progress + "Reading your product"). */
+          function goToFlow2(base64) {
             lastCapturedBase64 = base64;
-            if (stepResult) { stepResult.classList.remove('hidden'); stepResult.classList.add('flex'); }
-            if (stepCamera) stepCamera.classList.add('hidden');
-            if (seoTitleEl) seoTitleEl.textContent = 'Extracting…';
-            if (scanExtractErrorEl) scanExtractErrorEl.classList.add('hidden');
             var rawB64 = base64.indexOf(',') >= 0 ? base64.split(',')[1] : base64;
             var dataUrl = (base64.indexOf('data:') === 0) ? base64 : ('data:image/jpeg;base64,' + base64);
             var img = new Image();
@@ -1023,35 +1020,22 @@
                 ctx.drawImage(img, 0, 0, c.width, c.height);
                 b64 = c.toDataURL('image/jpeg', 0.82).split(',')[1];
               }
-              if (capturedImg) capturedImg.src = 'data:image/jpeg;base64,' + b64;
-              fetch(apiUrl + '/api/v1/vision/extract', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image_base64: b64, mime_type: 'image/jpeg', include_ocr: true, skip_web_enrichment: false })
-              })
-                .then(function(r) {
-                  if (r.status === 402) { showExtractError('Free scans used. Upgrade to continue.'); return null; }
-                  if (!r.ok) return r.text().then(function(t) { throw new Error(t || 'Server error'); });
-                  return r.json();
-                })
-                .then(function(data) {
-                  if (data && typeof data === 'object') showExtractSuccess(data);
-                  else showExtractError('Invalid response.');
-                })
-                .catch(function(err) {
-                  showExtractError(err.message || 'Network error. Ensure the backend is running.');
-                });
+              try {
+                sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: b64 }));
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/reading-product');
+                else window.location.href = '/reading-product';
+              } catch (e) {
+                showExtractError('Could not save image. Try again.');
+              }
             };
             img.onerror = function() {
-              if (capturedImg) capturedImg.src = 'data:image/jpeg;base64,' + rawB64;
-              fetch(apiUrl + '/api/v1/vision/extract', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image_base64: rawB64, mime_type: 'image/jpeg', include_ocr: true, skip_web_enrichment: false })
-              })
-                .then(function(r) { if (!r.ok) throw new Error('Server error'); return r.json(); })
-                .then(function(data) { if (data && typeof data === 'object') showExtractSuccess(data); else showExtractError('Invalid response.'); })
-                .catch(function(err) { showExtractError(err.message || 'Extraction failed.'); });
+              try {
+                sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: rawB64 }));
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/reading-product');
+                else window.location.href = '/reading-product';
+              } catch (e) {
+                showExtractError('Invalid image. Try again.');
+              }
             };
             img.src = dataUrl;
           }
@@ -1077,7 +1061,7 @@
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             var base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
             if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
-            runExtraction(base64);
+            goToFlow2(base64);
           });
 
           var uploadInput = document.getElementById('scan-upload-input');
@@ -1093,7 +1077,7 @@
                 var base64 = dataUrl.indexOf(',') >= 0 ? dataUrl.split(',')[1] : dataUrl;
                 uploadInput.value = '';
                 if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
-                runExtraction(base64);
+                goToFlow2(base64);
               };
               reader.readAsDataURL(file);
             });
@@ -1121,7 +1105,7 @@
           });
 
           if (extractAgainBtn) extractAgainBtn.addEventListener('click', function() {
-            if (lastCapturedBase64) runExtraction(lastCapturedBase64);
+            if (lastCapturedBase64) goToFlow2(lastCapturedBase64);
           });
 
           var closeBtn = document.getElementById('conversion-popup-close');
