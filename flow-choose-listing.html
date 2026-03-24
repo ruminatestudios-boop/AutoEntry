@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+  <title>Choose how to use your listing | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .modal-backdrop { background: rgba(0,0,0,0.4); }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 border-b border-zinc-100 bg-white">
+      <span class="w-10 h-10" aria-hidden="true"></span>
+      <span class="invisible text-sm">—</span>
+    </header>
+
+    <main class="flex-1 px-5 pt-8 pb-8 overflow-auto">
+      <h1 class="text-xl font-semibold tracking-tight text-zinc-900 mb-1">Choose how to use your listing</h1>
+      <p class="text-sm text-zinc-500 mb-8">Copy, download, or connect your stores to publish.</p>
+
+      <section class="mb-8">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">Copy or download</p>
+        <div class="grid grid-cols-2 gap-3">
+          <button type="button" id="choose-copy-btn" class="py-3.5 rounded-2xl border border-zinc-200 bg-white text-zinc-800 font-semibold text-sm hover:bg-zinc-50 transition-colors">
+            Copy to clipboard
+          </button>
+          <button type="button" id="choose-download-btn" class="py-3.5 rounded-2xl border border-zinc-200 bg-white text-zinc-800 font-semibold text-sm hover:bg-zinc-50 transition-colors">
+            Download
+          </button>
+        </div>
+        <p class="text-xs text-zinc-500 mt-2">Paste anywhere — or download as .txt</p>
+      </section>
+
+      <section>
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">Publish to your stores</p>
+        <a href="plans.html" id="choose-publish-btn" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline hover:bg-zinc-800 transition-colors">
+          Connect and publish
+        </a>
+        <p class="text-xs text-zinc-500 mt-2">Connect your stores and we publish live (Pro)</p>
+      </section>
+    </main>
+  </div>
+
+  <p id="choose-toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-zinc-800 text-white text-sm font-medium hidden z-[60] shadow-lg">Copied to clipboard</p>
+
+  <script>
+    (function() {
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) {
+          e.preventDefault();
+          history.back();
+        }
+      });
+    })();
+  </script>
+  <script>
+    (function() {
+      var DRAFT_KEY = 'auralink_review_draft';
+      var STORAGE_KEY = 'auralink_selected_marketplaces';
+
+      function loadDraft() {
+        try {
+          var raw = sessionStorage.getItem(DRAFT_KEY);
+          if (raw) { var d = JSON.parse(raw); if (d && typeof d === 'object') return d; }
+        } catch (e) {}
+        return { title: '', price: '', description: '', category: '', condition: '', tags: [], photos: [] };
+      }
+      function loadSelected() {
+        try {
+          var raw = sessionStorage.getItem(STORAGE_KEY);
+          if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr)) return arr; }
+        } catch (e) {}
+        return [];
+      }
+
+      var draft = loadDraft();
+      var selected = loadSelected();
+      var publishBtn = document.getElementById('choose-publish-btn');
+      if (publishBtn && selected.length) publishBtn.textContent = 'Connect and publish (' + selected.length + ' store' + (selected.length === 1 ? '' : 's') + ')';
+
+      function getFormattedListingText() {
+        draft = loadDraft();
+        var title = (draft.title && draft.title.trim()) ? draft.title.trim() : 'Untitled listing';
+        var desc = (draft.description && draft.description.trim()) ? draft.description.trim() : '';
+        var p = (draft.price != null && draft.price !== '') ? String(draft.price).replace(/^\$/, '').trim() : '0';
+        var price = '$' + (p === '' ? '0' : (p.indexOf('.') !== -1 ? p : p + '.00'));
+        var category = (draft.category && draft.category.trim()) ? draft.category.trim() : '';
+        var condition = (draft.condition && draft.condition.trim()) ? draft.condition.trim() : '';
+        var tagList = (draft.tags && Array.isArray(draft.tags)) ? draft.tags : [];
+        var photoCount = (draft.photos && Array.isArray(draft.photos)) ? draft.photos.length : 0;
+        var lines = [
+          title,
+          '',
+          'Price: ' + price,
+          'Category: ' + category,
+          'Condition: ' + condition,
+          'Photos: ' + (photoCount > 0 ? photoCount + ' image' + (photoCount === 1 ? '' : 's') : 'None'),
+          '',
+          'Description:',
+          desc,
+          '',
+          'Tags: ' + (tagList.length ? tagList.join(', ') : 'None')
+        ];
+        return lines.join('\n');
+      }
+
+      var toastEl = document.getElementById('choose-toast');
+      function showToast(msg) {
+        if (!toastEl) return;
+        toastEl.textContent = msg || 'Copied to clipboard';
+        toastEl.classList.remove('hidden');
+        setTimeout(function() { toastEl.classList.add('hidden'); }, 2000);
+      }
+
+      var copyBtn = document.getElementById('choose-copy-btn');
+      if (copyBtn) copyBtn.addEventListener('click', function() {
+        var text = getFormattedListingText();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function() { showToast('Copied to clipboard'); }).catch(function() { showToast('Copy failed'); });
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed'; ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand('copy');
+            showToast('Copied to clipboard');
+          } catch (e) { showToast('Copy failed'); }
+          document.body.removeChild(ta);
+        }
+      });
+
+      var downloadBtn = document.getElementById('choose-download-btn');
+      if (downloadBtn) downloadBtn.addEventListener('click', function() {
+        var text = getFormattedListingText();
+        draft = loadDraft();
+        var filename = (draft.title && draft.title.trim()) ? draft.title.trim().replace(/[^a-z0-9]+/gi, '-').slice(0, 50) + '-listing.txt' : 'listing.txt';
+        var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+    })();
+  </script>
+</body>
+</html>

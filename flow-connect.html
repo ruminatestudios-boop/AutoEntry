@@ -3,16 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <title>Connect your stores | Listing Flow | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
         },
       },
     };
@@ -30,7 +36,7 @@
     </header>
 
     <main class="flex-1 px-5 pb-6 overflow-auto">
-      <h1 class="font-serif text-xl font-bold text-zinc-900 mb-2 text-center">Connect your stores</h1>
+      <h1 class="text-xl font-semibold tracking-tight text-zinc-900 mb-2 text-center">Connect your stores</h1>
       <p class="text-center text-sm text-zinc-500 mb-1">You selected where to list. One click connects all of them — we’ll guide you through each store.</p>
       <p class="text-center text-xs text-zinc-400 mb-5" id="connect-progress-text"></p>
 
@@ -82,7 +88,7 @@
             if (Array.isArray(arr) && arr.length > 0) return arr;
           }
         } catch (e) {}
-        return ['amazon', 'shopify'];
+        return ['shopify'];
       }
 
       function loadConnected() {
@@ -140,7 +146,7 @@
           card.className = 'rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between';
           card.setAttribute('data-marketplace', id);
 
-          var logoUrl = 'https://www.google.com/s2/favicons?domain=' + meta.domain + '&sz=128';
+          var logoUrl = meta.logoUrl || ('https://www.google.com/s2/favicons?domain=' + meta.domain + '&sz=128');
           card.innerHTML =
             '<div class="flex items-center gap-3">' +
               '<span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">' +
@@ -184,7 +190,8 @@
         } else {
           primaryBtn.textContent = 'Continue to preview';
           primaryBtn.onclick = function() {
-            window.location.href = '/flow-verifying.html';
+            if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/flow-verifying.html');
+            else window.location.href = '/flow-verifying.html';
           };
         }
       }

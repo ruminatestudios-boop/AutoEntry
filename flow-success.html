@@ -3,54 +3,264 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="view-transition" content="same-origin" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>You're live! | SyncLyst</title>
+  <meta name="auralink-publishing-url" content="http://localhost:8001" />
+  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <title>SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+  <script src="/js/clip-meta-description.js"></script>
+  <script src="/js/synclyst-publish-from-draft.js"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
         },
       },
     };
   </script>
+  <style>
+    @keyframes synclyst-success-ring {
+      from {
+        transform: scale(0.65);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    @keyframes synclyst-success-tick {
+      0% {
+        transform: scale(0.35) rotate(-28deg);
+        opacity: 0;
+      }
+      55% {
+        transform: scale(1.12) rotate(4deg);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+    .synclyst-success-ring {
+      animation: synclyst-success-ring 0.48s cubic-bezier(0.34, 1.45, 0.64, 1) forwards;
+      opacity: 0;
+    }
+    .synclyst-success-tick {
+      display: inline-block;
+      animation: synclyst-success-tick 0.4s cubic-bezier(0.34, 1.25, 0.64, 1) 0.1s forwards;
+      opacity: 0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .synclyst-success-ring,
+      .synclyst-success-tick {
+        animation: none;
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
-  <div class="max-w-md mx-auto min-h-screen flex flex-col px-5 py-8">
-    <main class="flex-1 flex flex-col items-center text-center">
-      <!-- Success circle -->
-      <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-6">
-        <span class="text-2xl font-bold text-zinc-900">✓</span>
+<body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
+  <div id="synclyst-flow-shell" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
+      <div></div>
+      <a href="/landing.html" class="inline-flex items-center justify-self-center no-underline text-[#111]"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <div></div>
+    </header>
+
+    <main class="flex-1 px-5 pt-8 pb-10 overflow-auto flex flex-col">
+
+      <!-- After Shopify OAuth only: ?shopify=connected&shop=... -->
+      <div id="success-mode-connect" class="hidden flex flex-col items-center text-center w-full">
+        <div class="synclyst-success-ring w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-5" aria-hidden="true">
+          <span class="synclyst-success-tick text-2xl font-bold text-emerald-700 leading-none">✓</span>
+        </div>
+        <h1 class="text-xl font-bold text-[#0a0a0a] mb-2">Shopify connected</h1>
+        <p class="text-sm text-[#525252] mb-6 max-w-sm" id="connect-subtitle">Your store is linked. <strong class="text-[#0a0a0a] font-semibold">Publish to Shopify</strong> from here, or open your listing to edit first.</p>
+
+        <div class="w-full rounded-xl bg-white border border-[#e5e5e5] p-4 flex items-center justify-between mb-4 text-left shadow-sm" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-10 h-10 rounded-xl bg-[#fafafa] border border-[#e5e5e5] flex items-center justify-center shrink-0 p-1.5">
+              <img src="https://cdn.simpleicons.org/shopify/95BF47" alt="" class="w-6 h-6 object-contain" width="24" height="24" onerror="this.onerror=null;this.src='https://www.google.com/s2/favicons?domain=shopify.com&amp;sz=64';" />
+            </span>
+            <div class="min-w-0">
+              <p class="font-semibold text-[#0a0a0a] truncate" id="connect-shop-label">Shopify</p>
+              <p class="text-xs text-[#737373] truncate" id="connect-shop-domain"></p>
+            </div>
+          </div>
+          <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 shrink-0">Connected</span>
+        </div>
+
+        <div class="w-full rounded-xl bg-[#fafafa] border border-[#e5e5e5] p-4 text-left mb-6">
+          <p class="text-sm text-[#525252] leading-relaxed"><strong class="text-[#0a0a0a]">Tip:</strong> drafts appear in <strong>Shopify Admin → Products → Drafts</strong> until you publish them in Shopify.</p>
+        </div>
+
+        <div class="w-full flex flex-col gap-3">
+          <button type="button" id="connect-publish-shopify" class="w-full py-3.5 px-4 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[15px] text-center border-0 cursor-pointer hover:bg-[#262626] transition-colors font-sans">
+            Publish to Shopify
+          </button>
+          <a href="/review" id="connect-edit-listing" class="w-full py-3.5 rounded-xl bg-white border border-[#e5e5e5] text-[#0a0a0a] font-semibold text-[15px] text-center no-underline hover:bg-zinc-50 transition-colors">
+            Edit listing
+          </a>
+          <a href="/scan" class="w-full py-3.5 rounded-xl bg-white border border-[#e5e5e5] text-[#525252] font-semibold text-[15px] text-center no-underline hover:bg-zinc-50 transition-colors">
+            Scan another product
+          </a>
+          <p id="connect-manage-stores-wrap" class="hidden mt-1">
+            <a href="/stores-list.html" class="text-sm font-medium text-[#525252] hover:text-[#111] no-underline">Manage connected stores</a>
+          </p>
+        </div>
       </div>
 
-      <h1 class="font-serif text-2xl font-bold text-zinc-900 mb-1" id="success-heading">You're live!</h1>
-      <p class="text-sm text-zinc-500 mb-8" id="success-count-text">Listed on 1 store in 2.4 seconds</p>
+      <!-- After listing publish from flow-3 (no shopify=connected in URL) -->
+      <div id="success-mode-publish" class="flex flex-col items-center text-center w-full">
+        <div class="synclyst-success-ring w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-6" aria-hidden="true">
+          <span class="synclyst-success-tick text-2xl font-bold text-zinc-900 leading-none">✓</span>
+        </div>
 
-      <!-- Store cards: filled from selected marketplaces -->
-      <div class="w-full space-y-3 mb-8" id="success-stores-list"></div>
+        <h1 class="text-2xl font-bold text-zinc-900 mb-1" id="success-heading">You're live!</h1>
+        <p class="text-sm text-zinc-500 mb-8" id="success-count-text">Listed on 1 store in 2.4 seconds</p>
 
-      <!-- Buttons -->
-      <div class="w-full flex flex-col sm:flex-row gap-3">
-        <a href="/dashboard/home" class="flex-1 py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline">
-          View listings
-        </a>
-        <a href="/?mode=scan" class="flex-1 py-3.5 rounded-2xl bg-white border border-zinc-200 text-zinc-600 font-semibold text-[15px] text-center no-underline hover:bg-zinc-50 transition-colors">
-          List another
-        </a>
+        <div class="w-full space-y-3 mb-6" id="success-stores-list"></div>
+
+        <div class="rounded-xl bg-zinc-100 border border-zinc-200 p-4 flex gap-3 text-left mb-8 w-full">
+          <span class="w-6 h-6 rounded border border-zinc-300 flex items-center justify-center text-zinc-500 text-xs font-bold shrink-0">◆</span>
+          <p class="text-sm text-zinc-700"><span id="success-shop-hint">Shopify: Your product is in Shopify Admin → Products → Drafts. Open it there and click Publish to make it live.</span></p>
+        </div>
+
+        <div class="w-full flex flex-col sm:flex-row gap-3">
+          <a href="/dashboard/home" class="flex-1 py-3.5 rounded-xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline hover:bg-zinc-800 transition-colors">
+            View listings
+          </a>
+          <a href="/scan" class="flex-1 py-3.5 rounded-xl bg-white border border-zinc-200 text-zinc-600 font-semibold text-[15px] text-center no-underline hover:bg-zinc-50 transition-colors">
+            List another
+          </a>
+        </div>
+        <p class="text-xs text-zinc-500 mt-4">
+          <a href="/connect-store" class="font-medium text-zinc-700 hover:underline">Connect or reconnect Shopify</a>
+        </p>
       </div>
-      <p class="text-xs text-zinc-500 mt-4">
-        <a href="/connect-store" class="font-medium text-zinc-700 hover:underline">Connect or reconnect Shopify</a>
-      </p>
     </main>
   </div>
   <script>
     (function() {
+      function getPublishingBase() {
+        var host = window.location.hostname;
+        var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+        if ((host === 'localhost' || host === '127.0.0.1') && port === '3000') {
+          return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
+        }
+        var meta = document.querySelector('meta[name="auralink-publishing-url"]');
+        var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
+        if (host && host !== 'localhost' && host !== '127.0.0.1') {
+          var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
+          if (prodMeta && prodMeta.getAttribute('content') && prodMeta.getAttribute('content').trim()) {
+            url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+          } else if (host === 'synclyst.app' || host === 'www.synclyst.app') {
+            url = 'https://synclyst-publishing-299567386855.us-central1.run.app';
+          } else {
+            url = window.location.protocol + '//' + host + ':8001';
+          }
+        }
+        return url;
+      }
+      function showManageStoresOnlyIfMultipleConnections() {
+        var wrap = document.getElementById('connect-manage-stores-wrap');
+        if (!wrap) return;
+        try {
+          var token = sessionStorage.getItem('auralink_jwt');
+          if (!token) return;
+          var base = getPublishingBase().replace(/\/$/, '');
+          fetch(base + '/api/user/connected-stores', { headers: { Authorization: 'Bearer ' + token } })
+            .then(function(r) { return r.ok ? r.json() : {}; })
+            .then(function(stores) {
+              var n = 0;
+              Object.keys(stores).forEach(function(k) {
+                if (stores[k] && stores[k].status === 'connected') n++;
+              });
+              if (n > 1) wrap.classList.remove('hidden');
+            })
+            .catch(function() {});
+        } catch (e) {}
+      }
+
+      function replaySuccessIconAnimations(root) {
+        if (!root || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+        root.querySelectorAll('.synclyst-success-ring, .synclyst-success-tick').forEach(function (el) {
+          el.style.animation = 'none';
+          void el.offsetWidth;
+          el.style.removeProperty('animation');
+        });
+      }
+
+      var params = new URLSearchParams(window.location.search || '');
+      var isConnectOnly = params.get('shopify') === 'connected';
+      var shopParam = params.get('shop') || '';
+
+      if (isConnectOnly) {
+        document.title = 'Shopify connected | SyncLyst';
+        var pub = document.getElementById('success-mode-publish');
+        var con = document.getElementById('success-mode-connect');
+        if (pub) pub.classList.add('hidden');
+        if (con) con.classList.remove('hidden');
+        replaySuccessIconAnimations(con);
+        var shortName = shopParam.replace(/\.myshopify\.com$/i, '').trim();
+        var badShop = !shopParam || shopParam.indexOf('<') !== -1 || /their-store/i.test(shopParam + shortName);
+        if (!shortName || badShop) shortName = 'Your Shopify store';
+        var domainEl = document.getElementById('connect-shop-domain');
+        var labelEl = document.getElementById('connect-shop-label');
+        if (domainEl) domainEl.textContent = badShop ? 'Ready to receive listings' : shopParam;
+        if (labelEl) labelEl.textContent = shortName;
+        var q = '?shopify=connected';
+        if (shopParam) q += '&shop=' + encodeURIComponent(shopParam);
+        var editA = document.getElementById('connect-edit-listing');
+        if (editA) editA.href = '/review' + q;
+        var pubBtn = document.getElementById('connect-publish-shopify');
+        if (pubBtn && typeof SynclystPublishFromDraft !== 'undefined') {
+          pubBtn.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            if (pubBtn.disabled) return;
+            pubBtn.disabled = true;
+            var orig = pubBtn.textContent;
+            pubBtn.textContent = 'Publishing…';
+            SynclystPublishFromDraft.publish()
+              .then(function () {
+                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/listing/published');
+                else window.location.href = '/listing/published';
+              })
+              .catch(function (e) {
+                pubBtn.disabled = false;
+                pubBtn.textContent = orig;
+                var code = e && e.code;
+                if (code === 'NO_TOKEN' || code === 'SHOPIFY_NOT_CONNECTED') {
+                  window.location.href = '/connect-store?return=review';
+                  return;
+                }
+                if (code === 'TIMEOUT') {
+                  alert(e.message || 'Publishing took too long. Check your connection and that the publishing service is running, then try again.');
+                  return;
+                }
+                alert(e && e.message ? e.message : 'Publish failed. Try again.');
+              });
+          });
+        }
+        showManageStoresOnlyIfMultipleConnections();
+        return;
+      }
+
+      document.title = "You're live! | SyncLyst";
+
       var STORAGE_KEY = 'auralink_selected_marketplaces';
       var meta = {
         tiktok_shop: { name: 'TikTok Shop', domain: 'tiktok.com', letter: 'T' },
@@ -65,6 +275,7 @@
         vinted: { name: 'Vinted', domain: 'vinted.com', letter: 'V' }
       };
       var LAST_PUBLISH_KEY = 'auralink_last_publish_platforms';
+      var LAST_PUBLISH_SHOP_KEY = 'auralink_last_publish_shop';
       function loadSelected() {
         try {
           var lastRaw = sessionStorage.getItem(LAST_PUBLISH_KEY);
@@ -74,7 +285,6 @@
             if (Array.isArray(arr) && arr.length > 0) return arr;
           }
         } catch (e) {}
-        var params = new URLSearchParams(window.location.search || '');
         if (params.get('shopify') === 'connected' || (params.get('shop') && String(params.get('shop')).includes('myshopify.com'))) return ['shopify'];
         var platform = params.get('platform');
         if (platform) return [platform.toLowerCase()];
@@ -95,7 +305,7 @@
         selected.forEach(function(id, i) {
           var m = meta[id];
           if (!m) return;
-          var logoUrl = 'https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128';
+          var logoUrl = m.logoUrl || ('https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128');
           var badges = '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Live</span>';
           if (id === 'tiktok_shop') badges = '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Live</span><span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Trending</span>';
           var row = document.createElement('div');
@@ -108,6 +318,16 @@
             '<div class="flex gap-2">' + badges + '</div>';
           container.appendChild(row);
         });
+      }
+      var shopHint = document.getElementById('success-shop-hint');
+      if (shopHint) {
+        try {
+          var shop = sessionStorage.getItem(LAST_PUBLISH_SHOP_KEY);
+          if (shop) {
+            sessionStorage.removeItem(LAST_PUBLISH_SHOP_KEY);
+            shopHint.textContent = 'Published to ' + shop + '. Your product is in Shopify Admin → Products → Drafts for that store. Open it there and click Publish to make it live.';
+          }
+        } catch (e) {}
       }
     })();
   </script>

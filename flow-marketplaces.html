@@ -3,16 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <title>Choose Marketplaces | Listing Flow | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], serif: ['Source Serif 4', 'Georgia', 'serif'] },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
         },
       },
     };
@@ -38,7 +44,7 @@
     </header>
 
     <main class="flex-1 px-5 pb-6 overflow-auto">
-      <h1 class="font-serif text-xl font-bold text-zinc-900 mb-4 text-center">Where to list?</h1>
+      <h1 class="text-xl font-semibold tracking-tight text-zinc-900 mb-4 text-center">Where to list?</h1>
 
       <p class="text-center text-sm text-zinc-500 mb-4">Select the platforms for this listing. Next screen: connect all of them in one go.</p>
 
@@ -307,7 +313,8 @@
       document.getElementById('marketplaces-next-btn').addEventListener('click', function() {
         if (selected.length === 0) return;
         saveSelection(selected);
-        window.location.href = '/flow-connecting.html';
+        if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/flow-connecting.html');
+        else window.location.href = '/flow-connecting.html';
       });
     })();
   </script>

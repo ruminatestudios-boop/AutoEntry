@@ -3,10 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
   <title>Batch Upload | SyncLyst</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
   <script>
     tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
   </script>
@@ -21,7 +27,7 @@
   <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
     <header class="shrink-0 border-b border-[#eaeaea] bg-white/80 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
       <div></div>
-      <a href="/" class="text-xl font-bold tracking-tight text-[#111] justify-self-center">SyncLyst</a>
+      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#111] justify-self-center">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></a>
       <div></div>
     </header>
     <main class="flex-1 px-5 pt-6 pb-6 overflow-auto">
@@ -135,7 +141,8 @@
         if (addMore) {
           try { sessionStorage.setItem('auralink_batch_add_more', '1'); } catch (e) {}
         }
-        window.location.href = '/flow-batch.html';
+        if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/flow-batch.html');
+        else window.location.href = '/flow-batch.html';
       });
     })();
   </script>

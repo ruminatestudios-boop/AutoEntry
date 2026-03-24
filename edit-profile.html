@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+  <title>Edit profile | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
+      <a href="settings.html" class="flex items-center gap-2 text-zinc-900 no-underline">
+        <span class="text-lg">←</span>
+        <span class="font-semibold">Settings</span>
+      </a>
+      <h1 class="text-lg font-bold text-zinc-900">Edit profile</h1>
+      <span class="w-14"></span>
+    </header>
+
+    <main class="flex-1 px-5 py-4 overflow-auto">
+      <form class="space-y-5">
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex flex-col items-center gap-4">
+          <div class="w-20 h-20 rounded-full bg-zinc-200 border border-zinc-300 flex items-center justify-center text-2xl font-semibold text-zinc-600">J</div>
+          <button type="button" class="text-sm font-medium text-zinc-600 hover:text-zinc-900">Change photo</button>
+        </div>
+
+        <div class="rounded-xl bg-white border border-zinc-200 divide-y divide-zinc-100 overflow-hidden">
+          <div class="px-4 py-3">
+            <label class="block text-xs font-medium text-zinc-500 mb-1">Name</label>
+            <input type="text" value="James Wilson" class="w-full text-sm font-medium text-zinc-900 bg-transparent border-0 focus:outline-none focus:ring-0 p-0" placeholder="Your name" />
+          </div>
+          <div class="px-4 py-3">
+            <label class="block text-xs font-medium text-zinc-500 mb-1">Email</label>
+            <input type="email" value="james@example.com" class="w-full text-sm font-medium text-zinc-900 bg-transparent border-0 focus:outline-none focus:ring-0 p-0" placeholder="you@example.com" />
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 rounded-xl bg-zinc-900 text-white font-semibold text-sm hover:bg-zinc-800 transition-colors">
+          Save changes
+        </button>
+      </form>
+    </main>
+  </div>
+</body>
+</html>

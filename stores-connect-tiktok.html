@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+  <title>Connect TikTok Shop | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col px-5 py-8">
+    <a href="/flow-3-tiktok.html" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-900 no-underline text-sm font-medium mb-6">
+      <span class="text-lg">←</span>
+      <span>Back to listing</span>
+    </a>
+    <div class="flex items-center gap-3 mb-6">
+      <span class="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0">
+        <img src="https://www.google.com/s2/favicons?domain=tiktok.com&sz=128" alt="" class="w-7 h-7 object-contain" onerror="this.parentElement.innerHTML='<span class=\'text-zinc-600 text-lg font-bold\'>T</span>';" />
+      </span>
+      <div>
+        <h1 class="text-xl font-semibold tracking-tight text-zinc-900">Connect TikTok Shop</h1>
+        <p class="text-sm text-zinc-500 mt-0.5">TikTok Shop integration is coming soon</p>
+      </div>
+    </div>
+    <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-6">
+      <p class="text-sm text-zinc-800">You’ll be able to connect your TikTok Shop here and publish draft listings. For now, use Etsy or Shopify from the marketplace picker.</p>
+    </div>
+    <a href="/flow-choose-platform.html" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] text-center no-underline">
+      Choose another marketplace
+    </a>
+  </div>
+</body>
+</html>

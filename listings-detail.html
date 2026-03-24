@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="view-transition" content="same-origin" />
+  <meta name="auralink-publishing-url" content="http://localhost:8001" />
+  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <title>Listing detail | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };</script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .vercel-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .vercel-headline { font-weight: 700; color: #0a0a0a; letter-spacing: -0.025em; }
+    .vercel-body { font-weight: 400; color: #525252; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <!-- Header: same as flow-3.html (centered logo only) -->
+    <header class="shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+      <div></div>
+      <a href="/landing.html" class="inline-flex items-center justify-self-center no-underline text-[#111] leading-none py-0.5"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <div class="justify-self-end"></div>
+    </header>
+    <main class="flex-1 px-5 pt-6 pb-8 overflow-auto">
+      <div id="detail-loading" class="text-sm text-[#71717a] py-8">Loading…</div>
+      <div id="detail-content" class="hidden">
+        <!-- Photo -->
+        <div class="flex justify-center mb-6">
+          <div id="detail-photo" class="w-full max-w-[240px] aspect-square rounded-xl bg-[#f5f5f5] border border-[#e5e5e5] overflow-hidden flex items-center justify-center">
+            <i data-lucide="image" class="w-16 h-16 text-[#a1a1aa]"></i>
+          </div>
+        </div>
+        <h2 class="vercel-headline text-xl font-bold text-[#0a0a0a] text-center mb-1" id="detail-name">—</h2>
+        <p class="text-xl font-bold text-[#0a0a0a] text-center mb-6" id="detail-price">—</p>
+        <div class="vercel-card p-5 mb-5">
+          <div id="detail-status-row" class="flex flex-nowrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+              <span class="text-[13px] font-medium text-[#0a0a0a] shrink-0">Status</span>
+              <img id="detail-status-shopify-icon" src="https://www.google.com/s2/favicons?domain=shopify.com&amp;sz=64" alt="" width="20" height="20" class="w-5 h-5 rounded border border-[#e5e5e5] bg-white object-contain p-px shrink-0 hidden" />
+              <p id="detail-status" class="text-sm text-[#525252] font-medium leading-tight truncate min-w-0 text-left">—</p>
+            </div>
+            <span id="detail-status-meta" class="hidden shrink-0 text-[11px] font-medium text-[#a1a1aa] tabular-nums whitespace-nowrap"></span>
+          </div>
+        </div>
+        <div class="vercel-card p-5 mb-5" id="detail-description-wrap">
+          <span class="text-[13px] font-medium text-[#0a0a0a] block mb-2">Description</span>
+          <p id="detail-description" class="text-sm text-[#525252] whitespace-pre-wrap">—</p>
+        </div>
+        <div class="vercel-card p-5 mb-5" id="detail-platforms-wrap">
+          <span class="text-[13px] font-medium text-[#0a0a0a] block mb-3">Published to</span>
+          <div id="detail-platforms" class="space-y-2"></div>
+        </div>
+        <a href="/listings-all.html" class="block w-full py-3.5 rounded-xl bg-black text-white font-semibold text-[15px] text-center no-underline hover:opacity-95 transition-opacity">
+          Return to listings
+        </a>
+        <p class="text-center mt-4">
+          <a href="/dashboard/home" class="text-sm font-semibold text-[#0a0a0a] underline">Return to dashboard</a>
+        </p>
+      </div>
+      <div id="detail-error" class="hidden text-center py-12">
+        <p class="text-sm text-[#525252] mb-6">Listing not found.</p>
+        <a href="/listings-all.html" class="block w-full max-w-sm mx-auto py-3.5 rounded-xl bg-black text-white font-semibold text-[15px] text-center no-underline hover:opacity-95 transition-opacity mb-4">
+          Return to listings
+        </a>
+        <a href="/dashboard/home" class="text-sm font-semibold text-[#0a0a0a] underline">Return to dashboard</a>
+      </div>
+    </main>
+  </div>
+  <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var id = params.get('id');
+      if (!id) {
+        document.getElementById('detail-loading').classList.add('hidden');
+        document.getElementById('detail-content').classList.add('hidden');
+        document.getElementById('detail-error').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+      }
+      function getPublishingUrl() {
+        var meta = document.querySelector('meta[name="auralink-publishing-url"]');
+        var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
+        var host = window.location.hostname;
+        if (host && host !== 'localhost' && host !== '127.0.0.1') {
+          var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
+          if (prodMeta && prodMeta.getAttribute('content')) url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+        }
+        return url;
+      }
+      function getToken() { try { return sessionStorage.getItem('auralink_jwt'); } catch (e) { return null; } }
+      function fetchToken() {
+        var base = getPublishingUrl();
+        return fetch(base + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(d) { if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; } return null; });
+      }
+      function formatPrice(val) {
+        if (val == null || val === '') return '—';
+        var n = Number(val);
+        if (isNaN(n)) return String(val);
+        // Matches publishing API + flow-3: price is minor units (pence for GBP), not decimal pounds
+        return '£' + (n / 100).toFixed(2);
+      }
+      var platformNames = { shopify: 'Shopify', etsy: 'Etsy', ebay: 'eBay', tiktok: 'TikTok Shop', amazon: 'Amazon' };
+      var token = getToken();
+      (token ? Promise.resolve(token) : fetchToken()).then(function(t) {
+        if (!t) {
+          document.getElementById('detail-loading').classList.add('hidden');
+          document.getElementById('detail-content').classList.add('hidden');
+          document.getElementById('detail-error').classList.remove('hidden');
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          return;
+        }
+        var base = getPublishingUrl();
+        return fetch(base + '/api/listings/' + encodeURIComponent(id), { headers: { 'Authorization': 'Bearer ' + t } })
+          .then(function(r) {
+            if (!r.ok) throw new Error('Not found');
+            return r.json();
+          })
+          .then(function(data) {
+            var listing = data.listing;
+            if (!listing) throw new Error('No listing');
+            var u = listing.universal_data || listing;
+            document.getElementById('detail-loading').classList.add('hidden');
+            document.getElementById('detail-error').classList.add('hidden');
+            document.getElementById('detail-content').classList.remove('hidden');
+            document.getElementById('detail-name').textContent = (u.title || '').trim() || 'Untitled';
+            document.getElementById('detail-price').textContent = formatPrice(u.price);
+            var pr = listing.publish_results || {};
+            var statusEl = document.getElementById('detail-status');
+            var statusIcon = document.getElementById('detail-status-shopify-icon');
+            var okPlatforms = Object.keys(pr).filter(function(k) { return pr[k] && pr[k].success; });
+            if (listing.status === 'published') {
+              if (pr.shopify && pr.shopify.success) {
+                if (statusIcon) statusIcon.classList.remove('hidden');
+                var others = okPlatforms.filter(function(k) { return k !== 'shopify'; });
+                statusEl.textContent = others.length
+                  ? 'Published on Shopify · also ' + others.map(function(k) { return platformNames[k] || k; }).join(', ')
+                  : 'Published on Shopify';
+              } else {
+                if (statusIcon) statusIcon.classList.add('hidden');
+                statusEl.textContent = okPlatforms.length
+                  ? 'Published on ' + okPlatforms.map(function(k) { return platformNames[k] || k; }).join(', ')
+                  : 'Published to marketplace(s)';
+              }
+            } else {
+              if (statusIcon) statusIcon.classList.remove('hidden');
+              statusEl.textContent = 'Draft (not yet published)';
+            }
+            var metaEl = document.getElementById('detail-status-meta');
+            if (metaEl) {
+              var pCount = Array.isArray(u.photos) ? u.photos.filter(function(x) { return x; }).length : 0;
+              if (pCount > 0) {
+                metaEl.textContent = pCount === 1 ? '1 photo' : pCount + ' photos';
+                metaEl.classList.remove('hidden');
+              } else {
+                metaEl.classList.add('hidden');
+              }
+            }
+            var desc = (u.description || '').trim();
+            if (desc) {
+              document.getElementById('detail-description').textContent = desc;
+              document.getElementById('detail-description-wrap').classList.remove('hidden');
+            } else {
+              document.getElementById('detail-description-wrap').classList.add('hidden');
+            }
+            var photo = Array.isArray(u.photos) && u.photos[0] ? u.photos[0] : null;
+            var photoSrc = null;
+            if (photo) {
+              if (typeof photo === 'string') photoSrc = photo;
+              else if (photo.url) photoSrc = photo.url;
+              else if (photo.imageDataUrl) photoSrc = photo.imageDataUrl;
+            }
+            var photoEl = document.getElementById('detail-photo');
+            if (photoSrc) {
+              photoEl.innerHTML = '<img src="' + photoSrc + '" alt="" class="w-full h-full object-cover" />';
+            }
+            var platformsEl = document.getElementById('detail-platforms');
+            var platformsWrap = document.getElementById('detail-platforms-wrap');
+            var keys = Object.keys(pr).filter(function(k) { return pr[k] && pr[k].success; });
+            if (keys.length === 0) {
+              platformsWrap.classList.add('hidden');
+            } else {
+              platformsWrap.classList.remove('hidden');
+              platformsEl.innerHTML = '';
+              keys.forEach(function(k) {
+                var r = pr[k];
+                var name = platformNames[k] || k;
+                var row = document.createElement('div');
+                row.className = 'flex items-center justify-between py-2 border-b border-[#f4f4f5] last:border-0';
+                if (r.url) {
+                  row.innerHTML = '<span class="text-sm text-[#525252]">' + name + '</span><a href="' + r.url + '" target="_blank" rel="noopener" class="text-sm font-semibold text-[#0a0a0a] no-underline hover:underline flex items-center gap-1.5">View draft <i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>';
+                } else {
+                  row.innerHTML = '<span class="text-sm text-[#525252]">' + name + '</span><span class="text-xs text-[#71717a]">Published</span>';
+                }
+                platformsEl.appendChild(row);
+              });
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          })
+          .catch(function() {
+            document.getElementById('detail-loading').classList.add('hidden');
+            document.getElementById('detail-content').classList.add('hidden');
+            document.getElementById('detail-error').classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          });
+      }).catch(function() {
+        document.getElementById('detail-loading').classList.add('hidden');
+        document.getElementById('detail-content').classList.add('hidden');
+        document.getElementById('detail-error').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      });
+    })();
+  </script>
+</body>
+</html>

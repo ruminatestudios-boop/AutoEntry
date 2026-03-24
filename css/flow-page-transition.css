@@ -1,0 +1,99 @@
+/**
+ * Static shells: slide in top → bottom. Targets #synclyst-flow-shell or [data-synclyst-page-transition-root].
+ */
+html {
+  background-color: #f5f5f5;
+}
+
+/* Enter from top, settle downward */
+@keyframes synclyst-enter-forward {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -24px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Back navigation: slide up from below */
+@keyframes synclyst-enter-back {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+#synclyst-flow-shell.synclyst-pt-enter-fwd {
+  animation: synclyst-enter-forward 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+#synclyst-flow-shell.synclyst-pt-enter-back {
+  animation: synclyst-enter-back 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Fallback if id missing but .synclyst-pt-root was set by older script */
+.synclyst-pt-root.synclyst-pt-enter-fwd {
+  animation: synclyst-enter-forward 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.synclyst-pt-root.synclyst-pt-enter-back {
+  animation: synclyst-enter-back 0.48s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@supports (view-transition-name: none) {
+  ::view-transition-old(root) {
+    animation: synclyst-vt-out 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: synclyst-vt-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes synclyst-vt-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0.96;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes synclyst-vt-in {
+  from {
+    opacity: 0.88;
+    transform: translateY(-22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #synclyst-flow-shell.synclyst-pt-enter-fwd,
+  #synclyst-flow-shell.synclyst-pt-enter-back,
+  [data-synclyst-page-transition-root].synclyst-pt-enter-fwd,
+  [data-synclyst-page-transition-root].synclyst-pt-enter-back,
+  .synclyst-pt-root.synclyst-pt-enter-fwd,
+  .synclyst-pt-root.synclyst-pt-enter-back {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  @supports (view-transition-name: none) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 0.01ms !important;
+    }
+  }
+}

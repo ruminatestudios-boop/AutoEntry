@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <meta name="auralink-api-url" content="http://localhost:8000" />
+  <meta name="auralink-publishing-url" content="http://localhost:8001" />
+  <title>Connect eBay | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col px-5 py-8">
+    <header class="shrink-0 pb-4" id="connect-header" style="display: none;">
+      <a href="#" id="back-link" class="flex items-center gap-2 text-zinc-600 hover:text-zinc-900 no-underline text-sm font-medium">
+        <span class="text-lg">←</span>
+        <span>Back</span>
+      </a>
+    </header>
+    <main class="flex-1 flex flex-col" id="connect-main">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center overflow-hidden shrink-0">
+          <img src="/assets/ebay-logo.png" alt="eBay" class="w-7 h-7 object-contain" />
+        </span>
+        <div>
+          <h1 class="text-xl font-semibold tracking-tight text-zinc-900">Connect eBay</h1>
+          <p class="text-sm text-zinc-500 mt-0.5">Authorise SyncLyst to create and manage listings in your eBay account</p>
+        </div>
+      </div>
+
+      <div class="rounded-xl bg-zinc-100 border border-zinc-200 p-4 mb-8">
+        <p class="text-sm text-zinc-700">You’ll be sent to eBay to sign in and approve access. SyncLyst can then create draft listings in your account. You review and publish them on eBay when you’re ready. Use your <strong>eBay seller account</strong> (developer login is separate).</p>
+      </div>
+
+      <button type="button" id="connect-btn" class="block w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[15px] border-0 text-center mb-3">
+        Connect eBay
+      </button>
+      <a href="/stores-list.html" id="cancel-btn" class="block w-full py-3 rounded-xl border border-zinc-200 text-zinc-600 font-medium text-sm text-center no-underline">
+        Cancel
+      </a>
+      <p id="connect-error" class="text-sm text-red-600 mt-3 hidden"></p>
+    </main>
+  </div>
+  <script>
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowLeft') return;
+      if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
+      e.preventDefault();
+      history.back();
+    });
+  </script>
+  <script>
+    (function() {
+      function getPublishingBase() {
+        var meta = document.querySelector('meta[name="auralink-publishing-url"]');
+        var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
+        var host = window.location.hostname;
+        if (host && host !== 'localhost' && host !== '127.0.0.1') {
+          var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
+          if (prodMeta && prodMeta.getAttribute('content') && prodMeta.getAttribute('content').trim()) {
+            url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+          } else if (host === 'synclyst.app' || host === 'www.synclyst.app') {
+            url = 'https://synclyst-publishing-299567386855.us-central1.run.app';
+          } else {
+            url = window.location.protocol + '//' + host + ':8001';
+          }
+        }
+        return url;
+      }
+      var params = new URLSearchParams(window.location.search);
+      var returnTo = params.get('return') || 'flow-3-ebay';
+      var cancelBtn = document.getElementById('cancel-btn');
+      var backLink = document.getElementById('back-link');
+      var header = document.getElementById('connect-header');
+      var backHref = '/stores-list.html';
+      if (returnTo === 'flow-3-ebay') {
+        backHref = '/flow-3-ebay.html';
+        if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Back to listing</span>';
+        if (header) header.style.display = 'block';
+      } else if (returnTo === 'flow-marketplaces') {
+        backHref = '/flow-marketplaces.html';
+        if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Choose marketplaces</span>';
+        if (header) header.style.display = 'block';
+      } else if (returnTo === 'flow-connect') {
+        backHref = '/flow-connect.html';
+        if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Connect your stores</span>';
+        if (header) header.style.display = 'block';
+      } else if (returnTo === 'stores-list') {
+        backHref = '/stores-list.html';
+        if (backLink) backLink.innerHTML = '<span class="text-lg">←</span><span> Back to stores</span>';
+        if (header) header.style.display = 'block';
+      }
+      if (cancelBtn) cancelBtn.href = backHref;
+      if (backLink) backLink.href = backHref;
+
+      function getReturnToPath() {
+        if (returnTo === 'flow-3-ebay') return 'flow-3-ebay.html';
+        if (returnTo === 'flow-marketplaces') return 'flow-marketplaces.html';
+        if (returnTo === 'flow-connect') return 'flow-connect-done.html';
+        if (returnTo === 'stores-list') return 'stores-list.html';
+        return 'flow-3-ebay.html';
+      }
+
+      var connectBtn = document.getElementById('connect-btn');
+      var errorEl = document.getElementById('connect-error');
+
+      // Show error from redirect (e.g. ?error=ebay&message=...)
+      var redirectError = params.get('error');
+      var redirectMessage = params.get('message');
+      if (redirectError && (redirectError === 'ebay' || redirectMessage)) {
+        if (errorEl) {
+          errorEl.textContent = redirectMessage || 'eBay connection failed. Try again.';
+          errorEl.classList.remove('hidden');
+        }
+      }
+
+      if (connectBtn) {
+        connectBtn.addEventListener('click', function() {
+          if (errorEl) errorEl.classList.add('hidden');
+          var pubBase = getPublishingBase();
+          var returnToPath = getReturnToPath();
+          connectBtn.disabled = true;
+          connectBtn.textContent = 'Connecting…';
+          var connectAbort = new AbortController();
+          var timeoutId = setTimeout(function() { connectAbort.abort(); }, 15000);
+          fetch(pubBase + '/auth/dev-token', { signal: connectAbort.signal })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+              clearTimeout(timeoutId);
+              if (data && data.user_id) {
+                var authUrl = pubBase + '/auth/ebay?user_id=' + encodeURIComponent(data.user_id) + '&return_to=' + encodeURIComponent(returnToPath);
+                if (data.token) try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {}
+                window.location.href = authUrl;
+              } else {
+                if (errorEl) { errorEl.textContent = 'Could not get session. Try again.'; errorEl.classList.remove('hidden'); }
+              }
+            })
+            .catch(function(err) {
+              clearTimeout(timeoutId);
+              var msg = err.name === 'AbortError'
+                ? 'Connection timed out. The publishing service may be unreachable.'
+                : 'Could not reach the publishing service. Try again.';
+              if (errorEl) { errorEl.textContent = msg; errorEl.classList.remove('hidden'); }
+            })
+            .finally(function() { connectBtn.disabled = false; connectBtn.textContent = 'Connect eBay'; });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

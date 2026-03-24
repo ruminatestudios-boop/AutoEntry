@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your AI Listing Machine | SyncLyst</title>
+  <meta name="description" content="List products on Shopify in seconds. Scan with your phone, get AI-generated titles and descriptions, then push live to your store. More apps &amp; integrations coming soon." />
+  <!-- Open Graph -->
+  <meta property="og:title" content="Your AI Listing Machine | SyncLyst" />
+  <meta property="og:description" content="List products on Shopify in seconds. Scan with your phone, get AI-generated titles and descriptions, then push live to your store. More apps &amp; integrations coming soon." />
+  <meta property="og:image" content="https://auralink.ai/og-image.png" />
+  <meta property="og:url" content="https://auralink.ai/" />
+  <meta property="og:type" content="website" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Your AI Listing Machine | SyncLyst" />
+  <meta name="twitter:description" content="List products on Shopify in seconds. Scan with your phone, get AI-generated titles and descriptions, then push live to your store. More apps &amp; integrations coming soon." />
+  <meta name="twitter:image" content="https://auralink.ai/og-image.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="view-transition" content="same-origin" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            accent: { blue: '#18181b', emerald: '#10b981' }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          letterSpacing: { tight: '-0.02em' },
+          animation: {
+            'marquee': 'marquee 40s linear infinite',
+            'marquee-infinite': 'marquee-infinite 30s linear infinite'
+          },
+          keyframes: {
+            marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
+            'marquee-infinite': { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-33.333%)' } },
+            fadeUp: { '0%': { opacity: '0', transform: 'translateY(16px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
+          },
+        },
+      },
+    };
+  </script>
+  <meta name="auralink-api-url" content="http://localhost:8000" />
+  <style type="text/tailwindcss">
+    html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+    @layer utilities {
+      .glass-nav { @apply bg-white border-b border-zinc-200; }
+      .glass-card { @apply bg-white rounded-2xl border border-zinc-200; }
+      .glass-panel { @apply bg-white rounded-2xl border border-zinc-200; }
+      .glass-cta { @apply bg-accent-blue border border-accent-blue text-white; }
+      .glass-cta-secondary { @apply bg-white border border-zinc-300 text-zinc-800 hover:bg-zinc-50; }
+      .hero-line { opacity: 0; transform: translateY(20px); }
+      .hero-line.animate { animation: fadeUp 0.6s ease-out forwards; }
+      .hero-line.delay-1 { animation-delay: 0.1s; }
+      .hero-line.delay-2 { animation-delay: 0.2s; }
+      .hero-line.delay-3 { animation-delay: 0.35s; }
+      .hero-line.delay-4 { animation-delay: 0.5s; }
+      .card-hover { @apply transition-all duration-300 ease-out; }
+      .card-hover:hover { transform: translateY(-2px); }
+      .connector-card:hover { }
+      .app-logo { object-fit: contain; }
+      .section-label { @apply text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-4; }
+      .pricing-card { @apply bg-white rounded-2xl border border-zinc-200 overflow-hidden; }
+      .pricing-card-sep { @apply border-b border-zinc-100; }
+      .pricing-tag { @apply text-xs font-semibold text-zinc-700 bg-zinc-200/80 px-2.5 py-1 rounded-md; }
+      .scan-result-card { @apply bg-white rounded-2xl border border-zinc-200 overflow-hidden; }
+      .scan-result-card-sep { @apply border-b border-zinc-200; }
+      .scan-result-row { @apply flex justify-between items-center py-3 text-sm; }
+      .scan-result-label { @apply font-medium text-zinc-900; }
+      .scan-result-value { @apply text-sm text-zinc-600 mt-1; }
+      .scan-result-value--error { @apply text-red-600 bg-red-50 border border-red-200 rounded-xl p-3 mt-1; }
+      .scan-result-tag { @apply text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded border border-zinc-200 bg-zinc-100 text-zinc-700; }
+      .scan-extract-alert { @apply text-sm rounded-xl p-4 border bg-red-50 border-red-200 text-red-600; }
+      body { background: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 40%, #e2e8f0 100%); min-height: 100vh; }
+      .nav-mobile-menu { max-height: 0; overflow: hidden; transition: max-height 0.25s ease-out; }
+      .nav-mobile-menu.open { max-height: 20rem; }
+      @media (min-width: 768px) {
+        .nav-mobile-menu { max-height: none; overflow: visible; }
+      }
+    }
+    .marquee-logo { height: 28px; width: auto; max-width: 120px; object-fit: contain; vertical-align: middle; flex-shrink: 0; }
+    .marquee-wrapper {
+      animation: marquee-scroll 35s linear infinite;
+      will-change: transform;
+      display: flex;
+      flex-wrap: nowrap;
+    }
+    @keyframes marquee-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-33.333%); }
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .scan-icon-wrap { overflow: hidden; }
+    .scan-line {
+      position: absolute; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+      border-radius: 2px;
+      animation: scanSweep 1.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes scanSweep { 0%, 100% { top: 0; opacity: 0.6; } 50% { top: 100%; opacity: 1; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-loading-spin { animation: spin 0.7s linear infinite; }
+    .vibe-carousel-wrapper { overflow: hidden; }
+    .vibe-carousel-track { display: flex; gap: 1rem; transition: transform 0.4s ease-out; }
+    .vibe-card {
+      flex: 0 0 280px; max-width: 280px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    @media (min-width: 640px) { .vibe-card { flex: 0 0 320px; max-width: 320px; } }
+    .vibe-card-visual {
+      aspect-ratio: 9 / 16;
+      overflow: hidden;
+      position: relative;
+      background-color: #e4e4e7;
+    }
+    .vibe-card-pill { position: absolute; top: 12px; left: 12px; z-index: 10; }
+    .vibe-card-controls {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      padding: 24px 12px 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .vibe-card-controls .progress { flex: 1; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; }
+    .hero-grid-bg {
+      position: relative;
+      background-color: #0a0a0a;
+      overflow: hidden;
+      outline: 2px solid #d4d4d8;
+      outline-offset: 0;
+    }
+    .hero-grid-bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .hero-grid-labels {
+      position: absolute; inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 10;
+    }
+    .hero-grid-labels span {
+      position: absolute;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      color: #71717a;
+      opacity: 0.08;
+    }
+    /* Scan view: full-screen camera on phone */
+    @media (max-width: 640px) {
+      #scan-view { background: #0a0a0a; }
+      #scan-view #scan-step-result { background: #fafafa; }
+      #scan-view .scan-view-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 20;
+        background: rgba(0,0,0,0.35);
+        border-bottom-color: transparent;
+        padding-top: max(0.75rem, env(safe-area-inset-top));
+      }
+      #scan-view .scan-view-header span { color: #fff; }
+      #scan-view .scan-view-header a { color: rgba(255,255,255,0.95); }
+      #scan-view #scan-step-camera {
+        padding: 0;
+        justify-content: stretch;
+      }
+      #scan-view #scan-step-camera .section-label,
+      #scan-view #scan-step-camera > p.text-zinc-500,
+      #scan-view #scan-step-camera > p.text-zinc-400,
+      #scan-view #scan-step-camera #scan-upload-btn { display: none; }
+      /* Always show Upload photo on mobile (camera often blocked on HTTP); override .hidden */
+      #scan-view #scan-step-camera .scan-upload-link {
+        display: block !important;
+        position: absolute;
+        bottom: 5.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #fff;
+        text-align: center;
+        z-index: 15;
+        text-decoration: underline;
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
+      }
+      #scan-view #scan-step-camera .scan-upload-link.hidden { display: block !important; }
+      #scan-view #scan-step-camera.camera-unavailable #scan-upload-btn { display: block !important; }
+      #scan-view #scan-step-camera .scan-camera-viewport {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        aspect-ratio: auto;
+        border-radius: 0;
+        border: none;
+      }
+      #scan-view #scan-step-camera .scan-camera-viewport .flex.items-end {
+        padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+      }
+      #scan-view #scan-step-camera #scan-camera-error {
+        position: absolute;
+        bottom: 5rem;
+        left: 1rem;
+        right: 1rem;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body class="text-zinc-900 font-sans antialiased overflow-x-hidden">
+  <!-- Scan view: product capture → SyncLyst vision extract -->
+  <div id="scan-view" class="fixed inset-0 z-[80] hidden flex-col bg-zinc-50 text-zinc-900">
+    <div class="scan-view-header flex items-center justify-between px-4 py-3 bg-white border-b border-zinc-200">
+      <span class="text-xl font-bold text-zinc-900 tracking-tight">SyncLyst — Product Scanner</span>
+      <a href="/landing.html" id="scan-view-back" class="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Exit</a>
+    </div>
+    <div id="scan-step-camera" class="flex-1 flex flex-col items-center justify-center p-4 overflow-auto relative">
+      <p class="section-label text-center mb-4">[ scan product ]</p>
+      <div class="scan-camera-viewport w-full max-w-md aspect-[3/4] glass-card overflow-hidden relative">
+        <video id="scan-video" class="w-full h-full object-cover" playsinline muted autoplay></video>
+        <div class="absolute inset-0 flex items-end justify-center p-4">
+          <button type="button" id="scan-capture-btn" class="w-16 h-16 rounded-full bg-white border-2 border-zinc-300 hover:border-zinc-900 hover:bg-zinc-50 transition-all border border-zinc-200">Capture</button>
+        </div>
+      </div>
+      <p class="text-zinc-500 text-sm mt-4">Point at a product—we extract attributes, copy, and tags.</p>
+      <div id="scan-camera-error" class="text-red-600 text-sm mt-2 hidden max-w-md text-center rounded-xl bg-red-50 border border-red-200 p-3"></div>
+      <input type="file" id="scan-upload-input" accept="image/*" class="hidden" />
+      <button type="button" id="scan-upload-btn" class="mt-4 px-5 py-3 rounded-xl glass-cta-secondary text-sm font-semibold">
+        Upload photo
+      </button>
+      <button type="button" id="scan-upload-link-mobile" class="scan-upload-link hidden mt-4 text-sm font-medium" aria-label="Upload photo">Upload photo</button>
+      <p class="text-zinc-400 text-xs mt-2 max-w-md text-center">Use when camera is unavailable (e.g. on HTTP). Pick an image from your gallery.</p>
+    </div>
+    <div id="scan-step-reading" class="flex-1 hidden flex flex-col items-center justify-center p-6 bg-zinc-50">
+      <div class="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 flex flex-col items-center justify-center text-center">
+        <span class="inline-block w-10 h-10 border-2 border-zinc-300 border-t-zinc-900 rounded-full btn-loading-spin mb-5" aria-hidden="true"></span>
+        <h2 class="font-sans font-normal text-xl text-zinc-900 mb-2">Reading your product</h2>
+        <p class="text-sm text-zinc-500">AI is working its magic…</p>
+      </div>
+    </div>
+    <div id="scan-step-result" class="flex-1 hidden flex-col p-4 overflow-auto">
+      <div class="max-w-md w-full mx-auto py-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-serif text-xl font-bold text-zinc-900">Scan result</h2>
+          <span class="scan-result-tag">Draft</span>
+        </div>
+        <div class="bg-white rounded-2xl border border-zinc-200 overflow-hidden">
+          <div class="p-5 border-b border-zinc-100">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">What we extracted</p>
+            <img id="scan-captured-img" alt="Captured product" class="w-full rounded-xl border border-zinc-200 mb-4 bg-zinc-50" />
+            <p id="scan-extract-error" class="scan-extract-alert hidden mt-2 mb-4"></p>
+            <div id="scan-result-upload-row" class="hidden mt-3 mb-2">
+              <input type="file" id="scan-result-upload-input" accept="image/*" class="hidden" />
+              <button type="button" id="scan-result-upload-btn" class="w-full py-3 px-4 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 text-zinc-700 font-semibold text-sm hover:bg-zinc-100 transition-colors">
+                Upload different photo
+              </button>
+            </div>
+            <div class="space-y-4">
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">SEO Title</p>
+                <p id="scan-seo-title" class="scan-result-value text-zinc-700 font-medium min-h-[1.25rem] text-sm"></p>
+              </div>
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Attributes</p>
+                <p id="scan-attributes" class="scan-result-value min-h-[1.25rem] text-sm text-zinc-600"></p>
+              </div>
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Bullet points</p>
+                <ul id="scan-bullets" class="text-sm text-zinc-600 mt-1 list-disc list-inside space-y-1"></ul>
+              </div>
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-0.5">Tags</p>
+                <p id="scan-tags" class="scan-result-value min-h-[1.25rem] text-sm text-zinc-600"></p>
+              </div>
+            </div>
+          </div>
+          <div class="p-5 bg-zinc-50/50">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">Next steps</p>
+            <div class="flex flex-col gap-3">
+              <button type="button" id="scan-done-btn" class="w-full py-3.5 px-4 rounded-xl bg-zinc-900 text-white font-semibold text-[15px] hover:bg-zinc-800 transition-colors">
+                Scan another / Upload another
+              </button>
+              <button type="button" id="scan-open-camera-btn" class="w-full py-3 px-4 rounded-xl border border-zinc-300 bg-white text-zinc-700 font-semibold text-sm hover:bg-zinc-50 transition-colors inline-flex items-center justify-center gap-2">
+                <i data-lucide="camera" class="w-4 h-4 shrink-0"></i>
+                Take photo with camera
+              </button>
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" id="scan-extract-again-btn" class="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white text-zinc-700 font-semibold text-sm px-4 py-2.5 hover:bg-zinc-50 transition-colors">
+                  Extract again
+                </button>
+                <button type="button" id="scan-save-draft-btn" class="inline-flex items-center gap-2 bg-zinc-900 text-white font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-zinc-800 transition-colors">
+                  Save as draft
+                </button>
+                <a href="/dashboard/home" class="inline-flex items-center gap-2 bg-zinc-900 text-white font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-zinc-800 transition-colors no-underline">
+                  Dashboard
+                  <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
+                </a>
+              </div>
+              <button type="button" id="scan-continue-sample-btn" class="hidden inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white text-zinc-700 font-semibold text-sm px-4 py-2.5 hover:bg-zinc-50 transition-colors">
+                Continue with sample listing
+              </button>
+            </div>
+          </div>
+        </div>
+        <p id="scan-toast" class="text-sm text-emerald-600 hidden text-center mt-3"></p>
+        <p class="text-center text-zinc-500 text-xs mt-4"><a href="/landing.html" class="font-medium text-zinc-900 hover:underline">Exit to main page</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conversion popup: after scan demo, claim 3 free credits -->
+  <div id="conversion-popup" class="fixed inset-0 z-[90] hidden flex items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="conversion-popup-title">
+    <div class="glass-panel w-full max-w-md p-6 sm:p-8 shadow-xl rounded-2xl" onclick="event.stopPropagation()">
+      <h2 id="conversion-popup-title" class="text-xl font-bold text-zinc-900 mb-2">That looks great!</h2>
+      <p class="text-zinc-600 text-sm leading-relaxed mb-6">We've saved this draft for you. Claim your 3 free credits to push this listing to Shopify or TikTok.</p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a href="/dashboard" id="conversion-claim-btn" class="inline-flex items-center justify-center gap-2 glass-cta font-semibold px-5 py-3 rounded-xl text-white">
+          Claim 3 free credits
+          <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
+        </a>
+        <button type="button" id="conversion-popup-close" class="inline-flex items-center justify-center px-5 py-3 rounded-xl border border-zinc-300 text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors">
+          Maybe later
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watch it work: big video modal with dark blurred backdrop -->
+  <div id="watch-video-modal" class="fixed inset-0 z-[85] hidden flex items-center justify-center p-4 bg-black/75 backdrop-blur-md" aria-modal="true" role="dialog" aria-label="Watch demo video">
+    <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" onclick="event.stopPropagation()">
+      <button type="button" id="watch-video-modal-close" class="absolute -top-12 right-0 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors z-10" aria-label="Close">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <div class="relative w-full">
+        <p id="watch-video-loading-msg" class="absolute inset-0 flex items-center justify-center text-white/90 text-sm z-10 pointer-events-none">Loading video…</p>
+      <video id="watch-video-modal-video" class="w-full max-h-[85vh] rounded-xl shadow-2xl bg-black" muted loop playsinline controls preload="auto">
+        <source src="/demo-extraction.mp4" type="video/mp4" />
+      </video>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero video: click to play with sound, dark overlay -->
+  <div id="hero-video-modal" class="fixed inset-0 z-[86] hidden flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm" aria-modal="true" role="dialog" aria-label="Watch hero video with sound">
+    <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" onclick="event.stopPropagation()">
+      <button type="button" id="hero-video-modal-close" class="absolute -top-12 right-0 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors z-10" aria-label="Close">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <video id="hero-video-modal-video" class="w-full max-h-[85vh] rounded-xl shadow-2xl bg-black" loop playsinline controls preload="auto">
+        <source src="https://cdn.shopify.com/videos/c/o/v/48ec1e59d63740a1bd3b81486969da95.mp4" type="video/mp4" />
+      </video>
+    </div>
+  </div>
+
+  <!-- Navigation (sticky: always visible on scroll) -->
+  <header id="main-header" class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-zinc-200 overflow-x-hidden shadow-sm">
+    <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:grid md:grid-cols-3 md:items-center md:h-14 md:min-h-[4rem] lg:h-16 gap-2 md:gap-4 w-full">
+      <div class="relative flex items-center justify-between h-14 md:h-auto shrink-0 w-full md:w-auto md:col-start-2 md:justify-center md:order-2">
+        <span class="w-10 h-10 shrink-0 md:hidden" aria-hidden="true"></span>
+        <a href="/landing.html" class="absolute left-1/2 -translate-x-1/2 md:relative md:left-auto md:translate-x-0 text-xl font-bold tracking-tight text-zinc-900">SyncLyst</a>
+        <button type="button" id="nav-mobile-toggle" aria-label="Open menu" class="md:hidden p-2 rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 shrink-0">
+          <svg id="nav-icon-menu" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <svg id="nav-icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="nav-mobile-menu" class="nav-mobile-menu md:!max-h-none md:overflow-visible md:contents">
+        <div class="flex flex-col md:flex-row md:col-start-1 md:row-start-1 md:justify-start md:items-center gap-1 pb-4 md:pb-0 md:gap-6 lg:gap-8 border-b border-zinc-200 md:border-b-0 order-1">
+          <a href="#services" class="text-sm font-medium text-zinc-600 hover:text-zinc-900 py-2 md:py-0">How it works</a>
+          <a href="#before-after" class="text-sm font-medium text-zinc-600 hover:text-zinc-900 py-2 md:py-0">Before/After</a>
+          <a href="#roadmap" class="text-sm font-medium text-zinc-600 hover:text-zinc-900 py-2 md:py-0">Roadmap</a>
+          <a href="#pricing" class="text-sm font-medium text-zinc-600 hover:text-zinc-900 py-2 md:py-0">Pricing</a>
+        </div>
+        <div class="flex flex-col md:flex-row gap-2 pt-4 md:pt-0 md:col-start-3 md:row-start-1 md:items-center md:justify-end shrink-0 md:gap-3 md:pl-4 order-3">
+            <a href="/dashboard" class="text-sm font-semibold px-4 py-2.5 rounded-lg glass-cta text-white hover:opacity-95 transition-all inline-flex items-center justify-center gap-1.5 w-full md:w-auto order-first md:order-none">
+              JOIN NOW
+            </a>
+            <button type="button" id="watch-it-work-nav-btn" class="text-sm font-semibold px-4 py-2.5 rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-50 transition-all inline-flex items-center justify-center gap-1.5 w-full md:w-auto">
+              JOIN NOW
+            </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-landing" data-synclyst-page-transition-root>
+    <!-- Hero -->
+    <section id="home" class="relative pt-28 pb-20 px-4 hero-grid-bg min-h-[85vh] flex flex-col">
+      <video id="hero-video" autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover z-0" aria-hidden="true">
+        <source src="https://cdn.shopify.com/videos/c/o/v/48ec1e59d63740a1bd3b81486969da95.mp4" type="video/mp4" />
+      </video>
+      <div id="hero-video-click-layer" class="absolute inset-0 z-[5] cursor-pointer" aria-label="Play video with sound" title="Click to play with sound"></div>
+      <div class="hero-grid-labels" aria-hidden="true">
+        <span style="top: 8%; left: 5%;">SHOPIFY</span>
+        <span style="top: 15%; right: 12%;">AMAZON</span>
+        <span style="top: 25%; left: 18%;">TIKTOK</span>
+        <span style="top: 35%; right: 8%;">DEPOP</span>
+        <span style="top: 45%; left: 8%;">VINTED</span>
+        <span style="top: 55%; right: 18%;">ETSY</span>
+        <span style="top: 65%; left: 25%;">EBAY</span>
+        <span style="top: 20%; right: 28%;">MERCARI</span>
+        <span style="top: 70%; right: 5%;">POSHMARK</span>
+        <span style="top: 40%; left: 35%;">WOOCOMMERCE</span>
+      </div>
+      <div class="max-w-4xl mx-auto text-center relative z-10">
+        <p class="section-label hero-line">Built for Shopify stores. More apps &amp; integrations coming soon.</p>
+        <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-zinc-900 leading-[1.1] mt-2">
+          <span class="hero-line block">Your AI Listing Machine</span>
+        </h1>
+        <p class="hero-line delay-2 mt-6 text-lg sm:text-xl text-zinc-700 max-w-2xl mx-auto leading-relaxed font-medium">
+          List products on Shopify in seconds—not hours. Scan a photo, get SEO-ready titles and descriptions, then push live to your store. Etsy, eBay, and more integrations coming soon.
+        </p>
+        <div class="hero-line delay-3 mt-10 flex flex-wrap items-center justify-center gap-4">
+          <button type="button" id="scan-first-item-hero-btn" class="inline-flex items-center gap-2 glass-cta font-semibold px-6 py-3.5 rounded-xl transition-all">
+            <span class="scan-icon-wrap relative inline-flex items-center justify-center w-5 h-5 shrink-0">
+              <i data-lucide="camera" class="w-5 h-5 relative z-[1] text-white"></i>
+              <span class="scan-line"></span>
+            </span>
+            Scan Your First Item
+          </button>
+          <button type="button" id="watch-it-work-hero-btn" class="inline-flex items-center gap-2 border border-zinc-300 text-zinc-700 font-semibold px-6 py-3.5 rounded-xl hover:bg-zinc-50 transition-all">
+            <i data-lucide="play" class="w-5 h-5 shrink-0"></i>
+            JOIN NOW
+          </button>
+        </div>
+        <p class="hero-line delay-4 mt-5 text-center max-w-xl mx-auto">
+          <span class="inline-flex items-center gap-2.5 rounded-xl bg-amber-50/90 border border-amber-200/70 px-4 py-2.5 shadow-sm ring-1 ring-amber-100/50">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100/80">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-600"></i>
+            </span>
+            <span class="text-sm leading-snug">
+              <span class="font-semibold text-zinc-900">Smart Suggest:</span>
+              <span class="text-zinc-700"> One photo → AI writes title, description &amp; tags. Review, tap Approve, and publish straight to your Shopify store. More apps &amp; integrations coming soon.</span>
+            </span>
+          </span>
+        </p>
+      </div>
+    </section>
+
+    <!-- Marquee: marketplaces (infinite continuous loop, no white space) -->
+    <section class="py-8 overflow-hidden border-y border-zinc-200 bg-white/80" aria-hidden="true">
+      <div class="marquee-wrapper flex w-max">
+        <div class="marquee-track flex items-center gap-12 shrink-0 pr-12">
+          <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="Shopify" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=amazon.com&sz=128" alt="Amazon" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=tiktok.com&sz=128" alt="TikTok Shop" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=depop.com&sz=128" alt="Depop" class="marquee-logo" />
+          <img src="/assets/ebay-logo.png" alt="eBay" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=google.com&sz=128" alt="Google" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=meta.com&sz=128" alt="Meta" class="marquee-logo" />
+        </div>
+        <div class="marquee-track flex items-center gap-12 shrink-0 pr-12" aria-hidden="true">
+          <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=amazon.com&sz=128" alt="" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=tiktok.com&sz=128" alt="" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=depop.com&sz=128" alt="" class="marquee-logo" />
+          <img src="/assets/ebay-logo.png" alt="" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=google.com&sz=128" alt="" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=meta.com&sz=128" alt="" class="marquee-logo" />
+        </div>
+        <div class="marquee-track flex items-center gap-12 shrink-0 pr-12" aria-hidden="true">
+          <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=amazon.com&sz=128" alt="" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=tiktok.com&sz=128" alt="" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=depop.com&sz=128" alt="" class="marquee-logo" />
+          <img src="/assets/ebay-logo.png" alt="" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=google.com&sz=128" alt="" class="marquee-logo" />
+          <img src="https://www.google.com/s2/favicons?domain=meta.com&sz=128" alt="" class="marquee-logo" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Before/After: clear side-by-side comparison -->
+    <section id="before-after" class="py-16 sm:py-24 px-4 bg-[#f8f8f8]">
+      <div class="max-w-4xl mx-auto">
+        <p class="section-label text-center">[ the difference ]</p>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 text-center mb-3">From manual listing to Shopify in seconds</h2>
+        <p class="text-zinc-600 text-center text-sm sm:text-base mb-10 max-w-xl mx-auto">Stop typing product details by hand. Snap a photo, let AI do the work, and push to your Shopify store. More channels coming soon.</p>
+        <!-- Big stat callout -->
+        <div class="flex items-center justify-center gap-3 sm:gap-6 mb-8">
+          <div class="text-center">
+            <p class="text-2xl sm:text-3xl font-bold text-zinc-400 line-through">10–20 min</p>
+            <p class="text-xs font-medium text-zinc-500 mt-0.5">per product</p>
+          </div>
+          <i data-lucide="arrow-right" class="w-6 h-6 text-zinc-400 shrink-0"></i>
+          <div class="text-center">
+            <p class="text-2xl sm:text-3xl font-bold text-zinc-900">&lt;1 minute</p>
+            <p class="text-xs font-medium text-zinc-500 mt-0.5">per product</p>
+          </div>
+        </div>
+        <div class="glass-card overflow-hidden">
+          <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-zinc-200">
+            <div class="p-6 md:p-8">
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center shrink-0">
+                  <i data-lucide="type" class="w-5 h-5 text-zinc-600"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-zinc-900">Manual</h3>
+                  <p class="text-xs text-zinc-500">The old way</p>
+                </div>
+              </div>
+              <ul class="space-y-3">
+                <li class="flex gap-3 items-start">
+                  <i data-lucide="x" class="w-4 h-4 text-zinc-500 shrink-0 mt-0.5"></i>
+                  <span class="text-sm text-zinc-600">Type title, description, and bullets by hand</span>
+                </li>
+                <li class="flex gap-3 items-start">
+                  <i data-lucide="x" class="w-4 h-4 text-zinc-500 shrink-0 mt-0.5"></i>
+                  <span class="text-sm text-zinc-600">Re-enter the same product info across channels</span>
+                </li>
+                <li class="flex gap-3 items-start">
+                  <i data-lucide="x" class="w-4 h-4 text-zinc-500 shrink-0 mt-0.5"></i>
+                  <span class="text-sm text-zinc-600">10–20 minutes lost per product</span>
+                </li>
+              </ul>
+            </div>
+            <div class="p-6 md:p-8 bg-zinc-50/50">
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center shrink-0">
+                  <i data-lucide="camera" class="w-5 h-5 text-zinc-600"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-zinc-900">SyncLyst</h3>
+                  <p class="text-xs text-zinc-500 font-medium">The new way</p>
+                </div>
+              </div>
+              <ul class="space-y-3">
+                <li class="flex gap-3 items-start">
+                  <i data-lucide="check" class="w-4 h-4 text-zinc-600 shrink-0 mt-0.5"></i>
+                  <span class="text-sm text-zinc-800">Snap one photo—we extract everything</span>
+                </li>
+                <li class="flex gap-3 items-start">
+                  <i data-lucide="check" class="w-4 h-4 text-zinc-600 shrink-0 mt-0.5"></i>
+                  <span class="text-sm text-zinc-800">OCR + AI read material, brand, specs from labels</span>
+                </li>
+                <li class="flex gap-3 items-start">
+                  <i data-lucide="check" class="w-4 h-4 text-zinc-600 shrink-0 mt-0.5"></i>
+                  <span class="text-sm text-zinc-800">Push to your Shopify store in one tap. More apps &amp; integrations coming soon.</span>
+                </li>
+                <li class="flex gap-3 items-start">
+                  <i data-lucide="check" class="w-4 h-4 text-zinc-600 shrink-0 mt-0.5"></i>
+                  <span class="text-sm font-semibold text-zinc-900">Ready in under 1 minute</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="services" class="py-24 px-4 bg-white">
+      <div class="max-w-6xl mx-auto">
+        <p class="section-label text-center">[ features ]</p>
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 text-center mb-6">
+          Built for Shopify—three ways it helps
+        </h2>
+        <div class="max-w-2xl mx-auto mb-12 rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-3 sm:px-5 sm:py-4 text-center">
+          <p class="text-sm sm:text-base text-zinc-700 font-medium">
+            <span class="text-zinc-900 font-semibold">Smart Suggest:</span> AI fills in title, description, and tags so you're 95% done before you tap Approve. Edit anything in the dashboard, then push live to Shopify. More apps &amp; integrations coming soon.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="glass-card card-hover p-8 flex flex-col items-center text-center">
+            <h3 class="text-xl font-semibold text-zinc-900 mb-2">Scan any product</h3>
+            <p class="text-zinc-600 text-sm leading-relaxed">Point your camera at any product—packaged, unpackaged, or handmade. One tap captures everything we need to build your Shopify listing.</p>
+          </div>
+          <div class="glass-card card-hover p-8 flex flex-col items-center text-center">
+            <h3 class="text-xl font-semibold text-zinc-900 mb-2">AI Extract</h3>
+            <p class="text-zinc-600 text-sm leading-relaxed">We pull material, color, brand, SEO title, description, and tags from your photo. High accuracy so your Shopify product page looks pro from day one.</p>
+          </div>
+          <div class="glass-card card-hover p-8 flex flex-col items-center text-center">
+            <h3 class="text-xl font-semibold text-zinc-900 mb-2">Push to Shopify</h3>
+            <p class="text-zinc-600 text-sm leading-relaxed">One tap publishes to your Shopify store—no re-typing, no CSV. More apps and integrations (Etsy, eBay, Amazon, etc.) coming soon.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Connectors / Roadmap -->
+    <section id="roadmap" class="py-24 px-4 bg-[#f8f8f8]">
+      <div class="max-w-6xl mx-auto">
+        <p class="section-label text-center">[ roadmap ]</p>
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 text-center mb-4">
+          More apps &amp; integrations coming soon
+        </h2>
+        <p class="text-zinc-600 text-center max-w-xl mx-auto mb-4">
+          Shopify is live now. We're adding Etsy, eBay, Amazon, TikTok Shop, and more—vote below to shape what we build next.
+        </p>
+        <div class="mb-6">
+          <div id="vote-stats-card" class="max-w-md mx-auto grid grid-cols-4 gap-0 rounded-lg border border-zinc-200 bg-white overflow-hidden">
+            <div class="py-3 px-2 text-center border-r border-zinc-200 last:border-r-0">
+              <div class="text-[9px] font-medium text-zinc-500 uppercase tracking-wider">Total votes</div>
+              <div id="vote-stats-total" class="text-sm sm:text-base font-bold text-zinc-900 tabular-nums mt-0.5">0</div>
+            </div>
+            <div class="py-3 px-2 text-center border-r border-zinc-200 last:border-r-0">
+              <div class="text-[9px] font-medium text-zinc-500 uppercase tracking-wider">Coming soon</div>
+              <div class="text-sm sm:text-base font-bold text-zinc-900 tabular-nums mt-0.5">9</div>
+            </div>
+            <div class="py-3 px-2 text-center border-r border-zinc-200 last:border-r-0">
+              <div class="text-[9px] font-medium text-zinc-500 uppercase tracking-wider">Live</div>
+              <div class="text-sm sm:text-base font-bold text-zinc-900 tabular-nums mt-0.5">1</div>
+            </div>
+            <div class="py-3 px-2 text-center border-r border-zinc-200 last:border-r-0">
+              <div class="text-[9px] font-medium text-zinc-500 uppercase tracking-wider">Top pick</div>
+              <div id="vote-stats-top" class="text-xs sm:text-sm font-bold text-zinc-900 mt-0.5">—</div>
+            </div>
+          </div>
+          <p class="text-center text-zinc-600 text-base sm:text-lg mt-2">
+            <span id="connector-count" class="font-bold text-accent-blue tabular-nums">11</span>+ connectors in the pipeline. Shopify live today—vote to shape what we build next.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div class="glass-card connector-card p-4 flex flex-col items-center justify-center min-h-[120px]">
+            <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="Shopify" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Shopify</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent-emerald/15 text-accent-emerald border border-accent-emerald/30">Active</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="etsy" role="button" tabindex="0" aria-label="Vote for Etsy">
+            <img src="https://www.google.com/s2/favicons?domain=etsy.com&sz=128" alt="Etsy" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Etsy</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="ebay" role="button" tabindex="0" aria-label="Vote for eBay">
+            <img src="/assets/ebay-logo.png" alt="eBay" class="w-10 h-10 rounded-lg object-contain app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">eBay</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="tiktok_shop" role="button" tabindex="0" aria-label="Vote for TikTok Shop">
+            <img src="https://www.google.com/s2/favicons?domain=tiktok.com&sz=128" alt="TikTok Shop" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">TikTok Shop</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="amazon" role="button" tabindex="0" aria-label="Vote for Amazon SP-API">
+            <img src="https://www.google.com/s2/favicons?domain=amazon.com&sz=128" alt="Amazon" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Amazon SP-API</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="depop" role="button" tabindex="0" aria-label="Vote for Depop">
+            <img src="https://www.google.com/s2/favicons?domain=depop.com&sz=128" alt="Depop" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Depop</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="vinted" role="button" tabindex="0" aria-label="Vote for Vinted">
+            <img src="https://www.google.com/s2/favicons?domain=vinted.com&sz=128" alt="Vinted" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Vinted</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="bigcommerce" role="button" tabindex="0" aria-label="Vote for BigCommerce">
+            <img src="https://www.google.com/s2/favicons?domain=bigcommerce.com&sz=128" alt="BigCommerce" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">BigCommerce</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="walmart" role="button" tabindex="0" aria-label="Vote for Walmart Marketplace">
+            <img src="https://www.google.com/s2/favicons?domain=walmart.com&sz=128" alt="Walmart" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Walmart</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="mercari" role="button" tabindex="0" aria-label="Vote for Mercari">
+            <img src="https://www.google.com/s2/favicons?domain=mercari.com&sz=128" alt="Mercari" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Mercari</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="poshmark" role="button" tabindex="0" aria-label="Vote for Poshmark">
+            <img src="https://www.google.com/s2/favicons?domain=poshmark.com&sz=128" alt="Poshmark" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Poshmark</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+          <div class="glass-card connector-card connector-vote p-4 flex flex-col items-center justify-center min-h-[120px] cursor-pointer hover:ring-2 hover:ring-zinc-300 transition-all rounded-2xl" data-connector-id="facebook_marketplace" role="button" tabindex="0" aria-label="Vote for Facebook Marketplace">
+            <img src="https://www.google.com/s2/favicons?domain=facebook.com&sz=128" alt="Facebook" class="w-10 h-10 rounded-lg app-logo mb-2" />
+            <span class="text-sm font-medium text-zinc-800">Facebook Marketplace</span>
+            <span class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-200/80 text-zinc-600 border border-zinc-200">Coming Soon</span>
+            <span class="connector-vote-count mt-1.5 text-xs font-semibold text-zinc-500 tabular-nums" data-count="0">0 votes</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vibe Carousel (B150-style vertical cards) -->
+    <section id="vibe-carousel" class="py-16 sm:py-20 px-4 bg-[#f8f8f8]">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between gap-4 mb-6">
+          <div>
+            <p class="section-label">[ who it's for ]</p>
+            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">List on Shopify in seconds</h2>
+          </div>
+          <div class="flex items-center gap-2 shrink-0" aria-label="Carousel navigation">
+            <button type="button" id="vibe-carousel-prev" class="w-10 h-10 rounded-full bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50 flex items-center justify-center transition-colors" aria-label="Previous"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+            <button type="button" id="vibe-carousel-next" class="w-10 h-10 rounded-full bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50 flex items-center justify-center transition-colors" aria-label="Next"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+          </div>
+        </div>
+        <div class="vibe-carousel-wrapper">
+          <div id="vibe-carousel-track" class="vibe-carousel-track">
+            <div class="vibe-card card-hover flex flex-col vibe-video-card">
+              <div class="vibe-card-visual relative bg-[#e4e4e7] flex items-center justify-center overflow-hidden cursor-pointer group" id="vibe-video-trigger">
+                <span class="vibe-card-pill inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-semibold px-3 py-1.5 rounded-full">+ SyncLyst</span>
+                <video class="vibe-card-video-el absolute inset-0 w-full h-full object-cover" muted loop playsinline controls>
+                  <source src="/vibe-sequence-01.mp4" type="video/mp4" />
+                </video>
+                <div class="vibe-card-video-play absolute inset-0 flex flex-col items-center justify-center bg-[#e4e4e7] group-hover:bg-zinc-200/50 transition-colors cursor-pointer" aria-label="Play video">
+                  <i data-lucide="play" class="w-16 h-16 text-zinc-500 mb-2"></i>
+                  <p class="text-sm font-medium text-zinc-600 text-center">Photo to draft in seconds</p>
+                  <p class="text-xs text-zinc-500 text-center mt-0.5">Point camera, tap, done</p>
+                </div>
+              </div>
+              <div class="p-5 flex flex-col flex-1">
+                <span class="text-sm font-bold uppercase tracking-wider" style="color: #2E3A59">Vibe Scanning</span>
+                <span class="text-sm mt-1" style="color: #6E7B91">Photo to draft in seconds. No typing.</span>
+              </div>
+            </div>
+            <div class="vibe-card card-hover flex flex-col vibe-video-card">
+              <div class="vibe-card-visual relative bg-[#e4e4e7] flex items-center justify-center overflow-hidden cursor-pointer group" id="vibe-video-trigger">
+                <span class="vibe-card-pill inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-semibold px-3 py-1.5 rounded-full">+ SyncLyst</span>
+                <video class="vibe-card-video-el absolute inset-0 w-full h-full object-cover" muted loop playsinline controls>
+                  <source src="/demo-extraction.mp4" type="video/mp4" />
+                </video>
+                <div class="vibe-card-video-play absolute inset-0 flex flex-col items-center justify-center bg-[#e4e4e7] group-hover:bg-zinc-200/50 transition-colors cursor-pointer" aria-label="Play video">
+                  <i data-lucide="play" class="w-16 h-16 text-zinc-500 mb-2"></i>
+                  <p class="text-sm font-medium text-zinc-600 text-center">Demo: Product photo → AI extraction</p>
+                  <p class="text-xs text-zinc-500 text-center mt-0.5">Sellers going live in seconds</p>
+                </div>
+              </div>
+              <div class="p-5 flex flex-col flex-1">
+                <span class="text-sm font-bold uppercase tracking-wider" style="color: #2E3A59">Vibe Listing</span>
+                <span class="text-sm mt-1" style="color: #6E7B91">Sellers going live in seconds.</span>
+              </div>
+            </div>
+            <div class="vibe-card card-hover flex flex-col vibe-video-card">
+              <div class="vibe-card-visual relative bg-[#e4e4e7] flex items-center justify-center overflow-hidden cursor-pointer group">
+                <span class="vibe-card-pill inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-semibold px-3 py-1.5 rounded-full">+ SyncLyst</span>
+                <video class="vibe-card-video-el absolute inset-0 w-full h-full object-cover" muted loop playsinline controls>
+                  <source src="/vibe-sequence-02.mp4" type="video/mp4" />
+                </video>
+                <div class="vibe-card-video-play absolute inset-0 flex flex-col items-center justify-center bg-[#e4e4e7] group-hover:bg-zinc-200/50 transition-colors cursor-pointer" aria-label="Play video">
+                  <i data-lucide="play" class="w-16 h-16 text-zinc-500 mb-2"></i>
+                  <p class="text-sm font-medium text-zinc-600 text-center">One profile → your Shopify store</p>
+                  <p class="text-xs text-zinc-500 text-center mt-0.5">More apps &amp; integrations coming soon</p>
+                </div>
+              </div>
+              <div class="p-5 flex flex-col flex-1">
+                <span class="text-sm font-bold uppercase tracking-wider" style="color: #2E3A59">Vibe Syncing</span>
+                <span class="text-sm mt-1" style="color: #6E7B91">Push to Shopify now. More apps &amp; integrations coming soon.</span>
+              </div>
+            </div>
+            <div class="vibe-card card-hover flex flex-col vibe-video-card">
+              <div class="vibe-card-visual relative bg-[#e4e4e7] flex items-center justify-center overflow-hidden cursor-pointer group">
+                <span class="vibe-card-pill inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-semibold px-3 py-1.5 rounded-full">+ SyncLyst</span>
+                <video class="vibe-card-video-el absolute inset-0 w-full h-full object-cover" muted loop playsinline controls>
+                  <source src="/vibe-sequence-01.mp4" type="video/mp4" />
+                </video>
+                <div class="vibe-card-video-play absolute inset-0 flex flex-col items-center justify-center bg-[#e4e4e7] group-hover:bg-zinc-200/50 transition-colors cursor-pointer" aria-label="Play video">
+                  <i data-lucide="play" class="w-16 h-16 text-zinc-500 mb-2"></i>
+                  <p class="text-sm font-medium text-zinc-600 text-center">Publish to Shopify in one tap</p>
+                  <p class="text-xs text-zinc-500 text-center mt-0.5">More channels coming soon</p>
+                </div>
+              </div>
+              <div class="p-5 flex flex-col flex-1">
+                <span class="text-sm font-bold uppercase tracking-wider" style="color: #2E3A59">Vibe Selling</span>
+                <span class="text-sm mt-1" style="color: #6E7B91">Publish to your Shopify store in one tap. More apps &amp; integrations coming soon.</span>
+              </div>
+            </div>
+            <div class="vibe-card card-hover flex flex-col vibe-video-card">
+              <div class="vibe-card-visual relative bg-[#e4e4e7] flex items-center justify-center overflow-hidden cursor-pointer group">
+                <span class="vibe-card-pill inline-flex items-center gap-1.5 bg-zinc-900 text-white text-xs font-semibold px-3 py-1.5 rounded-full">+ SyncLyst</span>
+                <video class="vibe-card-video-el absolute inset-0 w-full h-full object-cover" muted loop playsinline controls>
+                  <source src="/vibe-sequence-02.mp4" type="video/mp4" />
+                </video>
+                <div class="vibe-card-video-play absolute inset-0 flex flex-col items-center justify-center bg-[#e4e4e7] group-hover:bg-zinc-200/50 transition-colors cursor-pointer" aria-label="Play video">
+                  <i data-lucide="play" class="w-16 h-16 text-zinc-500 mb-2"></i>
+                  <p class="text-sm font-medium text-zinc-600 text-center">OCR + AI extraction</p>
+                  <p class="text-xs text-zinc-500 text-center mt-0.5">Read every label, auto-tag</p>
+                </div>
+              </div>
+              <div class="p-5 flex flex-col flex-1">
+                <span class="text-sm font-bold uppercase tracking-wider" style="color: #2E3A59">Vibe Extracting</span>
+                <span class="text-sm mt-1" style="color: #6E7B91">OCR + AI read every label.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-24 px-4 bg-[#f8f8f8]">
+      <div class="max-w-6xl mx-auto">
+        <p class="section-label text-center">[ pricing ]</p>
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 text-center mb-4">
+          Start listing on Shopify
+        </h2>
+        <div class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <a href="/dashboard" class="pricing-card card-hover flex flex-col text-left block">
+            <div class="p-6 pricing-card-sep flex items-start justify-between gap-3">
+              <h3 class="text-xl font-bold text-zinc-900">Starter</h3>
+              <span class="pricing-tag shrink-0">Free</span>
+            </div>
+            <div class="p-6 pricing-card-sep">
+              <p class="text-sm text-zinc-500">Try extraction</p>
+              <p class="mt-2 text-4xl font-bold text-zinc-900">Free</p>
+              <p class="mt-1 text-sm text-zinc-500">Product scan · Draft listings · Push to Shopify</p>
+            </div>
+            <div class="p-6 flex items-center justify-between gap-4">
+              <p class="text-sm font-bold text-zinc-900">Get started</p>
+              <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-400 shrink-0"></i>
+            </div>
+          </a>
+          <a href="/dashboard" class="pricing-card card-hover flex flex-col text-left block ring-2 ring-accent-blue/20">
+            <div class="p-6 pricing-card-sep flex items-start justify-between gap-3">
+              <h3 class="text-xl font-bold text-zinc-900">Scale</h3>
+              <span class="pricing-tag shrink-0 bg-accent-blue/10 text-accent-blue">Popular</span>
+            </div>
+            <div class="p-6 pricing-card-sep">
+              <p class="text-sm text-zinc-500">Full omnichannel</p>
+              <p class="mt-1 flex items-baseline gap-1">
+                <span class="text-4xl font-bold text-zinc-900">$29</span>
+                <span class="text-sm font-normal text-zinc-500">/mo</span>
+              </p>
+              <p class="mt-1 text-sm text-zinc-500">Unlimited scans · Shopify + more channels coming soon</p>
+            </div>
+            <div class="p-6 flex items-center justify-between gap-4">
+              <p class="text-sm font-bold text-zinc-900">Join waitlist</p>
+              <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-400 shrink-0"></i>
+            </div>
+          </a>
+          <a href="/dashboard" class="pricing-card card-hover flex flex-col text-left block">
+            <div class="p-6 pricing-card-sep flex items-start justify-between gap-3">
+              <h3 class="text-xl font-bold text-zinc-900">Power User</h3>
+              <span class="pricing-tag shrink-0 bg-amber-100 text-amber-800 border-amber-200">Audit Mode</span>
+            </div>
+            <div class="p-6 pricing-card-sep">
+              <p class="text-sm text-zinc-500">High-volume + multi-item</p>
+              <p class="mt-1 flex items-baseline gap-1">
+                <span class="text-4xl font-bold text-zinc-900">$79</span>
+                <span class="text-sm font-normal text-zinc-500">/mo</span>
+              </p>
+              <p class="mt-1 text-sm text-zinc-500">Everything in Scale, plus:</p>
+              <ul class="mt-2 text-sm text-zinc-600 space-y-1">
+                <li class="flex gap-1.5"><i data-lucide="layers" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>High-density item counting</li>
+                <li class="flex gap-1.5"><i data-lucide="box" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>Multi-item audit (e.g. box of 50)</li>
+                <li class="flex gap-1.5"><i data-lucide="square" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>Bounding boxes for confirmation</li>
+                <li class="flex gap-1.5"><i data-lucide="zap" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>Bulk inventory scans</li>
+              </ul>
+            </div>
+            <div class="p-6 flex items-center justify-between gap-4">
+              <p class="text-sm font-bold text-zinc-900">Join waitlist</p>
+              <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-400 shrink-0"></i>
+            </div>
+          </a>
+          <a href="mailto:hello@synclyst.app?subject=Empire%20plan" class="pricing-card card-hover flex flex-col text-left block">
+            <div class="p-6 pricing-card-sep flex items-start justify-between gap-3">
+              <h3 class="text-xl font-bold text-zinc-900">Empire</h3>
+              <span class="pricing-tag shrink-0">Custom</span>
+            </div>
+            <div class="p-6 pricing-card-sep">
+              <p class="text-sm text-zinc-500">Enterprise</p>
+              <p class="mt-2 text-4xl font-bold text-zinc-900">Custom</p>
+              <p class="mt-1 text-sm text-zinc-500">SSO · Audit logs · Dedicated support</p>
+            </div>
+            <div class="p-6 flex items-center justify-between gap-4">
+              <p class="text-sm font-bold text-zinc-900">Contact us</p>
+              <i data-lucide="arrow-right" class="w-5 h-5 text-zinc-400 shrink-0"></i>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-24 px-4 bg-[#f8f8f8]">
+      <div class="max-w-3xl mx-auto">
+        <p class="section-label text-center">[ faq ]</p>
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 text-center mb-12">Questions sellers ask us most</h2>
+        <div class="space-y-4">
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              What does SyncLyst extract from a product image?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">Attributes (material, color, weight, dimensions, brand), SEO title, high-converting description, bullet points, category, and search keywords. We use OCR for labels (e.g. 100% Cotton) and VLMs for visual features.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              Does this work on mobile?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">Yes. The site is fully mobile-responsive and the landing page supports in-browser camera capture and photo upload on phones and tablets. Snap a product with your camera, get your draft listing in seconds, then push to your Shopify store—all from your device. Etsy, eBay, and more coming soon. No desktop required.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              Which marketplaces do you sync to?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">Right now we sync to Shopify. Etsy, eBay, TikTok Shop, Amazon, and other integrations are coming soon. One master profile, with more platform adapters on the way.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              How fast is extraction?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">Target &lt;1 minute from photo upload to draft listing. We use Gemini 2.0 Flash or GPT-4o for vision, with optional OCR enrichment.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              Is my product data secure?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">Yes. Data is encrypted in transit and at rest. We don't train models on your images or listings. You own your data and can export or delete it at any time.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              Can I edit the extraction before syncing?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">Absolutely. Every extraction becomes a draft in the Dashboard. Edit title, description, attributes, and tags before pushing to any channel.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              What image formats and types work?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">We support JPEG, PNG, and WebP. Works with packaged products, unpackaged items, handmade goods, and even screenshots of listings. Clear, well-lit photos give the best results.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              What is Audit Mode (Power User)?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">For images with multiple items—e.g. a box of 50 patches—Audit Mode estimates the count and highlights each unit with bounding boxes so you can confirm before listing. Built for bulk inventory and high-volume sellers.</p>
+          </details>
+          <details class="glass-card group">
+            <summary class="p-6 cursor-pointer list-none flex items-center justify-between font-semibold text-zinc-900">
+              How do I get started?
+              <i data-lucide="chevron-down" class="w-5 h-5 text-zinc-500 shrink-0 ml-2"></i>
+            </summary>
+            <p class="px-6 pb-6 text-zinc-600 text-sm leading-relaxed border-t border-zinc-100 pt-4 -mt-2">Sign up for the Dashboard, then try a product scan from your phone or upload an image from the dashboard. No credit card needed for the free tier.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-zinc-100 bg-white py-8 px-4">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <span class="text-zinc-500 text-sm">© SyncLyst. Your AI Listing Machine</span>
+      <div class="flex items-center gap-6 text-sm">
+        <a href="mailto:hello@synclyst.app" class="text-zinc-500 hover:text-zinc-800 transition-colors">hello@synclyst.app</a>
+        <a href="#" class="text-zinc-500 hover:text-zinc-800 transition-colors" data-modal="privacy" id="footer-privacy-link">Privacy</a>
+        <a href="#" class="text-zinc-500 hover:text-zinc-800 transition-colors" data-modal="terms" id="footer-terms-link">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Privacy modal -->
+  <div id="modal-privacy" class="fixed inset-0 z-[100] hidden items-start justify-center overflow-y-auto bg-black/50 p-4 sm:p-6" aria-modal="true" role="dialog" aria-labelledby="modal-privacy-title">
+    <div class="glass-panel w-full max-w-2xl my-8 shadow-xl flex flex-col max-h-[85vh]" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between p-4 sm:p-6 border-b border-zinc-200 shrink-0">
+        <h2 id="modal-privacy-title" class="text-lg font-semibold text-zinc-900">Privacy Policy</h2>
+        <button type="button" class="p-2 rounded-lg text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 transition-colors" data-modal-close="privacy" aria-label="Close">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-4 sm:p-6 overflow-y-auto text-sm text-zinc-600 space-y-4">
+        <p><strong class="text-zinc-900">Last updated:</strong> February 2025.</p>
+        <p>SyncLyst (&quot;we&quot;, &quot;our&quot;) respects your privacy. This policy describes how we collect, use, and protect your information when you use our product-photo-to-listing service.</p>
+        <h3 class="font-semibold text-zinc-900 pt-2">Information we collect</h3>
+        <p>We collect information you provide (e.g. account details, product images you upload) and usage data necessary to operate and improve our service.</p>
+        <h3 class="font-semibold text-zinc-900 pt-2">How we use it</h3>
+        <p>We use your data to generate listings, sync with connected marketplaces (e.g. Shopify), and to improve our AI and product experience.</p>
+        <h3 class="font-semibold text-zinc-900 pt-2">Sharing and security</h3>
+        <p>We do not sell your personal information. We may share data with service providers that help us run the product. We use reasonable measures to keep your data secure.</p>
+        <h3 class="font-semibold text-zinc-900 pt-2">Contact</h3>
+        <p>For privacy questions, contact us at <a href="mailto:hello@synclyst.app" class="text-zinc-900 font-medium hover:underline">hello@synclyst.app</a>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terms modal -->
+  <div id="modal-terms" class="fixed inset-0 z-[100] hidden items-start justify-center overflow-y-auto bg-black/50 p-4 sm:p-6" aria-modal="true" role="dialog" aria-labelledby="modal-terms-title">
+    <div class="glass-panel w-full max-w-2xl my-8 shadow-xl flex flex-col max-h-[85vh]" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between p-4 sm:p-6 border-b border-zinc-200 shrink-0">
+        <h2 id="modal-terms-title" class="text-lg font-semibold text-zinc-900">Terms of Service</h2>
+        <button type="button" class="p-2 rounded-lg text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 transition-colors" data-modal-close="terms" aria-label="Close">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-4 sm:p-6 overflow-y-auto text-sm text-zinc-600 space-y-4">
+        <p><strong class="text-zinc-900">Last updated:</strong> February 2025.</p>
+        <p>By using SyncLyst you agree to these terms. Our service turns product photos into listing content and may connect to marketplaces you authorize.</p>
+        <h3 class="font-semibold text-zinc-900 pt-2">Use of the service</h3>
+        <p>You must use the service lawfully and only for content you have the right to use. You are responsible for the accuracy of listings you publish.</p>
+        <h3 class="font-semibold text-zinc-900 pt-2">Account and data</h3>
+        <p>You must keep your account credentials secure. We may suspend or terminate access for breach of these terms or for operational reasons.</p>
+        <h3 class="font-semibold text-zinc-900 pt-2">Disclaimer</h3>
+        <p>The service is provided &quot;as is&quot;. We do not guarantee uninterrupted or error-free operation. Our liability is limited to the extent permitted by law.</p>
+        <h3 class="font-semibold text-zinc-900 pt-2">Contact</h3>
+        <p>For terms-related questions, contact <a href="mailto:hello@synclyst.app" class="text-zinc-900 font-medium hover:underline">hello@synclyst.app</a>.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+  <script>
+    // SyncLyst API: from meta (injected at build via NEXT_PUBLIC_API_URL)
+    window.AURALINK_CONFIG = { API_URL: 'http://localhost:8000' };
+    (function() {
+      var meta = document.querySelector('meta[name="auralink-api-url"]');
+      var url = (meta && meta.getAttribute('content') ? meta.getAttribute('content').trim().replace(/\/$/, '') : '') || window.AURALINK_CONFIG.API_URL;
+      window.AURALINK_CONFIG.API_URL = (url && url !== 'http://localhost:8000') ? url : 'http://localhost:8000';
+      // When opened from phone/LAN (e.g. 192.168.x.x), use same host with port 8000 so API requests hit the backend
+      if (!window.AURALINK_CONFIG.API_URL || window.AURALINK_CONFIG.API_URL === 'http://localhost:8000' || window.AURALINK_CONFIG.API_URL.indexOf('localhost') !== -1) {
+        var host = window.location.hostname;
+        if (host && host !== 'localhost' && host !== '127.0.0.1') {
+          window.AURALINK_CONFIG.API_URL = window.location.protocol + '//' + host + ':8000';
+        }
+      }
+    })();
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+      document.querySelectorAll('.hero-line').forEach(function(el) { el.classList.add('animate'); });
+
+      // Privacy / Terms modals: open and close
+      (function() {
+        function openModal(id) {
+          var el = document.getElementById(id);
+          if (el) {
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          }
+        }
+        function closeModal(id) {
+          var el = document.getElementById(id);
+          if (el) {
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+          }
+        }
+        document.querySelectorAll('[data-modal]').forEach(function(link) {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal('modal-' + this.getAttribute('data-modal'));
+          });
+        });
+        document.querySelectorAll('[data-modal-close]').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            closeModal('modal-' + this.getAttribute('data-modal-close'));
+          });
+        });
+        ['modal-privacy', 'modal-terms'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) {
+            el.addEventListener('click', function(e) {
+              if (e.target === el) closeModal(id);
+            });
+          }
+        });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') {
+            closeModal('modal-privacy');
+            closeModal('modal-terms');
+          }
+        });
+      })();
+
+      // Vibe carousel: horizontal scroll with prev/next + continuous auto-advance one by one
+      (function() {
+        var track = document.getElementById('vibe-carousel-track');
+        var prevBtn = document.getElementById('vibe-carousel-prev');
+        var nextBtn = document.getElementById('vibe-carousel-next');
+        var wrapper = track ? track.parentElement : null;
+        var cards = track ? track.querySelectorAll('.vibe-card') : [];
+        var total = cards.length;
+        var index = 0;
+        var autoplayInterval = null;
+        var AUTOPLAY_MS = 4500;
+        function getCardWidth() {
+          if (!cards[0]) return 296;
+          var width = cards[0].offsetWidth;
+          var gap = track ? parseInt(window.getComputedStyle(track).gap) || 16 : 16;
+          return width + gap;
+        }
+        function goTo(i) {
+          index = Math.max(0, Math.min(i, total - 1));
+          var offset = index * getCardWidth();
+          if (track) track.style.transform = 'translateX(-' + offset + 'px)';
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+        function scrollBy(n) {
+          var nextIndex = index + n;
+          var maxIndex = total - 1;
+          var visible = wrapper ? Math.floor(wrapper.offsetWidth / getCardWidth()) : 3;
+          if (nextIndex > maxIndex - Math.max(0, visible - 1)) nextIndex = maxIndex;
+          goTo(Math.max(0, nextIndex));
+        }
+        function advanceOne() {
+          var next = (index + 1) % total;
+          goTo(next);
+        }
+        function startAutoplay() {
+          if (autoplayInterval) return;
+          autoplayInterval = setInterval(advanceOne, AUTOPLAY_MS);
+        }
+        function stopAutoplay() {
+          if (autoplayInterval) {
+            clearInterval(autoplayInterval);
+            autoplayInterval = null;
+          }
+        }
+        if (prevBtn) prevBtn.addEventListener('click', function() { scrollBy(-1); });
+        if (nextBtn) nextBtn.addEventListener('click', function() { scrollBy(1); });
+        if (wrapper) {
+          wrapper.addEventListener('mouseenter', stopAutoplay);
+          wrapper.addEventListener('mouseleave', startAutoplay);
+        }
+        goTo(0);
+        startAutoplay();
+        window.addEventListener('resize', function() { goTo(index); });
+      })();
+
+      // Vibe carousel video: play on click for all video cards
+      (function() {
+        document.querySelectorAll('.vibe-video-card').forEach(function(card) {
+          var video = card.querySelector('.vibe-card-video-el');
+          var playBtn = card.querySelector('.vibe-card-video-play');
+          if (!video || !playBtn) return;
+          playBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (video.paused) {
+              video.play();
+              playBtn.style.opacity = '0';
+              playBtn.style.pointerEvents = 'none';
+            } else {
+              video.pause();
+              playBtn.style.opacity = '1';
+              playBtn.style.pointerEvents = '';
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          });
+          video.addEventListener('pause', function() {
+            playBtn.style.opacity = '1';
+            playBtn.style.pointerEvents = '';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          });
+        });
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      })();
+
+      // Connector vote: persist in localStorage, use for dev prioritization
+      var VOTE_STORAGE_KEY = 'auralink_connector_votes';
+      var CONNECTOR_NAMES = {
+        tiktok_shop: 'TikTok Shop', depop: 'Depop', ebay: 'eBay', etsy: 'Etsy',
+        vinted: 'Vinted', bigcommerce: 'BigCommerce', walmart: 'Walmart',
+        mercari: 'Mercari', poshmark: 'Poshmark', facebook_marketplace: 'Facebook Marketplace',
+      };
+      function getVotes() {
+        try {
+          var raw = localStorage.getItem(VOTE_STORAGE_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+      function setVotes(obj) {
+        try { localStorage.setItem(VOTE_STORAGE_KEY, JSON.stringify(obj)); } catch (e) {}
+      }
+      function updateVoteStats() {
+        var totalEl = document.getElementById('vote-stats-total');
+        var topEl = document.getElementById('vote-stats-top');
+        if (!totalEl || !topEl) return;
+        var votes = getVotes();
+        var total = 0, topId = null, topCount = 0;
+        Object.keys(votes).forEach(function(id) {
+          var n = votes[id] || 0;
+          total += n;
+          if (n > topCount) { topCount = n; topId = id; }
+        });
+        totalEl.textContent = total;
+        topEl.textContent = topId && topCount > 0 ? (CONNECTOR_NAMES[topId] || topId) : '—';
+      }
+      function updateVoteDisplay(card) {
+        var id = card.getAttribute('data-connector-id');
+        var countEl = card.querySelector('.connector-vote-count');
+        if (!id || !countEl) return;
+        var n = (getVotes())[id] || 0;
+        countEl.setAttribute('data-count', n);
+        countEl.textContent = n === 1 ? '1 vote' : n + ' votes';
+      }
+      document.querySelectorAll('.connector-vote').forEach(function(card) {
+        updateVoteDisplay(card);
+        card.addEventListener('click', function() {
+          var id = card.getAttribute('data-connector-id');
+          if (!id) return;
+          var votes = getVotes();
+          votes[id] = (votes[id] || 0) + 1;
+          setVotes(votes);
+          updateVoteDisplay(card);
+          updateVoteStats();
+        });
+        card.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+        });
+      });
+      updateVoteStats();
+
+      function getScanUrl() {
+        var origin = window.location.origin;
+        var pathname = (window.location.pathname || '/').replace(/\/$/, '');
+        if (pathname && pathname.indexOf('landing.html') !== -1) {
+          return origin + pathname + '?mode=scan';
+        }
+        return origin + '/scan';
+      }
+
+      function openScanView() {
+        var heroBtn = document.getElementById('scan-first-item-hero-btn');
+        var loadingHtml = '<span class="inline-flex items-center gap-2"><span class="btn-loading-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full" aria-hidden="true"></span>Loading…</span>';
+        if (heroBtn && !heroBtn.getAttribute('data-loading')) {
+          heroBtn.setAttribute('data-loading', 'true');
+          heroBtn.disabled = true;
+          heroBtn.innerHTML = loadingHtml;
+        }
+        window.location.href = getScanUrl();
+      }
+
+      function scrollToWatchItWork() {
+        var el = document.getElementById('demo');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        setTimeout(function() {
+          var modal = document.getElementById('watch-video-modal');
+          var video = document.getElementById('watch-video-modal-video');
+          if (modal && video) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            video.currentTime = 0;
+            var loadingMsg = document.getElementById('watch-video-loading-msg');
+            if (loadingMsg) loadingMsg.style.display = 'flex';
+            video.load();
+            function tryPlay() {
+              video.play().catch(function() {});
+            }
+            function hideLoading() {
+              var msg = document.getElementById('watch-video-loading-msg');
+              if (msg) msg.style.display = 'none';
+            }
+            if (video.readyState >= 2) {
+              hideLoading();
+              tryPlay();
+            } else {
+              video.addEventListener('canplay', function() { hideLoading(); tryPlay(); }, { once: true });
+              video.addEventListener('loadeddata', function() { hideLoading(); tryPlay(); }, { once: true });
+            }
+            video.addEventListener('playing', hideLoading, { once: true });
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          }
+        }, 400);
+      }
+
+      function closeWatchVideoModal() {
+        var modal = document.getElementById('watch-video-modal');
+        var video = document.getElementById('watch-video-modal-video');
+        if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        if (video) video.pause();
+      }
+
+      document.getElementById('watch-video-modal-close')?.addEventListener('click', closeWatchVideoModal);
+      document.getElementById('watch-video-modal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeWatchVideoModal();
+      });
+
+      (function heroVideoModal() {
+        var overlay = document.getElementById('hero-video-click-layer');
+        var modal = document.getElementById('hero-video-modal');
+        var modalVideo = document.getElementById('hero-video-modal-video');
+        var heroVideo = document.getElementById('hero-video');
+        var closeBtn = document.getElementById('hero-video-modal-close');
+        if (!overlay || !modal || !modalVideo) return;
+        overlay.addEventListener('click', function() {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          if (heroVideo) heroVideo.pause();
+          modalVideo.muted = false;
+          modalVideo.currentTime = 0;
+          modalVideo.play().catch(function() {});
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+        function closeHeroVideoModal() {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          modalVideo.pause();
+          modalVideo.muted = true;
+          if (heroVideo) heroVideo.play().catch(function() {});
+        }
+        closeBtn?.addEventListener('click', closeHeroVideoModal);
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) closeHeroVideoModal();
+        });
+      })();
+
+      document.getElementById('watch-it-work-nav-btn')?.addEventListener('click', function(e) { e.preventDefault(); scrollToWatchItWork(); });
+      document.getElementById('scan-first-item-hero-btn')?.addEventListener('click', function(e) { e.preventDefault(); openScanView(); });
+      document.getElementById('watch-it-work-hero-btn')?.addEventListener('click', function(e) { e.preventDefault(); scrollToWatchItWork(); });
+
+      (function() {
+        var toggle = document.getElementById('nav-mobile-toggle');
+        var menu = document.getElementById('nav-mobile-menu');
+        var iconMenu = document.getElementById('nav-icon-menu');
+        var iconClose = document.getElementById('nav-icon-close');
+        if (!toggle || !menu) return;
+        toggle.addEventListener('click', function() {
+          var isOpen = menu.classList.toggle('open');
+          if (iconMenu && iconClose) {
+            iconMenu.classList.toggle('hidden', isOpen);
+            iconClose.classList.toggle('hidden', !isOpen);
+          }
+          toggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+        });
+        menu.querySelectorAll('a').forEach(function(link) {
+          link.addEventListener('click', function() {
+            menu.classList.remove('open');
+            if (iconMenu && iconClose) { iconMenu.classList.remove('hidden'); iconClose.classList.add('hidden'); }
+            toggle.setAttribute('aria-label', 'Open menu');
+          });
+        });
+      })();
+
+      // Scan mode: show scan view, camera, capture → SyncLyst extract
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('mode') === 'scan') {
+        document.getElementById('main-landing').style.display = 'none';
+        var mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
+        var scanView = document.getElementById('scan-view');
+        scanView.classList.remove('hidden');
+        scanView.classList.add('flex');
+        // On HTTP (e.g. phone at 192.168.x.x), camera is usually blocked; show Upload photo from the start
+        var isSecureContext = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        var stepCameraEl = document.getElementById('scan-step-camera');
+        if (!isSecureContext && stepCameraEl) stepCameraEl.classList.add('camera-unavailable');
+
+        var video = document.getElementById('scan-video');
+        var stepCamera = document.getElementById('scan-step-camera');
+        var stepResult = document.getElementById('scan-step-result');
+        var stepReading = document.getElementById('scan-step-reading');
+        var captureBtn = document.getElementById('scan-capture-btn');
+        var capturedImg = document.getElementById('scan-captured-img');
+        var seoTitleEl = document.getElementById('scan-seo-title');
+        var attributesEl = document.getElementById('scan-attributes');
+        var bulletsEl = document.getElementById('scan-bullets');
+        var tagsEl = document.getElementById('scan-tags');
+        var cameraErrorEl = document.getElementById('scan-camera-error');
+        var doneBtn = document.getElementById('scan-done-btn');
+        var saveDraftBtn = document.getElementById('scan-save-draft-btn');
+        var toastEl = document.getElementById('scan-toast');
+        var stream = null;
+        var lastExtractionData = null;
+        var lastCapturedBase64 = null;
+        var extractAbortController = null;
+        var EXTRACT_TIMEOUT_MS = 60000;
+
+        var scanExtractErrorEl = document.getElementById('scan-extract-error');
+        var scanRetryExtractBtn = document.getElementById('scan-retry-extract-btn');
+
+        function showExtractError(titleMessage, hintMessage) {
+          if (stepReading) { stepReading.classList.add('hidden'); stepReading.classList.remove('flex'); }
+          if (stepResult) { stepResult.classList.remove('hidden'); stepResult.classList.add('flex'); }
+          lastExtractionData = null;
+          if (seoTitleEl) {
+            seoTitleEl.textContent = titleMessage;
+            seoTitleEl.classList.add('text-red-600', 'scan-result-value--error');
+          }
+          if (attributesEl) {
+            attributesEl.textContent = hintMessage || '';
+            attributesEl.classList.remove('scan-result-value--error');
+          }
+          bulletsEl.innerHTML = '';
+          if (tagsEl) { tagsEl.textContent = ''; tagsEl.classList.remove('scan-result-value--error'); }
+          if (scanExtractErrorEl) {
+            scanExtractErrorEl.textContent = hintMessage || titleMessage;
+            scanExtractErrorEl.classList.remove('hidden');
+          }
+          var scanResultUploadRow = document.getElementById('scan-result-upload-row');
+          if (scanResultUploadRow) scanResultUploadRow.classList.remove('hidden');
+          if (scanRetryExtractBtn && lastCapturedBase64) scanRetryExtractBtn.classList.remove('hidden');
+          var extractAgainBtn = document.getElementById('scan-extract-again-btn');
+          if (extractAgainBtn) extractAgainBtn.style.display = lastCapturedBase64 ? '' : 'none';
+          var scanContinueSampleBtn = document.getElementById('scan-continue-sample-btn');
+          if (scanContinueSampleBtn && lastCapturedBase64) scanContinueSampleBtn.classList.remove('hidden');
+          if (toastEl) toastEl.classList.add('hidden');
+        }
+
+        function showExtractSuccess(data) {
+          lastExtractionData = data;
+          if (seoTitleEl) {
+            seoTitleEl.classList.remove('text-red-600', 'scan-result-value--error');
+          }
+          if (attributesEl) attributesEl.classList.remove('scan-result-value--error');
+          if (tagsEl) tagsEl.classList.remove('scan-result-value--error');
+          if (scanExtractErrorEl) scanExtractErrorEl.classList.add('hidden');
+          var scanResultUploadRow = document.getElementById('scan-result-upload-row');
+          if (scanResultUploadRow) scanResultUploadRow.classList.add('hidden');
+          if (scanRetryExtractBtn) scanRetryExtractBtn.classList.add('hidden');
+          var extractAgainBtn = document.getElementById('scan-extract-again-btn');
+          if (extractAgainBtn) extractAgainBtn.style.display = lastCapturedBase64 ? '' : 'none';
+          if (toastEl) toastEl.classList.add('hidden');
+          var copy = data.copy || data.extraction_copy || {};
+          var att = data.attributes || {};
+          var tags = data.tags || {};
+          seoTitleEl.textContent = copy.seo_title || '(no title)';
+          var attParts = [];
+          if (att.material) attParts.push('Material: ' + att.material);
+          if (att.color) attParts.push('Color: ' + att.color);
+          if (att.weight) attParts.push('Weight: ' + att.weight);
+          if (att.dimensions) attParts.push('Dimensions: ' + att.dimensions);
+          if (att.brand) attParts.push('Brand: ' + att.brand);
+          if (att.price_display) attParts.push('Price: ' + att.price_display);
+          attributesEl.textContent = attParts.length ? attParts.join(' · ') : '—';
+          bulletsEl.innerHTML = '';
+          (copy.bullet_points || []).forEach(function(b) {
+            var li = document.createElement('li');
+            li.textContent = b;
+            bulletsEl.appendChild(li);
+          });
+          tagsEl.textContent = (tags.search_keywords || []).join(', ') || (tags.category || '—');
+          // Use extracted price when present, else suggest from category
+          var suggestedPrice = 199;
+          if (att.price_value != null && typeof att.price_value === 'number' && att.price_value > 0) {
+            suggestedPrice = att.price_value;
+          } else if (att.price_display && typeof att.price_display === 'string') {
+            var match = att.price_display.replace(/[^\d.]/g, '').match(/[\d.]+/);
+            if (match && parseFloat(match[0]) > 0) suggestedPrice = parseFloat(match[0]);
+          } else {
+            var cat = (tags.category || '').toLowerCase();
+            var kw = (tags.search_keywords || []).join(' ').toLowerCase();
+            if (cat.indexOf('audio') !== -1 || cat.indexOf('electron') !== -1 || kw.indexOf('headphone') !== -1 || kw.indexOf('sony') !== -1) suggestedPrice = 269;
+            else if (cat.indexOf('fashion') !== -1 || kw.indexOf('shirt') !== -1 || kw.indexOf('dress') !== -1) suggestedPrice = 49;
+          }
+          // Send user to flow-2 (Reading your product) then flow-3 (Review) with extracted data
+          try {
+            var payload = { extraction: data, suggested_price: suggestedPrice };
+            if (capturedImg && capturedImg.src && capturedImg.src.startsWith('data:')) {
+              payload.imageDataUrl = capturedImg.src;
+            }
+            sessionStorage.removeItem('auralink_review_draft');
+            sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
+            window.location.href = '/reading-product';
+            return;
+          } catch (e) {}
+          // Fallback: show result step in scan view if redirect fails
+          if (stepReading) { stepReading.classList.add('hidden'); stepReading.classList.remove('flex'); }
+          if (stepResult) { stepResult.classList.remove('hidden'); stepResult.classList.add('flex'); }
+          if (!window._conversionPopupShown) {
+            window._conversionPopupShown = true;
+            setTimeout(function() { showConversionPopupAfterResult(data); }, 800);
+          }
+        }
+
+        function showConversionPopupAfterResult(data) {
+          var popup = document.getElementById('conversion-popup');
+          var claimBtn = document.getElementById('conversion-claim-btn');
+          if (!popup) return;
+          var apiUrl = (window.AURALINK_CONFIG && window.AURALINK_CONFIG.API_URL) || 'http://localhost:8000';
+          fetch(apiUrl + '/api/v1/products/from-extraction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          })
+            .then(function(r) {
+              if (r.ok) return r.json();
+              return null;
+            })
+            .then(function(res) {
+              if (claimBtn) {
+                if (res && res.id) {
+                  claimBtn.href = window.location.origin + '/dashboard/products?highlight=' + encodeURIComponent(res.id);
+                } else {
+                  claimBtn.href = '/dashboard';
+                }
+              }
+              popup.classList.remove('hidden');
+              popup.classList.add('flex');
+              if (typeof lucide !== 'undefined') lucide.createIcons();
+            })
+            .catch(function() {
+              if (claimBtn) claimBtn.href = '/dashboard';
+              popup.classList.remove('hidden');
+              popup.classList.add('flex');
+              if (typeof lucide !== 'undefined') lucide.createIcons();
+            });
+        }
+
+        function runExtraction(base64) {
+          if (stepReading) {
+            stepReading.classList.remove('hidden');
+            stepReading.classList.add('flex');
+          }
+          if (stepResult) {
+            stepResult.classList.add('hidden');
+            stepResult.classList.remove('flex');
+          }
+          seoTitleEl.textContent = 'Extracting…';
+          seoTitleEl.classList.remove('text-red-600', 'scan-result-value--error');
+          attributesEl.textContent = '';
+          attributesEl.classList.remove('scan-result-value--error');
+          bulletsEl.innerHTML = '';
+          tagsEl.textContent = '';
+          if (scanExtractErrorEl) scanExtractErrorEl.classList.add('hidden');
+          if (scanRetryExtractBtn) scanRetryExtractBtn.classList.add('hidden');
+
+          var apiUrl = (window.AURALINK_CONFIG && window.AURALINK_CONFIG.API_URL) || 'http://localhost:8000';
+          if (extractAbortController) extractAbortController.abort();
+          extractAbortController = new AbortController();
+          var timeoutId = setTimeout(function() { extractAbortController.abort(); }, EXTRACT_TIMEOUT_MS);
+
+          fetch(apiUrl + '/api/v1/vision/extract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image_base64: base64, mime_type: 'image/jpeg', include_ocr: true }),
+            signal: extractAbortController.signal
+          })
+            .then(function(r) {
+              clearTimeout(timeoutId);
+              if (r.status === 402) {
+                showExtractError('Free scans used', 'You\'ve used all 3 free scans. Upgrade to continue.');
+                if (scanExtractErrorEl) {
+                  scanExtractErrorEl.innerHTML = 'You\'ve used all 3 free scans. <a href="/dashboard/upgrade" class="font-semibold underline">Upgrade now</a> to continue.';
+                  scanExtractErrorEl.classList.remove('hidden');
+                }
+                return;
+              }
+              if (!r.ok) {
+                return r.text().then(function(text) {
+                  var msg = 'Server error (' + r.status + ')';
+                  try {
+                    var j = JSON.parse(text);
+                    if (j.detail) msg += ': ' + (typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail));
+                  } catch (e) {}
+                  throw new Error(msg);
+                });
+              }
+              return r.json();
+            })
+            .then(function(data) {
+              if (!data || typeof data !== 'object') {
+                showExtractError('Invalid response', 'The server returned invalid data. Try again.');
+                return;
+              }
+              showExtractSuccess(data);
+            })
+            .catch(function(err) {
+              clearTimeout(timeoutId);
+              if (err.name === 'AbortError') {
+                showExtractError('Request timed out', 'The server took too long to respond. Try again or use a smaller image.');
+                return;
+              }
+              if (err.message === 'Failed to fetch' || err.name === 'TypeError' || (err.message && (err.message.indexOf('fetch') !== -1 || err.message.indexOf('Network') !== -1))) {
+                showExtractError('Network error', 'Couldn\'t reach the server. Start the SyncLyst backend on port 8000 (see CONNECT.md in the repo). If the backend is running, ensure CORS allows this origin (e.g. set CORS_ORIGINS=http://localhost:3000 in backend/.env or leave it empty for dev). API URL: ' + apiUrl);
+                return;
+              }
+              showExtractError('Extraction failed', err.message || 'An unexpected error occurred. Try again.');
+            });
+
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function startCamera() {
+          if (cameraErrorEl) { cameraErrorEl.textContent = ''; cameraErrorEl.classList.add('hidden'); }
+          if (stepCamera) stepCamera.classList.remove('camera-unavailable');
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if (cameraErrorEl) {
+              cameraErrorEl.textContent = 'Camera requires HTTPS or localhost. Or tap Upload photo below to use an image from your gallery.';
+              cameraErrorEl.classList.remove('hidden');
+            }
+            if (stepCamera) stepCamera.classList.add('camera-unavailable');
+            return;
+          }
+          var opts = { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
+          navigator.mediaDevices.getUserMedia(opts).then(function(s) {
+            stream = s;
+            video.srcObject = s;
+          }).catch(function() {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(function(s) {
+              stream = s;
+              video.srcObject = s;
+            }).catch(function() {
+              if (cameraErrorEl) {
+                cameraErrorEl.textContent = 'Camera access denied. Tap Upload photo below to use an image from your gallery.';
+                cameraErrorEl.classList.remove('hidden');
+              }
+              if (stepCamera) stepCamera.classList.add('camera-unavailable');
+            });
+          });
+        }
+        startCamera();
+
+        captureBtn.addEventListener('click', function() {
+          var canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0);
+          var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          var base64 = dataUrl.split(',')[1];
+
+          if (!video.videoWidth || !video.videoHeight) {
+            if (cameraErrorEl) {
+              cameraErrorEl.textContent = 'Camera not ready. Wait for the video to load and try again.';
+              cameraErrorEl.classList.remove('hidden');
+            }
+            var stepCam = document.getElementById('scan-step-camera');
+            if (stepCam) stepCam.classList.add('camera-unavailable');
+            return;
+          }
+          if (!base64 || base64.length < 100) {
+            if (cameraErrorEl) {
+              cameraErrorEl.textContent = 'Invalid or empty image. Try again with a clearer view of the product.';
+              cameraErrorEl.classList.remove('hidden');
+            }
+            return;
+          }
+          if (cameraErrorEl) cameraErrorEl.classList.add('hidden');
+
+          lastCapturedBase64 = base64;
+          capturedImg.src = dataUrl;
+          if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
+          stepCamera.classList.add('hidden');
+          if (stepResult) { stepResult.classList.add('hidden'); stepResult.classList.remove('flex'); }
+          if (stepReading) { stepReading.classList.remove('hidden'); stepReading.classList.add('flex'); }
+
+          runExtraction(base64);
+        });
+
+        if (scanRetryExtractBtn) {
+          scanRetryExtractBtn.addEventListener('click', function() {
+            if (lastCapturedBase64) runExtraction(lastCapturedBase64);
+          });
+        }
+
+        var uploadInput = document.getElementById('scan-upload-input');
+        var uploadBtn = document.getElementById('scan-upload-btn');
+        if (uploadBtn && uploadInput) {
+          uploadBtn.addEventListener('click', function() { uploadInput.click(); });
+          uploadInput.addEventListener('change', function() {
+            var file = uploadInput.files && uploadInput.files[0];
+            if (!file || !file.type.match(/^image\//)) {
+              if (cameraErrorEl) { cameraErrorEl.textContent = 'Please choose an image file.'; cameraErrorEl.classList.remove('hidden'); }
+              return;
+            }
+            if (cameraErrorEl) cameraErrorEl.classList.add('hidden');
+            var reader = new FileReader();
+            reader.onload = function() {
+              var dataUrl = reader.result;
+              var base64 = dataUrl.indexOf(',') >= 0 ? dataUrl.split(',')[1] : dataUrl;
+              if (!base64 || base64.length < 100) {
+                if (cameraErrorEl) { cameraErrorEl.textContent = 'Image too small or invalid.'; cameraErrorEl.classList.remove('hidden'); }
+                return;
+              }
+              lastCapturedBase64 = base64;
+              capturedImg.src = dataUrl;
+              if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
+              stepCamera.classList.add('hidden');
+              if (stepResult) { stepResult.classList.add('hidden'); stepResult.classList.remove('flex'); }
+              if (stepReading) { stepReading.classList.remove('hidden'); stepReading.classList.add('flex'); }
+              uploadInput.value = '';
+              runExtraction(base64);
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+        var uploadLinkMobile = document.getElementById('scan-upload-link-mobile');
+        if (uploadLinkMobile && uploadInput) {
+          uploadLinkMobile.addEventListener('click', function() { uploadInput.click(); });
+        }
+
+        var scanResultUploadBtn = document.getElementById('scan-result-upload-btn');
+        var scanResultUploadInput = document.getElementById('scan-result-upload-input');
+        if (scanResultUploadBtn && scanResultUploadInput) {
+          scanResultUploadBtn.addEventListener('click', function() { scanResultUploadInput.click(); });
+          scanResultUploadInput.addEventListener('change', function() {
+            var file = scanResultUploadInput.files && scanResultUploadInput.files[0];
+            if (!file || !file.type.match(/^image\//)) return;
+            var uploadRow = document.getElementById('scan-result-upload-row');
+            if (uploadRow) uploadRow.classList.add('hidden');
+            if (scanExtractErrorEl) scanExtractErrorEl.classList.add('hidden');
+            var reader = new FileReader();
+            reader.onload = function() {
+              var dataUrl = reader.result;
+              var base64 = dataUrl.indexOf(',') >= 0 ? dataUrl.split(',')[1] : dataUrl;
+              if (!base64 || base64.length < 100) return;
+              lastCapturedBase64 = base64;
+              capturedImg.src = dataUrl;
+              if (stepResult) { stepResult.classList.add('hidden'); stepResult.classList.remove('flex'); }
+              if (stepReading) { stepReading.classList.remove('hidden'); stepReading.classList.add('flex'); }
+              scanResultUploadInput.value = '';
+              runExtraction(base64);
+            };
+            reader.readAsDataURL(file);
+          });
+        }
+
+        doneBtn.addEventListener('click', function() {
+          stepResult.classList.add('hidden');
+          stepResult.classList.remove('flex');
+          stepCamera.classList.remove('hidden');
+          capturedImg.src = '';
+          lastExtractionData = null;
+          lastCapturedBase64 = null;
+          if (uploadInput) uploadInput.value = '';
+          if (scanRetryExtractBtn) scanRetryExtractBtn.classList.add('hidden');
+          var scanResultUploadRow = document.getElementById('scan-result-upload-row');
+          if (scanResultUploadRow) scanResultUploadRow.classList.add('hidden');
+          var scanContinueSampleBtn = document.getElementById('scan-continue-sample-btn');
+          if (scanContinueSampleBtn) scanContinueSampleBtn.classList.add('hidden');
+          if (scanExtractErrorEl) scanExtractErrorEl.classList.add('hidden');
+          var extractAgainBtn = document.getElementById('scan-extract-again-btn');
+          if (extractAgainBtn) extractAgainBtn.style.display = 'none';
+          startCamera();
+        });
+
+        var openCameraBtn = document.getElementById('scan-open-camera-btn');
+        if (openCameraBtn) {
+          openCameraBtn.addEventListener('click', function() {
+            if (doneBtn) doneBtn.click();
+          });
+        }
+
+        var extractAgainBtn = document.getElementById('scan-extract-again-btn');
+        if (extractAgainBtn) {
+          extractAgainBtn.addEventListener('click', function() {
+            if (!lastCapturedBase64) return;
+            if (stepResult) { stepResult.classList.add('hidden'); stepResult.classList.remove('flex'); }
+            if (stepReading) { stepReading.classList.remove('hidden'); stepReading.classList.add('flex'); }
+            runExtraction(lastCapturedBase64);
+          });
+        }
+
+        var scanContinueSampleBtn = document.getElementById('scan-continue-sample-btn');
+        if (scanContinueSampleBtn) {
+          scanContinueSampleBtn.addEventListener('click', function() {
+            if (!lastCapturedBase64) return;
+            var mockExtraction = {
+              copy: {
+                seo_title: 'Wireless Headphones – Noise Cancelling',
+                description: 'Industry-leading noise cancelling with Dual Noise Sensor. LDAC, multipoint, Speak-to-Chat. Up to 30hr battery.',
+                bullet_points: ['Noise cancelling', 'LDAC audio', '30hr battery', 'Multipoint connect']
+              },
+              attributes: { brand: 'Sony', exact_model: 'WH-1000XM5', condition: 'New', price_value: 199, price_display: '$199' },
+              tags: { search_keywords: ['headphones', 'noise cancel', 'sony', 'wireless', 'bluetooth'], category: 'Electronics' }
+            };
+            var payload = { extraction: mockExtraction, suggested_price: 199 };
+            if (capturedImg && capturedImg.src && capturedImg.src.startsWith('data:')) {
+              payload.imageDataUrl = capturedImg.src;
+            }
+            try {
+              sessionStorage.removeItem('auralink_review_draft');
+              sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
+              window.location.href = '/reading-product';
+            } catch (e) {}
+          });
+        }
+
+        if (saveDraftBtn) {
+          saveDraftBtn.addEventListener('click', function() {
+            if (!lastExtractionData) {
+              if (toastEl) { toastEl.textContent = 'No extraction data. Capture and extract first.'; toastEl.classList.remove('hidden'); toastEl.classList.remove('text-emerald-600'); toastEl.classList.add('text-red-600'); }
+              return;
+            }
+            saveDraftBtn.disabled = true;
+            saveDraftBtn.innerHTML = '<span class="inline-flex items-center gap-2"><span class="btn-loading-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full" aria-hidden="true"></span>Saving…</span>';
+            var apiUrl = (window.AURALINK_CONFIG && window.AURALINK_CONFIG.API_URL) || 'http://localhost:8000';
+            fetch(apiUrl + '/api/v1/products/from-extraction', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(lastExtractionData)
+            })
+              .then(function(r) {
+                if (!r.ok) throw new Error(r.statusText || 'Save failed');
+                return r.json();
+              })
+              .then(function(res) {
+                saveDraftBtn.textContent = 'Saved';
+                var popup = document.getElementById('conversion-popup');
+                var claimBtn = document.getElementById('conversion-claim-btn');
+                if (claimBtn && res && res.id) {
+                  claimBtn.href = window.location.origin + '/dashboard/products?highlight=' + encodeURIComponent(res.id);
+                } else if (claimBtn) {
+                  claimBtn.href = '/dashboard';
+                }
+                if (popup && !window._conversionPopupShown) {
+                  window._conversionPopupShown = true;
+                  popup.classList.remove('hidden');
+                  popup.classList.add('flex');
+                }
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+              })
+              .catch(function(err) {
+                if (toastEl) { toastEl.textContent = 'Save failed: ' + (err.message || 'Network error'); toastEl.classList.remove('hidden'); toastEl.classList.remove('text-emerald-600'); toastEl.classList.add('text-red-600'); }
+                saveDraftBtn.disabled = false;
+                saveDraftBtn.innerHTML = 'Save as draft';
+              });
+          });
+        }
+
+        document.getElementById('scan-view-back').addEventListener('click', function(e) {
+          e.preventDefault();
+          if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
+          window.location.href = '/landing.html';
+        });
+
+        (function() {
+          var popup = document.getElementById('conversion-popup');
+          var closeBtn = document.getElementById('conversion-popup-close');
+          function hideConversionPopup() {
+            if (popup) { popup.classList.add('hidden'); popup.classList.remove('flex'); }
+          }
+          if (closeBtn) closeBtn.addEventListener('click', hideConversionPopup);
+          if (popup) popup.addEventListener('click', function(e) { if (e.target === popup) hideConversionPopup(); });
+        })();
+      }
+    });
+    // Ensure dashboard links use current origin (same port as this page)
+    (function() {
+      var origin = window.location.origin;
+      document.querySelectorAll('a[href="/dashboard"]').forEach(function(a) {
+        a.setAttribute('href', origin + '/dashboard');
+      });
+      document.querySelectorAll('a[href^="/dashboard"]').forEach(function(a) {
+        var path = a.getAttribute('href');
+        if (path && path.startsWith('/')) a.setAttribute('href', origin + path);
+      });
+    })();
+  </script>
+</body>
+</html>

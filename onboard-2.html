@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+  <title>Gets smarter every sale. | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .progress-dot { width: 6px; height: 6px; border-radius: 3px; background: #e4e4e7; }
+    .progress-dot.current { width: 20px; background: #18181b; }
+    .icon-box { width: 120px; height: 120px; }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex justify-end px-5 pt-6 pb-2 shrink-0">
+      <a href="/landing.html" class="text-sm font-medium text-zinc-500 hover:text-zinc-900">Skip</a>
+    </header>
+    <main class="flex-1 flex flex-col items-center justify-center px-6 text-center">
+      <div class="icon-box rounded-2xl bg-white border border-zinc-200 flex items-center justify-center mb-8">
+        <span class="text-4xl font-bold text-zinc-400">2</span>
+      </div>
+      <h1 class="text-2xl font-bold text-zinc-900 mb-3">Gets smarter every sale.</h1>
+      <p class="text-sm text-zinc-500 leading-relaxed max-w-sm">
+        The AI learns your store — what sells fast for you, your best platforms, your pricing sweet spot. After 50 listings it knows your business better than you do.
+      </p>
+      <div class="mt-10 flex justify-center gap-1.5">
+        <span class="progress-dot"></span>
+        <span class="progress-dot current"></span>
+        <span class="progress-dot"></span>
+      </div>
+      <a href="/onboard-3.html" class="mt-8 w-full max-w-xs py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] hover:bg-zinc-800 transition-colors no-underline text-center">
+        Next
+      </a>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="view-transition" content="same-origin" />
+  <meta name="auralink-publishing-url" content="http://localhost:8001" />
+  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <title>Listings | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };</script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .vercel-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .vercel-headline { font-weight: 700; color: #0a0a0a; letter-spacing: -0.025em; }
+    .vercel-body { font-weight: 400; color: #525252; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <!-- Header: same as flow-3.html -->
+    <header class="shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+      <div></div>
+      <a href="/landing.html" class="inline-flex items-center justify-self-center no-underline text-[#111] leading-none py-0.5"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <div class="justify-self-end"></div>
+    </header>
+    <main class="flex-1 flex flex-col px-5 pt-6 pb-8 overflow-auto min-h-0">
+      <h1 class="vercel-headline text-xl font-bold text-[#0a0a0a] mb-1 text-center">Your listings</h1>
+      <p class="text-center text-sm text-[#525252] mb-4 vercel-body">Every listing Synclyst created or synced—one place to browse.</p>
+      <p id="listings-total" class="text-center text-sm text-[#71717a] mb-6 vercel-body">— listings</p>
+      <div id="listings-container" class="space-y-3 flex-1 min-h-0">
+        <p id="listings-loading" class="text-sm text-[#71717a]">Loading…</p>
+      </div>
+      <div id="listings-empty" class="hidden text-center py-12 flex-1">
+        <p class="text-sm text-[#525252] mb-4">No listings yet.</p>
+        <a href="/scan" class="inline-flex items-center gap-2 py-3 px-5 rounded-xl bg-black text-white font-semibold text-sm no-underline">
+          <i data-lucide="camera" class="w-4 h-4"></i>
+          Scan your first product
+        </a>
+      </div>
+      <div class="mt-auto pt-6 shrink-0">
+        <a href="/dashboard/home" class="block w-full py-3.5 rounded-xl bg-black text-white font-semibold text-[15px] text-center no-underline hover:opacity-95 transition-opacity">
+          Return to dashboard
+        </a>
+      </div>
+    </main>
+  </div>
+  <script>
+    (function() {
+      var allListings = [];
+
+      function getPublishingUrl() {
+        var meta = document.querySelector('meta[name="auralink-publishing-url"]');
+        var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
+        var host = window.location.hostname;
+        if (host && host !== 'localhost' && host !== '127.0.0.1') {
+          var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
+          if (prodMeta && prodMeta.getAttribute('content')) url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+        }
+        return url;
+      }
+      function getToken() { try { return sessionStorage.getItem('auralink_jwt'); } catch (e) { return null; } }
+      function fetchToken() {
+        var base = getPublishingUrl();
+        return fetch(base + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(d) { if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; } return null; });
+      }
+
+      function formatPrice(val) {
+        if (val == null || val === '') return '—';
+        var n = Number(val);
+        if (isNaN(n)) return String(val);
+        // Matches publishing API + flow-3: price is minor units (pence for GBP), not decimal pounds
+        return '£' + (n / 100).toFixed(2);
+      }
+
+      function getPlatformsFromListing(listing) {
+        var pr = (listing.publish_results || {});
+        var keys = Object.keys(pr);
+        if (keys.length === 0) return [];
+        return keys.filter(function(k) { return pr[k] && pr[k].success; });
+      }
+
+      function renderListings() {
+        var totalEl = document.getElementById('listings-total');
+        var container = document.getElementById('listings-container');
+        var emptyEl = document.getElementById('listings-empty');
+        if (totalEl) totalEl.textContent = allListings.length + ' listing' + (allListings.length !== 1 ? 's' : '');
+
+        if (allListings.length === 0) {
+          container.classList.add('hidden');
+          emptyEl.classList.remove('hidden');
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          return;
+        }
+        emptyEl.classList.add('hidden');
+        container.classList.remove('hidden');
+        container.innerHTML = '';
+        allListings.forEach(function(l) {
+          var u = l.universal_data || l;
+          var title = (u.title || '').trim() || 'Untitled';
+          var price = formatPrice(u.price);
+          var platforms = getPlatformsFromListing(l);
+          var platformLabel = platforms.length ? platforms.join(', ') : (l.status === 'published' ? 'Published' : 'Draft');
+          var statusClass = l.status === 'published' ? 'bg-[#ecfdf5] border-[#059669] text-[#059669]' : 'bg-[#f5f5f5] border-[#e5e5e5] text-[#525252]';
+          var photo = Array.isArray(u.photos) && u.photos[0] ? u.photos[0] : null;
+          var thumb = '';
+          if (photo) {
+            if (typeof photo === 'string') thumb = photo;
+            else if (photo.url) thumb = photo.url;
+            else if (photo.imageDataUrl) thumb = photo.imageDataUrl;
+          }
+          var card = document.createElement('a');
+          card.href = '/listings-detail.html?id=' + encodeURIComponent(l.id);
+          card.className = 'vercel-card p-4 flex items-center gap-3 no-underline text-[#0a0a0a] hover:bg-[#fafafa] transition-colors block';
+          card.innerHTML = '<div class="w-12 h-12 rounded-xl bg-[#f5f5f5] border border-[#e5e5e5] shrink-0 overflow-hidden flex items-center justify-center">' +
+            (thumb ? '<img src="' + thumb + '" alt="" class="w-full h-full object-cover" />' : '<i data-lucide="image" class="w-6 h-6 text-[#a1a1aa]"></i>') +
+            '</div>' +
+            '<div class="min-w-0 flex-1">' +
+              '<p class="font-semibold text-[#0a0a0a] truncate">' + title + '</p>' +
+              '<p class="text-xs text-[#525252] mt-0.5">' + price + (platforms.length ? ' · ' + platformLabel : '') + '</p>' +
+            '</div>' +
+            '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full border shrink-0 ' + statusClass + '">' + (l.status === 'published' ? 'Published' : 'Draft') + '</span>';
+          container.appendChild(card);
+        });
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+
+      var token = getToken();
+      (token ? Promise.resolve(token) : fetchToken()).then(function(t) {
+        if (!t) {
+          document.getElementById('listings-loading').textContent = 'Get a token first (e.g. start a scan).';
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          return;
+        }
+        var base = getPublishingUrl();
+        return fetch(base + '/api/listings', { headers: { 'Authorization': 'Bearer ' + t } })
+          .then(function(r) { return r.ok ? r.json() : { listings: [] }; })
+          .then(function(data) {
+            allListings = data.listings || [];
+            document.getElementById('listings-loading').classList.add('hidden');
+            renderListings();
+          })
+          .catch(function() {
+            document.getElementById('listings-loading').textContent = 'Could not load listings.';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          });
+      }).catch(function() { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+    })();
+  </script>
+</body>
+</html>

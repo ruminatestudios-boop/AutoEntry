@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+  <title>Plans | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .accordion-panel { display: none; }
+    .accordion-item.is-open .accordion-panel { display: block; }
+    .accordion-item.is-open .accordion-chevron { transform: rotate(180deg); }
+    .accordion-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d4d4d8; flex-shrink: 0; }
+    .accordion-item.is-open .accordion-radio { border-color: #18181b; background: #18181b; }
+    .accordion-item.plan-current.is-open .accordion-radio { border-color: #b45309; background: #b45309; }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
+      <a href="settings.html" class="flex items-center gap-2 text-zinc-900 no-underline">
+        <span class="text-lg">←</span>
+        <span class="font-semibold">Settings</span>
+      </a>
+      <h1 class="text-lg font-bold text-zinc-900">Plans</h1>
+      <span class="w-14"></span>
+    </header>
+
+    <main class="flex-1 px-5 py-4 overflow-auto">
+      <p class="text-sm text-zinc-600 mb-4">You're on <strong>Pro</strong> · renews 1 Apr 2026</p>
+
+      <div class="space-y-3 mb-6">
+        <!-- Free -->
+        <div class="accordion-item rounded-xl bg-white border border-zinc-200 overflow-hidden" data-plan="free">
+          <button type="button" class="accordion-trigger w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-zinc-50 transition-colors">
+            <span class="accordion-radio"></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-zinc-900 leading-tight">Free</p>
+              <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Try it out</p>
+            </div>
+            <span class="text-lg font-bold text-zinc-900 shrink-0">$0/mo</span>
+            <span class="accordion-chevron text-zinc-400 transition-transform shrink-0 ml-1">▼</span>
+          </button>
+          <div class="accordion-panel border-t border-zinc-100 px-5 pb-4 pt-3">
+            <ul class="space-y-2 text-sm text-zinc-700">
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 3 scans per month</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Publish to Shopify</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Web enrichment (exact name, price)</li>
+              <li class="flex items-center gap-2"><span class="text-zinc-300">○</span> Batch processing</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Starter -->
+        <div class="accordion-item rounded-xl bg-white border border-zinc-200 overflow-hidden" data-plan="starter">
+          <button type="button" class="accordion-trigger w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-zinc-50 transition-colors">
+            <span class="accordion-radio"></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-zinc-900 leading-tight">Starter</p>
+              <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Low-volume sellers</p>
+            </div>
+            <span class="text-lg font-bold text-zinc-900 shrink-0">$12/mo</span>
+            <span class="accordion-chevron text-zinc-400 transition-transform shrink-0 ml-1">▼</span>
+          </button>
+          <div class="accordion-panel border-t border-zinc-100 px-5 pb-4 pt-3">
+            <ul class="space-y-2 text-sm text-zinc-700">
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 50 scans per month</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Publish to Shopify</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Web enrichment</li>
+              <li class="flex items-center gap-2"><span class="text-zinc-300">○</span> Batch processing</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Pro (current) -->
+        <div class="accordion-item plan-current rounded-xl bg-amber-50 border-2 border-amber-200 overflow-hidden relative" data-plan="pro">
+          <span class="absolute top-2.5 right-2.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-200 px-2.5 py-1 rounded z-10">Current</span>
+          <button type="button" class="accordion-trigger w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-amber-100/50 transition-colors pr-24">
+            <span class="accordion-radio"></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-zinc-900 leading-tight">Pro</p>
+              <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Active sellers</p>
+            </div>
+            <span class="text-lg font-bold text-zinc-900 shrink-0">$29/mo</span>
+            <span class="accordion-chevron text-zinc-500 transition-transform shrink-0 ml-1">▼</span>
+          </button>
+          <div class="accordion-panel border-t border-amber-200/50 px-5 pb-4 pt-3">
+            <ul class="space-y-2 text-sm text-zinc-700">
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 250 scans per month</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Publish to Shopify</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Web enrichment</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 2 connected stores</li>
+              <li class="flex items-center gap-2"><span class="text-zinc-300">○</span> Batch processing</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Business -->
+        <div class="accordion-item rounded-xl bg-white border border-zinc-200 overflow-hidden" data-plan="business">
+          <button type="button" class="accordion-trigger w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-zinc-50 transition-colors">
+            <span class="accordion-radio"></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-zinc-900 leading-tight">Business</p>
+              <p class="text-xs text-zinc-500 mt-0.5 leading-tight">Power sellers & batch</p>
+            </div>
+            <span class="text-lg font-bold text-zinc-900 shrink-0">$79/mo</span>
+            <span class="accordion-chevron text-zinc-400 transition-transform shrink-0 ml-1">▼</span>
+          </button>
+          <div class="accordion-panel border-t border-zinc-100 px-5 pb-4 pt-3">
+            <ul class="space-y-2 text-sm text-zinc-700">
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 1,000 scans per month</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> <strong>Batch processing</strong></li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Publish to Shopify</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> Web enrichment</li>
+              <li class="flex items-center gap-2"><span class="text-emerald-500">✓</span> 5 connected stores</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" id="plans-upgrade-btn" class="w-full py-3 rounded-xl border-2 border-zinc-900 bg-zinc-900 text-white font-semibold text-sm hover:bg-zinc-800 transition-colors">
+        Upgrade
+      </button>
+    </main>
+  </div>
+
+  <script>
+    (function() {
+      var items = document.querySelectorAll('.accordion-item');
+      var triggers = document.querySelectorAll('.accordion-trigger');
+      function closeAll() {
+        items.forEach(function(el) { el.classList.remove('is-open'); });
+      }
+      function openItem(item) {
+        closeAll();
+        item.classList.add('is-open');
+      }
+      triggers.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var item = btn.closest('.accordion-item');
+          if (item.classList.contains('is-open')) {
+            closeAll();
+          } else {
+            openItem(item);
+          }
+        });
+      });
+      // Open Pro (current) by default
+      var current = document.querySelector('.accordion-item.plan-current');
+      if (current) openItem(current);
+
+      function getSelectedPlan() {
+        var open = document.querySelector('.accordion-item.is-open');
+        if (open) {
+          var id = open.getAttribute('data-plan');
+          if (id) return id;
+        }
+        return 'pro';
+      }
+
+      var upgradeBtn = document.getElementById('plans-upgrade-btn');
+      if (upgradeBtn) upgradeBtn.addEventListener('click', function() {
+        sessionStorage.setItem('auralink_selected_plan', getSelectedPlan());
+        window.location.href = 'checkout.html';
+      });
+    })();
+  </script>
+</body>
+</html>

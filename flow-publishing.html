@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="view-transition" content="same-origin" />
+  <meta name="auralink-publishing-url" content="http://localhost:8001" />
+  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <title>Publishing | Listing Flow | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+  <script src="/js/clip-meta-description.js"></script>
+  <script src="/js/synclyst-publish-from-draft.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .step-segment { width: 8px; height: 4px; border-radius: 2px; background: #e4e4e7; }
+    .step-segment.filled { background: #18181b; }
+    .publish-icon-wrap img { width: 100%; height: 100%; object-fit: contain; }
+    .marketplace-icon { width: 100%; height: 100%; object-fit: contain; }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div id="synclyst-flow-shell" class="max-w-md mx-auto min-h-screen flex flex-col">
+    <main class="flex-1 px-5 pt-6 pb-6 overflow-auto flex flex-col items-center text-center">
+      <div class="w-20 h-20 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mb-6 publish-icon-wrap">
+        <svg class="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+      </div>
+
+      <h1 class="text-xl font-semibold tracking-tight text-zinc-900 mb-1">Publishing your listing</h1>
+      <p class="text-sm text-zinc-500 mb-8" id="publishing-count-text">Syncing to 3 marketplaces…</p>
+
+      <div class="w-full space-y-3 mb-6" id="publishing-stores-list"></div>
+
+      <p id="publishing-inline-error" class="hidden w-full text-sm text-red-600 text-left mb-4"></p>
+      <a href="/review" id="publishing-edit-fallback" class="hidden w-full py-3 rounded-xl border border-zinc-300 text-zinc-800 font-semibold text-[15px] text-center no-underline mb-3">Review listing</a>
+
+      <div class="flex items-center justify-center gap-1 mt-auto pt-4 pb-3">
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+        <span class="step-segment filled"></span>
+      </div>
+      <a href="/listing/published" id="publishing-done-btn" class="block w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline">
+        Done
+      </a>
+    </main>
+  </div>
+  <script>
+    (function() {
+      var STORAGE_KEY = 'auralink_selected_marketplaces';
+      var meta = {
+        tiktok_shop: { name: 'TikTok Shop', domain: 'tiktok.com', letter: 'T' },
+        amazon: { name: 'Amazon', domain: 'amazon.com', letter: 'A' },
+        shopify: { name: 'Shopify', domain: 'shopify.com', letter: 'S' },
+        ebay: { name: 'eBay', domain: 'ebay.com', letter: 'E', logoUrl: '/assets/ebay-logo.png' },
+        etsy: { name: 'Etsy', domain: 'etsy.com', letter: 'E' },
+        depop: { name: 'Depop', domain: 'depop.com', letter: 'D' },
+        walmart: { name: 'Walmart', domain: 'walmart.com', letter: 'W' },
+        poshmark: { name: 'Poshmark', domain: 'poshmark.com', letter: 'P' },
+        mercari: { name: 'Mercari', domain: 'mercari.com', letter: 'M' },
+        vinted: { name: 'Vinted', domain: 'vinted.com', letter: 'V' }
+      };
+
+      function loadSelected() {
+        try {
+          var raw = sessionStorage.getItem(STORAGE_KEY);
+          if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length > 0) return arr; }
+        } catch (e) {}
+        return ['shopify'];
+      }
+
+      function renderStoreRows(selected) {
+        var countEl = document.getElementById('publishing-count-text');
+        if (countEl) countEl.textContent = selected.length === 1 ? 'Syncing to 1 marketplace…' : 'Syncing to ' + selected.length + ' marketplaces…';
+        var container = document.getElementById('publishing-stores-list');
+        if (!container) return;
+        container.innerHTML = '';
+        selected.forEach(function(id, i) {
+          var m = meta[id];
+          if (!m) return;
+          var logoUrl = m.logoUrl || ('https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128');
+          var statusHtml;
+          if (i === 0) statusHtml = '<span class="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-white text-xs flex-shrink-0"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg></span>';
+          else if (i === 1) statusHtml = '<span class="w-5 h-5 rounded-full border-2 border-zinc-300 border-t-zinc-600 animate-spin flex-shrink-0"></span>';
+          else statusHtml = '<span class="text-xs text-zinc-500 flex items-center gap-1.5 flex-shrink-0"><svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Waiting…</span>';
+          var row = document.createElement('div');
+          row.className = 'rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between';
+          row.innerHTML = '<div class="flex items-center gap-3">' +
+            '<span class="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden p-1.5">' +
+              '<img src="' + logoUrl + '" alt="" class="marketplace-icon" onerror="this.style.display=\'none\';var n=this.nextElementSibling;n&&n.classList.remove(\'hidden\');" />' +
+              '<span class="text-zinc-600 text-sm font-bold hidden">' + m.letter + '</span></span>' +
+            '<span class="font-semibold text-zinc-900">' + m.name + '</span></div>' + statusHtml;
+          container.appendChild(row);
+        });
+      }
+
+      var params = new URLSearchParams(window.location.search || '');
+      var runPublish = params.get('run') === '1';
+      var shopParam = params.get('shop') || '';
+      var selected = loadSelected();
+      var doneBtn = document.getElementById('publishing-done-btn');
+      var errEl = document.getElementById('publishing-inline-error');
+      var editFallback = document.getElementById('publishing-edit-fallback');
+
+      if (!runPublish) {
+        renderStoreRows(selected);
+        return;
+      }
+
+      if (doneBtn) doneBtn.classList.add('hidden');
+      var sub = document.getElementById('publishing-count-text');
+      if (sub) sub.textContent = 'Preparing your listing…';
+      renderStoreRows(selected);
+
+      function reviewHref() {
+        var q = '?shopify=connected';
+        if (shopParam) q += '&shop=' + encodeURIComponent(shopParam);
+        return '/review' + q;
+      }
+
+      if (typeof SynclystPublishFromDraft === 'undefined') {
+        if (errEl) { errEl.textContent = 'Publishing script failed to load. Refresh and try again.'; errEl.classList.remove('hidden'); }
+        if (editFallback) { editFallback.href = reviewHref(); editFallback.classList.remove('hidden'); }
+        if (doneBtn) doneBtn.classList.remove('hidden');
+        return;
+      }
+
+      SynclystPublishFromDraft.publish()
+        .then(function() {
+          if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/listing/published');
+          else window.location.href = '/listing/published';
+        })
+        .catch(function(e) {
+          if (doneBtn) doneBtn.classList.remove('hidden');
+          var code = e && e.code;
+          if (code === 'NO_TOKEN' || code === 'SHOPIFY_NOT_CONNECTED') {
+            window.location.href = '/connect-store?return=review';
+            return;
+          }
+          if (code === 'NO_PHOTOS' || code === 'NO_PRICE') {
+            if (errEl) {
+              errEl.textContent = e.message || 'Complete your listing first.';
+              errEl.classList.remove('hidden');
+            }
+            if (editFallback) {
+              editFallback.href = reviewHref();
+              editFallback.classList.remove('hidden');
+            }
+            return;
+          }
+          alert(e && e.message ? e.message : 'Publish failed.');
+        });
+    })();
+  </script>
+</body>
+</html>

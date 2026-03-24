@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+  <title>Notifications | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
+      <span class="w-10 h-10" aria-hidden="true"></span>
+      <h1 class="text-lg font-bold text-zinc-900">Notifications</h1>
+      <button type="button" class="text-sm font-semibold text-zinc-900">Clear all</button>
+    </header>
+
+    <main class="flex-1 px-5 py-4 overflow-auto">
+      <div class="space-y-3">
+        <!-- Notification 1 - unread -->
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex gap-3 relative">
+          <span class="absolute top-4 right-4 w-2 h-2 rounded-full bg-amber-500"></span>
+          <div class="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 text-sm font-bold shrink-0">$</div>
+          <div class="min-w-0 flex-1">
+            <p class="font-medium text-zinc-900">Sony WH-1000XM5 sold on TikTok</p>
+            <p class="text-xs text-zinc-500 mt-0.5">$269 · 2.1 days to sell</p>
+            <p class="text-[11px] text-zinc-400 mt-1">2h ago</p>
+          </div>
+        </div>
+        <!-- Notification 2 -->
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex gap-3">
+          <div class="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-sm font-bold shrink-0">B</div>
+          <div class="min-w-0 flex-1">
+            <p class="font-medium text-zinc-900">AI learned from your last 5 listings</p>
+            <p class="text-xs text-zinc-500 mt-0.5">Pricing IQ +12%</p>
+            <p class="text-[11px] text-zinc-400 mt-1">Yesterday</p>
+          </div>
+        </div>
+        <!-- Notification 3 - unread -->
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex gap-3 relative">
+          <span class="absolute top-4 right-4 w-2 h-2 rounded-full bg-amber-500"></span>
+          <div class="w-10 h-10 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 text-sm font-bold shrink-0">!</div>
+          <div class="min-w-0 flex-1">
+            <p class="font-medium text-zinc-900">Electronics underprice alert</p>
+            <p class="text-xs text-zinc-500 mt-0.5">Avg $18 below market on eBay</p>
+            <p class="text-[11px] text-zinc-400 mt-1">2 days ago</p>
+          </div>
+        </div>
+        <!-- Notification 4 -->
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex gap-3">
+          <div class="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-sm font-bold shrink-0">S</div>
+          <div class="min-w-0 flex-1">
+            <p class="font-medium text-zinc-900">Weekly stats ready</p>
+            <p class="text-xs text-zinc-500 mt-0.5">84 listed, 67 sold</p>
+            <p class="text-[11px] text-zinc-400 mt-1">3 days ago</p>
+          </div>
+        </div>
+        <!-- Notification 5 -->
+        <div class="rounded-xl bg-white border border-zinc-200 p-4 flex gap-3">
+          <div class="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 text-sm font-bold shrink-0">T</div>
+          <div class="min-w-0 flex-1">
+            <p class="font-medium text-zinc-900">Best category: Vintage clothing</p>
+            <p class="text-xs text-zinc-500 mt-0.5">94% sell rate</p>
+            <p class="text-[11px] text-zinc-400 mt-1">1 week ago</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowLeft') return;
+      if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
+      e.preventDefault();
+      history.back();
+    });
+  </script>
+</body>
+</html>

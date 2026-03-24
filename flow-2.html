@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="view-transition" content="same-origin" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
   <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
   <title>Processing | Listing Flow | SyncLyst</title>
@@ -10,6 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
   <script>
     tailwind.config = {
       theme: {
@@ -20,47 +26,89 @@
     };
   </script>
   <style>
-    .vercel-card { background: #fff; border: 1px solid #eaeaea; border-radius: 16px; }
-    .proc-fill { transition: width 0.5s ease-out; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    .vercel-headline { font-weight: 700; color: #0a0a0a; letter-spacing: -0.025em; }
+    .vercel-body { font-weight: 400; color: #525252; }
+    .vercel-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .smart-suggest-banner { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%); border-radius: 14px; border: 1px solid #e4e4e7; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .smart-suggest-banner .smart-suggest-icon-wrap { flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; background: #fff; border: 1px solid #e4e4e7; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    .smart-suggest-banner .smart-suggest-icon-wrap img,
+    .smart-suggest-banner .smart-suggest-icon-wrap svg { display: block; }
+    .smart-suggest-banner .smart-suggest-text { flex: 1; min-width: 0; }
+    .smart-suggest-banner .smart-suggest-title { font-size: 13px; font-weight: 600; color: #18181b; display: block; line-height: 1.3; margin-bottom: 0; }
+    .smart-suggest-banner .smart-suggest-desc { font-size: 12px; font-weight: 400; color: #52525b; line-height: 1.35; display: block; margin-top: 4px; }
+    /* Segmented progress bar — same UI as flow-3 listing quality bar */
+    .listing-quality-bar-track { display: flex; gap: 1px; height: 8px; align-items: stretch; }
+    .listing-quality-segment { flex: 1; min-width: 1px; border-radius: 1px; background: #e5e5e5; transition: background 0.25s ease; }
+    .listing-quality-segment.filled { background: var(--seg-color, #eab308); }
+    .listing-quality-bar-track.proc-bar-waiting {
+      animation: procBarPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes procBarPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.88; }
+    }
     .progress-dot { width: 6px; height: 6px; border-radius: 3px; background: #e4e4e7; transition: all 0.3s; }
-    .progress-dot.done { background: #18181b; }
-    .progress-dot.current { width: 20px; background: #18181b; }
+    .progress-dot.done { background: #22c55e; }
+    .progress-dot.current { width: 20px; background: #eab308; }
     .proc-item { transition: color 0.2s; }
     .proc-item.done { color: #18181b; }
-    .proc-item.pending { color: #a1a1aa; }
+    .proc-item.pending { color: #71717a; }
+    .proc-item .step-icon-done { width: 20px; height: 20px; border-radius: 50%; background: #22c55e; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: bold; }
+    .proc-item .step-icon-pending { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #e4e4e7; flex-shrink: 0; }
+    .proc-item .step-icon-current { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #eab308; border-top-color: transparent; flex-shrink: 0; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .marketplace-logo { width: 28px; height: 28px; object-fit: contain; opacity: 0.85; }
+
   </style>
 </head>
-<body class="min-h-screen bg-[#fafafa] font-sans text-[#111] antialiased">
-  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
-    <header class="shrink-0 border-b border-[#eaeaea] bg-white px-4 h-14 flex items-center justify-center">
-      <a href="/" class="text-xl font-bold tracking-tight text-[#111]">SyncLyst</a>
+<body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
+  <div id="synclyst-flow-shell" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+    <!-- Header: same layout as flow-3 (centered logo, h-14, divider) -->
+    <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
+      <div aria-hidden="true"></div>
+      <a href="/landing.html" class="inline-flex items-center justify-self-center no-underline text-[#111]"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <div aria-hidden="true"></div>
     </header>
     <main class="flex-1 px-5 pt-6 pb-6 overflow-auto">
-      <div class="text-center mb-6">
-        <h1 class="font-sans font-semibold text-xl text-zinc-900 mb-1">Reading your product</h1>
-        <p class="text-sm text-zinc-500 mb-8">AI is working its magic…</p>
-      </div>
-      <div class="vercel-card rounded-2xl border border-[#eaeaea] p-6">
-        <div class="h-1 bg-zinc-200 rounded-full overflow-hidden mb-2">
-          <div id="proc-fill" class="proc-fill h-full bg-zinc-900 rounded-full" style="width: 0%;"></div>
+      <h1 class="vercel-headline text-xl font-bold text-[#0a0a0a] mb-1 text-center">Reading your product</h1>
+      <p class="text-center text-sm text-[#525252] mb-6 vercel-body">AI is working its magic…</p>
+
+      <div class="smart-suggest-banner mb-6 w-full text-left" role="status" aria-live="polite">
+        <div class="smart-suggest-icon-wrap" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h3l1.5-2h5L15 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
+            <circle cx="12" cy="13" r="3.25" />
+          </svg>
         </div>
-        <p id="proc-pct" class="text-right text-sm font-medium text-zinc-600 mb-6">0%</p>
-        <ul class="space-y-3 text-sm" id="proc-list">
-          <li class="proc-item done flex items-center gap-3" data-step="0"><span class="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center text-white text-[10px] shrink-0">✓</span> OCR — reading labels</li>
-          <li class="proc-item done flex items-center gap-3" data-step="1"><span class="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center text-white text-[10px] shrink-0">✓</span> Object recognition</li>
-          <li class="proc-item done flex items-center gap-3" data-step="2"><span class="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center text-white text-[10px] shrink-0">✓</span> Brand & model identified</li>
-          <li class="proc-item pending flex items-center gap-3" data-step="3"><span class="w-4 h-4 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin shrink-0"></span> Writing title & description</li>
-          <li class="proc-item pending flex items-center gap-3" data-step="4"><span class="w-4 h-4 rounded-full border-2 border-zinc-200 shrink-0"></span> Building SEO tags</li>
-          <li class="proc-item pending flex items-center gap-3" data-step="5"><span class="w-4 h-4 rounded-full border-2 border-zinc-200 shrink-0"></span> Checking your sell history</li>
-          <li class="proc-item pending flex items-center gap-3" data-step="6"><span class="w-4 h-4 rounded-full border-2 border-zinc-200 shrink-0"></span> Recommending price</li>
+        <div class="smart-suggest-text">
+          <span class="smart-suggest-title">What we’re doing with your scan</span>
+          <span class="smart-suggest-desc">From this scan we draft your listing — the list tracks each stage.</span>
+        </div>
+      </div>
+
+      <div class="vercel-card p-6">
+        <div id="proc-bar" class="listing-quality-bar-track mb-2" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        <p id="proc-pct" class="text-right text-sm font-semibold text-zinc-600 mb-6">0%</p>
+        <p id="proc-wait" class="hidden -mt-4 mb-6 text-xs text-zinc-500 text-center">
+          Still reading — review opens when ready.
+        </p>
+        <ul class="space-y-4 text-sm" id="proc-list">
+          <li class="proc-item done flex items-center gap-3" data-step="0"><span class="step-icon-done">✓</span> OCR — reading labels</li>
+          <li class="proc-item done flex items-center gap-3" data-step="1"><span class="step-icon-done">✓</span> Object recognition</li>
+          <li class="proc-item done flex items-center gap-3" data-step="2"><span class="step-icon-done">✓</span> Brand & model identified</li>
+          <li class="proc-item pending flex items-center gap-3" data-step="3"><span class="step-icon-current"></span> Writing title & description</li>
+          <li class="proc-item pending flex items-center gap-3" data-step="4"><span class="step-icon-pending"></span> Building SEO tags</li>
+          <li class="proc-item pending flex items-center gap-3" data-step="5"><span class="step-icon-pending"></span> Checking your sell history</li>
+          <li class="proc-item pending flex items-center gap-3" data-step="6"><span class="step-icon-pending"></span> Recommending price</li>
         </ul>
       </div>
     </main>
     <div id="proc-error-wrap" class="hidden px-5 pb-6">
       <p id="proc-error-msg" class="text-sm text-red-600 mb-3"></p>
-      <a href="/?mode=scan" class="text-sm font-semibold text-[#111] underline">Back to scan</a>
+      <a href="/scan" class="text-sm font-semibold text-[#111] underline">Back to scan</a>
     </div>
-    <div class="p-5 pt-4 border-t border-[#eaeaea] shrink-0 bg-[#fafafa]">
+    <div class="p-4 pt-3 border-t border-[#e5e5e5] shrink-0 bg-white">
       <div class="flex items-center justify-between">
         <span class="w-10 h-10 shrink-0" aria-hidden="true"></span>
         <span class="w-10 h-10 shrink-0" aria-hidden="true"></span>
@@ -79,8 +127,9 @@
     (function() {
       var PENDING_SCAN_KEY = 'auralink_pending_scan';
       var DRAFT_LISTING_KEY = 'auralink_draft_listing';
-      var fillEl = document.getElementById('proc-fill');
+      var barEl = document.getElementById('proc-bar');
       var pctEl = document.getElementById('proc-pct');
+      var waitEl = document.getElementById('proc-wait');
       var listEl = document.getElementById('proc-list');
       var cardEl = document.querySelector('.vercel-card');
       var errorWrap = document.getElementById('proc-error-wrap');
@@ -88,11 +137,56 @@
       var steps = listEl ? listEl.querySelectorAll('.proc-item') : [];
       var stepIndex = 3;
       var extractionDone = false;
+      var extractionInFlight = false;
+      var extractionOk = false;
+      var SEGMENTS = 60;
+      var gradientStops = [{ p: 0, r: 234, g: 179, b: 8 }, { p: 1, r: 34, g: 197, b: 94 }];
 
+      function interpColor(t) {
+        var i = 0;
+        while (i + 1 < gradientStops.length && gradientStops[i + 1].p < t) i++;
+        var a = gradientStops[i];
+        var b = gradientStops[Math.min(i + 1, gradientStops.length - 1)];
+        var s = (t - a.p) / (b.p - a.p || 1);
+        s = Math.max(0, Math.min(1, s));
+        var r = Math.round(a.r + (b.r - a.r) * s);
+        var g = Math.round(a.g + (b.g - a.g) * s);
+        var bl = Math.round(a.b + (b.b - a.b) * s);
+        return '#' + [r, g, bl].map(function(x) { var h = x.toString(16); return h.length === 1 ? '0' + h : h; }).join('');
+      }
+      function renderProcBar(pct) {
+        if (!barEl) return;
+        pct = Math.min(100, Math.max(0, pct));
+        barEl.setAttribute('aria-valuenow', Math.round(pct));
+        var filledCount = Math.round((pct / 100) * SEGMENTS);
+        var html = '';
+        for (var i = 0; i < SEGMENTS; i++) {
+          if (i < filledCount) {
+            var p = (i + 0.5) / SEGMENTS;
+            var color = interpColor(p);
+            html += '<span class="listing-quality-segment filled" style="background:' + color + '"></span>';
+          } else {
+            html += '<span class="listing-quality-segment"></span>';
+          }
+        }
+        barEl.innerHTML = html;
+      }
+      var lastPct = 0;
       function setPct(value) {
-        var pct = Math.min(100, Math.round(value));
-        if (fillEl) fillEl.style.width = pct + '%';
-        if (pctEl) pctEl.textContent = pct + '%';
+        var v = Math.min(100, Math.max(0, value));
+        lastPct = v;
+        renderProcBar(v);
+        if (pctEl) pctEl.textContent = Math.round(v) + '%';
+      }
+      function setWaiting(on) {
+        if (barEl) {
+          if (on) barEl.classList.add('proc-bar-waiting');
+          else barEl.classList.remove('proc-bar-waiting');
+        }
+        if (waitEl) {
+          if (on) waitEl.classList.remove('hidden');
+          else waitEl.classList.add('hidden');
+        }
       }
       function markStepDone(index) {
         var li = steps[index];
@@ -101,13 +195,36 @@
         li.classList.add('done');
         var icon = li.querySelector('span');
         if (icon) {
-          icon.className = 'w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center text-white text-[10px] shrink-0';
+          icon.className = 'step-icon-done';
           icon.textContent = '✓';
+        }
+      }
+      function setCurrentStep(index) {
+        for (var i = 0; i < steps.length; i++) {
+          var li = steps[i];
+          var icon = li ? li.querySelector('span') : null;
+          if (!li || !icon) continue;
+          li.classList.remove('pending', 'done');
+          if (i < index) {
+            li.classList.add('done');
+            icon.className = 'step-icon-done';
+            icon.textContent = '✓';
+          } else if (i === index) {
+            li.classList.add('pending');
+            icon.className = 'step-icon-current';
+            icon.textContent = '';
+          } else {
+            li.classList.add('pending');
+            icon.className = 'step-icon-pending';
+            icon.textContent = '';
+          }
         }
       }
       function redirectToFlow3() {
         try { sessionStorage.removeItem(PENDING_SCAN_KEY); } catch (e) {}
-        window.location.href = '/review';
+        var next = '/review';
+        if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(next);
+        else window.location.href = next;
       }
       function showError(message) {
         extractionDone = true;
@@ -128,48 +245,130 @@
           if (draftRaw && JSON.parse(draftRaw).extraction) draftOnly = true;
         } catch (e) {}
         if (!draftOnly) {
-          window.location.href = '/?mode=scan';
+          var scanHome = '/scan';
+          if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(scanHome);
+          else window.location.href = scanHome;
           return;
         }
       }
 
       var apiUrl = (document.querySelector('meta[name="auralink-api-url"]') && document.querySelector('meta[name="auralink-api-url"]').getAttribute('content')) || 'http://localhost:8000';
       apiUrl = (apiUrl || '').trim().replace(/\/$/, '') || 'http://localhost:8000';
-      // On production, call Cloud Run backend directly (bypasses Vercel proxy / env var)
       var host = window.location.hostname;
-      if (host && host !== 'localhost' && host !== '127.0.0.1') {
-        var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
-        apiUrl = (prodBackend && prodBackend.getAttribute('content')) ? prodBackend.getAttribute('content').trim().replace(/\/$/, '') : window.location.origin;
+      var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
+      // On localhost go directly to backend (avoids Next.js proxy timeouts).
+      // Backend CORS is configured for local dev.
+      if (host === 'localhost' || host === '127.0.0.1') {
+        apiUrl = apiUrl || 'http://localhost:8000';
+      } else if (prodBackend && prodBackend.getAttribute('content')) {
+        apiUrl = prodBackend.getAttribute('content').trim().replace(/\/$/, '');
+      } else if (host) {
+        apiUrl = window.location.origin;
       }
 
       var start = Date.now();
-      var duration = 6000;
+      /** Vision + OCR + web enrichment can exceed 45s; align with landing/index extract timeout. */
+      var EXTRACTION_TIMEOUT_MS = 180000;
+      var DRAFT_INTRO_MS = 4000;
+      /** While waiting: fast rise, then eases toward high 90s (not wall-clock seconds — avoids crawl + sudden jump). */
+      var PENDING_TAU_MS = 6500;
+      var PENDING_CAP = 97;
+      /** When extraction returns: smooth glide from current % to 100 (no snap). */
+      var COMPLETION_RAMP_MS = 480;
+      var completionRamp = null;
+
+      function finalizePendingSuccess(data) {
+        extractionDone = true;
+        setPct(100);
+        for (var i = 0; i < steps.length; i++) markStepDone(i);
+        var att = data.attributes || {};
+        var suggestedPrice = 199;
+        if (att.price_value != null && typeof att.price_value === 'number' && att.price_value > 0) suggestedPrice = att.price_value;
+        else if (att.price_display && typeof att.price_display === 'string') {
+          var match = att.price_display.replace(/[^\d.]/g, '').match(/[\d.]+/);
+          if (match && parseFloat(match[0]) > 0) suggestedPrice = parseFloat(match[0]);
+        }
+        var payload = { extraction: data, suggested_price: suggestedPrice, imageDataUrl: 'data:image/jpeg;base64,' + pending.base64 };
+        try {
+          sessionStorage.removeItem('auralink_review_draft');
+          sessionStorage.setItem(DRAFT_LISTING_KEY, JSON.stringify(payload));
+        } catch (e) {}
+        setTimeout(redirectToFlow3, 500);
+      }
+
       function tick() {
         if (extractionDone) return;
         var elapsed = Date.now() - start;
-        var t = Math.min(1, elapsed / duration);
-        var easeOut = 1 - Math.pow(1 - t, 1.5);
-        setPct(easeOut * 100);
-        var nextToReach = 3 + Math.floor(easeOut * 4);
+
+        if (completionRamp) {
+          var tr = Math.min(1, (Date.now() - completionRamp.start) / COMPLETION_RAMP_MS);
+          var ease = 1 - Math.pow(1 - tr, 3);
+          var pct = completionRamp.from + (100 - completionRamp.from) * ease;
+          setPct(pct);
+          setWaiting(false);
+          if (tr >= 1) {
+            var d = completionRamp.data;
+            completionRamp = null;
+            finalizePendingSuccess(d);
+          }
+          if (!extractionDone) requestAnimationFrame(tick);
+          return;
+        }
+
+        if (draftOnly) {
+          var td = Math.min(1, elapsed / DRAFT_INTRO_MS);
+          setPct(td * 100);
+          setWaiting(false);
+          var nextDraft = 3 + Math.floor(td * 4);
+          while (stepIndex < nextDraft && stepIndex < steps.length) {
+            markStepDone(stepIndex);
+            stepIndex++;
+          }
+          if (stepIndex < steps.length) setCurrentStep(stepIndex);
+          if (td < 1) requestAnimationFrame(tick);
+          else {
+            extractionDone = true;
+            setPct(100);
+            for (var i = stepIndex; i < steps.length; i++) markStepDone(i);
+            setTimeout(redirectToFlow3, 500);
+          }
+          return;
+        }
+
+        var visualPct;
+        if (extractionInFlight && !extractionOk) {
+          var phase = 1 - Math.exp(-elapsed / PENDING_TAU_MS);
+          visualPct = Math.min(PENDING_CAP, PENDING_CAP * phase);
+        } else if (!extractionInFlight) {
+          visualPct = 0;
+        } else {
+          visualPct = lastPct;
+        }
+        setPct(visualPct);
+        setWaiting(extractionInFlight && !extractionOk && !completionRamp);
+        var stepPhase = Math.min(1, 1 - Math.exp(-elapsed / PENDING_TAU_MS));
+        var nextToReach = 3 + Math.floor(stepPhase * 4);
         while (stepIndex < nextToReach && stepIndex < steps.length) {
           markStepDone(stepIndex);
           stepIndex++;
         }
-        if (t < 1) requestAnimationFrame(tick);
-        else if (draftOnly) {
-          extractionDone = true;
-          setPct(100);
-          for (var i = stepIndex; i < steps.length; i++) markStepDone(i);
-          setTimeout(redirectToFlow3, 500);
-        }
+        if (stepIndex < steps.length && !extractionOk) setCurrentStep(stepIndex);
+        if (!extractionDone) requestAnimationFrame(tick);
       }
+      renderProcBar(0);
       requestAnimationFrame(tick);
 
       if (draftOnly) return;
 
+      extractionInFlight = true;
+      setWaiting(true);
+      var abort = new AbortController();
+      var extractionTimeoutId = setTimeout(function() { try { abort.abort(); } catch (e) {} }, EXTRACTION_TIMEOUT_MS);
+
       fetch(apiUrl + '/api/v1/vision/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: abort.signal,
         body: JSON.stringify({
           image_base64: pending.base64,
           mime_type: 'image/jpeg',
@@ -182,33 +381,30 @@
             showError('Free scans used. Upgrade to continue.');
             return null;
           }
-          if (!r.ok) return r.text().then(function(t) { throw new Error(t || 'Server error'); });
+          if (!r.ok) {
+            return r.text().then(function(t) {
+              var detail = '';
+              try { detail = (JSON.parse(t || '{}') || {}).detail || ''; } catch (e) {}
+              throw new Error(detail || t || ('Server error (' + r.status + ')'));
+            });
+          }
           return r.json();
         })
         .then(function(data) {
+          clearTimeout(extractionTimeoutId);
           if (!data || extractionDone) return;
-          extractionDone = true;
-          setPct(100);
-          for (var i = stepIndex; i < steps.length; i++) markStepDone(i);
-          var att = data.attributes || {};
-          var copy = data.extraction_copy || data.copy || {};
-          var tags = data.tags || {};
-          var suggestedPrice = 199;
-          if (att.price_value != null && typeof att.price_value === 'number' && att.price_value > 0) suggestedPrice = att.price_value;
-          else if (att.price_display && typeof att.price_display === 'string') {
-            var match = att.price_display.replace(/[^\d.]/g, '').match(/[\d.]+/);
-            if (match && parseFloat(match[0]) > 0) suggestedPrice = parseFloat(match[0]);
-          }
-          var payload = { extraction: data, suggested_price: suggestedPrice, imageDataUrl: 'data:image/jpeg;base64,' + pending.base64 };
-          try {
-            sessionStorage.removeItem('auralink_review_draft');
-            sessionStorage.setItem(DRAFT_LISTING_KEY, JSON.stringify(payload));
-          } catch (e) {}
-          setTimeout(redirectToFlow3, 500);
+          extractionOk = true;
+          setWaiting(false);
+          completionRamp = { from: lastPct, start: Date.now(), data: data };
         })
         .catch(function(err) {
+          clearTimeout(extractionTimeoutId);
           if (extractionDone) return;
-          showError(err.message || 'Could not read the image. Try again or use a different photo.');
+          setWaiting(false);
+          var msg = (err && err.name === 'AbortError')
+            ? 'Extraction timed out. Make sure the backend is running on http://localhost:8000 (check /health) and try again.'
+            : (err && err.message) ? err.message : 'Could not read the image. Try again or use a different photo.';
+          showError(msg);
         });
     })();
   </script>

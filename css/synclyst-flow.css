@@ -1,0 +1,111 @@
+/**
+ * SyncLyst flow UI standard — matches public/home.html
+ * (zinc-50 page bg, white cards, zinc-900 primary actions, Inter, rounded-2xl / rounded-xl)
+ * Include on every app/flow page except marketing landings (landing.html, landing-old.html).
+ */
+:root {
+  --syn-bg: #fafafa;
+  --syn-surface: #ffffff;
+  --syn-border: #e4e4e7;
+  --syn-text: #18181b;
+  --syn-muted: #71717a;
+  --syn-radius-lg: 1rem;
+  --syn-radius-md: 0.75rem;
+}
+
+.synclyst-flow-body {
+  min-height: 100vh;
+  background-color: var(--syn-bg);
+  color: var(--syn-text);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.synclyst-card {
+  background: var(--syn-surface);
+  border: 1px solid var(--syn-border);
+  border-radius: var(--syn-radius-lg);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.synclyst-header-bar {
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--syn-border);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.synclyst-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: var(--syn-radius-md);
+  background: var(--syn-text);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.synclyst-btn-primary:hover {
+  background: #27272a;
+}
+
+.synclyst-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: var(--syn-radius-md);
+  background: var(--syn-surface);
+  color: var(--syn-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid var(--syn-border);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.synclyst-btn-secondary:hover {
+  background: #fafafa;
+}
+
+.synclyst-kicker {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+/* Legacy class used on several flows — align with home card (rounded-2xl, zinc border, subtle shadow) */
+.vercel-card {
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+/**
+ * Native <select> arrows are often vertically off on macOS/WebKit. Replace with a centered SVG.
+ * Use with extra right padding (e.g. pr-10) so label text does not overlap the chevron.
+ */
+select.synclyst-select-chevron {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2352525b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem 1rem;
+  line-height: 1.5;
+}

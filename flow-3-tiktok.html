@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
   <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
   <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
-  <!-- Optional: set content to a Shopify login/lookup URL to send users there instead of the connect form (e.g. from Shopify Identity). Leave empty to use the connect form. -->
+  <!-- Optional: Etsy flow does not use Shopify login URL -->
   <meta name="auralink-shopify-login-url" content="" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="view-transition" content="same-origin" />
-  <title>Review | Listing Flow | SyncLyst</title>
+  <title>Review | TikTok Shop listing | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -115,13 +115,13 @@
     #modal-description::-webkit-scrollbar { display: none; }
     #modal-meta-description { scrollbar-width: none; -ms-overflow-style: none; overflow: hidden; }
     #modal-meta-description::-webkit-scrollbar { display: none; }
-    /* Tips cards: minimal yellow tint for critical; same quiet chrome as before */
+    /* Tips cards: white, yellow tint for critical only; no left bar */
     .quality-improve-row { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; border-radius: 12px; background: #fff; border: 1px solid #e5e5e5; text-align: left; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
     .quality-improve-row .quality-improve-icon { flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
     .quality-improve-row .quality-improve-text { font-size: 13px; line-height: 1.5; color: #262626; }
-    .quality-improve-row.critical { background: #fffdf8; }
+    .quality-improve-row.critical { background: #fffbeb; }
     .quality-improve-row.critical .quality-improve-text { color: #0a0a0a; font-weight: 500; }
-    .quality-improve-row.critical .quality-improve-icon { color: #78716c; background: #fefce8; }
+    .quality-improve-row.critical .quality-improve-icon { color: #a16207; background: #fef08a; }
     .quality-improve-row.recommended { }
     .quality-improve-row.recommended .quality-improve-text { color: #262626; }
     .quality-improve-row.recommended .quality-improve-icon { color: #525252; background: #f5f5f5; }
@@ -134,7 +134,7 @@
     .quality-improve-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #525252; margin-bottom: 8px; }
     .quality-improve-row { cursor: pointer; }
     .quality-improve-row:hover { background: #fafafa !important; }
-    .quality-improve-row.critical:hover { background: #fffbeb !important; }
+    .quality-improve-row.critical:hover { background: #fef9c3 !important; }
     .section-highlight { box-shadow: 0 0 0 3px #eab308; border-radius: 14px; transition: box-shadow 0.2s ease; }
     #listing-quality-improvements { scrollbar-width: none; -ms-overflow-style: none; }
     #listing-quality-improvements::-webkit-scrollbar { display: none; }
@@ -144,106 +144,69 @@
     .listing-quality-segment { flex: 1; min-width: 1px; border-radius: 1px; background: #e5e5e5; transition: background 0.25s ease; }
     .listing-quality-segment.filled { background: var(--seg-color, #eab308); }
     .smart-suggest-banner { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%); border-radius: 14px; border: 1px solid #e4e4e7; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-    .smart-suggest-banner .smart-suggest-icon-wrap {
-      flex-shrink: 0;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: #fff;
-      border: 1px solid #e4e4e7;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-      position: relative;
-      overflow: hidden;
-    }
-    .smart-suggest-banner .smart-suggest-icon-wrap img { display: block; position: relative; z-index: 0; }
-    .smart-suggest-banner .smart-suggest-icon-wrap::after {
-      content: '';
-      position: absolute;
-      top: -25%;
-      left: 0;
-      width: 55%;
-      height: 150%;
-      z-index: 1;
-      border-radius: inherit;
-      pointer-events: none;
-      mix-blend-mode: soft-light;
-      background: linear-gradient(
-        95deg,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.15) 38%,
-        rgba(255, 255, 255, 0.95) 50%,
-        rgba(255, 255, 255, 0.2) 62%,
-        rgba(255, 255, 255, 0) 100%
-      );
-      transform: translateX(-130%) skewX(-14deg);
-      animation: smartSuggestIconShine 12s ease-in-out infinite;
-    }
-    @keyframes smartSuggestIconShine {
-      0%, 76% { transform: translateX(-130%) skewX(-14deg); opacity: 0; }
-      78% { opacity: 1; }
-      92% { transform: translateX(220%) skewX(-14deg); opacity: 1; }
-      96%, 100% { transform: translateX(220%) skewX(-14deg); opacity: 0; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .smart-suggest-banner .smart-suggest-icon-wrap::after { animation: none; opacity: 0; }
-    }
+    .smart-suggest-banner .smart-suggest-icon-wrap { flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; background: #fff; border: 1px solid #e4e4e7; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    .smart-suggest-banner .smart-suggest-icon-wrap img { display: block; }
     .smart-suggest-banner .smart-suggest-text { flex: 1; min-width: 0; }
     .smart-suggest-banner .smart-suggest-title { font-size: 13px; font-weight: 600; color: #18181b; display: block; margin-bottom: 2px; }
     .smart-suggest-banner .smart-suggest-desc { font-size: 12px; font-weight: 400; color: #52525b; line-height: 1.4; }
   </style>
 </head>
 <body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
-  <div id="synclyst-flow-shell" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
     <!-- Header: landing-style -->
-    <header class="shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+    <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
       <div id="flow3-header-left"></div>
-      <a href="/landing.html" class="inline-flex items-center justify-self-center no-underline text-[#111] leading-none py-0.5"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <a href="/landing.html" class="text-xl font-bold tracking-tight text-[#0a0a0a] justify-self-center">SyncLyst<sup class="text-[0.5em] opacity-80 font-normal">®</sup></a>
       <div class="justify-self-end"></div>
     </header>
     <main class="flex-1 px-5 pt-6 pb-6 overflow-auto">
       <h1 class="vercel-headline text-xl font-bold text-[#0a0a0a] mb-1 text-center">Confirm your listing</h1>
-      <p class="text-center text-sm text-[#525252] mb-6 vercel-body">Review and edit any field, then push live</p>
+      <p class="text-center text-sm text-[#525252] mb-6 vercel-body">Review and edit any field to match Etsy’s dashboard, then push as draft.</p>
 
       <!-- Smart Suggest banner (informational only, not clickable) -->
       <div class="smart-suggest-banner mb-6 w-full text-left">
         <div class="smart-suggest-icon-wrap">
-          <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="" class="w-6 h-6" width="24" height="24" />
+          <img src="https://www.google.com/s2/favicons?domain=tiktok.com&sz=128" alt="" class="w-6 h-6" width="24" height="24" />
         </div>
         <div class="smart-suggest-text">
           <span class="smart-suggest-title">Smart Suggest</span>
-          <span class="smart-suggest-desc">AI analysed your photo — title, description, SEO tags and price all set from one scan.</span>
+          <span class="smart-suggest-desc">AI analysed your photo — title, description, tags and category set from one scan for TikTok Shop.</span>
         </div>
       </div>
 
-      <!-- Shown when user returns from Shopify OAuth -->
-      <div id="shopify-connected-banner" class="hidden rounded-xl border border-[#059669] bg-[#ecfdf5] px-4 py-3 mb-6 flex items-center justify-between gap-3">
-        <p class="text-sm font-medium text-[#059669]">Shopify connected. You're ready to publish.</p>
-        <button type="button" id="shopify-connected-dismiss" class="text-[#059669] hover:text-[#047857] shrink-0" aria-label="Dismiss">×</button>
+      <!-- Shown when user returns from TikTok Shop OAuth -->
+      <div id="tiktok-connected-banner" class="hidden rounded-xl border border-[#059669] bg-[#ecfdf5] px-4 py-3 mb-6 flex items-center justify-between gap-3">
+        <p class="text-sm font-medium text-[#059669]">TikTok Shop connected. You're ready to publish.</p>
+        <button type="button" id="tiktok-connected-dismiss" class="text-[#059669] hover:text-[#047857] shrink-0" aria-label="Dismiss">×</button>
       </div>
-      <div id="shopify-error-banner" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-6">
-        <p class="text-sm font-medium text-red-800">Connection failed. Try again or check your store.</p>
+      <div id="tiktok-error-banner" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-6">
+        <p class="text-sm font-medium text-red-800">TikTok Shop connection failed. Try again.</p>
       </div>
 
       <div class="space-y-5">
-        <!-- Title -->
+        <!-- About: Title -->
         <div id="modal-section-title" class="vercel-card p-5">
-          <label for="modal-title" class="section-label">Title</label>
-          <input type="text" id="modal-title" class="w-full text-sm font-medium text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" placeholder="Product title" />
+          <span class="section-label">About</span>
+          <p class="section-hint text-[#525252] mb-2">Tell the world all about your item and why they love it.</p>
+          <label for="modal-title" class="section-label">Title *</label>
+          <p class="section-hint">Make sure your title is easy to understand and clearly describes the items you're selling.</p>
+          <div class="flex items-center justify-between gap-2">
+            <input type="text" id="modal-title" maxlength="140" class="flex-1 min-w-0 text-sm font-medium text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" placeholder="Product title" />
+            <span id="modal-title-count" class="text-xs text-[#71717a] shrink-0">0/140</span>
+          </div>
         </div>
 
-        <!-- Description -->
+        <!-- About: Description -->
         <div id="modal-section-description" class="vercel-card p-5">
-          <label for="modal-description" class="section-label">Description</label>
+          <label for="modal-description" class="section-label">Description *</label>
+          <p class="section-hint">What makes your item special? Buyers will only see the first few lines unless they expand the description.</p>
           <textarea id="modal-description" rows="5" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent resize-none min-h-[120px]" placeholder="Full product description" data-auto-resize></textarea>
         </div>
 
-        <!-- Photos -->
+        <!-- About: Photos and video -->
         <div id="modal-section-photos" class="vercel-card p-5">
-          <span class="section-label">Photos</span>
-          <p class="section-hint">Sharp, well-lit photos from several angles help buyers decide.</p>
+          <span class="section-label">Photos and video *</span>
+          <p class="section-hint">Add up to 20 photos and 1 video.</p>
           <div class="mt-2 rounded-xl border border-dashed border-[#eaeaea] bg-[#fafafa] p-4">
             <p class="text-[11px] font-semibold uppercase tracking-wider text-[#555] mb-2">Your photos</p>
             <div class="flex items-center gap-3 flex-wrap">
@@ -251,6 +214,7 @@
                 <!-- Filled by JS: thumbnails + add button as last child -->
               </div>
             </div>
+            <p class="text-xs text-[#71717a] mt-3">Drag, drop, or use + to add photos. Use clear, well-lit images from several angles so shoppers can see the product.</p>
             <div class="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-[#eaeaea]">
               <button type="button" id="find-photos-online-btn" class="w-full bg-black text-white px-5 py-2.5 rounded-xl font-semibold border border-black hover:bg-zinc-900 transition-all flex items-center justify-center gap-2.5 inline-flex">
                 <div class="relative flex items-center justify-center w-5 h-5 overflow-hidden">
@@ -260,75 +224,114 @@
                 Auto-find images
               </button>
             </div>
-            <p class="text-xs text-[#71717a] mt-3 pt-3 border-t border-[#f4f4f5]">Uses your first photo when you have one to find more shots from the same listing or photoshoot; otherwise uses title and brand. Results may vary by product.</p>
+            <p class="text-xs text-[#71717a] mt-3">Uses your first photo to look for more images from the same listing or photoshoot when possible; title and brand help narrow results.</p>
           </div>
           <input type="file" id="suggest-from-photo-input" accept="image/*" multiple class="hidden" />
         </div>
 
-        <!-- Category -->
-        <div id="modal-section-category" class="vercel-card p-5">
-          <label for="modal-category" class="section-label">Category</label>
-          <p class="text-[11px] text-[#71717a] mb-2">Use the menu for standard categories, or type a custom category in the field below.</p>
-          <select id="modal-category-preset" class="synclyst-select-chevron w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg pl-3 pr-10 py-2.5 mb-2 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent cursor-pointer" aria-label="Pick a common product category"></select>
-          <input type="text" id="modal-category" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" placeholder="Choose a product category" autocomplete="off" />
-          <datalist id="modal-category-list" class="hidden" aria-hidden="true">
-            <option value="Apparel &amp; accessories" /><option value="Electronics" /><option value="Home &amp; garden" /><option value="Health &amp; beauty" /><option value="Sports &amp; recreation" /><option value="Toys &amp; games" /><option value="Food &amp; beverage" /><option value="Other" />
-          </datalist>
-        </div>
-
-        <!-- Price -->
-        <div id="modal-section-price" class="vercel-card p-5">
-          <span class="section-label">Price</span>
-          <div class="flex items-center gap-1 mt-2 mb-3">
-            <span id="modal-price-symbol" class="text-[#555] font-medium shrink-0">£</span>
-            <input type="text" id="modal-price" inputmode="decimal" class="flex-1 min-w-0 text-sm font-semibold text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" placeholder="0.00" />
-            <button type="button" id="modal-price-geo" class="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-zinc-100 text-zinc-500 border border-[#eaeaea] hover:bg-zinc-200 transition-colors cursor-pointer" title="Detected location"><i data-lucide="map-pin" class="w-4 h-4"></i></button>
-          </div>
-          <p id="modal-price-source-label" class="text-[11px] mt-0.5 min-h-[14px]" title="Verify price before publishing."></p>
-          <div class="flex flex-wrap items-center gap-3 text-sm hidden">
-            <span class="text-[#555]">Compare at</span>
-            <div class="flex items-center gap-1">
-              <span class="text-[#555] font-medium">£</span>
-              <input type="text" id="modal-compare-at" inputmode="decimal" class="w-20 text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="0.00" />
-            </div>
-            <span class="text-[#555]">Unit price</span>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" id="modal-charge-tax" checked class="toggle-switch" />
-              <span class="text-sm text-[#555]">Charge tax</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Weight & SKU -->
-        <div class="vercel-card p-5">
-          <span class="section-label">Weight & SKU</span>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+        <!-- Details: Item type, Who made it, What is it, When made, Category -->
+        <div id="modal-section-details-etsy" class="vercel-card p-5">
+          <span class="section-label">Details</span>
+          <p class="section-hint mb-3">Share a few more specifics about your item so it’s easier to find in search.</p>
+          <div class="space-y-4">
             <div>
-              <label for="modal-weight" class="block text-xs font-medium text-[#555] mb-0.5">Product weight</label>
-              <div class="flex items-center gap-2 flex-wrap">
-                <input type="text" id="modal-weight" inputmode="decimal" class="w-full max-w-[120px] text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="0.5" title="Weight in kg. Update for accurate shipping costs." />
-                <span class="text-sm text-[#555]">kg</span>
-                <span id="modal-weight-source-label" class="text-[11px] text-amber-600 hidden" title="Weight estimated from product type. Update for accurate shipping costs.">Estimated — verify</span>
+              <span class="block text-xs font-medium text-[#555] mb-2">What type of item is it? *</span>
+              <div class="flex gap-3">
+                <label class="flex-1 flex flex-col p-3 rounded-xl border-2 border-[#eaeaea] cursor-pointer hover:border-[#a1a1aa] has-[:checked]:border-[#0a0a0a] has-[:checked]:bg-[#fafafa]">
+                  <input type="radio" name="etsy-item-type" value="physical" checked class="sr-only" />
+                  <span class="text-sm font-medium text-[#111]">Physical item</span>
+                  <span class="text-xs text-[#525252] mt-0.5">A tangible item that you will deliver to buyers.</span>
+                </label>
+                <label class="flex-1 flex flex-col p-3 rounded-xl border-2 border-[#eaeaea] cursor-pointer hover:border-[#a1a1aa] has-[:checked]:border-[#0a0a0a] has-[:checked]:bg-[#fafafa]">
+                  <input type="radio" name="etsy-item-type" value="digital" class="sr-only" />
+                  <span class="text-sm font-medium text-[#111]">Digital files</span>
+                  <span class="text-xs text-[#525252] mt-0.5">A digital file that buyers will download.</span>
+                </label>
               </div>
             </div>
             <div>
-              <label for="modal-sku" class="block text-xs font-medium text-[#555] mb-0.5">SKU</label>
-              <input type="text" id="modal-sku" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="SKU" />
+              <span class="block text-xs font-medium text-[#555] mb-2">Who made it? *</span>
+              <div class="flex flex-col gap-1.5">
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="etsy-who-made" value="i_did" checked class="rounded-full" /> <span class="text-sm">I did</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="etsy-who-made" value="member" class="rounded-full" /> <span class="text-sm">A member of my shop</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="etsy-who-made" value="other" class="rounded-full" /> <span class="text-sm">Another company or person</span></label>
+              </div>
             </div>
             <div>
-              <label for="modal-quantity" class="block text-xs font-medium text-[#555] mb-0.5">Quantity</label>
-              <input type="number" id="modal-quantity" min="1" class="w-full max-w-[100px] text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="1" />
+              <span class="block text-xs font-medium text-[#555] mb-2">What is it? *</span>
+              <div class="flex flex-col gap-1.5">
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="etsy-what-is-it" value="finished" checked class="rounded-full" /> <span class="text-sm">A finished product</span></label>
+                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="etsy-what-is-it" value="supply" class="rounded-full" /> <span class="text-sm">A supply or tool to make things</span></label>
+              </div>
+            </div>
+            <div>
+              <label for="etsy-when-made" class="block text-xs font-medium text-[#555] mb-2">When was it made? *</label>
+              <select id="etsy-when-made" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300">
+                <option value="made_to_order">Made to order</option>
+                <option value="">Select when it was made</option>
+                <option value="2020_2025">2020 – 2025</option>
+                <option value="2010_2019">2010 – 2019</option>
+                <option value="2000_2009">2000 – 2009</option>
+                <option value="1990_1999">1990 – 1999</option>
+                <option value="1980_1989">1980 – 1989</option>
+                <option value="1970_1979">1970 – 1979</option>
+                <option value="1960_1969">1960 – 1969</option>
+                <option value="1950_1959">1950 – 1959</option>
+                <option value="pre_1950">Pre-1950</option>
+              </select>
             </div>
           </div>
         </div>
 
-        <!-- Variants -->
+        <!-- Category * -->
+        <div id="modal-section-category" class="vercel-card p-5">
+          <label for="modal-category" class="section-label">Category *</label>
+          <p class="section-hint">It's best to be specific – we'll tag your item in all the broader categories it fits under, too.</p>
+          <p class="text-[11px] text-[#71717a] mb-2">Use the menu for common categories, or type below.</p>
+          <select id="modal-category-preset" class="synclyst-select-chevron w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg pl-3 pr-10 py-2.5 mb-2 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent cursor-pointer" aria-label="Pick a common product category"></select>
+          <input type="text" id="modal-category" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" placeholder="Search for a category, e.g. Hats, Rings, Cushions, etc." autocomplete="off" />
+          <datalist id="modal-category-list" class="hidden" aria-hidden="true">
+            <option value="Art &amp; Collectibles" /><option value="Craft Supplies &amp; Tools" /><option value="Clothing" /><option value="Home &amp; Living" /><option value="Jewellery" /><option value="Toys &amp; Games" /><option value="Electronics" /><option value="Books &amp; Magazines" /><option value="Hats" /><option value="Rings" /><option value="Cushions" /><option value="Other" />
+          </datalist>
+        </div>
+
+        <!-- Price & Inventory -->
+        <div id="modal-section-price" class="vercel-card p-5">
+          <span class="section-label">Price &amp; Inventory</span>
+          <p class="section-hint mb-3">Set a price for your item and indicate how many are available for sale.</p>
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="text-xs font-medium text-[#555]">Domestic and global pricing</span>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="etsy-global-pricing" class="toggle-switch" />
+              <span class="text-xs text-[#555]">Set prices for different locations</span>
+            </label>
+          </div>
+          <div class="grid grid-cols-2 gap-3 mt-3">
+            <div>
+              <label for="modal-price" class="block text-xs font-medium text-[#555] mb-0.5">Price *</label>
+              <div class="flex items-center gap-1">
+                <span id="modal-price-symbol" class="text-[#555] font-medium shrink-0">£</span>
+                <input type="text" id="modal-price" inputmode="decimal" class="flex-1 min-w-0 text-sm font-semibold text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="0.00" />
+              </div>
+            </div>
+            <div>
+              <label for="modal-quantity" class="block text-xs font-medium text-[#555] mb-0.5">Quantity *</label>
+              <input type="number" id="modal-quantity" min="1" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="1" />
+            </div>
+          </div>
+          <p id="modal-price-source-label" class="text-[11px] mt-0.5 min-h-[14px]" title="Verify price before publishing."></p>
+        </div>
+
+        <!-- Variations -->
         <div id="modal-section-variants" class="vercel-card p-5">
           <div class="flex items-center justify-between gap-2 mb-3">
-            <span class="section-label">Variants</span>
+            <span class="section-label">Variations</span>
+            <span class="text-xs text-[#525252]">If your item is offered in different colours, sizes, materials, etc.</span>
+          </div>
+          <div class="flex items-center justify-between gap-2 mb-3">
             <button type="button" id="modal-variants-add-option" class="text-sm text-[#555] hover:text-[#111] font-medium flex items-center gap-1.5">
               <i data-lucide="plus" class="w-4 h-4"></i>
-              Add variant
+              Add variations
             </button>
           </div>
           <div id="modal-variant-options-list" class="space-y-4">
@@ -373,31 +376,91 @@
           </div>
         </div>
 
-        <!-- Product organization (Type, Vendor, Tags) -->
-        <div id="modal-section-organization" class="vercel-card p-5">
-          <span class="section-label">Product organization</span>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+        <!-- Attributes -->
+        <div id="modal-section-attributes-etsy" class="vercel-card p-5">
+          <span class="section-label">Attributes</span>
+          <p class="section-hint mb-3">Share specifics about your item to make it easier to find in search.</p>
+          <div class="space-y-3">
             <div>
-              <label for="modal-product-type" class="block text-xs font-medium text-[#555] mb-0.5">Type</label>
-              <input type="text" id="modal-product-type" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Product type" />
+              <label for="etsy-materials" class="block text-xs font-medium text-[#555] mb-0.5">Materials</label>
+              <input type="text" id="etsy-materials" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Select up to 5 (e.g. Cotton, Wood)" />
             </div>
-            <div>
-              <label for="modal-vendor" class="block text-xs font-medium text-[#555] mb-0.5">Vendor</label>
-              <input type="text" id="modal-vendor" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Vendor / brand" />
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="etsy-primary-colour" class="block text-xs font-medium text-[#555] mb-0.5">Primary colour</label>
+                <input type="text" id="etsy-primary-colour" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Type to search..." />
+              </div>
+              <div>
+                <label for="etsy-secondary-colour" class="block text-xs font-medium text-[#555] mb-0.5">Secondary colour</label>
+                <input type="text" id="etsy-secondary-colour" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Type to search..." />
+              </div>
             </div>
-          </div>
-          <div class="mt-3">
-            <label class="block text-xs font-medium text-[#555] mb-1">Tags</label>
-            <div id="modal-tags-wrap" class="flex flex-wrap gap-1.5 mb-1.5"></div>
-            <div class="flex gap-1">
-              <input type="text" id="modal-tag-input" class="flex-1 min-w-0 text-sm px-2 py-1.5 rounded-lg border border-[#eaeaea] bg-white text-[#111] focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Add tag…" />
-              <button type="button" id="modal-tag-add" class="px-2.5 py-1.5 rounded-lg border border-[#eaeaea] text-[#555] text-xs font-medium shrink-0 hover:bg-zinc-50 hover:text-[#111] transition-colors">Add</button>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="etsy-width" class="block text-xs font-medium text-[#555] mb-0.5">Width</label>
+                <div class="flex gap-2">
+                  <input type="text" id="etsy-width" inputmode="decimal" class="flex-1 min-w-0 text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="0" />
+                  <select id="etsy-width-unit" class="w-24 text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300">
+                    <option value="cm">cm</option>
+                    <option value="in">in</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label for="etsy-height" class="block text-xs font-medium text-[#555] mb-0.5">Height</label>
+                <div class="flex gap-2">
+                  <input type="text" id="etsy-height" inputmode="decimal" class="flex-1 min-w-0 text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="0" />
+                  <select id="etsy-height-unit" class="w-24 text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300">
+                    <option value="cm">cm</option>
+                    <option value="in">in</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Search engine listing -->
-        <div id="modal-section-seo" class="vercel-card p-5">
+        <!-- Tags (up to 13) -->
+        <div id="modal-section-organization" class="vercel-card p-5">
+          <span class="section-label">Tags</span>
+          <p class="section-hint">Add up to 13 tags to help people search for your listings.</p>
+          <div id="modal-tags-wrap" class="flex flex-wrap gap-1.5 mb-1.5"></div>
+          <div class="flex gap-1 items-center">
+            <input type="text" id="modal-tag-input" class="flex-1 min-w-0 text-sm px-2 py-1.5 rounded-lg border border-[#eaeaea] bg-white text-[#111] focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Shape, colour, style, function, etc." maxlength="20" />
+            <button type="button" id="modal-tag-add" class="px-2.5 py-1.5 rounded-lg border border-[#eaeaea] text-[#555] text-xs font-medium shrink-0 hover:bg-zinc-50 hover:text-[#111] transition-colors">Add</button>
+            <span id="modal-tags-left" class="text-xs text-[#71717a] shrink-0">13 left</span>
+          </div>
+        </div>
+
+        <!-- Materials (buyers value transparency) -->
+        <div id="modal-section-materials-etsy" class="vercel-card p-5">
+          <label for="etsy-materials-transparency" class="section-label">Materials</label>
+          <p class="section-hint">Buyers value transparency – tell them what's used to make your item.</p>
+          <input type="text" id="etsy-materials-transparency" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Ingredients, components, etc." />
+        </div>
+
+        <!-- Settings -->
+        <div id="modal-section-settings-etsy" class="vercel-card p-5">
+          <span class="section-label">Settings</span>
+          <p class="section-hint mb-3">Choose how this listing will renew.</p>
+          <div>
+            <span class="block text-xs font-medium text-[#555] mb-2">Renewal options *</span>
+            <p class="text-xs text-[#525252] mb-2">Each renewal lasts for four months or until the listing sells out.</p>
+            <div class="flex flex-col gap-2">
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input type="radio" name="etsy-renewal" value="automatic" checked class="mt-0.5 rounded-full" />
+                <span class="text-sm"><strong>Automatic</strong> – This listing will renew as it expires (recommended).</span>
+              </label>
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input type="radio" name="etsy-renewal" value="manual" class="mt-0.5 rounded-full" />
+                <span class="text-sm"><strong>Manual</strong> – I'll renew expired listings myself.</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search engine listing (optional, collapsed by default for Etsy) -->
+        <div id="modal-section-seo" class="vercel-card p-5 hidden">
           <div class="flex items-center justify-between gap-2 mb-3">
             <span class="section-label">Search engine listing</span>
             <button type="button" id="modal-seo-edit-btn" class="p-1 rounded text-[#555] hover:bg-zinc-100 hover:text-[#111] transition-colors" aria-label="Edit listing"><i data-lucide="pencil" class="w-4 h-4"></i></button>
@@ -405,12 +468,12 @@
           <div id="modal-seo-fields" class="space-y-3">
             <div>
               <label for="modal-seo-title" class="block text-xs font-medium text-[#555] mb-0.5">Page title</label>
-              <input type="text" id="modal-seo-title" maxlength="60" class="w-full text-sm text-[#555] bg-zinc-50 border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Uses product title" />
+              <input type="text" id="modal-seo-title" class="w-full text-sm text-[#555] bg-zinc-50 border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300" placeholder="Uses product title" />
             </div>
             <div>
               <label for="modal-meta-description" class="block text-xs font-medium text-[#555] mb-0.5">Meta description</label>
-              <textarea id="modal-meta-description" rows="2" maxlength="320" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300 resize-none" placeholder="Short snippet for Google (~155 characters)"></textarea>
-              <p class="text-[11px] text-[#555] mt-0.5 vercel-body"><span id="modal-meta-desc-count">0</span>/155</p>
+              <textarea id="modal-meta-description" rows="2" maxlength="320" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-300 resize-none" placeholder="Brief description for search engines"></textarea>
+              <p class="text-[11px] text-[#555] mt-0.5 vercel-body"><span id="modal-meta-desc-count">0</span>/320</p>
             </div>
           </div>
         </div>
@@ -442,15 +505,16 @@
     <div class="p-4 pt-3 border-t border-[#e5e5e5] shrink-0 bg-white">
       <div class="flex flex-col gap-2">
         <a href="/flow-choose-platform.html" id="review-next-btn" class="block w-full py-3.5 px-6 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[15px] hover:bg-[#262626] transition-colors no-underline text-center flex items-center justify-center gap-2">
-          <span id="review-next-btn-label">Publish to Shopify</span>
-          <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/shopify.svg" alt="" class="w-5 h-5 shrink-0" style="filter: brightness(0) invert(1);" width="20" height="20" />
+          <span id="review-next-btn-label">Publish to TikTok Shop</span>
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/tiktok.svg" alt="" class="w-5 h-5 shrink-0" style="filter: brightness(0) invert(1);" width="20" height="20" />
         </a>
+        <p class="text-[11px] text-[#525252] text-center">Sends this listing to your connected TikTok Shop as a draft.</p>
       </div>
     </div>
   </div>
   <script>
     (function() {
-      // Show "Shopify connected" or error when returning from OAuth
+      // Show "Etsy connected" or error when returning from OAuth
       (function() {
         var host = window.location.hostname;
         if (host && host !== 'localhost' && host !== '127.0.0.1') {
@@ -474,18 +538,18 @@
       })();
       (function() {
         var params = new URLSearchParams(window.location.search);
-        var connected = params.get('shopify') === 'connected';
-        var shop = params.get('shop') || '';
+        var connected = params.get('tiktok') === 'connected';
+        var shopId = params.get('shop_id') || '';
         var err = params.get('error');
         var msg = params.get('message');
-        var banner = document.getElementById('shopify-connected-banner');
-        var errBanner = document.getElementById('shopify-error-banner');
-        var dismissBtn = document.getElementById('shopify-connected-dismiss');
+        var banner = document.getElementById('tiktok-connected-banner');
+        var errBanner = document.getElementById('tiktok-error-banner');
+        var dismissBtn = document.getElementById('tiktok-connected-dismiss');
         if (connected && banner) {
           banner.classList.remove('hidden');
-          if (shop) banner.querySelector('p').textContent = 'Shopify connected (' + shop.replace('.myshopify.com', '') + '). You\'re ready to publish.';
+          if (shopId) banner.querySelector('p').textContent = 'TikTok Shop connected. You\'re ready to publish.';
         }
-        if (err === 'shopify' && errBanner) {
+        if (err === 'tiktok' && errBanner) {
           errBanner.classList.remove('hidden');
           if (msg) errBanner.querySelector('p').textContent = msg;
         }
@@ -508,37 +572,18 @@
       } catch (e) {}
       var marketplaceNames = { tiktok_shop: 'TikTok Shop', amazon: 'Amazon', shopify: 'Shopify', ebay: 'eBay', etsy: 'Etsy' };
       var marketplaceDomains = { tiktok_shop: 'tiktok.com', amazon: 'amazon.com', shopify: 'shopify.com', ebay: 'ebay.com', etsy: 'etsy.com' };
-
       var SEO_META_DESC_MAX = window.SEO_META_DESC_MAX || 155;
-      var clipMetaDescriptionForSeo = window.clipMetaDescriptionForSeo;
-      if (typeof clipMetaDescriptionForSeo !== 'function') {
-        clipMetaDescriptionForSeo = function(text, maxLen) {
-          maxLen = maxLen || SEO_META_DESC_MAX;
-          var t = (text || '').replace(/\s+/g, ' ').trim();
-          if (t.length <= maxLen) return t;
-          var cut = t.slice(0, maxLen + 1);
-          var lastSpace = cut.lastIndexOf(' ');
-          if (lastSpace >= Math.floor(maxLen * 2 / 3)) return t.slice(0, lastSpace).replace(/[.,;:]+$/, '').trim();
-          return t.slice(0, maxLen).replace(/[.,;:]+$/, '').trim();
-        };
-      }
-      var SEO_PAGE_TITLE_MAX = 60;
-      function buildFallbackMetaSnippet(title, desc) {
-        var body = (desc || '').replace(/\s+/g, ' ').trim();
-        var t = (title || '').replace(/\s+/g, ' ').trim();
-        if (body && t) return clipMetaDescriptionForSeo(t + '. ' + body, SEO_META_DESC_MAX);
-        return clipMetaDescriptionForSeo(body || t, SEO_META_DESC_MAX);
-      }
-      function clipSeoPageTitle(text) {
-        var s = (text || '').replace(/\s+/g, ' ').trim();
-        if (s.length <= SEO_PAGE_TITLE_MAX) return s;
-        var cut = s.slice(0, SEO_PAGE_TITLE_MAX + 1);
+      function clipMetaDescriptionForSeo(text, maxLen) {
+        if (typeof window.clipMetaDescriptionForSeo === 'function') return window.clipMetaDescriptionForSeo(text, maxLen);
+        maxLen = maxLen || SEO_META_DESC_MAX;
+        var t = (text || '').replace(/\s+/g, ' ').trim();
+        if (t.length <= maxLen) return t;
+        var cut = t.slice(0, maxLen + 1);
         var lastSpace = cut.lastIndexOf(' ');
-        if (lastSpace >= 35) return s.slice(0, lastSpace).trim();
-        return s.slice(0, SEO_PAGE_TITLE_MAX).trim();
+        if (lastSpace >= Math.floor(maxLen * 2 / 3)) return t.slice(0, lastSpace).replace(/[.,;:]+$/, '').trim();
+        return t.slice(0, maxLen).replace(/[.,;:]+$/, '').trim();
       }
 
-      /** Merge sizes from extraction fields + listing text only where the same token appears in OCR snippets (no category guessing). */
       function mergeVariantSizesFromEvidence(att, descriptionAndTitleText, rawOcrSnippets) {
         var seen = {};
         var out = [];
@@ -637,25 +682,19 @@
             var copy = data.extraction_copy || data.copy || {};
             var att = data.attributes || {};
             var tags = data.tags || {};
-            var sources = data.sources || {};
             var seoTitle = (copy.seo_title || '').trim() || '';
             var category = (tags.category || att.brand || '').trim();
             if (att.brand && category && category !== att.brand) category = att.brand + ' › ' + category;
             else if (!category && att.brand) category = att.brand;
             var desc = '';
-            var flatDesc = (copy.description && String(copy.description).trim()) || '';
-            if ((sources.description === 'web' || sources.description === 'web_page' || sources.description === 'vision_grounded') && flatDesc) {
-              desc = flatDesc;
-            } else if (copy.description_fact_feel_proof && typeof copy.description_fact_feel_proof === 'object') {
+            if (copy.description_fact_feel_proof && typeof copy.description_fact_feel_proof === 'object') {
               var f = copy.description_fact_feel_proof;
               var parts = [];
               if (f.fact) parts.push(String(f.fact).trim());
               if (f.feel) parts.push(String(f.feel).trim());
               if (f.proof) parts.push(String(f.proof).trim());
-              var stitched = parts.filter(Boolean).join('\n\n');
-              if (flatDesc && flatDesc.length > stitched.length + 40) desc = flatDesc;
-              else desc = stitched;
-            } else if (flatDesc) desc = flatDesc;
+              desc = parts.filter(Boolean).join('\n\n');
+            } else if (copy.description) desc = String(copy.description).trim();
             else if (copy.bullet_points && Array.isArray(copy.bullet_points)) desc = copy.bullet_points.join('\n');
             if (desc && (att.material || att.color || att.dimensions || att.material_composition)) {
               var extras = [];
@@ -697,8 +736,9 @@
             var weightSource = att.weight_source || '';
             var keywords = (tags.search_keywords && Array.isArray(tags.search_keywords)) ? tags.search_keywords : [];
             var metaDesc = (copy.description || '').trim();
-            if (!metaDesc && desc) metaDesc = desc.split(/\n/)[0].trim();
             if (!metaDesc && seoTitle) metaDesc = seoTitle;
+            if (desc && metaDesc && metaDesc !== desc) metaDesc = (metaDesc + ' – ' + desc).slice(0, 320);
+            else if (metaDesc) metaDesc = metaDesc.slice(0, 320);
             metaDesc = clipMetaDescriptionForSeo(metaDesc, SEO_META_DESC_MAX);
             var rawOcr = data.raw_ocr_snippets || [];
             var variantTextBlob = [desc, seoTitle, category].filter(Boolean).join('\n');
@@ -721,9 +761,6 @@
               price_source: priceSource,
               product_type: category,
               vendor: (att.brand || '').trim(),
-              brand: (att.brand || '').trim(),
-              make: (att.make || '').trim() || undefined,
-              model_year: (att.model_year || '').trim() || undefined,
               condition: (att.condition || 'new'),
               status: 'draft',
               meta_description: metaDesc,
@@ -761,18 +798,13 @@
           var raw = sessionStorage.getItem(STORAGE_KEY);
           if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr)) return arr; }
         } catch (e) {}
-        return ['shopify'];
+        return ['tiktok_shop'];
       }
 
       function getPublishingUrl() {
-        var host = window.location.hostname;
-        var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
-        // Next dev (localhost:3000): use same-origin rewrite → publishing (see next.config.ts /__synclyst_publishing/*)
-        if ((host === 'localhost' || host === '127.0.0.1') && port === '3000') {
-          return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
-        }
         var meta = document.querySelector('meta[name="auralink-publishing-url"]');
         var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
+        var host = window.location.hostname;
         if (host && host !== 'localhost' && host !== '127.0.0.1') {
           var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
           if (prodMeta && prodMeta.getAttribute('content') && prodMeta.getAttribute('content').trim()) {
@@ -785,9 +817,6 @@
         }
         return url;
       }
-
-      // Connect Shopify page removed from scan flow: do not redirect to it on load. User goes reading-product → review → flow-verifying.
-      // (function requireShopifyConnected() { ... })();
 
       var draft = loadDraft();
       var selected = loadSelected();
@@ -1335,7 +1364,7 @@
           barEl.setAttribute('aria-valuenow', displayScore);
           var segments = 60;
           var filledCount = Math.round((displayScore / 100) * segments);
-          var gradientStops = [{ p: 0, r: 234, g: 179, b: 8 }, { p: 1, r: 34, g: 197, b: 94 }];
+          var gradientStops = [{ p: 0, r: 212, g: 212, b: 212 }, { p: 0.5, r: 234, g: 179, b: 8 }, { p: 1, r: 234, g: 179, b: 8 }];
           function interpColor(t) {
             var i = 0;
             while (i + 1 < gradientStops.length && gradientStops[i + 1].p < t) i++;
@@ -1410,18 +1439,33 @@
 
       function renderTags() {
         if (!tagsWrap) return;
+        if (modalTags.length > 13) modalTags = modalTags.slice(0, 13);
         tagsWrap.innerHTML = modalTags.map(function(tag, i) {
           return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-50 border border-[#eaeaea] text-[#111] text-xs font-medium">' + tag.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' <button type="button" class="modal-tag-remove text-[#555] hover:text-[#111]" data-i="' + i + '" aria-label="Remove">×</button></span>';
         }).join('');
         tagsWrap.querySelectorAll('.modal-tag-remove').forEach(function(btn) {
           btn.addEventListener('click', function() {
             var i = parseInt(btn.getAttribute('data-i'), 10);
-            if (!isNaN(i) && i >= 0 && i < modalTags.length) { modalTags.splice(i, 1); renderTags(); }
+            if (!isNaN(i) && i >= 0 && i < modalTags.length) { modalTags.splice(i, 1); renderTags(); updateTagsLeft(); if (typeof updateListingQuality === 'function') updateListingQuality(); }
           });
         });
+        updateTagsLeft();
+      }
+      function updateTagsLeft() {
+        var leftEl = document.getElementById('modal-tags-left');
+        if (leftEl) { var left = Math.max(0, 13 - modalTags.length); leftEl.textContent = left + ' left'; }
       }
 
-      if (titleInput) titleInput.value = (draft.title || '').trim();
+      if (titleInput) {
+        titleInput.value = (draft.title || '').trim().slice(0, 140);
+        var titleCountEl = document.getElementById('modal-title-count');
+        if (titleCountEl) titleCountEl.textContent = (titleInput.value || '').length + '/140';
+        titleInput.addEventListener('input', function() {
+          var v = (titleInput.value || '').slice(0, 140);
+          if (titleInput.value !== v) titleInput.value = v;
+          if (titleCountEl) titleCountEl.textContent = v.length + '/140';
+        });
+      }
       if (descInput) descInput.value = (draft.description || '').trim();
       function resizeDescTextarea() {
         if (!descInput) return;
@@ -1432,16 +1476,11 @@
       if (descInput) descInput.addEventListener('input', resizeDescTextarea);
       if (categoryInput) categoryInput.value = (draft.category || '').trim();
       syncCategoryInputMode();
+      if (priceInput) priceInput.value = (draft.price != null && draft.price !== '') ? String(draft.price).replace(/^\$|^£|^€|^CA\$|^A\$/g, '').trim() : '';
       var priceSourceLabel = document.getElementById('modal-price-source-label');
       var priceSection = document.getElementById('modal-section-price');
       var priceSrc = draft.price_source || (draft.extraction && draft.extraction.attributes && draft.extraction.attributes.price_source) || '';
       var priceFromWeb = !!(draft.extraction && draft.extraction.price_from_web);
-      var _webAvgPv = (draft.extraction && draft.extraction.attributes && draft.extraction.attributes.price_value != null) ? draft.extraction.attributes.price_value : null;
-      if (priceInput) {
-        var _pv = (draft.price != null && draft.price !== '') ? String(draft.price).replace(/^\$|^£|^€|^CA\$|^A\$/g, '').trim() : '';
-        if (!_pv && priceFromWeb && _webAvgPv != null) _pv = String(_webAvgPv);
-        priceInput.value = _pv;
-      }
       if (priceSourceLabel) {
         if (priceFromWeb) {
           var rangeDisplay = (draft.extraction && draft.extraction.price_range_display) ? draft.extraction.price_range_display : '';
@@ -1504,12 +1543,41 @@
         productTypeInput.value = (draft.product_type || _attDraft.product_type || draft.category || '').trim();
       }
       if (vendorInput) vendorInput.value = (draft.vendor || draft.brand || '').trim();
+      var wm = (draft.who_made || 'i_did');
+      var wMadeEl = document.querySelector('input[name="etsy-who-made"][value="' + wm + '"]');
+      if (wMadeEl) wMadeEl.checked = true;
+      var whenMadeEl = document.getElementById('etsy-when-made');
+      if (whenMadeEl && (draft.when_made || '')) whenMadeEl.value = draft.when_made;
+      var whatEl = document.querySelector('input[name="etsy-what-is-it"][value="' + ((draft.is_supply ? 'supply' : 'finished')) + '"]');
+      if (whatEl) whatEl.checked = true;
+      var itemTypeEl = document.querySelector('input[name="etsy-item-type"][value="' + ((draft.item_type === 'digital' ? 'digital' : 'physical')) + '"]');
+      if (itemTypeEl) itemTypeEl.checked = true;
+      var matsEl = document.getElementById('etsy-materials');
+      if (matsEl) matsEl.value = (draft.materials || '').trim();
+      var pcEl = document.getElementById('etsy-primary-colour');
+      if (pcEl) pcEl.value = (draft.primary_colour || '').trim();
+      var scEl = document.getElementById('etsy-secondary-colour');
+      if (scEl) scEl.value = (draft.secondary_colour || '').trim();
+      var wEl = document.getElementById('etsy-width');
+      if (wEl) wEl.value = (draft.width || '').trim();
+      var widthUnitEl = document.getElementById('etsy-width-unit');
+      if (widthUnitEl && draft.width_unit) widthUnitEl.value = draft.width_unit;
+      var hEl = document.getElementById('etsy-height');
+      if (hEl) hEl.value = (draft.height || '').trim();
+      var heightUnitEl = document.getElementById('etsy-height-unit');
+      if (heightUnitEl && draft.height_unit) heightUnitEl.value = draft.height_unit;
+      var matTransEl = document.getElementById('etsy-materials-transparency');
+      if (matTransEl) matTransEl.value = (draft.materials_transparency || '').trim();
+      var renEl = document.querySelector('input[name="etsy-renewal"][value="' + ((draft.renewal === 'manual' ? 'manual' : 'automatic')) + '"]');
+      if (renEl) renEl.checked = true;
       var metaVal = (draft.meta_description || '').trim();
-      if (metaVal) {
-        metaVal = clipMetaDescriptionForSeo(metaVal, SEO_META_DESC_MAX);
-      } else {
-        metaVal = buildFallbackMetaSnippet((draft.title || '').trim(), (draft.description || '').trim());
+      if (!metaVal) {
+        var title = (draft.title || '').trim();
+        var desc = (draft.description || '').trim();
+        metaVal = title && desc ? (title + ' – ' + desc) : (desc || title);
+        metaVal = metaVal.slice(0, 320);
       }
+      metaVal = clipMetaDescriptionForSeo(metaVal, SEO_META_DESC_MAX);
       if (metaDescInput) metaDescInput.value = metaVal;
       if (seoTitleInput) seoTitleInput.value = (draft.title || '').trim() || 'Uses product title';
       updateMetaDescCount();
@@ -1522,17 +1590,7 @@
       function updateSeoPreview() {}
       if (seoTitleInput) seoTitleInput.addEventListener('input', function() { updateListingQuality(); });
       if (metaDescInput) metaDescInput.addEventListener('input', function() { updateListingQuality(); });
-      if (priceInput) {
-        priceInput.addEventListener('input', function() {
-          updateListingQuality();
-          var hasPrice = (priceInput.value || '').trim() !== '';
-          if (hasPrice) {
-            priceInput.classList.remove('border-amber-400');
-            var priceSection = document.getElementById('modal-section-price');
-            if (priceSection) priceSection.classList.remove('section-highlight');
-          }
-        });
-      }
+      if (priceInput) priceInput.addEventListener('input', function() { updateListingQuality(); });
       var seoEditBtn = document.getElementById('modal-seo-edit-btn');
       if (seoEditBtn && seoTitleInput) seoEditBtn.addEventListener('click', function() { seoTitleInput.focus(); });
       if (titleInput) titleInput.addEventListener('input', function() {
@@ -1701,7 +1759,7 @@
               image_base64: base64,
               mime_type: 'image/jpeg',
               include_ocr: true,
-              skip_web_enrichment: false
+              skip_web_enrichment: true
             })
           })
             .then(function(r) {
@@ -1741,14 +1799,11 @@
               }
               if (typeof window.syncVariantSizePresetVisibility === 'function') window.syncVariantSizePresetVisibility();
               var priceSrc = att.price_source || '';
-              var priceFromWebAvg = !!data.price_from_web && att.price_value != null;
               if (priceSrc === 'found_in_image' && att.price_value != null && priceInput) {
                 priceInput.value = String(att.price_value);
               } else if (priceSrc === 'ai_suggested' && (att.price_confidence == null || att.price_confidence >= 0.7) && att.price_value != null && priceInput) {
                 priceInput.value = String(att.price_value);
-              } else if (priceFromWebAvg && priceInput) {
-                priceInput.value = String(att.price_value);
-              } else if (priceSrc === 'not_found' && priceInput && !priceFromWebAvg) {
+              } else if (priceSrc === 'not_found' && priceInput) {
                 priceInput.value = '';
               } else if (att.price_value != null && priceInput && priceSrc !== 'not_found') {
                 priceInput.value = String(att.price_value);
@@ -1764,7 +1819,7 @@
                 else if (priceSrc === 'ai_suggested') { priceSourceLabelEl.textContent = 'AI estimate — verify'; priceSourceLabelEl.className = 'text-[11px] mt-0.5 min-h-[14px] text-amber-600'; priceSourceLabelEl.setAttribute('title', 'Price suggested from product. Verify before publishing.'); }
                 else { priceSourceLabelEl.textContent = 'Add your price'; priceSourceLabelEl.className = 'text-[11px] mt-0.5 min-h-[14px] text-amber-600'; priceSourceLabelEl.setAttribute('title', 'Verify price before publishing.'); }
               }
-              if (priceInput && priceSrc === 'not_found' && !String(priceInput.value || '').trim()) priceInput.classList.add('border-amber-400'); else if (priceInput) priceInput.classList.remove('border-amber-400');
+              if (priceInput && priceSrc === 'not_found') priceInput.classList.add('border-amber-400'); else if (priceInput) priceInput.classList.remove('border-amber-400');
               if (att.weight_grams != null && att.weight_grams > 0 && weightInput) {
                 weightInput.value = String(Math.round(att.weight_grams / 1000 * 100) / 100);
               }
@@ -1870,7 +1925,9 @@
       if (tagAddBtn && tagInput) {
         tagAddBtn.addEventListener('click', function() {
           var t = normalizeProductTag((tagInput.value || '').trim());
-          if (t && !modalTags.some(function(x) { return x.toLowerCase() === t.toLowerCase(); })) { modalTags.push(t); tagInput.value = ''; renderTags(); updateListingQuality(); }
+          if (!t) return;
+          if (modalTags.length >= 13) { if (document.getElementById('modal-tags-left')) document.getElementById('modal-tags-left').textContent = '0 left'; return; }
+          if (!modalTags.some(function(x) { return x.toLowerCase() === t.toLowerCase(); })) { modalTags.push(t); tagInput.value = ''; renderTags(); if (typeof updateListingQuality === 'function') updateListingQuality(); }
         });
         tagInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); tagAddBtn.click(); } });
       }
@@ -1907,9 +1964,8 @@
           })
           .then(function(data) {
             if (data.seo_title && titleInput) {
-              var st = clipSeoPageTitle(data.seo_title);
-              titleInput.value = st;
-              if (seoTitleInput) seoTitleInput.value = st;
+              titleInput.value = data.seo_title;
+              if (seoTitleInput) seoTitleInput.value = data.seo_title;
             }
             if (data.meta_description && metaDescInput) {
               metaDescInput.value = clipMetaDescriptionForSeo(data.meta_description, SEO_META_DESC_MAX);
@@ -1918,68 +1974,49 @@
             }
             updateSeoPreview();
             if (typeof lucide !== 'undefined') lucide.createIcons();
-            updateListingQuality();
-            try { persistDraftFromDom(); } catch (e) {}
           })
-          .catch(function() {
-            if (metaDescInput) {
-              var v = (metaDescInput.value || '').trim();
-              if (!v) {
-                metaDescInput.value = buildFallbackMetaSnippet(
-                  (titleInput && titleInput.value) ? titleInput.value.trim() : '',
-                  (descInput && descInput.value) ? descInput.value.trim() : ''
-                );
-              } else {
-                metaDescInput.value = clipMetaDescriptionForSeo(v, SEO_META_DESC_MAX);
-              }
-              updateMetaDescCount();
-              resizeMetaDescTextarea();
-            }
-            if (seoTitleInput && titleInput) {
-              var tv = (titleInput.value || '').trim();
-              if (tv) seoTitleInput.value = clipSeoPageTitle(tv);
-            }
-            updateListingQuality();
-          });
+          .catch(function() {});
       }
       setTimeout(runAutoSeoOptimize, 300);
-
-      function persistDraftFromDom() {
-        try {
-          var d = loadDraft();
-          d.title = (titleInput && titleInput.value) ? titleInput.value.trim() : (d.title || 'Untitled listing');
-          d.description = (descInput && descInput.value) ? descInput.value.trim() : (d.description || '');
-          d.category = (categoryInput && categoryInput.value) ? categoryInput.value.trim() : (d.category || '');
-          d.tags = modalTags.slice();
-          d.price = (priceInput && priceInput.value) ? priceInput.value.trim().replace(/^\$|^£|^€|^CA\$|^A\$/g, '') : (d.price || '0');
-          d.compare_at = (compareAtInput && compareAtInput.value) ? compareAtInput.value.trim().replace(/^\$|^£/, '') : '';
-          d.charge_tax = chargeTaxCheck ? chargeTaxCheck.checked : true;
-          d.inventory_tracked = inventoryTrackedCheck ? inventoryTrackedCheck.checked : true;
-          d.quantity = quantityInput && quantityInput.value !== '' ? parseInt(quantityInput.value, 10) : 1;
-          if (d.quantity < 1 || isNaN(d.quantity)) d.quantity = 1;
-          d.sku = (skuInput && skuInput.value) ? skuInput.value.trim() : (d.sku || '');
-          d.sell_when_out_of_stock = sellOutOfStockCheck ? sellOutOfStockCheck.checked : false;
-          d.physical_product = physicalProductCheck ? physicalProductCheck.checked : true;
-          d.weight_kg = (weightInput && weightInput.value) ? weightInput.value.trim() : (d.weight_kg || '');
-          d.product_type = (productTypeInput && productTypeInput.value) ? productTypeInput.value.trim() : (d.category || '');
-          d.vendor = (vendorInput && vendorInput.value) ? vendorInput.value.trim() : (d.brand || '');
-          d.meta_description = (metaDescInput && metaDescInput.value) ? clipMetaDescriptionForSeo(metaDescInput.value.trim(), SEO_META_DESC_MAX) : '';
-          d.status = 'draft';
-          if (!d.brand && d.vendor) d.brand = d.vendor;
-          d.variant_options = (typeof getVariantOptionsFromDOM === 'function' && getVariantOptionsFromDOM()) || d.variant_options || [];
-          saveDraft(d);
-        } catch (err) {}
-      }
-      window.addEventListener('pagehide', persistDraftFromDom);
-      document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'hidden') persistDraftFromDom();
-      });
 
       document.getElementById('review-next-btn').addEventListener('click', function(e) {
         e.preventDefault();
         var nextBtn = document.getElementById('review-next-btn');
-        persistDraftFromDom();
         var d = loadDraft();
+        d.title = (titleInput && titleInput.value) ? titleInput.value.trim() : (d.title || 'Untitled listing');
+        d.description = (descInput && descInput.value) ? descInput.value.trim() : (d.description || '');
+        d.category = (categoryInput && categoryInput.value) ? categoryInput.value.trim() : (d.category || '');
+        d.tags = modalTags.slice(0, 13);
+        d.price = (priceInput && priceInput.value) ? priceInput.value.trim().replace(/^\$|^£|^€|^CA\$|^A\$/g, '') : (d.price || '0');
+        d.compare_at = (compareAtInput && compareAtInput.value) ? compareAtInput.value.trim().replace(/^\$|^£/, '') : '';
+        d.charge_tax = chargeTaxCheck ? chargeTaxCheck.checked : true;
+        d.inventory_tracked = inventoryTrackedCheck ? inventoryTrackedCheck.checked : true;
+        d.quantity = quantityInput && quantityInput.value !== '' ? parseInt(quantityInput.value, 10) : 1;
+        if (d.quantity < 1 || isNaN(d.quantity)) d.quantity = 1;
+        d.sku = (skuInput && skuInput.value) ? skuInput.value.trim() : (d.sku || '');
+        d.sell_when_out_of_stock = sellOutOfStockCheck ? sellOutOfStockCheck.checked : false;
+        d.physical_product = physicalProductCheck ? physicalProductCheck.checked : true;
+        d.weight_kg = (weightInput && weightInput.value) ? weightInput.value.trim() : (d.weight_kg || '');
+        d.product_type = (productTypeInput && productTypeInput.value) ? productTypeInput.value.trim() : (d.category || '');
+        d.vendor = (vendorInput && vendorInput.value) ? vendorInput.value.trim() : (d.brand || '');
+        d.who_made = (document.querySelector('input[name="etsy-who-made"]:checked') || {}).value || 'i_did';
+        d.when_made = (document.getElementById('etsy-when-made') || {}).value || 'made_to_order';
+        d.is_supply = ((document.querySelector('input[name="etsy-what-is-it"]:checked') || {}).value) === 'supply';
+        d.item_type = ((document.querySelector('input[name="etsy-item-type"]:checked') || {}).value) || 'physical';
+        d.primary_colour = (document.getElementById('etsy-primary-colour') || {}).value || '';
+        d.secondary_colour = (document.getElementById('etsy-secondary-colour') || {}).value || '';
+        d.materials = (document.getElementById('etsy-materials') || {}).value || '';
+        d.materials_transparency = (document.getElementById('etsy-materials-transparency') || {}).value || '';
+        d.width = (document.getElementById('etsy-width') || {}).value || '';
+        d.width_unit = (document.getElementById('etsy-width-unit') || {}).value || 'cm';
+        d.height = (document.getElementById('etsy-height') || {}).value || '';
+        d.height_unit = (document.getElementById('etsy-height-unit') || {}).value || 'cm';
+        d.renewal = (document.querySelector('input[name="etsy-renewal"]:checked') || {}).value || 'automatic';
+        d.meta_description = (metaDescInput && metaDescInput.value) ? clipMetaDescriptionForSeo(metaDescInput.value.trim(), SEO_META_DESC_MAX) : '';
+        d.status = 'draft';
+        if (!d.brand && d.vendor) d.brand = d.vendor;
+        d.variant_options = (typeof getVariantOptionsFromDOM === 'function' && getVariantOptionsFromDOM()) || d.variant_options || [];
+        saveDraft(d);
 
         var photos = Array.isArray(d.photos) ? d.photos.filter(Boolean) : [];
         if (photos.length === 0) {
@@ -2011,69 +2048,89 @@
         var pricePence = Math.round(priceNum * 100);
         var weightKgNum = (weightInput && weightInput.value) ? parseFloat(weightInput.value.trim()) : (d.weight_kg ? parseFloat(d.weight_kg) : 0.5);
         if (isNaN(weightKgNum) || weightKgNum <= 0) weightKgNum = 0.5;
-        var att = (d.extraction && d.extraction.attributes) || {};
         var universal_data = {
-          title: d.title || 'Untitled listing',
+          title: (d.title || 'Untitled listing').slice(0, 140),
           description: d.description || '',
           price: pricePence,
           photos: photos,
           brand: d.brand || d.vendor || '',
-          make: (d.make || att.make || '').trim() || undefined,
-          model_year: (d.model_year || att.model_year || '').trim() || undefined,
           category: d.category || '',
-          tags: d.tags || [],
+          tags: (d.tags || []).slice(0, 13),
           quantity: Math.max(1, d.quantity != null ? d.quantity : 1),
           sku: d.sku || '',
           weight_kg: weightKgNum,
-          condition: d.condition || 'New',
-          meta_title: clipSeoPageTitle((seoTitleInput && seoTitleInput.value) ? seoTitleInput.value.trim() : (d.title || '').trim()),
-          meta_description: clipMetaDescriptionForSeo((d.meta_description || '').trim(), SEO_META_DESC_MAX) || buildFallbackMetaSnippet(d.title || '', d.description || ''),
+          condition: d.condition || 'new',
+          meta_title: (seoTitleInput && seoTitleInput.value) ? seoTitleInput.value.trim() : (d.title || '').trim().slice(0, 140),
+          meta_description: clipMetaDescriptionForSeo((d.meta_description || '').trim(), SEO_META_DESC_MAX) || '',
           variant_options: Array.isArray(d.variant_options) ? d.variant_options : [],
-          product_type: d.product_type || d.category || ''
+          product_type: d.product_type || d.category || '',
+          who_made: (document.querySelector('input[name="etsy-who-made"]:checked') || {}).value || 'i_did',
+          when_made: (document.getElementById('etsy-when-made') || {}).value || 'made_to_order',
+          is_supply: ((document.querySelector('input[name="etsy-what-is-it"]:checked') || {}).value) === 'supply',
+          item_type: ((document.querySelector('input[name="etsy-item-type"]:checked') || {}).value) || 'physical',
+          primary_colour: (document.getElementById('etsy-primary-colour') || {}).value || '',
+          secondary_colour: (document.getElementById('etsy-secondary-colour') || {}).value || '',
+          materials: (document.getElementById('etsy-materials') || {}).value || '',
+          materials_transparency: (document.getElementById('etsy-materials-transparency') || {}).value || '',
+          width: (document.getElementById('etsy-width') || {}).value || '',
+          width_unit: (document.getElementById('etsy-width-unit') || {}).value || 'cm',
+          height: (document.getElementById('etsy-height') || {}).value || '',
+          height_unit: (document.getElementById('etsy-height-unit') || {}).value || 'cm',
+          renewal: (document.querySelector('input[name="etsy-renewal"]:checked') || {}).value || 'automatic'
         };
 
-        // Flow order: flow-3 → /listing/published (same as flow-success.html via Next rewrite).
         var pubUrl = getPublishingUrl();
-        var nextBtn = document.getElementById('review-next-btn');
         if (nextBtn) { nextBtn.disabled = true; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publishing…'; nextBtn.style.pointerEvents = 'none'; nextBtn.style.opacity = '0.7'; }
+
         var publishAbort = new AbortController();
         var timeoutId = setTimeout(function() { publishAbort.abort(); }, 15000);
+
         function getToken() {
-          try { var t = sessionStorage.getItem('auralink_jwt'); if (t) return Promise.resolve(t); } catch (e) {}
-          return fetch(pubUrl.replace(/\/$/, '') + '/auth/dev-token', { signal: publishAbort.signal }).then(function(r) {
-            if (!r.ok) {
-              if (r.status === 502 || r.status === 503 || r.status === 504) {
-                throw new Error('Failed to fetch');
-              }
+          try {
+            var t = sessionStorage.getItem('auralink_jwt');
+            if (t) return Promise.resolve(t);
+          } catch (e) {}
+          return fetch(pubUrl + '/auth/dev-token', { signal: publishAbort.signal })
+            .then(function(r) {
+              if (r.ok) return r.json();
+              return r.json().then(function(j) { throw new Error(j.error || r.statusText || 'Could not get token'); }).catch(function(e) { if (e.message) throw e; throw new Error('Could not get token'); });
+            })
+            .then(function(data) {
+              if (data && data.token) { try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {} return data.token; }
               return null;
-            }
-            return r.json();
-          }).then(function(d) { if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; } return null; });
+            });
         }
+
         var platforms = loadSelected();
-        if (!platforms || platforms.length === 0) platforms = ['shopify'];
+        if (!platforms || platforms.length === 0) platforms = ['tiktok_shop'];
+
         getToken().then(function(token) {
           if (!token) {
-            clearTimeout(timeoutId);
-            if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to Shopify'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
-            window.location.href = '/connect-store?return=review';
+            if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to TikTok Shop'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
+            window.location.href = '/stores-connect-tiktok.html?return=flow-3-tiktok';
             return;
           }
           var base = pubUrl.replace(/\/$/, '');
-          return fetch(base + '/api/user/connected-stores', { headers: { 'Authorization': 'Bearer ' + token }, signal: publishAbort.signal })
-            .then(function(r) { return r.ok ? r.json() : {}; })
+          // Require user to have connected TikTok Shop before we can publish
+          return fetch(base + '/api/user/connected-stores', {
+            headers: { 'Authorization': 'Bearer ' + token },
+            signal: publishAbort.signal
+          })
+            .then(function(r) {
+              if (!r.ok) return r.json().then(function(j) { throw new Error(j.error || r.statusText); }).catch(function() { throw new Error(r.statusText); });
+              return r.json();
+            })
             .then(function(stores) {
-              var needShopify = platforms.indexOf('shopify') !== -1;
-              if (needShopify && (!stores.shopify || stores.shopify.status !== 'connected')) {
-                if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to Shopify'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
-                window.location.href = '/connect-store?return=review';
+              var needTiktok = platforms.indexOf('tiktok_shop') !== -1;
+              if (needTiktok && (!stores.tiktok_shop || stores.tiktok_shop.status !== 'connected')) {
+                if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to TikTok Shop'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
+                window.location.href = '/stores-connect-tiktok.html?return=flow-3-tiktok';
                 return null;
               }
               return token;
             });
         }).then(function(token) {
           if (!token) return;
-          clearTimeout(timeoutId);
           var base = pubUrl.replace(/\/$/, '');
           return fetch(base + '/api/listings', {
             method: 'POST',
@@ -2102,58 +2159,20 @@
           .then(function(result) {
             clearTimeout(timeoutId);
             if (result === undefined) return;
-            var results = result && result.results ? result.results : {};
-            var shopifyResult = results.shopify;
-            if (shopifyResult && shopifyResult.success === false) {
-              if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to Shopify'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
-              alert('Shopify: ' + (shopifyResult.error || 'Publish failed. Check your connection and try again.'));
-              return;
-            }
-            var succeeded = Object.keys(results).filter(function(p) { return results[p] && results[p].success === true; });
-            try {
-              sessionStorage.setItem('auralink_last_publish_platforms', JSON.stringify(succeeded.length ? succeeded : ['shopify']));
-              if (results.shopify && results.shopify.shop_domain) sessionStorage.setItem('auralink_last_publish_shop', results.shopify.shop_domain);
-            } catch (e) {}
-            if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/listing/published');
-            else window.location.href = '/listing/published';
+            window.location.href = '/listing/published';
           })
           .catch(function(err) {
             clearTimeout(timeoutId);
-            if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to Shopify'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
-            var msg = (err && err.message) ? String(err.message) : 'Publish failed. Try again.';
-            if (err && err.name === 'AbortError') {
-              msg = 'Publish timed out. Start the publishing API (port 8001), then try again. From repo root: npm run dev:all — or: cd auralink-ai/publishing && npm run dev';
-            } else if (/failed to fetch|networkerror|load failed|network request failed/i.test(msg)) {
-              var healthHint = (pubUrl.indexOf('__synclyst_publishing') !== -1)
-                ? 'http://localhost:8001/health (publishing runs on 8001; Next on 3000 proxies to it when it\'s up)'
-                : (pubUrl + '/health');
-              msg = 'Could not reach the publishing API.\n\n' +
-                '1) Start: cd auralink-ai/publishing && npm run dev\n' +
-                '   Or: npm run dev:all (from repo root)\n' +
-                '2) Verify: ' + healthHint + '\n\n' +
-                'On localhost:3000 the app uses a Next.js proxy; the real service is still port 8001.';
+            if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to TikTok Shop'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
+            var msg = err.message || 'Publish failed. Try again.';
+            if (err.name === 'AbortError') {
+              msg = 'Publish timed out. The publishing service may not be running or reachable. On production, deploy the publishing service and set the synclyst-publishing-url meta tag.';
+            } else if (msg === 'Failed to fetch' || err.name === 'TypeError') {
+              msg = 'Couldn\'t reach the publishing service. On synclyst.app you need to deploy the publishing API (see auralink-ai/publishing) and set synclyst-publishing-url in this page. Locally: run "npm run dev" in auralink-ai/publishing.';
             }
-            setTimeout(function() { alert(msg); }, 0);
+            alert(msg);
           });
       });
-
-      (function maybeAutoPublishFromSuccessPage() {
-        try {
-          var sp = new URLSearchParams(window.location.search || '');
-          if (sp.get('autopublish') !== '1' && sp.get('action') !== 'publish') return;
-          setTimeout(function() {
-            var btn = document.getElementById('review-next-btn');
-            if (btn) btn.click();
-            try {
-              var u = new URL(window.location.href);
-              u.searchParams.delete('autopublish');
-              u.searchParams.delete('action');
-              var qs = u.searchParams.toString();
-              window.history.replaceState({}, '', u.pathname + (qs ? '?' + qs : '') + u.hash);
-            } catch (e2) {}
-          }, 900);
-        } catch (e) {}
-      })();
     })();
   </script>
   <script>

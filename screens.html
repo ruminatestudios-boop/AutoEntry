@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+  <title>All screens | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-2xl mx-auto px-5 py-8">
+    <h1 class="text-2xl font-bold text-zinc-900 mb-1">All screens</h1>
+    <p class="text-sm text-zinc-500 mb-8">Layout and review every screen. Connect logic and real data later.</p>
+
+    <section class="mb-8">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Authentication</h2>
+      <ul class="space-y-2">
+        <li>
+          <a href="/auth-signup.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">B1 — Sign up</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Create account, Apple/Google, Full name, Email, Password</span>
+          </a>
+        </li>
+        <li>
+          <a href="/auth-login.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">B2 — Log in</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Welcome back, Apple/Google, Email, Password, Forgot password?</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Onboarding</h2>
+      <ul class="space-y-2">
+        <li>
+          <a href="/splash.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">A1 — Splash</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Logo, tagline, Continue</span>
+          </a>
+        </li>
+        <li>
+          <a href="/onboard-1.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">A2 — Onboard 1 of 3</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">One photo. Listed everywhere., Next</span>
+          </a>
+        </li>
+        <li>
+          <a href="/onboard-2.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">A3 — Onboard 2 of 3</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Gets smarter every sale., Next</span>
+          </a>
+        </li>
+        <li>
+          <a href="/onboard-3.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">A4 — Onboard 3 of 3</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Your business never forgets., Get started</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Landing</h2>
+      <ul class="space-y-2">
+        <li>
+          <a href="/landing.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">Landing</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Hero, demo, carousel, nav</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Listing flow</h2>
+      <ul class="space-y-2">
+        <li>
+          <a href="/flow.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">Flow start</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Redirects to Camera</span>
+          </a>
+        </li>
+        <li>
+          <a href="/scan" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">1 — Camera</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Capture, Continue, Skip</span>
+          </a>
+        </li>
+        <li>
+          <a href="/reading-product" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">2 — AI Processing</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Progress, task list, Next</span>
+          </a>
+        </li>
+        <li>
+          <a href="/review" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">3 — Review & Edit</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Product, title, price, AI insights</span>
+          </a>
+        </li>
+        <li>
+          <a href="/flow-4.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">4 — Pricing</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Pricing Brain, Done</span>
+          </a>
+        </li>
+        <li>
+          <a href="/flow-comp-coach.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">5 — Comp Coach (03/06)</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Price, Comp Coach scores, Auto-fix, Next</span>
+          </a>
+        </li>
+        <li>
+          <a href="/flow-marketplaces.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">6 — Choose Marketplaces (04/06)</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Where to list?, TikTok, Amazon, Shopify, eBay</span>
+          </a>
+        </li>
+        <li>
+          <a href="/flow-preview.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">7 — Listing Preview (05/06)</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Score, product card, Publish to 3 stores</span>
+          </a>
+        </li>
+        <li>
+          <a href="/flow-publishing.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">8 — Publishing (06/06)</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Syncing to 3 marketplaces, status cards</span>
+          </a>
+        </li>
+        <li>
+          <a href="/listing/published" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">D9 — Success</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">You're live!, store cards, View listings, List another</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Dashboard</h2>
+      <ul class="space-y-2">
+        <li>
+          <a href="/dashboard-empty.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">C1 — New user (empty)</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Your AI Brain, nothing listed, List your first item</span>
+          </a>
+        </li>
+        <li>
+          <a href="/dashboard/home" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">C2 — Home (active user)</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">AI has learned, stats, Today's Insights, List a new item</span>
+          </a>
+        </li>
+        <li>
+          <a href="/brain.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">E1 — Brain Status</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Good morning, 47 things, IQ bars, Today's Insights</span>
+          </a>
+        </li>
+        <li>
+          <a href="/brain-memory.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">E2 — What I've learned</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Memory timeline, All / Sold fast / Slow movers</span>
+          </a>
+        </li>
+        <li>
+          <a href="/brain-profile.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">E3 — Your profile</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Pricing profile, Category strength, Timing, Unlock at 100</span>
+          </a>
+        </li>
+        <li>
+          <a href="/dashboard.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">Dashboard entry</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Static entry, Open Dashboard, Home</span>
+          </a>
+        </li>
+        <li>
+          <a href="/listings-all.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">F1 — All Listings</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">84 total, All/Live/Sold/Drafts, listing cards</span>
+          </a>
+        </li>
+        <li>
+          <a href="/listings-detail.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">F2 — Listing Detail</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Product, platforms Live, metrics, Edit, Remove</span>
+          </a>
+        </li>
+        <li>
+          <a href="/notifications.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">Notifications</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Back, Clear all, notification list with icons</span>
+          </a>
+        </li>
+        <li>
+          <a href="/settings.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">Settings</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Profile, AI Preferences, Notifications, Account, Delete brain data</span>
+          </a>
+        </li>
+        <li>
+          <a href="/dashboard" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">Dashboard app</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Next.js /dashboard (if running)</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Stores</h2>
+      <ul class="space-y-2">
+        <li>
+          <a href="/stores-connect-amazon.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">L1 — Connect Amazon</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Permissions requested, disclaimer, Authorise Amazon, Cancel</span>
+          </a>
+        </li>
+        <li>
+          <a href="/stores-list.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">L2 — Stores list</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Amazon disconnected warning, TikTok/Shopify connected, Reconnect Amazon</span>
+          </a>
+        </li>
+        <li>
+          <a href="/stores-amazon-detail.html" class="block rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors no-underline">
+            <span class="font-semibold text-zinc-900">L3 — Amazon store detail</span>
+            <span class="text-zinc-500 text-sm block mt-0.5">Connected status, metrics, Auto-publish/Sync toggles, Disconnect</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <p class="text-xs text-zinc-400">Use this page to open and review each screen. Wire logic and real data when ready.</p>
+  </div>
+</body>
+</html>

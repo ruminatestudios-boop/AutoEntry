@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+  <title>Pricing | Listing Flow | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <style>
+    .progress-dot { width: 6px; height: 6px; border-radius: 3px; background: #e4e4e7; transition: all 0.2s; }
+    .progress-dot.done { background: #a1a1aa; }
+    .progress-dot.current { width: 20px; background: #18181b; }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <main class="flex-1 px-5 pt-6 overflow-auto">
+      <h1 class="text-xl font-semibold tracking-tight text-zinc-900 mb-1">Pricing</h1>
+      <p class="text-sm text-zinc-500 mb-6">AI recommended price based on market.</p>
+      <div class="bg-zinc-900 rounded-2xl p-5 text-white mb-4 border border-zinc-700">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-white/60 mb-1">Pricing Brain</p>
+        <p class="text-3xl font-bold mb-1" id="flow4-price">$269</p>
+        <p class="text-sm text-white/70 mb-4">Sweet spot — sells avg 2.3 days</p>
+        <div class="h-1.5 bg-white/20 rounded-full overflow-hidden mb-2 relative">
+          <div class="absolute inset-y-0 left-[18%] right-[28%] bg-white/90 rounded-full"></div>
+          <div class="absolute top-1/2 left-[54%] -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-zinc-900"></div>
+        </div>
+        <p class="flex justify-between text-xs text-white/60 mb-4"><span>$199</span><span>$349</span></p>
+        <ul class="space-y-2.5 text-sm">
+          <li class="flex items-center justify-between">
+            <span class="text-white/80">Amazon #1</span>
+            <span class="text-white">$289</span>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-red-500/20 text-red-300">Pricier</span>
+          </li>
+          <li class="flex items-center justify-between">
+            <span class="text-white/80">Best Buy</span>
+            <span class="text-white">$299</span>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-red-500/20 text-red-300">Pricier</span>
+          </li>
+          <li class="flex items-center justify-between">
+            <span class="text-white/80">Your price</span>
+            <span class="font-bold text-white" id="flow4-your-price">$269</span>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-200">Best</span>
+          </li>
+        </ul>
+        <p class="text-xs text-white/80 mt-4 pt-4 border-t border-white/10">You're $20 cheaper than #1 Amazon seller with same specs.</p>
+        <button type="button" class="w-full mt-4 py-3 rounded-2xl bg-white text-zinc-900 font-semibold text-sm hover:bg-zinc-100 transition-colors border border-zinc-200" id="flow4-keep-btn">Keep $269</button>
+      </div>
+      <div class="bg-white rounded-2xl border border-zinc-200 p-4">
+        <div class="flex gap-3 items-center">
+          <span class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-600 text-[10px] font-bold shrink-0">A</span>
+          <p class="text-sm font-medium text-zinc-900 flex-1">Description needs 2 keywords</p>
+          <span class="text-amber-600 text-sm font-bold">!</span>
+        </div>
+        <div class="flex gap-3 items-center mt-3 pt-3 border-t border-zinc-100">
+          <span class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-600 text-[10px] font-bold shrink-0">M</span>
+          <p class="text-sm font-medium text-zinc-900 flex-1">Seller Memory · 3 past sales</p>
+          <button type="button" class="text-xs font-medium px-2.5 py-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50">Why?</button>
+        </div>
+      </div>
+    </main>
+    <div class="p-5 pt-4 border-t border-zinc-100 shrink-0 bg-zinc-50">
+      <div class="flex items-center justify-between">
+        <span class="w-10 h-10 shrink-0" aria-hidden="true"></span>
+        <a href="/landing.html" class="py-3 px-6 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] hover:bg-zinc-800 transition-colors no-underline">Done</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowLeft') return;
+      if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
+      e.preventDefault();
+      history.back();
+    });
+  </script>
+  <script>
+    (function() {
+      try {
+        var raw = sessionStorage.getItem('auralink_review_draft');
+        if (raw) {
+          var draft = JSON.parse(raw);
+          var p = (draft.price != null && draft.price !== '') ? String(draft.price).replace(/^\$/, '') : '269';
+          if (!/^\d+\.?\d*$/.test(p)) p = '269';
+          var priceEl = document.getElementById('flow4-price');
+          var yourPriceEl = document.getElementById('flow4-your-price');
+          var keepBtn = document.getElementById('flow4-keep-btn');
+          if (priceEl) priceEl.textContent = '$' + p;
+          if (yourPriceEl) yourPriceEl.textContent = '$' + p;
+          if (keepBtn) keepBtn.textContent = 'Keep $' + p;
+        }
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>

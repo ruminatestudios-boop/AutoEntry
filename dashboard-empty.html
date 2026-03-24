@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="view-transition" content="same-origin" />
+  <title>Home | Dashboard | SyncLyst</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/synclyst-flow.css" />
+  <link rel="stylesheet" href="/css/flow-page-transition.css" />
+  <script src="/js/flow-page-transition.js"></script>
+
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50">
+      <span class="text-2xl font-bold text-zinc-900">SyncLyst<sup class="text-[0.45em] opacity-80 font-normal">®</sup></span>
+      <div class="w-9 h-9 rounded-full bg-zinc-200 border border-zinc-300 flex items-center justify-center text-sm font-semibold text-zinc-600">J</div>
+    </header>
+
+    <main class="flex-1 px-5 pb-24 overflow-auto">
+      <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Home & Dashboard</p>
+
+      <!-- Main card -->
+      <div class="rounded-2xl bg-white border border-zinc-200 p-5">
+        <!-- Your AI Brain (dark sub-card) -->
+        <div class="rounded-xl bg-zinc-800 border border-zinc-700 p-4 mb-6">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Your AI Brain</p>
+          <p class="text-lg font-bold text-white mb-1">No listings yet</p>
+          <p class="text-xs text-zinc-400">Take your first photo. The AI starts learning from listing 1.</p>
+        </div>
+
+        <!-- Empty state icon -->
+        <div class="w-16 h-16 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-400 text-2xl font-bold mx-auto mb-4">B</div>
+        <p class="text-center text-lg font-bold text-zinc-900 mb-1">Nothing listed yet</p>
+        <p class="text-center text-sm text-zinc-500 mb-6">Your AI gets smarter with every item you list. Start with anything — clothes, electronics, books.</p>
+
+        <!-- CTA -->
+        <a href="/scan" class="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 no-underline">
+          <span class="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center text-[10px] font-bold">C</span>
+          List your first item
+          <span class="text-white/70">→</span>
+        </a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
