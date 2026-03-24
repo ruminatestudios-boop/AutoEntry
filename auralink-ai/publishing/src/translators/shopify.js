@@ -93,8 +93,13 @@ function buildOptionsAndVariants(listing) {
     const opts = variantOptions.filter((o) => o && o.name && Array.isArray(o.values) && o.values.length > 0);
     if (opts.length > 0) {
       const optionNames = opts.map((o) => o.name);
-      const valueArrays = opts.map((o) => o.values.map((v) => String(v).trim()).filter(Boolean));
-      const combinations = cartesianProduct(valueArrays);
+      const valueArrays = opts.map((o) => {
+        const vals = o.values.map((v) => String(v).trim()).filter(Boolean);
+        return [...new Set(vals)];
+      });
+      let combinations = cartesianProduct(valueArrays);
+      // Shopify supports up to 100 variants per product.
+      if (combinations.length > 100) combinations = combinations.slice(0, 100);
       if (combinations.length > 0) {
         const options = optionNames.map((name, i) => ({
           name,

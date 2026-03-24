@@ -14,12 +14,20 @@ const APP_URL = process.env.APP_URL || 'http://localhost:8001';
 function shopifyErrorMessage(e) {
   if (!e.response) return e.message || 'Network or server error';
   const d = e.response.data;
-  if (d && typeof d.errors === 'object') {
+  if (d && typeof d.errors === 'string') return d.errors;
+  if (d && typeof d.errors === 'object' && d.errors) {
     const arr = d.errors?.product || d.errors?.base;
-    if (Array.isArray(arr)) return arr.join('. ');
-    if (typeof arr === 'string') return arr;
+    if (Array.isArray(arr) && arr.length) return arr.join('. ');
+    if (typeof arr === 'string' && arr.trim()) return arr.trim();
+    const parts = [];
+    for (const [k, v] of Object.entries(d.errors)) {
+      if (Array.isArray(v) && v.length) parts.push(`${k}: ${v.join(', ')}`);
+      else if (typeof v === 'string' && v.trim()) parts.push(`${k}: ${v.trim()}`);
+    }
+    if (parts.length) return parts.join(' | ');
   }
   if (d && typeof d.error === 'string') return d.error;
+  if (typeof d === 'string' && d.trim()) return d.trim();
   return e.response.statusText || `Shopify API ${e.response.status}`;
 }
 
