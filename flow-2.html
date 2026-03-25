@@ -76,9 +76,12 @@
 
       <div class="smart-suggest-banner mb-6 w-full text-left" role="status" aria-live="polite">
         <div class="smart-suggest-icon-wrap" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 7h3l1.5-2h5L15 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
-            <circle cx="12" cy="13" r="3.25" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+            <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+            <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+            <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+            <line x1="7" x2="17" y1="12" y2="12" />
           </svg>
         </div>
         <div class="smart-suggest-text">
@@ -401,9 +404,16 @@
           clearTimeout(extractionTimeoutId);
           if (extractionDone) return;
           setWaiting(false);
-          var msg = (err && err.name === 'AbortError')
-            ? 'Extraction timed out. Make sure the backend is running on http://localhost:8000 (check /health) and try again.'
-            : (err && err.message) ? err.message : 'Could not read the image. Try again or use a different photo.';
+          var raw = (err && err.message) ? String(err.message) : '';
+          var networkFail = err && (err.name === 'TypeError' || raw === 'Failed to fetch' || raw === 'fetch failed' || raw.indexOf('NetworkError') !== -1);
+          var msg;
+          if (err && err.name === 'AbortError') {
+            msg = 'Extraction timed out. Make sure the backend is running on ' + apiUrl + ' (open /health) and try again.';
+          } else if (networkFail) {
+            msg = 'Cannot reach the vision API at ' + apiUrl + '. Start the Python backend (port 8000), confirm ' + apiUrl + '/health, then scan again.';
+          } else {
+            msg = raw || 'Could not read the image. Try again or use a different photo.';
+          }
           showError(msg);
         });
     })();
