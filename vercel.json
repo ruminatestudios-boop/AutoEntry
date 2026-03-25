@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "auralink-ai/frontend/package.json",
+      "src": "auralink-ai/frontend/next.config.ts",
       "use": "@vercel/next"
     }
   ]
