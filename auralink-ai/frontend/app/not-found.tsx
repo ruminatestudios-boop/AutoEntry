@@ -21,7 +21,7 @@ export default function NotFound() {
         This page could not be found.
       </p>
       <a
-        href="/"
+        href="/landing.html"
         style={{
           display: "inline-block",
           marginTop: "1.5rem",

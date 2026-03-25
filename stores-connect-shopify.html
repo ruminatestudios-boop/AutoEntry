@@ -374,9 +374,10 @@
           connectBtn.textContent = 'Connecting…';
           var connectAbort = new AbortController();
           var timeoutId = setTimeout(function() { connectAbort.abort(); }, 15000);
-          fetch(pubBase + '/auth/dev-token', { signal: connectAbort.signal })
+          fetch('/api/publishing/token', { signal: connectAbort.signal })
             .then(function(r) {
               if (!r.ok) {
+                if (r.status === 401) throw new Error('unauthorized');
                 if (r.status === 502 || r.status === 503 || r.status === 504) throw new Error('unreachable');
                 return null;
               }
@@ -396,6 +397,10 @@
             .catch(function(err) {
               clearTimeout(timeoutId);
               var msg = PUBLISH_UNREACHABLE_MSG;
+              if (err && String(err.message || '') === 'unauthorized') {
+                try { window.location.href = '/sign-in?redirect_url=' + encodeURIComponent('/connect-store'); } catch (e) {}
+                return;
+              }
               if (err && err.name === 'AbortError') {
                 msg = 'Connection timed out (15s). ' + PUBLISH_UNREACHABLE_MSG;
               } else if (err && err.message !== 'unreachable' && err.message && !/failed to fetch|networkerror|load failed/i.test(String(err.message))) {
@@ -432,7 +437,7 @@
             }, 100);
             devBypassBtn.addEventListener('click', function() {
               devBypassBtn.disabled = true;
-              fetch(pubBaseForStatus + '/auth/dev-token')
+              fetch('/api/publishing/token')
                 .then(function(r) { return r.json(); })
                 .then(function(d) {
                   if (d && d.token) {

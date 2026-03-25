@@ -13,6 +13,10 @@ const DEV_USER_ID = 'dev-local';
 
 /** GET dev token. Always returns a JWT for dev-local; no DB or other deps. */
 authRouter.get('/dev-token', (_req, res) => {
+  // Never expose a shared dev token in production deployments.
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
   try {
     const userId = DEV_USER_ID;
     const token = jwt.sign({ sub: userId, userId }, JWT_SECRET, { expiresIn: '7d' });

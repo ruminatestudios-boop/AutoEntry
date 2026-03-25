@@ -157,10 +157,10 @@ export default function DashboardClient() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <header className="glass-nav" style={{ padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)" }}>
+        <Link href="/landing.html" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)" }}>
           SyncLyst
         </Link>
-        <UserButton afterSignOutUrl="/" />
+        <UserButton afterSignOutUrl="/landing.html" />
       </header>
       <main style={{ padding: "2rem", maxWidth: "64rem", margin: "0 auto" }}>
         <div style={{ marginBottom: "2rem", textAlign: "center" }}>

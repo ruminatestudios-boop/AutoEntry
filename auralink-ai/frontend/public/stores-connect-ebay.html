@@ -141,8 +141,14 @@
           connectBtn.textContent = 'Connecting…';
           var connectAbort = new AbortController();
           var timeoutId = setTimeout(function() { connectAbort.abort(); }, 15000);
-          fetch(pubBase + '/auth/dev-token', { signal: connectAbort.signal })
-            .then(function(r) { return r.ok ? r.json() : null; })
+          fetch('/api/publishing/token', { signal: connectAbort.signal })
+            .then(function(r) {
+              if (!r.ok) {
+                if (r.status === 401) throw new Error('unauthorized');
+                return null;
+              }
+              return r.json();
+            })
             .then(function(data) {
               clearTimeout(timeoutId);
               if (data && data.user_id) {
@@ -155,6 +161,10 @@
             })
             .catch(function(err) {
               clearTimeout(timeoutId);
+              if (err && String(err.message || '') === 'unauthorized') {
+                try { window.location.href = '/sign-in?redirect_url=' + encodeURIComponent('/stores-connect-ebay.html'); } catch (e) {}
+                return;
+              }
               var msg = err.name === 'AbortError'
                 ? 'Connection timed out. The publishing service may be unreachable.'
                 : 'Could not reach the publishing service. Try again.';

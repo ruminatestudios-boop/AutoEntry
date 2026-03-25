@@ -22,7 +22,7 @@ export default function DashboardWrapper() {
           color: "#18181b",
         }}
       >
-        <a href="/" style={{ marginBottom: "1rem", color: "#18181b" }}>
+        <a href="/landing.html" style={{ marginBottom: "1rem", color: "#18181b" }}>
           ← SyncLyst
         </a>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Dashboard</h1>

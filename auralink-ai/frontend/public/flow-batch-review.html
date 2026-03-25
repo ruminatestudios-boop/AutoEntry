@@ -228,7 +228,7 @@
             var t = sessionStorage.getItem('auralink_jwt');
             if (t) return Promise.resolve(t);
           } catch (e) {}
-          return fetch(pubUrl + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; }).then(function(data) {
+          return fetch('/api/publishing/token').then(function(r) { return r.ok ? r.json() : null; }).then(function(data) {
             if (data && data.token) { try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {} return data.token; }
             return null;
           });

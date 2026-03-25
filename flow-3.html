@@ -2040,11 +2040,10 @@
         var timeoutId = setTimeout(function() { publishAbort.abort(); }, 15000);
         function getToken() {
           try { var t = sessionStorage.getItem('auralink_jwt'); if (t) return Promise.resolve(t); } catch (e) {}
-          return fetch(pubUrl.replace(/\/$/, '') + '/auth/dev-token', { signal: publishAbort.signal }).then(function(r) {
+          return fetch('/api/publishing/token', { signal: publishAbort.signal }).then(function(r) {
             if (!r.ok) {
-              if (r.status === 502 || r.status === 503 || r.status === 504) {
-                throw new Error('Failed to fetch');
-              }
+              if (r.status === 401) throw new Error('unauthorized');
+              if (r.status === 502 || r.status === 503 || r.status === 504) throw new Error('Failed to fetch');
               return null;
             }
             return r.json();
@@ -2121,6 +2120,10 @@
             clearTimeout(timeoutId);
             if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to Shopify'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
             var msg = (err && err.message) ? String(err.message) : 'Publish failed. Try again.';
+            if (msg === 'unauthorized') {
+              try { window.location.href = '/sign-in?redirect_url=' + encodeURIComponent('/review'); } catch (e) {}
+              return;
+            }
             if (err && err.name === 'AbortError') {
               msg = 'Publish timed out. Start the publishing API (port 8001), then try again. From repo root: npm run dev:all — or: cd auralink-ai/publishing && npm run dev';
             } else if (/failed to fetch|networkerror|load failed|network request failed/i.test(msg)) {

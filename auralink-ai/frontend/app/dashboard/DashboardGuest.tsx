@@ -144,7 +144,7 @@ export default function DashboardGuest() {
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", color: "#18181b" }}>
       <header className="glass-nav" style={{ padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
-        <Link href="/" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)" }}>
+        <Link href="/landing.html" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)" }}>
           SyncLyst
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "0.8125rem", color: "var(--muted)", flexWrap: "wrap" }}>

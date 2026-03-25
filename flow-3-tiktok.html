@@ -2090,9 +2090,10 @@
             var t = sessionStorage.getItem('auralink_jwt');
             if (t) return Promise.resolve(t);
           } catch (e) {}
-          return fetch(pubUrl + '/auth/dev-token', { signal: publishAbort.signal })
+          return fetch('/api/publishing/token', { signal: publishAbort.signal })
             .then(function(r) {
               if (r.ok) return r.json();
+              if (r.status === 401) throw new Error('unauthorized');
               return r.json().then(function(j) { throw new Error(j.error || r.statusText || 'Could not get token'); }).catch(function(e) { if (e.message) throw e; throw new Error('Could not get token'); });
             })
             .then(function(data) {

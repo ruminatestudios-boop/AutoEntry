@@ -60,15 +60,15 @@
       }
       function getToken() { try { return sessionStorage.getItem('auralink_jwt'); } catch (e) { return null; } }
       function fetchToken() {
-        var base = getPublishingUrl();
-        return fetch(base + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; })
-          .then(function(d) { if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; } return null; });
+        return fetch('/api/publishing/token')
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(d) { if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; } return null; })
+          .catch(function() { return null; });
       }
       var token = getToken();
       (token ? Promise.resolve(token) : fetchToken()).then(function(t) {
         if (!t) {
-          document.getElementById('stores-loading').textContent = 'Get a token first (e.g. start a scan).';
-          if (typeof lucide !== 'undefined') lucide.createIcons();
+          try { window.location.href = '/sign-in?redirect_url=' + encodeURIComponent('/stores-list.html'); } catch (e) {}
           return;
         }
         var base = getPublishingUrl();

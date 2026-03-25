@@ -45,7 +45,7 @@ function UpgradePageNoClerk() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <header className="glass-nav" style={{ padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)" }}>
+        <Link href="/landing.html" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)" }}>
           SyncLyst
         </Link>
         <Link href="/dashboard" style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--muted)" }}>
@@ -142,7 +142,7 @@ function UpgradePageWithClerk() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <header className="glass-nav" style={{ padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)" }}>
+        <Link href="/landing.html" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text)" }}>
           SyncLyst
         </Link>
         <Link href="/dashboard" style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--muted)" }}>

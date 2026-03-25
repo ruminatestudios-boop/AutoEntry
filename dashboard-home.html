@@ -149,13 +149,27 @@
       }
       function getToken() { try { return sessionStorage.getItem('auralink_jwt'); } catch (e) { return null; } }
       function fetchToken() {
-        var base = getPublishingUrl();
-        return fetch(base + '/auth/dev-token').then(function(r) { return r.ok ? r.json() : null; })
-          .then(function(d) { if (d && d.token) { try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {} return d.token; } return null; });
+        return fetch('/api/publishing/token')
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(d) {
+            if (d && d.token) {
+              try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {}
+              return d.token;
+            }
+            return null;
+          })
+          .catch(function() { return null; });
       }
       var token = getToken();
       (token ? Promise.resolve(token) : fetchToken()).then(function(t) {
-        if (!t) { var el = document.getElementById('dashboard-listed-count'); if (el) el.textContent = '0'; if (typeof lucide !== 'undefined') lucide.createIcons(); return; }
+        if (!t) {
+          // Require login to access listings; send user to sign-in then back here.
+          try { window.location.href = '/sign-in?redirect_url=' + encodeURIComponent('/dashboard/home'); } catch (e) {}
+          var el = document.getElementById('dashboard-listed-count');
+          if (el) el.textContent = '—';
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          return;
+        }
         var base = getPublishingUrl();
         return fetch(base + '/api/listings', { headers: { 'Authorization': 'Bearer ' + t } })
           .then(function(r) { return r.ok ? r.json() : null; })
