@@ -65,7 +65,13 @@ if (enabled.includes('shopify')) {
       const result = await handleShopifyCallback(req.query.code, req.query.shop || '', req.query.state);
       const base = FRONTEND_URL.replace(/\/$/, '');
       const qs = `shopify=connected&shop=${encodeURIComponent(result.shop_domain)}`;
-      res.redirect(`${base}${LISTING_PUBLISHED_PATH}?${qs}`);
+      if (result && result.returnTo) {
+        const path = result.returnTo.startsWith('/') ? result.returnTo : `/${result.returnTo}`;
+        res.redirect(`${base}${path}?${qs}`);
+      } else {
+        // Default: show a success screen in-app even when return_to is missing.
+        res.redirect(`${base}${LISTING_PUBLISHED_PATH}?${qs}`);
+      }
     } catch (e) {
       const base = FRONTEND_URL.replace(/\/$/, '');
       let returnTo = '';
