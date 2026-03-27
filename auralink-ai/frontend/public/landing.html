@@ -332,8 +332,8 @@
                 <span class="text-lg font-semibold tracking-tight text-[#111]">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span>
             </a>
             <div class="hidden md:flex items-center gap-4 flex-1 justify-end min-w-0">
-                <a href="/sign-in?redirect_url=/dashboard" class="text-sm text-[#555] hover:text-[#111] transition-colors">Login</a>
-                <a href="/sign-up?redirect_url=/dashboard" class="bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition-all no-underline">
+                <a href="/sign-in?redirect_url=/dashboard/home" class="text-sm text-[#555] hover:text-[#111] transition-colors">Login</a>
+                <a href="/sign-up?redirect_url=/dashboard/home" class="bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition-all no-underline">
                     Sign up
                 </a>
             </div>
@@ -1259,7 +1259,7 @@
             }
             // Starter: sign up then dashboard (free tier)
             if (tier === 'starter') {
-              window.location.href = window.synclystAppUrl('/sign-up?redirect_url=/dashboard');
+              window.location.href = window.synclystAppUrl('/sign-up?redirect_url=/dashboard/home');
               return;
             }
             if (getTier() !== tier) setTier(tier);

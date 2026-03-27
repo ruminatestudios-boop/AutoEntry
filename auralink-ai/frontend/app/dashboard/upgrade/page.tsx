@@ -131,9 +131,15 @@ function UpgradePageWithClerk() {
 
   useEffect(() => {
     if (didAutoStart.current || !isLoaded) return;
+    const autoStart = shouldAutoStartFromUrl();
+    if (!autoStart) {
+      // Manual plan-selection flow: never auto-redirect to Stripe.
+      clearPendingTierFromStorage();
+      return;
+    }
     const fromStorage = getPendingTierFromStorage();
-    const fromUrl = shouldAutoStartFromUrl() ? getTierFromUrl() : null;
-    const t = fromStorage || fromUrl;
+    const fromUrl = getTierFromUrl();
+    const t = fromUrl || fromStorage;
     if (!t || !userId || !getToken) return;
     didAutoStart.current = true;
     startCheckout(t as "pro" | "growth" | "scale");

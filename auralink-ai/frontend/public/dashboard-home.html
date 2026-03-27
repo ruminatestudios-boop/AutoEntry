@@ -33,11 +33,17 @@
     <header class="shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
       <div></div>
       <a href="/landing.html" class="inline-flex items-center justify-self-center no-underline text-[#111] leading-none py-0.5"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
-      <div class="justify-self-end"></div>
+      <div class="justify-self-end flex items-center relative">
+        <div id="clerk-user-button" class="hidden"></div>
+        <button id="dashboard-user-fallback-btn" type="button" aria-haspopup="menu" aria-expanded="false" class="hidden w-10 h-10 rounded-full border border-[#d4d4d8] bg-white text-[#525252] text-sm font-semibold inline-flex items-center justify-center overflow-hidden cursor-pointer select-none">U</button>
+        <div id="dashboard-user-fallback-menu" class="hidden absolute right-0 top-10 min-w-[160px] rounded-xl border border-[#e5e5e5] bg-white shadow-sm p-1.5 z-20">
+          <a href="/sign-out?redirect_url=/landing.html" class="block px-3 py-2 text-sm text-[#0a0a0a] no-underline rounded-lg hover:bg-zinc-50">Sign out</a>
+        </div>
+      </div>
     </header>
     <main class="flex-1 px-5 pt-6 pb-8 overflow-auto">
       <h1 class="vercel-headline text-xl font-bold text-[#0a0a0a] mb-1 text-center">Dashboard</h1>
-      <p class="text-center text-sm text-[#525252] mb-6 vercel-body">Your listings and connected stores.</p>
+      <p class="text-center text-sm text-[#525252] mb-6 vercel-body">Your listings and connected stores</p>
 
       <!-- Listings summary -->
       <div class="vercel-card p-5 mb-5">
@@ -65,13 +71,13 @@
       </div>
 
       <!-- Connected stores -->
-      <div class="vercel-card p-5 mb-5">
-        <span class="text-[13px] font-medium text-[#0a0a0a] block mb-3">Connected stores</span>
-        <p class="text-sm text-[#525252] mb-4 vercel-body">Connect marketplaces to publish drafts from SyncLyst.</p>
-        <a href="/stores-list.html" class="inline-flex items-center gap-2 text-sm font-semibold text-[#0a0a0a] no-underline hover:underline">
+      <div class="vercel-card p-5 mb-5 bg-[#fafafa] border-[#e5e5e5] opacity-70 pointer-events-none">
+        <span class="text-[13px] font-medium text-[#3f3f46] block mb-3">Connected stores</span>
+        <p class="text-sm text-[#71717a] mb-4 vercel-body">Connect marketplaces to publish drafts from SyncLyst.</p>
+        <div class="inline-flex items-center gap-2 text-sm font-semibold text-[#52525b]">
           <i data-lucide="store" class="w-4 h-4"></i>
-          Manage connections
-        </a>
+          <span>Manage connections <span class="font-medium text-[#71717a]">(expanding platforms soon)</span></span>
+        </div>
       </div>
 
       <!-- CTA -->
@@ -96,46 +102,78 @@
         }
       }
 
+      function setCurrentTier(tier) {
+        var t = String(tier || '').toLowerCase();
+        if (!TIER_LABELS[t]) return;
+        try { localStorage.setItem('synclyst_tier', t); } catch (e) {}
+      }
+
       function applyPlanCard() {
         var tier = getCurrentTier();
         var label = TIER_LABELS[tier];
+        var displayLabel = tier === 'starter' ? 'Free' : label;
         var h = document.getElementById('dashboard-plan-heading');
         var body = document.getElementById('dashboard-plan-body');
         var action = document.getElementById('dashboard-plan-action');
         var actionLabel = document.getElementById('dashboard-plan-action-label');
-        if (h) h.textContent = label + ' plan';
+        if (h) h.textContent = displayLabel + ' plan';
         var renewal = '';
         try {
           renewal = localStorage.getItem('synclyst_plan_renewal');
         } catch (e) {}
         if (body) {
-          if (renewal && String(renewal).trim()) {
+          if (tier === 'starter') {
+            body.textContent = "You're on the Free plan. Upgrade to any paid plan for more monthly scans and marketplace features.";
+          } else if (renewal && String(renewal).trim()) {
             body.textContent = 'Renews on ' + String(renewal).trim() + '. Upgrade or manage billing below.';
           } else {
             body.textContent = "You're on the " + label + ' plan. Upgrade for more monthly scans and marketplace features.';
           }
         }
-        var next = NEXT_TIER[tier];
         if (action && actionLabel) {
-          if (next) {
-            action.href = '/dashboard/upgrade?tier=' + encodeURIComponent(next) + '&autostart=1';
-            actionLabel.textContent = 'Upgrade to ' + TIER_LABELS[next];
-            var icon = action.querySelector('i');
-            if (icon) {
-              icon.setAttribute('data-lucide', 'arrow-up-circle');
-            }
+          action.href = '/dashboard/upgrade';
+          if (tier === 'starter') {
+            actionLabel.textContent = 'Choose paid plan';
           } else {
-            action.href = '/dashboard/upgrade';
-            actionLabel.textContent = 'View all plans';
-            var icon2 = action.querySelector('i');
-            if (icon2) {
-              icon2.setAttribute('data-lucide', 'layout-grid');
-            }
+            actionLabel.textContent = 'Change plan';
+          }
+          var icon = action.querySelector('i');
+          if (icon) {
+            icon.setAttribute('data-lucide', 'layout-grid');
           }
         }
       }
 
       applyPlanCard();
+
+      function fetchClerkToken() {
+        return fetch('/api/clerk/token')
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(d) { return d && d.token ? d.token : null; })
+          .catch(function() { return null; });
+      }
+
+      function refreshTierFromUsage() {
+        return fetchClerkToken()
+          .then(function(token) {
+            if (!token) return null;
+            return fetch('/api/usage', {
+              headers: { Authorization: 'Bearer ' + token }
+            })
+              .then(function(r) { return r.ok ? r.json() : null; })
+              .catch(function() { return null; });
+          })
+          .then(function(usage) {
+            if (!usage || !usage.tier) return;
+            var tier = String(usage.tier).toLowerCase();
+            if (!TIER_LABELS[tier]) return;
+            setCurrentTier(tier);
+            applyPlanCard();
+          })
+          .catch(function() {});
+      }
+
+      refreshTierFromUsage();
 
       function getPublishingUrl() {
         var meta = document.querySelector('meta[name="auralink-publishing-url"]');
@@ -160,6 +198,134 @@
           })
           .catch(function() { return null; });
       }
+      function loadScript(src) {
+        return new Promise(function(resolve, reject) {
+          var existing = document.querySelector('script[data-synclyst-clerk]');
+          if (existing) { resolve(); return; }
+          var s = document.createElement('script');
+          s.src = src;
+          s.async = true;
+          s.defer = true;
+          s.setAttribute('data-synclyst-clerk', '1');
+          s.onload = function() { resolve(); };
+          s.onerror = function() { reject(new Error('Failed to load Clerk script')); };
+          document.head.appendChild(s);
+        });
+      }
+
+      function bindFallbackUserMenu() {
+        var btn = document.getElementById('dashboard-user-fallback-btn');
+        var menu = document.getElementById('dashboard-user-fallback-menu');
+        if (!btn || !menu) return;
+        function openMenu() {
+          menu.classList.remove('hidden');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+        function closeMenu() {
+          menu.classList.add('hidden');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+        btn.addEventListener('click', function() {
+          if (menu.classList.contains('hidden')) openMenu();
+          else closeMenu();
+        });
+        document.addEventListener('click', function(e) {
+          if (!menu.contains(e.target) && !btn.contains(e.target)) closeMenu();
+        });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') closeMenu();
+        });
+      }
+
+      function setFallbackAvatarFromSummary() {
+        var btn = document.getElementById('dashboard-user-fallback-btn');
+        if (!btn) return;
+        // Prefer Clerk client-side user (most reliable in local dev).
+        try {
+          if (window.Clerk && window.Clerk.user) {
+            var u = window.Clerk.user;
+            var imageUrl = (u.imageUrl || '').trim();
+            var firstName = (u.firstName || '').trim();
+            var lastName = (u.lastName || '').trim();
+            var email = '';
+            try {
+              email = (u.primaryEmailAddress && u.primaryEmailAddress.emailAddress) ? String(u.primaryEmailAddress.emailAddress).trim() : '';
+            } catch (e) {}
+            var externalAccounts = Array.isArray(u.externalAccounts) ? u.externalAccounts : [];
+            var hasSocialAvatar = externalAccounts.some(function(a) {
+              var p = String((a && a.provider) || '').toLowerCase();
+              return p === 'oauth_google' || p === 'oauth_facebook';
+            });
+            if (hasSocialAvatar && imageUrl) {
+              btn.innerHTML = '<img src="' + imageUrl + '" alt="" class="w-full h-full object-cover pointer-events-none" referrerpolicy="no-referrer" />';
+              return;
+            }
+            var base = firstName || lastName || email || 'U';
+            btn.textContent = String(base).charAt(0).toUpperCase();
+            return;
+          }
+        } catch (e) {}
+        // Server fallback (may be unavailable in local dev if Clerk middleware can't resolve handshake).
+        fetch('/api/clerk/user-summary')
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(data) {
+            if (!data || !data.signedIn) return;
+            var firstName = (data.firstName || '').trim();
+            var lastName = (data.lastName || '').trim();
+            var email = (data.email || '').trim();
+            var imageUrl = (data.imageUrl || '').trim();
+            var hasSocialAvatar = !!data.hasSocialAvatar;
+            if (hasSocialAvatar && imageUrl) {
+              btn.innerHTML = '<img src="' + imageUrl + '" alt="" class="w-full h-full object-cover pointer-events-none" referrerpolicy="no-referrer" />';
+              return;
+            }
+            var base = firstName || lastName || email || 'U';
+            btn.textContent = String(base).charAt(0).toUpperCase();
+          })
+          .catch(function() {});
+      }
+
+      function initClerkUserButton() {
+        var hostEl = document.getElementById('clerk-user-button');
+        var fallbackBtn = document.getElementById('dashboard-user-fallback-btn');
+        if (!hostEl || !fallbackBtn) return;
+        function showFallbackMenu() {
+          hostEl.classList.add('hidden');
+          fallbackBtn.classList.remove('hidden');
+        }
+        fetch('/api/clerk/public-config')
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(cfg) {
+            var pk = cfg && cfg.publishableKey ? String(cfg.publishableKey).trim() : '';
+            if (!pk) { showFallbackMenu(); return; }
+            return loadScript('https://js.clerk.com/v1/clerk.js')
+              .then(function() {
+                if (!window.Clerk) { showFallbackMenu(); return; }
+                return window.Clerk.load({ publishableKey: pk }).then(function() {
+                  // Even if we don't mount the full Clerk UserButton (or it fails),
+                  // we can still render the correct avatar from Clerk.user.
+                  setFallbackAvatarFromSummary();
+                  hostEl.classList.remove('hidden');
+                  fallbackBtn.classList.add('hidden');
+                  try {
+                    window.Clerk.mountUserButton(hostEl, {
+                      appearance: {
+                        elements: {
+                          userButtonAvatarBox: 'w-10 h-10',
+                        },
+                      },
+                      afterSignOutUrl: '/landing.html',
+                    });
+                  } catch (e) {
+                    showFallbackMenu();
+                    setFallbackAvatarFromSummary();
+                  }
+                });
+              });
+          })
+          .catch(function() { showFallbackMenu(); });
+      }
+
       var token = getToken();
       (token ? Promise.resolve(token) : fetchToken()).then(function(t) {
         if (!t) {
@@ -179,8 +345,14 @@
           })
           .catch(function() { var el = document.getElementById('dashboard-listed-count'); if (el) el.textContent = '0'; });
       }).then(function() {
+        bindFallbackUserMenu();
+        setFallbackAvatarFromSummary();
+        initClerkUserButton();
         if (typeof lucide !== 'undefined') lucide.createIcons();
       }).catch(function() {
+        bindFallbackUserMenu();
+        setFallbackAvatarFromSummary();
+        initClerkUserButton();
         if (typeof lucide !== 'undefined') lucide.createIcons();
       });
     })();

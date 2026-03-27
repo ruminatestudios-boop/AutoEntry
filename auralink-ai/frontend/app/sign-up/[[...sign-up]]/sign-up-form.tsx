@@ -7,6 +7,7 @@ const clerkPublishableKey =
   typeof process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY === "string"
     ? process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.trim()
     : "";
+const hideSocialAuth = process.env.NODE_ENV !== "production";
 
 export function SignUpForm({
   forceRedirectUrl,
@@ -29,7 +30,7 @@ export function SignUpForm({
           restart the dev server.
         </p>
         <Link
-          href="/dashboard"
+          href="/dashboard/home"
           className="inline-block bg-zinc-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-zinc-800 transition-colors"
         >
           Continue to dashboard (dev)
@@ -43,5 +44,20 @@ export function SignUpForm({
     );
   }
 
-  return <SignUp forceRedirectUrl={forceRedirectUrl} signInUrl={signInUrl} />;
+  return (
+    <SignUp
+      forceRedirectUrl={forceRedirectUrl}
+      signInUrl={signInUrl}
+      appearance={
+        hideSocialAuth
+          ? {
+              elements: {
+                socialButtonsBlockButton: "hidden",
+                dividerRow: "hidden",
+              },
+            }
+          : undefined
+      }
+    />
+  );
 }

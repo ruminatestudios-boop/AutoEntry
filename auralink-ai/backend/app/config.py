@@ -59,6 +59,8 @@ class Settings(BaseSettings):
     clerk_publishable_key: str = ""
     clerk_secret_key: str = ""
     clerk_jwks_url: str = "https://api.clerk.com/v1/jwks"  # Override if needed
+    # Local dev only: when true and frontend_url host is localhost, allow a dev-user auth fallback.
+    allow_local_dev_auth_fallback: bool = False
 
     # Shopify OAuth (Partner Dashboard app credentials)
     shopify_client_id: str = ""

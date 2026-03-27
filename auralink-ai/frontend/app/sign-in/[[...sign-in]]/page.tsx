@@ -3,7 +3,10 @@ import { SignInForm } from "./sign-in-form";
 function safeRedirectPath(value: string | string[] | undefined): string {
   const v = Array.isArray(value) ? value[0] : value;
   if (typeof v !== "string" || !v.startsWith("/") || v.startsWith("//")) {
-    return "/dashboard";
+    return "/dashboard/home";
+  }
+  if (v === "/dashboard") {
+    return "/dashboard/home";
   }
   return v;
 }
@@ -24,8 +27,8 @@ export default async function SignInPage({ searchParams }: PageProps) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "2rem",
-        background: "#f8fafc",
+        padding: "1.25rem",
+        background: "#f5f5f5",
       }}
     >
       <SignInForm forceRedirectUrl={redirect} signUpUrl={signUpUrl} />

@@ -23,16 +23,22 @@ export const synclystClerkAppearance = {
     fontSize: "0.875rem",
   },
   elements: {
-    card: "shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-zinc-200",
-    headerTitle: "text-xl font-semibold tracking-tight text-zinc-900",
-    headerSubtitle: "text-zinc-500 text-sm",
-    socialButtonsBlockButton: "border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-800",
-    formButtonPrimary: "bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-semibold",
+    rootBox: "w-full max-w-md",
+    cardBox: "shadow-none border-0 bg-transparent",
+    card: "shadow-none border border-[#e5e5e5] rounded-2xl bg-white",
+    headerTitle: "text-xl font-bold tracking-tight text-[#0a0a0a]",
+    headerSubtitle: "text-sm text-[#525252]",
+    socialButtonsBlockButton:
+      "border border-[#0a0a0a] bg-white hover:bg-zinc-50 text-[#0a0a0a] rounded-xl shadow-none font-medium",
+    socialButtonsBlockButtonText: "text-[#0a0a0a] font-medium",
+    formButtonPrimary:
+      "bg-[#0a0a0a] hover:bg-zinc-800 text-white text-sm font-semibold rounded-xl border border-[#0a0a0a] shadow-none",
     formFieldInput:
-      "border-zinc-200 rounded-xl text-zinc-900 placeholder:text-zinc-400",
-    formFieldLabel: "text-zinc-700 text-sm font-medium",
-    footerActionLink: "text-zinc-900 font-medium",
-    dividerLine: "bg-zinc-200",
-    dividerText: "text-zinc-400 text-xs",
+      "border border-[#e5e5e5] rounded-xl text-[#0a0a0a] placeholder:text-zinc-400 shadow-none",
+    formFieldLabel: "text-[#525252] text-sm font-medium",
+    footerActionLink: "text-[#0a0a0a] font-medium",
+    dividerLine: "bg-[#e5e5e5]",
+    dividerText: "text-[#71717a] text-xs",
+    footer: "shadow-none border-t border-[#e5e5e5]",
   },
 };

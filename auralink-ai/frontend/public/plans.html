@@ -179,7 +179,7 @@
       if (upgradeBtn) upgradeBtn.addEventListener('click', function() {
         var plan = getSelectedPlan();
         if (plan === 'free') {
-          window.location.href = '/sign-up?redirect_url=/dashboard';
+          window.location.href = '/sign-up?redirect_url=/dashboard/home';
           return;
         }
         var tier = plan === 'business' ? 'growth' : 'pro';

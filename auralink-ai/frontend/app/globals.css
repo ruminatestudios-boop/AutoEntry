@@ -276,3 +276,113 @@ a:hover {
 .review-scheme .review-pill-unselected:hover {
   background: #e8e8e8;
 }
+
+/* Clerk auth screens: force Flow-3-like flat styling */
+.cl-cardBox,
+.cl-card {
+  box-shadow: none !important;
+}
+
+.cl-card {
+  border: 1px solid #e5e5e5 !important;
+  border-radius: 14px !important;
+  background: #ffffff !important;
+}
+
+.cl-socialButtonsBlockButton {
+  background: #ffffff !important;
+  border: 1px solid #d4d4d8 !important;
+  color: #0a0a0a !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.cl-socialButtonsBlockButton:hover {
+  background: #f5f5f5 !important;
+}
+
+.cl-socialButtonsBlockButtonText {
+  color: #0a0a0a !important;
+  font-weight: 500 !important;
+}
+
+.cl-socialButtonsBlockButtonArrow {
+  display: none !important;
+}
+
+/* Clerk "Last used" provider badge variants */
+.cl-socialButtonsProviderBadge,
+[class*="socialButtonsProviderBadge"],
+[class*="SocialButtonsProviderBadge"],
+[data-localization-key*="last_used"],
+[data-localization-key*="lastUsed"] {
+  display: none !important;
+}
+
+/* Force-hide badge text inside social auth buttons */
+.cl-socialButtonsBlockButton .cl-badge,
+.cl-socialButtonsBlockButton .cl-badgeText,
+.cl-socialButtonsBlockButton [class*="badge"],
+.cl-socialButtonsBlockButton [class*="Badge"] {
+  display: none !important;
+}
+
+/* Match email input border with social buttons */
+.cl-formFieldInput {
+  border: 1px solid #d4d4d8 !important;
+  box-shadow: none !important;
+}
+
+.cl-formFieldInput:focus {
+  border: 1px solid #a1a1aa !important;
+  box-shadow: 0 0 0 1px #a1a1aa !important;
+  outline: none !important;
+}
+
+/* Ensure "or" divider has lines on both sides */
+.cl-dividerRow {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  gap: 12px !important;
+}
+
+.cl-dividerLine {
+  flex: 1 1 auto !important;
+  height: 1px !important;
+  background: #e5e5e5 !important;
+}
+
+.cl-dividerText {
+  color: #71717a !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.cl-formButtonPrimary {
+  border: 1px solid #18181b !important;
+  box-shadow: none !important;
+}
+
+/* Hide Clerk "Optional" hint text in field labels */
+.cl-formFieldLabelRow .cl-formFieldOptionalText,
+.cl-formFieldOptionalText {
+  display: none !important;
+}
+
+/* Clerk sign-up optional hints can render with alternate classnames */
+.cl-formFieldRow__optional,
+.cl-formFieldLabel__optional,
+[class*="formFieldOptional"],
+[class*="FormFieldOptional"],
+[data-localization-key*="optional"] {
+  display: none !important;
+}
+
+/* Hide Clerk branding / development mode block at bottom */
+.cl-footerPages,
+[data-localization-key*="development_mode"],
+[data-localization-key*="secure"] {
+  display: none !important;
+}
