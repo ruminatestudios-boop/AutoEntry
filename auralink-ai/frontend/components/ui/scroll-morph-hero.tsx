@@ -337,9 +337,9 @@ export default function ScrollMorphHero() {
             Snap a photo. AI lists it on Shopify
           </h2>
           <p className="text-sm md:text-base text-zinc-500 max-w-xl leading-relaxed mb-6">
-            Snap a photo. AI writes the title, description, price and tags.
+            What used to take 20 minutes now takes one tap.
             <br />
-            Live on Shopify in one tap.
+            Everything you need to sell — title, description, price &amp; tags — done for you instantly.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pointer-events-auto">
             <Link
