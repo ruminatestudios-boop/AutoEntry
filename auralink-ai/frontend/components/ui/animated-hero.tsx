@@ -25,7 +25,7 @@ function Hero() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                Stop listing manually
+                Snap a photo. AI lists it on Shopify
               </motion.span>
             </h1>
 

@@ -1456,8 +1456,12 @@
           priceSourceLabel.textContent = 'AI estimate — verify';
           priceSourceLabel.className = 'text-[11px] mt-0.5 min-h-[14px] text-amber-600';
           priceSourceLabel.setAttribute('title', 'Price suggested from product. Verify before publishing.');
-        } else if (priceSrc === 'not_found' || !priceInput.value.trim()) {
+        } else if (!priceInput.value.trim()) {
           priceSourceLabel.textContent = 'Add your price';
+          priceSourceLabel.className = 'text-[11px] mt-0.5 min-h-[14px] text-amber-600';
+          priceSourceLabel.setAttribute('title', 'Verify price before publishing.');
+        } else if (priceSrc === 'not_found') {
+          priceSourceLabel.textContent = 'Saved price — verify';
           priceSourceLabel.className = 'text-[11px] mt-0.5 min-h-[14px] text-amber-600';
           priceSourceLabel.setAttribute('title', 'Verify price before publishing.');
         } else {
@@ -1741,17 +1745,19 @@
               }
               if (typeof window.syncVariantSizePresetVisibility === 'function') window.syncVariantSizePresetVisibility();
               var priceSrc = att.price_source || '';
+              var existingPrice = priceInput ? String(priceInput.value || '').trim() : '';
               var priceFromWebAvg = !!data.price_from_web && att.price_value != null;
               if (priceSrc === 'found_in_image' && att.price_value != null && priceInput) {
                 priceInput.value = String(att.price_value);
               } else if (priceSrc === 'ai_suggested' && (att.price_confidence == null || att.price_confidence >= 0.7) && att.price_value != null && priceInput) {
                 priceInput.value = String(att.price_value);
+              } else if (priceSrc === 'web_average' && att.price_value != null && priceInput) {
+                priceInput.value = String(att.price_value);
               } else if (priceFromWebAvg && priceInput) {
                 priceInput.value = String(att.price_value);
               } else if (priceSrc === 'not_found' && priceInput && !priceFromWebAvg) {
-                priceInput.value = '';
-              } else if (att.price_value != null && priceInput && priceSrc !== 'not_found') {
-                priceInput.value = String(att.price_value);
+                // Keep any previously entered/accepted price so reruns do not flicker to blank.
+                if (!existingPrice) priceInput.value = '';
               }
               var priceSourceLabelEl = document.getElementById('modal-price-source-label');
               if (priceSourceLabelEl) {
@@ -1762,6 +1768,8 @@
                   priceSourceLabelEl.setAttribute('title', 'Price from average across retailers. Verify before publishing.');
                 } else if (priceSrc === 'found_in_image') { priceSourceLabelEl.textContent = 'Read from photo'; priceSourceLabelEl.className = 'text-[11px] mt-0.5 min-h-[14px] text-green-600'; priceSourceLabelEl.setAttribute('title', 'Verify price before publishing.'); }
                 else if (priceSrc === 'ai_suggested') { priceSourceLabelEl.textContent = 'AI estimate — verify'; priceSourceLabelEl.className = 'text-[11px] mt-0.5 min-h-[14px] text-amber-600'; priceSourceLabelEl.setAttribute('title', 'Price suggested from product. Verify before publishing.'); }
+                else if (priceSrc === 'web_average') { priceSourceLabelEl.textContent = 'Average from retailers — verify'; priceSourceLabelEl.className = 'text-[11px] mt-0.5 min-h-[14px] text-amber-600'; priceSourceLabelEl.setAttribute('title', 'Price from average across retailers. Verify before publishing.'); }
+                else if (priceInput && String(priceInput.value || '').trim()) { priceSourceLabelEl.textContent = 'Saved price — verify'; priceSourceLabelEl.className = 'text-[11px] mt-0.5 min-h-[14px] text-amber-600'; priceSourceLabelEl.setAttribute('title', 'Verify price before publishing.'); }
                 else { priceSourceLabelEl.textContent = 'Add your price'; priceSourceLabelEl.className = 'text-[11px] mt-0.5 min-h-[14px] text-amber-600'; priceSourceLabelEl.setAttribute('title', 'Verify price before publishing.'); }
               }
               if (priceInput && priceSrc === 'not_found' && !String(priceInput.value || '').trim()) priceInput.classList.add('border-amber-400'); else if (priceInput) priceInput.classList.remove('border-amber-400');

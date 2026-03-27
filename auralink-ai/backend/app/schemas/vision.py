@@ -25,7 +25,7 @@ class ExtractionAttributes(BaseModel):
     # Price when visible on label/packaging
     price_display: Optional[str] = None  # e.g. "$19.99", "£12.50" exactly as shown
     price_value: Optional[float] = None  # numeric for calculations (no currency symbol)
-    price_source: Optional[str] = None  # "found_in_image" | "ai_suggested" | "not_found"
+    price_source: Optional[str] = None  # "found_in_image" | "web_average" | "ai_suggested" | "not_found"
     price_confidence: Optional[float] = Field(None, ge=0, le=1)
     # UCP / agentic extraction
     exact_model: Optional[str] = None

@@ -1035,7 +1035,8 @@ async def enrich_from_web(
     result.sources = sources
     result.sources["copy_policy_version"] = LISTING_COPY_POLICY_VERSION
 
-    # Average price across retailers (GBP) — pre-fill as suggestion (price_source remains not_found so UI can show "Suggested price from web")
+    # Average price across retailers (GBP) — grounded fallback from real listings.
+    # Mark source explicitly so clients can apply deterministic precedence.
     avg_gbp = enrichment.get("average_price_gbp")
     if avg_gbp is not None:
         try:
@@ -1043,8 +1044,10 @@ async def enrich_from_web(
             if val > 0:
                 result.attributes.price_value = round(val, 2)
                 result.attributes.price_display = f"£{int(round(val))}"
+                result.attributes.price_source = "web_average"
+                # Medium confidence by default; this is multi-listing average, not on-label exact.
+                result.attributes.price_confidence = 0.75
                 result.price_from_web = True
-                # Keep price_source as not_found so UI can show "Suggested price from web" (not from image)
         except (TypeError, ValueError):
             pass
     price_range = enrichment.get("price_range_gbp")
