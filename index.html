@@ -612,7 +612,7 @@
                             <li class="flex items-center gap-3 text-[#999]"><span class="w-4 shrink-0 text-center">—</span>Batch processing</li>
                             <li class="flex items-center gap-3 text-[#999]"><span class="w-4 shrink-0 text-center">—</span>Smart suggest</li>
                         </ul>
-                        <button type="button" data-tier="pro" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade plan</button>
+                        <button type="button" data-tier="pro" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade now</button>
                     </div>
                     <!-- Growth (Most popular) - black accent -->
                     <div class="pricing-card vercel-card p-8 flex flex-col border-2 border-black shadow-[0_0_40px_rgba(0,0,0,0.06)] relative transition-all duration-200" data-tier="growth">
@@ -635,7 +635,7 @@
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Batch processing</li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Priority support</li>
                         </ul>
-                        <button type="button" data-tier="growth" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-black text-white border border-black hover:bg-zinc-800 transition-all">Upgrade plan</button>
+                        <button type="button" data-tier="growth" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-black text-white border border-black hover:bg-zinc-800 transition-all">Upgrade now</button>
                     </div>
                     <!-- Scale -->
                     <div class="pricing-card vercel-card p-8 flex flex-col transition-all duration-200" data-tier="scale">
@@ -658,7 +658,7 @@
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>API access</li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Dedicated support</li>
                         </ul>
-                        <button type="button" data-tier="scale" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade plan</button>
+                        <button type="button" data-tier="scale" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade now</button>
                     </div>
                 </div>
             </div>
@@ -724,8 +724,18 @@
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-[#eaeaea] text-xs text-[#555]">
                 <p>© 2026 SyncLyst AI. All rights reserved.</p>
                 <div class="flex gap-6 items-center text-[#555]">
-                    <a href="#" class="hover:text-[#111] transition-colors inline-flex items-center justify-center" aria-label="Product Hunt"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M9.5 7.5V16.5M9.5 7.5h2.75C14.05 7.5 15.75 8.9 15.75 10.25S14.05 13 12.25 13H9.5"/></svg></a>
-                    <a href="https://www.instagram.com/synclyst/" target="_blank" rel="noopener noreferrer" class="hover:text-[#111] transition-colors" aria-label="Instagram"><i data-lucide="instagram" class="w-4 h-4 inline"></i></a>
+                    <a href="https://www.instagram.com/synclyst/" target="_blank" rel="noopener noreferrer" class="hover:text-[#111] transition-colors inline-flex items-center justify-center" aria-label="Instagram">
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                        </svg>
+                    </a>
+                    <a href="https://www.tiktok.com/@synclyst" target="_blank" rel="noopener noreferrer" class="hover:text-[#111] transition-colors inline-flex items-center justify-center" aria-label="TikTok">
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M14 3h2.2c.2 1.7 1.2 3 2.8 3.7V9a7.2 7.2 0 0 1-3-1v6.2a5.2 5.2 0 1 1-5.1-5.2c.2 0 .4 0 .6.1v2.6a2.6 2.6 0 1 0 2.5 2.6V3z"></path>
+                        </svg>
+                    </a>
                 </div>
             </div>
         </div>
@@ -944,10 +954,13 @@
                 btn.href = window.synclystAppUrl('/home.html?mode=scan');
                 btn.setAttribute('aria-label', `List on ${c.name}`);
             }
-            const gridImgCls = 'w-10 h-10 rounded-lg object-contain transition-transform duration-200 block group-hover:scale-105';
+            const gridIconBoxCls = 'inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-200 bg-zinc-50';
+            const gridImgCls = 'w-8 h-8 object-contain transition-transform duration-200 block group-hover:scale-105';
             btn.innerHTML = `
                 <span class="inline-block mb-4 ${isActive ? 'integration-icon-live' : ''}">
-                    <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="${gridImgCls}" referrerPolicy="no-referrer">
+                    <span class="${gridIconBoxCls}">
+                        <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="${gridImgCls}" referrerPolicy="no-referrer">
+                    </span>
                 </span>
                 <span class="text-sm font-bold mb-2">${c.name}</span>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-zinc-50 text-zinc-500 border-zinc-100'}">
@@ -1206,16 +1219,16 @@
           cards.forEach(function(card) {
             var tier = card.getAttribute('data-tier');
             var btn = card.querySelector('.pricing-tier-btn');
-            var isCurrent = tier === current;
             /* Only grey out free tier (Starter); Pro, Growth, Scale stay black and active */
             if (tier !== 'starter') card.classList.remove('pricing-card--inactive');
             if (btn) {
-              btn.disabled = isCurrent;
-              if (isCurrent) {
-                btn.textContent = 'Current plan';
-                btn.className = 'pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-zinc-100 text-zinc-600 border border-zinc-200 cursor-default transition-all';
+              if (tier === 'starter') {
+                btn.disabled = false;
+                btn.textContent = 'Start for Free';
+                btn.className = 'pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all';
               } else {
-                btn.textContent = tier === 'starter' ? 'Start for Free' : 'Upgrade plan';
+                btn.disabled = false;
+                btn.textContent = 'Upgrade now';
                 if (tier === 'growth') {
                   btn.className = 'pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-black text-white border border-black hover:bg-zinc-800 transition-all';
                 } else {

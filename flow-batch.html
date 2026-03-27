@@ -279,7 +279,10 @@
             skip_web_enrichment: true
           })
         }).then(function(r) {
-          if (r.status === 402) throw new Error('Free scans used');
+          if (r.status === 402) {
+            window.location.href = '/dashboard/upgrade?tier=pro&autostart=1';
+            throw new Error('Scan limit reached');
+          }
           if (!r.ok) return r.text().then(function(t) { throw new Error(t || 'Server error'); });
           return r.json();
         });

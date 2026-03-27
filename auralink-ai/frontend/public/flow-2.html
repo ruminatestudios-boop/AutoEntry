@@ -34,6 +34,22 @@
     .smart-suggest-banner .smart-suggest-icon-wrap { flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; background: #fff; border: 1px solid #e4e4e7; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
     .smart-suggest-banner .smart-suggest-icon-wrap img,
     .smart-suggest-banner .smart-suggest-icon-wrap svg { display: block; }
+    .smart-suggest-banner .smart-suggest-icon-wrap { position: relative; overflow: hidden; }
+    .smart-suggest-banner .smart-suggest-icon-wrap .scan-line {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, rgba(10, 10, 10, 0.78), transparent);
+      border-radius: 9999px;
+      filter: drop-shadow(0 0 10px rgba(10, 10, 10, 0.18));
+      animation: scanSweep 1.6s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes scanSweep {
+      0% { top: 6px; opacity: 0.75; }
+      100% { top: calc(100% - 10px); opacity: 1; }
+    }
     .smart-suggest-banner .smart-suggest-text { flex: 1; min-width: 0; }
     .smart-suggest-banner .smart-suggest-title { font-size: 13px; font-weight: 600; color: #18181b; display: block; line-height: 1.3; margin-bottom: 0; }
     .smart-suggest-banner .smart-suggest-desc { font-size: 12px; font-weight: 400; color: #52525b; line-height: 1.35; display: block; margin-top: 4px; }
@@ -83,6 +99,7 @@
             <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
             <line x1="7" x2="17" y1="12" y2="12" />
           </svg>
+          <span class="scan-line"></span>
         </div>
         <div class="smart-suggest-text">
           <span class="smart-suggest-title">What we’re doing with your scan</span>
@@ -259,6 +276,7 @@
       apiUrl = (apiUrl || '').trim().replace(/\/$/, '') || 'http://localhost:8000';
       var host = window.location.hostname;
       var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
+      var fallbackApiUrl = (prodBackend && prodBackend.getAttribute('content')) ? prodBackend.getAttribute('content').trim().replace(/\/$/, '') : '';
       // On localhost go directly to backend (avoids Next.js proxy timeouts).
       // Backend CORS is configured for local dev.
       if (host === 'localhost' || host === '127.0.0.1') {
@@ -268,6 +286,9 @@
       } else if (host) {
         apiUrl = window.location.origin;
       }
+
+      // If you're on localhost but want Cloud Run, we can auto-fallback on network failure.
+      var triedFallback = false;
 
       var start = Date.now();
       /** Vision + OCR + web enrichment can exceed 45s; align with landing/index extract timeout. */
@@ -365,23 +386,25 @@
 
       extractionInFlight = true;
       setWaiting(true);
-      var abort = new AbortController();
-      var extractionTimeoutId = setTimeout(function() { try { abort.abort(); } catch (e) {} }, EXTRACTION_TIMEOUT_MS);
 
-      fetch(apiUrl + '/api/v1/vision/extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: abort.signal,
-        body: JSON.stringify({
-          image_base64: pending.base64,
-          mime_type: 'image/jpeg',
-          include_ocr: true,
-          skip_web_enrichment: false
+      function runExtract() {
+        var abort = new AbortController();
+        var extractionTimeoutId = setTimeout(function() { try { abort.abort(); } catch (e) {} }, EXTRACTION_TIMEOUT_MS);
+
+        return fetch(apiUrl + '/api/v1/vision/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: abort.signal,
+          body: JSON.stringify({
+            image_base64: pending.base64,
+            mime_type: 'image/jpeg',
+            include_ocr: true,
+            skip_web_enrichment: false
+          })
         })
-      })
-        .then(function(r) {
+          .then(function(r) {
           if (r.status === 402) {
-            showError('Free scans used. Upgrade to continue.');
+            window.location.href = '/dashboard/upgrade?tier=pro&autostart=1';
             return null;
           }
           if (!r.ok) {
@@ -392,30 +415,52 @@
             });
           }
           return r.json();
-        })
-        .then(function(data) {
-          clearTimeout(extractionTimeoutId);
-          if (!data || extractionDone) return;
-          extractionOk = true;
-          setWaiting(false);
-          completionRamp = { from: lastPct, start: Date.now(), data: data };
-        })
-        .catch(function(err) {
-          clearTimeout(extractionTimeoutId);
-          if (extractionDone) return;
-          setWaiting(false);
-          var raw = (err && err.message) ? String(err.message) : '';
-          var networkFail = err && (err.name === 'TypeError' || raw === 'Failed to fetch' || raw === 'fetch failed' || raw.indexOf('NetworkError') !== -1);
-          var msg;
-          if (err && err.name === 'AbortError') {
-            msg = 'Extraction timed out. Make sure the backend is running on ' + apiUrl + ' (open /health) and try again.';
-          } else if (networkFail) {
-            msg = 'Cannot reach the vision API at ' + apiUrl + '. Start the Python backend (port 8000), confirm ' + apiUrl + '/health, then scan again.';
-          } else {
-            msg = raw || 'Could not read the image. Try again or use a different photo.';
-          }
-          showError(msg);
-        });
+          })
+          .then(function(data) {
+            clearTimeout(extractionTimeoutId);
+            if (!data || extractionDone) return;
+            extractionOk = true;
+            setWaiting(false);
+            completionRamp = { from: lastPct, start: Date.now(), data: data };
+          })
+          .catch(function(err) {
+            clearTimeout(extractionTimeoutId);
+            throw err;
+          });
+      }
+
+      runExtract().catch(function(err) {
+        if (extractionDone) return;
+        setWaiting(false);
+        var raw = (err && err.message) ? String(err.message) : '';
+        var networkFail = err && (err.name === 'TypeError' || raw === 'Failed to fetch' || raw === 'fetch failed' || raw.indexOf('NetworkError') !== -1);
+
+        // Auto-fallback: if localhost backend isn't reachable, try Cloud Run once.
+        if (!triedFallback && networkFail && (host === 'localhost' || host === '127.0.0.1') && fallbackApiUrl && apiUrl.indexOf('localhost:8000') !== -1) {
+          triedFallback = true;
+          apiUrl = fallbackApiUrl;
+          setWaiting(true);
+          return runExtract().catch(function(err2) {
+            if (extractionDone) return;
+            setWaiting(false);
+            var raw2 = (err2 && err2.message) ? String(err2.message) : '';
+            var msg2 = (err2 && err2.name === 'AbortError')
+              ? 'Extraction timed out. Make sure the backend is reachable at ' + apiUrl + ' (open /health) and try again.'
+              : (raw2 || ('Cannot reach the vision API at ' + apiUrl + '.'));
+            showError(msg2);
+          });
+        }
+
+        var msg;
+        if (err && err.name === 'AbortError') {
+          msg = 'Extraction timed out. Make sure the backend is running on ' + apiUrl + ' (open /health) and try again.';
+        } else if (networkFail) {
+          msg = 'Cannot reach the vision API at ' + apiUrl + '. If you are using Cloud Run, ensure it is public and supports CORS for this site.';
+        } else {
+          msg = raw || 'Could not read the image. Try again or use a different photo.';
+        }
+        showError(msg);
+      });
     })();
   </script>
 </body>

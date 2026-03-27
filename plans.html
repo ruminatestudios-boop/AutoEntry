@@ -177,8 +177,13 @@
 
       var upgradeBtn = document.getElementById('plans-upgrade-btn');
       if (upgradeBtn) upgradeBtn.addEventListener('click', function() {
-        sessionStorage.setItem('auralink_selected_plan', getSelectedPlan());
-        window.location.href = 'checkout.html';
+        var plan = getSelectedPlan();
+        if (plan === 'free') {
+          window.location.href = '/sign-up?redirect_url=/dashboard';
+          return;
+        }
+        var tier = plan === 'business' ? 'growth' : 'pro';
+        window.location.href = '/dashboard/upgrade?tier=' + encodeURIComponent(tier) + '&autostart=1';
       });
     })();
   </script>
