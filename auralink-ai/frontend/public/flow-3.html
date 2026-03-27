@@ -1147,37 +1147,111 @@
       function getLocaleCurrency() {
         try {
           var region = (navigator.language || navigator.userLanguage || 'en-GB');
-          if (region.toLowerCase().indexOf('gb') !== -1 || region.toLowerCase().indexOf('uk') !== -1) return { symbol: '£', region: 'United Kingdom' };
-          if (region.toLowerCase().indexOf('us') !== -1) return { symbol: '$', region: 'United States' };
-          if (region.toLowerCase().indexOf('de') !== -1 || region.toLowerCase().indexOf('fr') !== -1 || region.toLowerCase().indexOf('eu') !== -1) return { symbol: '€', region: 'Euro' };
+          if (region.toLowerCase().indexOf('gb') !== -1 || region.toLowerCase().indexOf('uk') !== -1) return { symbol: '£', region: 'United Kingdom', code: 'GBP' };
+          if (region.toLowerCase().indexOf('us') !== -1) return { symbol: '$', region: 'United States', code: 'USD' };
+          if (region.toLowerCase().indexOf('de') !== -1 || region.toLowerCase().indexOf('fr') !== -1 || region.toLowerCase().indexOf('eu') !== -1) return { symbol: '€', region: 'Euro', code: 'EUR' };
           var lang = region.split('-')[0].toLowerCase();
-          if (['de','fr','it','es','nl','pt','ie'].indexOf(lang) !== -1) return { symbol: '€', region: 'Euro' };
-          if (region.toLowerCase().indexOf('ca') !== -1) return { symbol: 'CA$', region: 'Canada' };
-          if (region.toLowerCase().indexOf('au') !== -1) return { symbol: 'A$', region: 'Australia' };
+          if (['de','fr','it','es','nl','pt','ie'].indexOf(lang) !== -1) return { symbol: '€', region: 'Euro', code: 'EUR' };
+          if (region.toLowerCase().indexOf('ca') !== -1) return { symbol: 'CA$', region: 'Canada', code: 'CAD' };
+          if (region.toLowerCase().indexOf('au') !== -1) return { symbol: 'A$', region: 'Australia', code: 'AUD' };
+          if (region.toLowerCase().indexOf('th') !== -1) return { symbol: '฿', region: 'Thailand', code: 'THB' };
         } catch (e) {}
-        return { symbol: '£', region: 'United Kingdom' };
+        return { symbol: '£', region: 'United Kingdom', code: 'GBP' };
       }
 
       function getCurrencyFromCountryCode(countryCode) {
         if (!countryCode || typeof countryCode !== 'string') return null;
         var cc = countryCode.toUpperCase();
         var map = {
-          GB: { symbol: '£', region: 'United Kingdom' }, UK: { symbol: '£', region: 'United Kingdom' },
-          US: { symbol: '$', region: 'United States' },
-          CA: { symbol: 'CA$', region: 'Canada' }, AU: { symbol: 'A$', region: 'Australia' },
-          NZ: { symbol: 'NZ$', region: 'New Zealand' }, JP: { symbol: '¥', region: 'Japan' },
-          CN: { symbol: '¥', region: 'China' }, IN: { symbol: '₹', region: 'India' },
-          CH: { symbol: 'CHF', region: 'Switzerland' }, SE: { symbol: 'kr', region: 'Sweden' },
-          NO: { symbol: 'kr', region: 'Norway' }, DK: { symbol: 'kr', region: 'Denmark' },
-          MX: { symbol: '$', region: 'Mexico' }, BR: { symbol: 'R$', region: 'Brazil' },
-          ZA: { symbol: 'R', region: 'South Africa' }, AE: { symbol: 'د.إ', region: 'UAE' },
-          SG: { symbol: 'S$', region: 'Singapore' }, HK: { symbol: 'HK$', region: 'Hong Kong' },
-          KR: { symbol: '₩', region: 'South Korea' }
+          GB: { symbol: '£', region: 'United Kingdom', code: 'GBP' }, UK: { symbol: '£', region: 'United Kingdom', code: 'GBP' },
+          US: { symbol: '$', region: 'United States', code: 'USD' },
+          CA: { symbol: 'CA$', region: 'Canada', code: 'CAD' }, AU: { symbol: 'A$', region: 'Australia', code: 'AUD' },
+          NZ: { symbol: 'NZ$', region: 'New Zealand', code: 'NZD' }, JP: { symbol: '¥', region: 'Japan', code: 'JPY' },
+          CN: { symbol: '¥', region: 'China', code: 'CNY' }, IN: { symbol: '₹', region: 'India', code: 'INR' },
+          CH: { symbol: 'CHF', region: 'Switzerland', code: 'CHF' }, SE: { symbol: 'kr', region: 'Sweden', code: 'SEK' },
+          NO: { symbol: 'kr', region: 'Norway', code: 'NOK' }, DK: { symbol: 'kr', region: 'Denmark', code: 'DKK' },
+          MX: { symbol: '$', region: 'Mexico', code: 'MXN' }, BR: { symbol: 'R$', region: 'Brazil', code: 'BRL' },
+          ZA: { symbol: 'R', region: 'South Africa', code: 'ZAR' }, AE: { symbol: 'د.إ', region: 'UAE', code: 'AED' },
+          SG: { symbol: 'S$', region: 'Singapore', code: 'SGD' }, HK: { symbol: 'HK$', region: 'Hong Kong', code: 'HKD' },
+          KR: { symbol: '₩', region: 'South Korea', code: 'KRW' },
+          TH: { symbol: '฿', region: 'Thailand', code: 'THB' },
+          MY: { symbol: 'RM', region: 'Malaysia', code: 'MYR' },
+          PH: { symbol: '₱', region: 'Philippines', code: 'PHP' },
+          ID: { symbol: 'Rp', region: 'Indonesia', code: 'IDR' },
+          VN: { symbol: '₫', region: 'Vietnam', code: 'VND' },
+          TW: { symbol: 'NT$', region: 'Taiwan', code: 'TWD' }
         };
         if (map[cc]) return map[cc];
         var euroCountries = ['AT','BE','CY','EE','FI','FR','DE','GR','IE','IT','LV','LT','LU','MT','NL','PT','SK','SI','ES'];
-        if (euroCountries.indexOf(cc) !== -1) return { symbol: '€', region: 'Euro' };
+        if (euroCountries.indexOf(cc) !== -1) return { symbol: '€', region: 'Euro', code: 'EUR' };
         return null;
+      }
+
+      function mapSymbolToCurrencyCode(symbol) {
+        var s = String(symbol || '').trim();
+        if (s === '£') return 'GBP';
+        if (s === '$' || s === 'US$') return 'USD';
+        if (s === 'CA$') return 'CAD';
+        if (s === 'A$') return 'AUD';
+        if (s === 'NZ$') return 'NZD';
+        if (s === '€') return 'EUR';
+        if (s === '฿') return 'THB';
+        if (s === '₹') return 'INR';
+        if (s === '¥') return 'JPY';
+        if (s === 'S$') return 'SGD';
+        if (s === 'HK$') return 'HKD';
+        if (s === 'NT$') return 'TWD';
+        if (s === 'RM') return 'MYR';
+        if (s === '₱') return 'PHP';
+        if (s === 'Rp') return 'IDR';
+        if (s === '₫') return 'VND';
+        if (s === 'CHF') return 'CHF';
+        if (s === 'kr') return 'SEK';
+        if (s === 'R$') return 'BRL';
+        if (s === '₩') return 'KRW';
+        return 'GBP';
+      }
+
+      function ensureCurrencyMeta(o) {
+        if (!o || typeof o !== 'object') return { symbol: '£', region: 'United Kingdom', code: 'GBP' };
+        var code = o.code || mapSymbolToCurrencyCode(o.symbol);
+        return { symbol: o.symbol || '£', region: o.region || 'United Kingdom', code: code };
+      }
+
+      function parseModalPriceNumber() {
+        if (!priceInput) return 0;
+        var raw = String(priceInput.value || '');
+        var n = parseFloat(raw.replace(/[^\d.\-]/g, ''));
+        return typeof n === 'number' && !isNaN(n) ? n : 0;
+      }
+
+      function formatAmountForCurrency(amount, code) {
+        if (code === 'JPY' || code === 'KRW' || code === 'VND' || code === 'IDR') return String(Math.max(0, Math.round(amount)));
+        var rounded = Math.round(amount * 100) / 100;
+        return rounded % 1 === 0 ? String(rounded) : rounded.toFixed(2);
+      }
+
+      /** ECB-based rates via Frankfurter; fallback for GBP↔THB if offline. */
+      function convertPriceAmount(amount, fromCode, toCode) {
+        if (!amount || amount <= 0 || !fromCode || !toCode || fromCode === toCode) {
+          return Promise.resolve(amount);
+        }
+        return fetch('https://api.frankfurter.app/latest?from=' + encodeURIComponent(fromCode) + '&to=' + encodeURIComponent(toCode))
+          .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('http')); })
+          .then(function(data) {
+            var rate = data.rates && data.rates[toCode];
+            if (typeof rate !== 'number') return Promise.reject(new Error('rate'));
+            return amount * rate;
+          })
+          .catch(function() {
+            if (fromCode === 'GBP' && toCode === 'THB') return amount * 45;
+            if (fromCode === 'THB' && toCode === 'GBP') return amount / 45;
+            if (fromCode === 'USD' && toCode === 'THB') return amount * 35;
+            if (fromCode === 'THB' && toCode === 'USD') return amount / 35;
+            if (fromCode === 'EUR' && toCode === 'THB') return amount * 39;
+            if (fromCode === 'THB' && toCode === 'EUR') return amount / 39;
+            return Promise.reject(new Error('no_fallback'));
+          });
       }
 
       var PRICE_CURRENCY_STORAGE_KEY = 'auralink_price_currency';
@@ -1190,24 +1264,29 @@
           var stored = sessionStorage.getItem(PRICE_CURRENCY_STORAGE_KEY);
           if (stored) {
             var parsed = JSON.parse(stored);
-            if (parsed && parsed.symbol) cur = parsed;
+            if (parsed && parsed.symbol) cur = ensureCurrencyMeta(parsed);
           }
         } catch (e) {}
-        if (!cur) cur = getLocaleCurrency();
+        if (!cur) cur = ensureCurrencyMeta(getLocaleCurrency());
         if (symEl) symEl.textContent = cur.symbol;
         if (geoEl) {
-          geoEl.setAttribute('title', 'Location: ' + cur.region + ' — ' + cur.symbol + '. Click to detect location and set currency.');
+          geoEl.setAttribute('title', 'Location: ' + cur.region + ' — ' + cur.symbol + '. Click to detect location and convert price.');
           geoEl.onclick = function() {
             if (!navigator.geolocation) {
-              var c = getLocaleCurrency();
+              var c = ensureCurrencyMeta(getLocaleCurrency());
               if (symEl) symEl.textContent = c.symbol;
               geoEl.setAttribute('title', 'Location: ' + c.region + ' — ' + c.symbol + '. (Geolocation not supported.)');
               return;
             }
-            var origTitle = geoEl.getAttribute('title');
             geoEl.setAttribute('title', 'Detecting location…');
             geoEl.style.opacity = '0.6';
             geoEl.disabled = true;
+            var oldCur;
+            try {
+              var st = sessionStorage.getItem(PRICE_CURRENCY_STORAGE_KEY);
+              if (st) oldCur = ensureCurrencyMeta(JSON.parse(st));
+            } catch (e2) {}
+            if (!oldCur) oldCur = ensureCurrencyMeta({ symbol: symEl ? symEl.textContent : '£', region: 'United Kingdom' });
             navigator.geolocation.getCurrentPosition(
               function(position) {
                 var lat = position.coords.latitude;
@@ -1216,16 +1295,45 @@
                   .then(function(r) { return r.ok ? r.json() : null; })
                   .then(function(data) {
                     var countryCode = (data && data.countryCode) ? data.countryCode : null;
-                    var c = getCurrencyFromCountryCode(countryCode) || getLocaleCurrency();
-                    if (symEl) symEl.textContent = c.symbol;
-                    geoEl.setAttribute('title', 'Location: ' + c.region + ' — ' + c.symbol + '. Click to detect again.');
-                    try { sessionStorage.setItem(PRICE_CURRENCY_STORAGE_KEY, JSON.stringify(c)); } catch (e) {}
-                    geoEl.style.opacity = '';
-                    geoEl.disabled = false;
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                    var c = ensureCurrencyMeta(getCurrencyFromCountryCode(countryCode) || getLocaleCurrency());
+                    var fromCode = oldCur.code;
+                    var toCode = c.code;
+                    var priceNum = parseModalPriceNumber();
+                    function finishUi(newAmount) {
+                      if (symEl) symEl.textContent = c.symbol;
+                      geoEl.setAttribute('title', 'Location: ' + c.region + ' — ' + c.symbol + '. Click to detect again.');
+                      try { sessionStorage.setItem(PRICE_CURRENCY_STORAGE_KEY, JSON.stringify(c)); } catch (e) {}
+                      geoEl.style.opacity = '';
+                      geoEl.disabled = false;
+                      if (typeof lucide !== 'undefined') lucide.createIcons();
+                      var psl = document.getElementById('modal-price-source-label');
+                      if (psl && newAmount != null && fromCode !== toCode && priceNum > 0) {
+                        psl.textContent = 'Converted from ' + fromCode + ' to ' + toCode + ' (today\'s rate) — verify';
+                        psl.className = 'text-[11px] mt-0.5 min-h-[14px] text-amber-600';
+                        psl.setAttribute('title', 'Exchange rate from frankfurter.app (ECB). Verify before publishing.');
+                      }
+                    }
+                    if (priceNum > 0 && fromCode && toCode && fromCode !== toCode) {
+                      geoEl.setAttribute('title', 'Fetching exchange rate…');
+                      convertPriceAmount(priceNum, fromCode, toCode)
+                        .then(function(converted) {
+                          if (priceInput) priceInput.value = formatAmountForCurrency(converted, toCode);
+                          finishUi(converted);
+                        })
+                        .catch(function() {
+                          if (symEl) symEl.textContent = c.symbol;
+                          try { sessionStorage.setItem(PRICE_CURRENCY_STORAGE_KEY, JSON.stringify(c)); } catch (e) {}
+                          geoEl.setAttribute('title', 'Could not convert amount. Currency: ' + c.region + ' — ' + c.symbol + '. Edit the price manually.');
+                          geoEl.style.opacity = '';
+                          geoEl.disabled = false;
+                          if (typeof lucide !== 'undefined') lucide.createIcons();
+                        });
+                    } else {
+                      finishUi(null);
+                    }
                   })
                   .catch(function() {
-                    var c = getLocaleCurrency();
+                    var c = ensureCurrencyMeta(getLocaleCurrency());
                     if (symEl) symEl.textContent = c.symbol;
                     geoEl.setAttribute('title', 'Could not get location. Using browser locale: ' + c.region + ' — ' + c.symbol);
                     geoEl.style.opacity = '';
@@ -1233,7 +1341,7 @@
                   });
               },
               function(err) {
-                var c = getLocaleCurrency();
+                var c = ensureCurrencyMeta(getLocaleCurrency());
                 if (symEl) symEl.textContent = c.symbol;
                 var msg = err.code === 1 ? 'Location denied' : (err.code === 2 ? 'Location unavailable' : 'Location timeout');
                 geoEl.setAttribute('title', msg + '. Using: ' + c.region + ' — ' + c.symbol + '. Click to try again.');
