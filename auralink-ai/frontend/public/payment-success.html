@@ -38,21 +38,18 @@
       </div>
       <h2 class="text-xl font-semibold tracking-tight text-zinc-900 mb-2">Payment successful</h2>
       <p id="success-message" class="text-sm text-zinc-600 mb-8">You're now on <strong>Pro</strong>. Enjoy your plan.</p>
-      <a href="plans.html" class="block w-full py-3.5 rounded-xl bg-zinc-900 text-white font-semibold text-center no-underline hover:bg-zinc-800 transition-colors mb-3 inline-flex items-center justify-center gap-2">
-        ← Plans
+      <a href="/dashboard" class="block w-full py-3.5 rounded-xl bg-zinc-900 text-white font-semibold text-center no-underline hover:bg-zinc-800 transition-colors mb-3 inline-flex items-center justify-center gap-2">
+        Go to dashboard
       </a>
-      <a href="settings.html" class="block w-full py-3 rounded-xl border border-zinc-200 text-zinc-700 font-medium text-sm text-center no-underline hover:bg-zinc-100 transition-colors inline-flex items-center justify-center gap-2">
-        ← Settings
+      <a href="/dashboard/upgrade" class="block w-full py-3 rounded-xl border border-zinc-200 text-zinc-700 font-medium text-sm text-center no-underline hover:bg-zinc-100 transition-colors inline-flex items-center justify-center gap-2">
+        Manage billing
       </a>
     </main>
   </div>
   <script>
     (function() {
-      var plan = sessionStorage.getItem('auralink_plan_after_payment') || 'pro';
-      var names = { free: 'Free', pro: 'Pro', business: 'Business' };
-      var name = names[plan] || 'Pro';
       var el = document.getElementById('success-message');
-      if (el) el.innerHTML = 'You\'re now on <strong>' + name + '</strong>. Enjoy your plan.';
+      if (el) el.innerHTML = 'Payment complete. Your plan is updated in <strong>Dashboard</strong>.';
     })();
   </script>
 </body>
