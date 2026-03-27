@@ -2,6 +2,9 @@ import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { getEnabledPlatforms } from '../config/platforms.js';
 import { upsertToken } from '../db/tokens.js';
+import axios from 'axios';
+import { isDevMode, devInsertConciergeRequest } from '../db/devStore.js';
+import { getSupabase } from '../db/client.js';
 
 const authRouter = Router();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -38,8 +41,181 @@ function requireUser(req, res, next) {
 
 const enabled = getEnabledPlatforms();
 
+authRouter.post('/waitlist', async (req, res) => {
+  try {
+    const email = (req.body?.email || '').toString().trim();
+    const storeDomain = (req.body?.store_domain || req.body?.shop_input || req.body?.domain || '').toString().trim();
+    const source = (req.body?.source || 'landing').toString().trim();
+    const note = (req.body?.note || req.body?.message || '').toString().trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Enter a valid email' });
+    }
+    const record = {
+      user_id: req.body?.user_id || 'anonymous',
+      platform: 'shopify_waitlist',
+      shop_input: storeDomain || null,
+      email,
+      message: note || null,
+      source,
+    };
+    const db = getSupabase();
+    if (!isDevMode() && db) {
+      const { error } = await db.from('waitlist_signups').insert({
+        email,
+        platform: 'shopify',
+        store_domain: storeDomain || null,
+        source,
+        note: note || null,
+      });
+      if (error) {
+        console.warn('[Waitlist] Supabase insert failed; falling back to in-memory:', error.message);
+        devInsertConciergeRequest(record);
+      }
+    } else {
+      devInsertConciergeRequest(record);
+    }
+    console.log('[Waitlist] Signup:', { email, store_domain: storeDomain || null, source });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Server error' });
+  }
+});
+
+authRouter.post('/concierge/shopify', requireUser, async (req, res) => {
+  try {
+    const email = (req.body?.email || '').toString().trim();
+    const shopInput = (req.body?.shop_input || req.body?.shop_domain || req.body?.domain || '').toString().trim();
+    const message = (req.body?.message || '').toString().trim();
+    const source = (req.body?.source || 'connect-store').toString().trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Enter a valid email' });
+    }
+    if (!shopInput) return res.status(400).json({ error: 'Enter your store domain' });
+
+    const record = {
+      user_id: req.userId,
+      platform: 'shopify',
+      shop_input: shopInput,
+      email,
+      message: message || null,
+      source,
+    };
+
+    // Persist to Supabase if available; otherwise dev store.
+    const db = getSupabase();
+    if (!isDevMode() && db) {
+      // Table is optional; if missing, fall back to dev store + log.
+      const { error } = await db.from('concierge_requests').insert(record);
+      if (error) {
+        console.warn('[Concierge] Supabase insert failed; falling back to in-memory:', error.message);
+        devInsertConciergeRequest(record);
+      }
+    } else {
+      devInsertConciergeRequest(record);
+    }
+
+    console.log('[Concierge] Shopify request:', { email, shop_input: shopInput, user_id: req.userId, source });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Server error' });
+  }
+});
+
 if (enabled.includes('shopify')) {
-  const { getShopifyAuthUrl, handleShopifyCallback } = await import('../auth/shopify.js');
+  const {
+    getShopifyAuthUrl,
+    handleShopifyCallback,
+    signShopifyState,
+    parseShopifyState,
+    resolveShopifyShopDomain,
+  } = await import('../auth/shopify.js');
+
+  authRouter.post('/shopify/custom-token', requireUser, async (req, res) => {
+    try {
+      const rawShop = (req.body?.shop_domain || req.body?.shop || '').toString();
+      const accessToken = (req.body?.access_token || req.body?.token || '').toString().trim();
+      if (!rawShop.trim()) return res.status(400).json({ error: 'Missing shop_domain' });
+      if (!accessToken) return res.status(400).json({ error: 'Missing access_token' });
+      // Accept either direct myshopify domain or a website domain (we resolve it).
+      const resolved = await resolveShopifyShopDomain(rawShop);
+      const shopDomain = (resolved?.shop_domain || '').toString().toLowerCase();
+      if (!shopDomain || !shopDomain.endsWith('.myshopify.com')) {
+        return res.status(400).json({ error: 'Invalid shop domain' });
+      }
+
+      // Verify token by calling Shopify Admin GraphQL.
+      const gql = {
+        query: `query {\n  shop {\n    name\n    myshopifyDomain\n    primaryDomain { host url }\n  }\n}`,
+      };
+      const apiVersion = process.env.SHOPIFY_API_VERSION || '2025-01';
+      const url = `https://${shopDomain}/admin/api/${apiVersion}/graphql.json`;
+      const r = await axios.post(url, gql, {
+        timeout: 12000,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': accessToken,
+        },
+        validateStatus: (s) => s >= 200 && s < 500,
+      });
+      const data = r.data || {};
+      const myshopify = (data?.data?.shop?.myshopifyDomain || '').toString().toLowerCase();
+      if (!myshopify || !myshopify.endsWith('.myshopify.com')) {
+        const msg =
+          (Array.isArray(data?.errors) && data.errors[0]?.message) ||
+          (Array.isArray(data?.errors) && data.errors.map((e) => e?.message).filter(Boolean).join('; ')) ||
+          (data?.error?.toString?.() || '') ||
+          '';
+        return res.status(401).json({
+          error: 'Invalid token or insufficient permissions',
+          hint: 'Make sure you pasted the Admin API access token (shpat_...) from a custom app installed on this store, with products/inventory scopes.',
+          details: msg || `HTTP ${r.status}`,
+        });
+      }
+
+      // Save the token as the Shopify connection for this user.
+      const cleanShop = myshopify.replace(/\.myshopify\.com$/i, '') + '.myshopify.com';
+      await upsertToken({
+        user_id: req.userId,
+        platform: 'shopify',
+        access_token: accessToken,
+        refresh_token: null,
+        expires_at: null,
+        shop_domain: cleanShop,
+        shop_id: cleanShop,
+        status: 'connected',
+      });
+      res.json({
+        ok: true,
+        shop_domain: cleanShop,
+        strategy: 'custom_token',
+        shop_name: data?.data?.shop?.name || undefined,
+      });
+    } catch (e) {
+      res.status(500).json({ error: e.message || 'Server error' });
+    }
+  });
+
+  authRouter.get('/shopify/resolve', async (req, res) => {
+    try {
+      const raw = (req.query.domain || req.query.shop || '').toString();
+      if (!raw || !raw.trim()) {
+        return res.status(400).json({ error: 'Missing domain' });
+      }
+      const debug = req.query.debug === '1' || req.query.debug === 'true';
+      const out = await resolveShopifyShopDomain(raw, debug ? { debug: true } : undefined);
+      if (!out || !out.shop_domain) {
+        return res.status(404).json({
+          error: 'Could not resolve Shopify shop domain from website domain',
+          hint: 'Try entering the exact domain you use for your storefront (e.g. mystore.com). If this store uses a custom domain, it must ultimately map to a Shopify shop.',
+          ...(debug ? { debug: out } : {}),
+        });
+      }
+      res.json(out);
+    } catch (e) {
+      res.status(500).json({ error: e.message || 'Server error' });
+    }
+  });
+
   authRouter.get('/shopify', requireUser, (req, res) => {
     const shop = (req.query.shop || '').trim().toLowerCase();
     const returnTo = req.query.return_to || req.query.returnTo || '';
@@ -53,7 +229,12 @@ if (enabled.includes('shopify')) {
     if (shop === 'admin' || shop === 'admin.myshopify.com' || /\/|\\\\/.test(req.query.shop || '')) {
       return res.redirect(`${base}${connectPage}?error=${encodeURIComponent('Use your store name only (e.g. your-store), not "admin" or a URL path.')}${returnQ}`);
     }
-    const stateStr = JSON.stringify({ userId: req.userId, shop, returnTo });
+    let stateStr = '';
+    try {
+      stateStr = signShopifyState({ userId: req.userId, shop, returnTo, iat: Date.now() });
+    } catch (e) {
+      return res.redirect(`${base}${connectPage}?error=${encodeURIComponent(e.message || 'Shopify app not configured')}${returnQ}`);
+    }
     const authUrl = getShopifyAuthUrl(shop, stateStr);
     if (!authUrl || authUrl.includes('client_id=undefined') || !authUrl.includes('.myshopify.com')) {
       return res.redirect(`${base}${connectPage}?error=${encodeURIComponent('Shopify app not configured. Set SHOPIFY_API_KEY and SHOPIFY_API_SECRET in auralink-ai/publishing/.env and restart the publishing service.')}${returnQ}`);
@@ -62,9 +243,18 @@ if (enabled.includes('shopify')) {
   });
   authRouter.get('/shopify/callback', async (req, res) => {
     try {
-      const result = await handleShopifyCallback(req.query.code, req.query.shop || '', req.query.state);
+      const result = await handleShopifyCallback(req.query);
       const base = FRONTEND_URL.replace(/\/$/, '');
-      const qs = `shopify=connected&shop=${encodeURIComponent(result.shop_domain)}`;
+      // When returning to the listing review publish flow, auto-retry publish after connect.
+      const wantsAutoPublish =
+        typeof result?.returnTo === 'string' &&
+        (result.returnTo === 'review' ||
+          result.returnTo === '/review' ||
+          result.returnTo === 'flow-3' ||
+          result.returnTo === 'flow-3.html' ||
+          result.returnTo === '/flow-3' ||
+          result.returnTo === '/flow-3.html');
+      const qs = `shopify=connected&shop=${encodeURIComponent(result.shop_domain)}${wantsAutoPublish ? '&autopublish=1' : ''}`;
       if (result && result.returnTo) {
         const path = result.returnTo.startsWith('/') ? result.returnTo : `/${result.returnTo}`;
         res.redirect(`${base}${path}?${qs}`);
@@ -76,7 +266,7 @@ if (enabled.includes('shopify')) {
       const base = FRONTEND_URL.replace(/\/$/, '');
       let returnTo = '';
       try {
-        const s = JSON.parse(req.query.state || '{}');
+        const s = parseShopifyState(req.query.state || '{}');
         returnTo = s.returnTo || s.return_to || '';
       } catch (_) {}
       const errQs = `error=shopify&message=${encodeURIComponent(e.message)}`;

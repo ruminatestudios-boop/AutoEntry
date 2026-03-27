@@ -2148,12 +2148,24 @@
           product_type: d.product_type || d.category || ''
         };
 
+        // Temporary shortcut: skip auth/connect/publish flow and go straight to success.
+        var SKIP_SHOPIFY_LOGIN_FOR_NOW = true;
+        if (SKIP_SHOPIFY_LOGIN_FOR_NOW) {
+          try {
+            sessionStorage.setItem('auralink_last_publish_platforms', JSON.stringify(['shopify']));
+          } catch (e) {}
+          if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/listing/published');
+          else window.location.href = '/listing/published';
+          return;
+        }
+
         // Flow order: flow-3 → /listing/published (same as flow-success.html via Next rewrite).
         var pubUrl = getPublishingUrl();
         var nextBtn = document.getElementById('review-next-btn');
         if (nextBtn) { nextBtn.disabled = true; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publishing…'; nextBtn.style.pointerEvents = 'none'; nextBtn.style.opacity = '0.7'; }
         var publishAbort = new AbortController();
-        var timeoutId = setTimeout(function() { publishAbort.abort(); }, 15000);
+        // Give the connection handoff more time; local dev proxies + cold starts can exceed 15s.
+        var timeoutId = setTimeout(function() { publishAbort.abort(); }, 45000);
         function getToken() {
           try { var t = sessionStorage.getItem('auralink_jwt'); if (t) return Promise.resolve(t); } catch (e) {}
           return fetch('/api/publishing/token', { signal: publishAbort.signal }).then(function(r) {
@@ -2241,7 +2253,9 @@
               return;
             }
             if (err && err.name === 'AbortError') {
-              msg = 'Publish timed out. Start the publishing API (port 8001), then try again. From repo root: npm run dev:all — or: cd auralink-ai/publishing && npm run dev';
+              msg = 'Publish timed out (45s).\n\n' +
+                'If you are on localhost, confirm the publishing API is up: http://localhost:8001/health\n' +
+                'If it is up, Shopify or your network may be slow—try again.';
             } else if (/failed to fetch|networkerror|load failed|network request failed/i.test(msg)) {
               var healthHint = (pubUrl.indexOf('__synclyst_publishing') !== -1)
                 ? 'http://localhost:8001/health (publishing runs on 8001; Next on 3000 proxies to it when it\'s up)'

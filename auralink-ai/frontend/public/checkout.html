@@ -27,7 +27,7 @@
 <body class="min-h-screen bg-zinc-50 font-sans text-zinc-900 antialiased">
   <div class="max-w-md mx-auto min-h-screen flex flex-col">
     <header class="flex items-center justify-between px-5 pt-6 pb-4 shrink-0 bg-zinc-50 border-b border-zinc-100">
-      <a href="/dashboard/upgrade" class="flex items-center gap-2 text-zinc-900 no-underline">
+      <a href="/landing.html#waitlist" class="flex items-center gap-2 text-zinc-900 no-underline">
         <span class="text-lg">←</span>
         <span class="font-semibold">Plans</span>
       </a>
@@ -55,8 +55,8 @@
         </div>
       </div>
 
-      <a href="/dashboard/upgrade" id="checkout-confirm" class="block w-full py-3.5 rounded-xl bg-zinc-900 text-white font-semibold text-center no-underline hover:bg-zinc-800 transition-colors">
-        Continue to secure checkout
+      <a href="javascript:void(0)" aria-disabled="true" id="checkout-confirm" class="block w-full py-3.5 rounded-xl bg-zinc-100 text-zinc-500 border border-zinc-200 font-semibold text-center no-underline cursor-not-allowed pointer-events-none">
+        Checkout opens soon
       </a>
     </main>
   </div>
@@ -69,11 +69,7 @@
       var priceEl = document.getElementById('checkout-plan-price');
       if (nameEl) nameEl.textContent = p.name;
       if (priceEl) priceEl.textContent = p.price;
-      var confirmBtn = document.getElementById('checkout-confirm');
-      if (confirmBtn) confirmBtn.addEventListener('click', function() {
-        var tier = plan === 'business' ? 'growth' : 'pro';
-        window.location.href = '/dashboard/upgrade?tier=' + encodeURIComponent(tier) + '&autostart=1';
-      });
+      // Paid checkout is temporarily disabled pre-launch.
     })();
   </script>
 </body>

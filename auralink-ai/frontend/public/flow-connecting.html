@@ -205,8 +205,11 @@
             if (errorEl) { errorEl.textContent = 'Enter a valid store name or domain (e.g. fightlore or your-store.myshopify.com)'; errorEl.classList.remove('hidden'); }
             return;
           }
-          var apiBase = getApiBase();
-          window.location.href = apiBase + '/api/v1/shopify/install?shop=' + encodeURIComponent(domain);
+          // Shopify connect is handled by the publishing service (via /connect-store).
+          // Keep the flow simple: send the user to the dedicated connect page.
+          var q = 'return=flow-connect';
+          try { q += '&shop=' + encodeURIComponent(domain); } catch (e) {}
+          window.location.href = '/connect-store?' + q;
         });
       }
     })();

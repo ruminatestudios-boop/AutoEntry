@@ -404,7 +404,7 @@
         })
           .then(function(r) {
           if (r.status === 402) {
-            window.location.href = '/dashboard/upgrade?tier=pro&autostart=1';
+            window.location.href = '/landing.html#waitlist';
             return null;
           }
           if (!r.ok) {

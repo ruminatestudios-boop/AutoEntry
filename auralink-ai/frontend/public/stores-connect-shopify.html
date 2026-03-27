@@ -43,20 +43,20 @@
         <p class="text-center text-sm text-[#525252] max-w-sm">Authorise SyncLyst to list and manage products in your store</p>
       </div>
 
-      <!-- Option A: continue via Shopify (no store domain needed) -->
+      <!-- Option A: open Shopify admin in a new tab (helper only) -->
       <div class="rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-4 mb-5">
-        <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Fastest option</p>
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Need help finding your store?</p>
         <p class="text-sm text-[#525252] mb-3">
-          Sign in securely to Shopify through their official site.
+          Open Shopify admin in a new tab to copy your store name, then use "Connect this Store" below.
         </p>
         <a
           href="https://admin.shopify.com/apps"
           target="_blank"
           rel="noopener noreferrer"
           id="shopify-open-admin"
-          class="block w-full py-3.5 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[15px] border border-[#0a0a0a] hover:bg-[#262626] text-center transition-colors no-underline"
+          class="block w-full py-3.5 rounded-xl bg-white text-[#0a0a0a] font-semibold text-[15px] border border-[#0a0a0a] hover:bg-[#f5f5f5] text-center transition-colors no-underline"
         >
-          Continue to Shopify
+          Open Shopify admin
         </a>
       </div>
 
@@ -78,12 +78,12 @@
       <details class="rounded-xl bg-white border border-[#e5e5e5] p-4 mb-4 shadow-sm" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04);" open>
         <summary class="cursor-pointer select-none list-none">
           <span class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">I know my store URL</span>
-          <span class="block text-sm text-[#525252] mt-1">Enter your store domain to connect directly.</span>
+          <span class="block text-sm text-[#525252] mt-1">Enter your website domain — we’ll find the Shopify store automatically.</span>
         </summary>
         <div class="mt-4">
-          <label for="shop-input" class="block text-sm font-medium text-zinc-700 mb-2">Store domain or URL</label>
-          <input type="text" id="shop-input" placeholder="e.g. your-brand.store, your-store.myshopify.com, or your-store" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" />
-          <p class="text-xs text-[#525252] mt-2 leading-relaxed">Paste any store URL or store name. We’ll normalize it for Shopify.</p>
+          <label for="shop-input" class="block text-sm font-medium text-zinc-700 mb-2">Website domain or Shopify URL</label>
+          <input type="text" id="shop-input" placeholder="e.g. mystore.com, your-store.myshopify.com, or admin.shopify.com/store/your-store" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" />
+          <p class="text-xs text-[#525252] mt-2 leading-relaxed">Paste your <strong>website domain</strong> (recommended). If you only have Shopify Admin, paste that URL and we’ll extract the store.</p>
           <button type="button" id="shopify-help-toggle" class="mt-3 text-xs font-semibold text-[#0a0a0a] underline underline-offset-4 text-left">
             Where do I find my store name?
           </button>
@@ -106,6 +106,58 @@
         <button type="button" id="shop-error-dev-toggle" class="hidden mt-3 text-xs font-semibold text-red-800 underline underline-offset-2">Details for developers</button>
         <div id="shop-error-dev" class="hidden mt-2 text-xs text-red-950/90 font-mono whitespace-pre-wrap break-words border-t border-red-200/80 pt-2"></div>
       </div>
+
+      <!-- Option C: connect via Admin API token (fastest; no app distribution wait) -->
+      <details class="rounded-xl bg-white border border-[#e5e5e5] p-4 mb-4 shadow-sm" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <summary class="cursor-pointer select-none list-none">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Fastest connect (recommended)</span>
+          <span class="block text-sm text-[#525252] mt-1">No Shopify app approval needed. Paste one token.</span>
+        </summary>
+        <div class="mt-4">
+          <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-3">
+            <p class="text-xs text-[#525252] leading-relaxed">
+              <strong>3 quick steps:</strong> open Shopify → create/install a “custom app” → paste the Admin API token.
+            </p>
+            <ol class="mt-2 list-decimal pl-5 space-y-1 text-sm text-[#525252]">
+              <li>Click <strong>Open Shopify (Develop apps)</strong> below and sign in.</li>
+              <li>Create an app → give <strong>Products</strong> + <strong>Inventory</strong> access → <strong>Install</strong>.</li>
+              <li>Copy the <strong>Admin API access token</strong> (starts with <code class="bg-zinc-200/60 px-1 rounded text-[12px]">shpat_</code>).</li>
+            </ol>
+          </div>
+          <div class="mt-4">
+            <a
+              id="open-develop-apps"
+              href="https://admin.shopify.com/apps"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="block w-full py-3 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[15px] border border-[#0a0a0a] hover:bg-[#262626] text-center transition-colors no-underline"
+            >
+              Open Shopify (Develop apps)
+            </a>
+            <label for="admin-token-input" class="block text-sm font-medium text-zinc-700 mb-2">Admin API access token</label>
+            <input type="password" id="admin-token-input" placeholder="shpat_..." class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" />
+            <p class="text-xs text-[#525252] mt-2 leading-relaxed">We verify the token against your store automatically.</p>
+            <button type="button" id="connect-token-btn" class="block w-full py-3.5 rounded-xl bg-white text-[#0a0a0a] font-semibold text-[15px] border border-[#0a0a0a] hover:bg-[#f5f5f5] text-center mt-3 transition-colors">
+              Verify & connect token
+            </button>
+
+            <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">
+              <p class="text-sm font-semibold text-amber-950 mb-1">Want us to set it up for you?</p>
+              <p class="text-xs text-amber-900/95 leading-relaxed mb-3">
+                Submit your details and we’ll help you connect your store (white-glove concierge).
+              </p>
+              <label for="concierge-email" class="block text-xs font-semibold text-amber-950 mb-1">Email</label>
+              <input type="email" id="concierge-email" placeholder="you@company.com" class="w-full text-sm text-[#111] bg-white border border-amber-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-transparent" />
+              <label for="concierge-note" class="block text-xs font-semibold text-amber-950 mb-1 mt-3">Note (optional)</label>
+              <textarea id="concierge-note" rows="2" placeholder="Anything we should know?" class="w-full text-sm text-[#111] bg-white border border-amber-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-transparent"></textarea>
+              <button type="button" id="concierge-btn" class="block w-full py-3 rounded-xl bg-amber-900 text-white font-semibold text-[14px] border border-amber-950 hover:bg-amber-950 text-center mt-3 transition-colors">
+                Request concierge setup
+              </button>
+              <p id="concierge-status" class="hidden text-xs mt-2"></p>
+            </div>
+          </div>
+        </div>
+      </details>
 
       <div id="redirect-user-guide" class="hidden mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
         <p class="text-sm font-semibold text-amber-950 mb-1">If Shopify mentioned redirect URL, callback, or the app</p>
@@ -271,26 +323,53 @@
         var panel = document.getElementById('shop-error-panel');
         if (panel) panel.classList.add('hidden');
       }
-      function normalizeShopDomain(raw) {
-        raw = (raw || '').trim().toLowerCase().split('?')[0].split('#')[0].replace(/\/+$/, '');
+      function normalizeInput(raw) {
+        raw = (raw || '').trim();
         if (!raw) return '';
-        raw = raw.replace(/^https?:\/\//, '');
-        if (raw.indexOf('/') !== -1) raw = raw.split('/')[0];
-        if (raw.indexOf('.myshopify.com') !== -1) return raw;
-        raw = raw.replace(/^www\./, '');
-        if (raw.endsWith('.store')) raw = raw.split('.')[0];
-        else if (raw.indexOf('.') !== -1) raw = raw.split('.')[0];
-        return raw ? (raw + '.myshopify.com') : '';
+        raw = raw.split('?')[0].split('#')[0].replace(/\/+$/, '');
+        return raw;
+      }
+      function parseAdminHandle(raw) {
+        var lower = String(raw || '').toLowerCase();
+        if (lower.indexOf('admin.shopify.com/store/') === -1) return '';
+        try {
+          var cleaned = lower.replace(/^https?:\/\//, '');
+          var parts = cleaned.split('/store/');
+          var tail = (parts[1] || '');
+          var handle = tail.split('/')[0].trim();
+          if (handle && handle !== 'admin') return handle;
+        } catch (e) {}
+        return '';
+      }
+      function normalizeShopParamIfDirect(raw) {
+        raw = normalizeInput(raw);
+        if (!raw) return '';
+        var lower = raw.toLowerCase();
+        var handleFromAdmin = parseAdminHandle(lower);
+        if (handleFromAdmin) return handleFromAdmin + '.myshopify.com';
+        lower = lower.replace(/^https?:\/\//, '');
+        if (lower.indexOf('/') !== -1) lower = lower.split('/')[0];
+        lower = lower.replace(/\.+$/, '').replace(/^www\./, '');
+        if (!lower) return '';
+        if (lower.indexOf('.myshopify.com') !== -1) return lower;
+        // A plain shop handle (no dots) is still valid for /auth/shopify?shop=...
+        if (lower.indexOf('.') === -1) return lower;
+        return '';
       }
       function isInvalidStoreName(domain) {
         if (!domain) return true;
         var d = domain.toLowerCase();
         if (d === 'admin.myshopify.com' || d === 'admin') return true;
-        if (/\/oauth|\/admin/.test((shopInput && shopInput.value) || '')) return true;
+        // We now allow Shopify admin URLs (we extract /store/{handle}).
+        var raw = ((shopInput && shopInput.value) || '').toLowerCase();
+        if (raw.indexOf('admin.shopify.com/store/') !== -1) return false;
+        // Block obviously wrong pasted paths that are not the admin/store form.
+        if (/\/oauth/.test(raw)) return true;
         return false;
       }
       var params = new URLSearchParams(window.location.search);
       var returnTo = params.get('return');
+      var forceTokenMode = (params.get('mode') || '').toLowerCase() === 'token' || params.get('token') === '1';
       var headerLeft = document.getElementById('connect-header-left');
       function setHeaderBack(href, label) {
         if (!headerLeft) return;
@@ -311,6 +390,9 @@
       } else if (returnTo === 'stores-list') {
         backHref = '/stores-list.html';
         setHeaderBack(backHref, '← Back to stores');
+      } else if (returnTo === 'dashboard-home') {
+        backHref = '/dashboard/home';
+        setHeaderBack(backHref, '← Dashboard');
       }
       var redirectUriLink = document.getElementById('redirect-uri-link');
       if (redirectUriLink) {
@@ -371,39 +453,87 @@
         if (returnTo === 'review' || returnTo === 'flow-3' || returnTo === 'flow-3.html') return 'review';
         if (returnTo === 'flow-batch-review') return 'flow-batch-review.html';
         if (returnTo === 'stores-list') return 'stores-list.html';
+        if (returnTo === 'dashboard-home') return 'dashboard/home';
         return '';
       }
 
       var shopInput = document.getElementById('shop-input');
       var connectBtn = document.getElementById('connect-btn');
+      var tokenInput = document.getElementById('admin-token-input');
+      var connectTokenBtn = document.getElementById('connect-token-btn');
+      var openDevelopApps = document.getElementById('open-develop-apps');
+      var conciergeBtn = document.getElementById('concierge-btn');
+      var conciergeEmail = document.getElementById('concierge-email');
+      var conciergeNote = document.getElementById('concierge-note');
+      var conciergeStatus = document.getElementById('concierge-status');
       var loginHintEl = document.getElementById('shop-login-hint');
+      var publicInstallEnabled = true;
+
+      // Token-only mode: never redirect into OAuth flow.
+      if (forceTokenMode) {
+        try {
+          // Hide the OAuth connect button to prevent accidental clicks.
+          if (connectBtn) connectBtn.style.display = 'none';
+          // Open the token panel by default.
+          var tokenDetails = (connectTokenBtn && connectTokenBtn.closest) ? connectTokenBtn.closest('details') : null;
+          if (tokenDetails) tokenDetails.open = true;
+          // Update summary text to make it obvious we're in token mode.
+          if (tokenDetails) {
+            var s = tokenDetails.querySelector('summary span.block');
+            if (s) s.textContent = 'Token mode: connect without Shopify install (recommended for testing).';
+          }
+        } catch (e) {}
+      }
       function updateLoginHint() {
         var shop = (shopInput && shopInput.value || '').trim();
         if (!shop) { if (loginHintEl) { loginHintEl.classList.add('hidden'); loginHintEl.innerHTML = ''; } return; }
-        var domain = normalizeShopDomain(shop);
-        if (!domain) { if (loginHintEl) { loginHintEl.classList.add('hidden'); } return; }
-        if (shop.toLowerCase().indexOf('.store') !== -1 && domain) {
+        var direct = normalizeShopParamIfDirect(shop);
+        if (direct && (direct.indexOf('.myshopify.com') !== -1)) {
           if (loginHintEl) {
-            loginHintEl.innerHTML = 'You’ll sign in on <strong>Shopify</strong>. Use the account that <strong>owns this store</strong>. If the address bar shows <code class="text-amber-950 bg-amber-100/80 px-1 rounded text-[11px]">' + escapeHtml(domain) + '</code>, that’s expected—it’s your store’s Shopify domain, not SyncLyst’s site.';
+            loginHintEl.innerHTML = 'You’ll sign in on <strong>Shopify</strong>. Use the account that <strong>owns this store</strong>. If the address bar shows <code class="text-amber-950 bg-amber-100/80 px-1 rounded text-[11px]">' + escapeHtml(direct) + '</code>, that’s expected—it’s your store’s Shopify domain, not SyncLyst’s site.';
             loginHintEl.classList.remove('hidden');
           }
-        } else { if (loginHintEl) { loginHintEl.classList.add('hidden'); loginHintEl.innerHTML = ''; } }
+          return;
+        }
+        // Custom domain path: we resolve it server-side.
+        if (loginHintEl) {
+          var host = normalizeInput(shop).replace(/^https?:\/\//i, '').split('/')[0].replace(/^www\./i, '');
+          if (host && host.indexOf('.') !== -1) {
+            loginHintEl.innerHTML = 'We’ll connect <strong>' + escapeHtml(host) + '</strong> by finding its Shopify store automatically.';
+            loginHintEl.classList.remove('hidden');
+            return;
+          }
+        }
+        if (loginHintEl) { loginHintEl.classList.add('hidden'); loginHintEl.innerHTML = ''; }
       }
       if (shopInput) { shopInput.addEventListener('input', updateLoginHint); shopInput.addEventListener('blur', updateLoginHint); }
       if (connectBtn && shopInput) {
         connectBtn.addEventListener('click', function() {
+          // If user already pasted an Admin API token, do the token-connect flow
+          // (prevents accidental redirect into OAuth/custom-distribution unauthorized page).
+          try {
+            var maybeTok = (tokenInput && tokenInput.value ? String(tokenInput.value).trim() : '');
+            if (maybeTok && /^shpat_/i.test(maybeTok) && connectTokenBtn) {
+              connectTokenBtn.click();
+              return;
+            }
+          } catch (e) {}
+          if (forceTokenMode) {
+            showConnectError('<p class="mb-0"><strong>Token mode is enabled.</strong> Paste your <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">shpat_...</code> token and click <strong>Verify &amp; connect token</strong>.</p>', null);
+            return;
+          }
+          if (!publicInstallEnabled) {
+            showConnectError('<p class="mb-0"><strong>Public Shopify install is not enabled yet.</strong> Use the token-based connect option below.</p>', null);
+            return;
+          }
           var shop = (shopInput.value || '').trim();
           if (!shop) {
             showConnectError('<p class="mb-0">Add your <strong>store name or domain</strong>. Use the same identifier Shopify uses (e.g. the part before <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">.myshopify.com</code>), not an empty field.</p>', null);
             return;
           }
           hideConnectError();
-          var domain = normalizeShopDomain(shop);
-          if (!domain) {
-            showConnectError('<p class="mb-0">That doesn’t look like a <strong>real Shopify store address</strong>. Try <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-store</code>, <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-store.myshopify.com</code>, or your <strong>custom store domain</strong>—not random text.</p>', null);
-            return;
-          }
-          if (isInvalidStoreName(domain)) {
+          var directShopParam = normalizeShopParamIfDirect(shop);
+          if (directShopParam && isInvalidStoreName(directShopParam)) {
             showConnectError('<p class="mb-0">Use your <strong>store identity only</strong>—not a full Shopify Admin link or a path. Examples: <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-store</code>, <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-store.myshopify.com</code>, <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-brand.store</code>.</p>', null);
             return;
           }
@@ -413,6 +543,7 @@
           console.log('[Connect Shopify] Publishing API URL:', pubBase);
           connectBtn.disabled = true;
           connectBtn.textContent = 'Connecting…';
+          var resolverStarted = false;
           var connectAbort = new AbortController();
           var timeoutId = setTimeout(function() { connectAbort.abort(); }, 15000);
           fetch('/api/publishing/token', { signal: connectAbort.signal })
@@ -428,9 +559,38 @@
             .then(function(data) {
               clearTimeout(timeoutId);
               if (data && data.user_id) {
-                var authUrl = pubBase + '/auth/shopify?shop=' + encodeURIComponent(domain) + '&user_id=' + encodeURIComponent(data.user_id) + '&return_to=' + encodeURIComponent(returnToPath);
                 if (data.token) try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {}
-                window.location.href = authUrl;
+                var goAuth = function(shopParamOrDomain) {
+                  var authUrl = pubBase + '/auth/shopify?shop=' + encodeURIComponent(shopParamOrDomain) + '&user_id=' + encodeURIComponent(data.user_id) + '&return_to=' + encodeURIComponent(returnToPath);
+                  window.location.href = authUrl;
+                };
+                // If user typed a direct shop handle or myshopify domain, skip resolver.
+                if (directShopParam) {
+                  goAuth(directShopParam);
+                  return;
+                }
+                // Otherwise resolve the custom domain → myshopify domain server-side.
+                var rawDomain = normalizeInput(shop);
+                var resolveAbort = new AbortController();
+                var resolveTimeout = setTimeout(function() { resolveAbort.abort(); }, 12000);
+                resolverStarted = true;
+                fetch(pubBase + '/auth/shopify/resolve?domain=' + encodeURIComponent(rawDomain), { signal: resolveAbort.signal })
+                  .then(function(r) {
+                    clearTimeout(resolveTimeout);
+                    if (!r.ok) return r.text().then(function(t) { throw new Error(t || ('resolve_failed_' + r.status)); });
+                    return r.json();
+                  })
+                  .then(function(resolved) {
+                    var shopDomain = resolved && resolved.shop_domain ? String(resolved.shop_domain) : '';
+                    if (!shopDomain || shopDomain.indexOf('.myshopify.com') === -1) throw new Error('Could not resolve Shopify store from that website domain.');
+                    goAuth(shopDomain);
+                  })
+                  .catch(function(err) {
+                    var msg = 'Couldn’t find a Shopify store for that website domain. Try entering the exact storefront domain (e.g. ' + codeWrap('mystore.com') + ') or paste your Shopify Admin URL.';
+                    var dev = err && err.message ? String(err.message) : null;
+                    showConnectError('<p class="mb-0">' + msg + '</p>', dev);
+                  })
+                  .finally(function() { connectBtn.disabled = false; connectBtn.textContent = 'Connect store'; });
               } else {
                 var c1 = classifyConnectError(PUBLISH_UNREACHABLE_MSG);
                 showConnectError(c1.userHtml, PUBLISH_UNREACHABLE_MSG);
@@ -456,7 +616,168 @@
               var c2 = classifyConnectError(msg);
               showConnectError(c2.userHtml, c2.devText || msg);
             })
-            .finally(function() { connectBtn.disabled = false; connectBtn.textContent = 'Connect store'; });
+            .finally(function() {
+              // Redirect flows will navigate away; resolver flow handles its own reset.
+              if (!resolverStarted) {
+                connectBtn.disabled = false;
+                connectBtn.textContent = 'Connect store';
+              }
+            });
+        });
+      }
+
+      function resolveShopDomainForToken(rawDomain) {
+        // If user typed direct shop handle/myshopify, no need to resolve.
+        var direct = normalizeShopParamIfDirect(rawDomain);
+        if (direct && direct.indexOf('.myshopify.com') !== -1) return Promise.resolve(direct);
+        // Otherwise call server-side resolver.
+        var pubBase = getPublishingBase();
+        return fetch(pubBase + '/auth/shopify/resolve?domain=' + encodeURIComponent(rawDomain))
+          .then(function(r) { return r.ok ? r.json() : r.text().then(function(t){ throw new Error(t || ('resolve_failed_' + r.status)); }); })
+          .then(function(d) {
+            var sd = d && d.shop_domain ? String(d.shop_domain) : '';
+            if (!sd || sd.indexOf('.myshopify.com') === -1) throw new Error('Resolver returned invalid shop_domain');
+            return sd;
+          });
+      }
+
+      function updateDevelopAppsLink() {
+        if (!openDevelopApps || !shopInput) return;
+        var raw = normalizeInput(shopInput.value || '');
+        if (!raw) { openDevelopApps.href = 'https://admin.shopify.com/apps'; return; }
+        // Best-effort: resolve to myshopify and deep-link into that store's settings.
+        var direct = normalizeShopParamIfDirect(raw);
+        var handle = '';
+        if (direct && direct.indexOf('.myshopify.com') !== -1) {
+          handle = direct.replace(/\.myshopify\.com$/i, '');
+        }
+        if (!handle) {
+          try { handle = raw.replace(/^https?:\/\//i, '').split('/')[0].replace(/^www\./i,'').split('.')[0]; } catch (e) {}
+        }
+        if (!handle) { openDevelopApps.href = 'https://admin.shopify.com/apps'; return; }
+        openDevelopApps.href = 'https://admin.shopify.com/store/' + encodeURIComponent(handle) + '/settings/apps/development';
+      }
+      if (shopInput) {
+        shopInput.addEventListener('input', updateDevelopAppsLink);
+        shopInput.addEventListener('blur', updateDevelopAppsLink);
+        setTimeout(updateDevelopAppsLink, 50);
+      }
+
+      if (connectTokenBtn && tokenInput && shopInput) {
+        connectTokenBtn.addEventListener('click', function() {
+          var rawDomain = normalizeInput(shopInput.value || '');
+          var tok = (tokenInput.value || '').trim();
+          if (!rawDomain) {
+            showConnectError('<p class="mb-0">Enter your <strong>website domain</strong> (or <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">your-store.myshopify.com</code>) above first.</p>', null);
+            return;
+          }
+          if (!tok) {
+            showConnectError('<p class="mb-0">Paste your <strong>Admin API access token</strong> (starts with <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">shpat_</code>).</p>', null);
+            return;
+          }
+          hideConnectError();
+          connectTokenBtn.disabled = true;
+          connectTokenBtn.textContent = 'Verifying…';
+          fetch('/api/publishing/token')
+            .then(function(r) {
+              if (!r.ok) throw new Error('unauthorized');
+              return r.json();
+            })
+            .then(function(u) {
+              var userId = u && u.user_id ? String(u.user_id) : '';
+              if (!userId) throw new Error('missing_user');
+              return resolveShopDomainForToken(rawDomain)
+                .then(function(shopDomain) {
+                  var pubBase = getPublishingBase();
+                  return fetch(pubBase + '/auth/shopify/custom-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, shop_domain: shopDomain, access_token: tok }),
+                  })
+                    .then(function(r) { return r.ok ? r.json() : r.json().catch(function(){ return null; }).then(function(j){ throw new Error((j && (j.details || j.error)) || ('connect_failed_' + r.status)); }); })
+                    .then(function(resp) {
+                      var connected = resp && resp.shop_domain ? String(resp.shop_domain) : shopDomain;
+                      var rt = getReturnToPath();
+                      var q = 'shopify=connected&shop=' + encodeURIComponent(connected);
+                      if (rt === 'review') window.location.href = '/review?' + q;
+                      else if (rt) window.location.href = '/' + rt + '?' + q;
+                      else window.location.href = '/listing/published?' + q;
+                    });
+                });
+            })
+            .catch(function(err) {
+              var msg = String(err && err.message ? err.message : err);
+              if (msg === 'unauthorized') {
+                try { window.location.href = '/sign-in?redirect_url=' + encodeURIComponent('/connect-store'); } catch (e) {}
+                return;
+              }
+              showConnectError('<p class="mb-0">Couldn’t verify that token for this store. Double-check you copied the <strong>Admin API access token</strong> from a custom app installed on this store, with products/inventory access.</p>', msg);
+            })
+            .finally(function() {
+              connectTokenBtn.disabled = false;
+              connectTokenBtn.textContent = 'Verify & connect token';
+            });
+        });
+      }
+
+      function setConciergeStatus(kind, text) {
+        if (!conciergeStatus) return;
+        conciergeStatus.textContent = text || '';
+        conciergeStatus.classList.remove('hidden');
+        conciergeStatus.style.color = kind === 'ok' ? '#166534' : (kind === 'warn' ? '#92400e' : '#991b1b');
+      }
+
+      if (conciergeBtn && conciergeEmail && shopInput) {
+        conciergeBtn.addEventListener('click', function() {
+          var email = (conciergeEmail.value || '').trim();
+          var shop = normalizeInput(shopInput.value || '');
+          var note = (conciergeNote && conciergeNote.value ? String(conciergeNote.value).trim() : '');
+          if (!shop) {
+            setConciergeStatus('err', 'Enter your website domain first (e.g. mystore.com).');
+            return;
+          }
+          if (!email || email.indexOf('@') === -1) {
+            setConciergeStatus('err', 'Enter a valid email so we can reach you.');
+            return;
+          }
+          conciergeBtn.disabled = true;
+          conciergeBtn.textContent = 'Sending…';
+          setConciergeStatus('warn', 'Sending your request…');
+          fetch('/api/publishing/token')
+            .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('unauthorized')); })
+            .then(function(u) {
+              var userId = u && u.user_id ? String(u.user_id) : '';
+              if (!userId) throw new Error('missing_user');
+              var pubBase = getPublishingBase();
+              return fetch(pubBase + '/auth/concierge/shopify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  user_id: userId,
+                  email: email,
+                  shop_input: shop,
+                  message: note || null,
+                  source: 'connect-store',
+                }),
+              });
+            })
+            .then(function(r) {
+              if (!r.ok) return r.json().catch(function(){ return null; }).then(function(j){ throw new Error((j && j.error) || ('send_failed_' + r.status)); });
+              setConciergeStatus('ok', 'Request received. We’ll email you shortly to help connect your store.');
+              try { conciergeNote.value = ''; } catch (e) {}
+            })
+            .catch(function(err) {
+              var msg = String(err && err.message ? err.message : err);
+              if (msg === 'unauthorized') {
+                setConciergeStatus('err', 'Please sign in first, then try again.');
+                return;
+              }
+              setConciergeStatus('err', 'Couldn’t send request. Try again or email support.');
+            })
+            .finally(function() {
+              conciergeBtn.disabled = false;
+              conciergeBtn.textContent = 'Request concierge setup';
+            });
         });
       }
 
@@ -485,6 +806,7 @@
         fetch(pubBaseForStatus + '/auth/shopify/status')
           .then(function(r) { return r.json(); })
           .then(function(status) {
+            publicInstallEnabled = status && status.public_install_enabled === true;
             if (status.shopify_configured || !status.dev_shopify_bypass || !status.dev_shop_domain) return;
             devBypassPanel.classList.remove('hidden');
             if (typeof hideConnectError === 'function') hideConnectError();
@@ -506,6 +828,7 @@
           })
           .catch(function() {});
       }
+
     })();
   </script>
 </body>

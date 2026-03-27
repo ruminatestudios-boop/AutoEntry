@@ -8,6 +8,7 @@ const DEV_USER_ID = 'dev-local';
 
 const listings = new Map(); // listingId -> { user_id, universal_data, status }
 const tokens = new Map();   // `${userId}:${platform}` -> { access_token, shop_domain, shop_id, status, ... }
+const conciergeRequests = []; // [{ created_at, user_id, platform, shop_input, email, message, source }]
 let nextListingId = 1;
 
 export function getDevUserId() {
@@ -114,4 +115,19 @@ export function devGetConnectedStores(userId, enabledPlatforms) {
     }
   }
   return out;
+}
+
+// --- Concierge requests (dev/in-memory)
+export function devInsertConciergeRequest(req) {
+  conciergeRequests.unshift({
+    created_at: new Date().toISOString(),
+    ...req,
+  });
+  // keep small
+  if (conciergeRequests.length > 200) conciergeRequests.length = 200;
+  return conciergeRequests[0];
+}
+
+export function devListConciergeRequests() {
+  return conciergeRequests.slice(0, 200);
 }

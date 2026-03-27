@@ -34,13 +34,16 @@ export async function GET() {
   }
 
   const secret =
-    process.env.PUBLISHING_JWT_SECRET?.trim() || process.env.JWT_SECRET?.trim() || "";
+    process.env.PUBLISHING_JWT_SECRET?.trim() ||
+    process.env.JWT_SECRET?.trim() ||
+    (process.env.NODE_ENV !== "production" ? "dev-secret-change-in-production" : "");
   if (!secret) {
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
   }
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  // Dev/guest fallback: allow local flows without Clerk.
+  // Publishing service already treats this as "dev-local".
+  if (!userId && process.env.NODE_ENV !== "production") userId = "dev-local";
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const now = Math.floor(Date.now() / 1000);
   const token = signHs256(

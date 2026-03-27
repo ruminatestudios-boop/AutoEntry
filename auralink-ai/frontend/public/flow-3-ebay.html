@@ -2091,7 +2091,7 @@
         if (nextBtn) { nextBtn.disabled = true; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publishing…'; nextBtn.style.pointerEvents = 'none'; nextBtn.style.opacity = '0.7'; }
 
         var publishAbort = new AbortController();
-        var timeoutId = setTimeout(function() { publishAbort.abort(); }, 15000);
+        var timeoutId = setTimeout(function() { publishAbort.abort(); }, 45000);
 
         function getToken() {
           try {
@@ -2175,7 +2175,7 @@
             if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to eBay'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
             var msg = err.message || 'Publish failed. Try again.';
             if (err.name === 'AbortError') {
-              msg = 'Publish timed out. The publishing service may not be running or reachable. On production, deploy the publishing service and set the synclyst-publishing-url meta tag.';
+              msg = 'Publish timed out (45s). If you are on localhost, confirm the publishing API is up: http://localhost:8001/health. If it is up, the marketplace or your network may be slow—try again.';
             } else if (msg === 'Failed to fetch' || err.name === 'TypeError') {
               msg = 'Couldn\'t reach the publishing service. On synclyst.app you need to deploy the publishing API (see auralink-ai/publishing) and set synclyst-publishing-url in this page. Locally: run "npm run dev" in auralink-ai/publishing.';
             }

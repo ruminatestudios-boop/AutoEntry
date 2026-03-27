@@ -64,19 +64,17 @@
       <div class="vercel-card p-5 mb-5">
         <span class="text-[13px] font-medium text-[#0a0a0a] block mb-3" id="dashboard-plan-heading">Starter plan</span>
         <p class="text-sm text-[#525252] mb-4 vercel-body" id="dashboard-plan-body">You're on the Starter plan. Upgrade for more monthly scans and marketplace features.</p>
-        <a href="/dashboard/upgrade?tier=pro&amp;autostart=1" id="dashboard-plan-action" class="inline-flex items-center gap-2 text-sm font-semibold text-[#0a0a0a] no-underline hover:underline">
+        <a href="javascript:void(0)" aria-disabled="true" id="dashboard-plan-action" class="inline-flex items-center gap-2 text-sm font-semibold text-[#71717a] no-underline cursor-not-allowed pointer-events-none">
           <i data-lucide="arrow-up-circle" class="w-4 h-4"></i>
-          <span id="dashboard-plan-action-label">Upgrade to Pro</span>
+          <span id="dashboard-plan-action-label">Upgrade soon</span>
         </a>
       </div>
 
-      <!-- Connected stores -->
-      <div class="vercel-card p-5 mb-5 bg-[#fafafa] border-[#e5e5e5] opacity-70 pointer-events-none">
-        <span class="text-[13px] font-medium text-[#3f3f46] block mb-3">Connected stores</span>
-        <p class="text-sm text-[#71717a] mb-4 vercel-body">Connect marketplaces to publish drafts from SyncLyst.</p>
-        <div class="inline-flex items-center gap-2 text-sm font-semibold text-[#52525b]">
-          <i data-lucide="store" class="w-4 h-4"></i>
-          <span>Manage connections <span class="font-medium text-[#71717a]">(expanding platforms soon)</span></span>
+      <!-- Connected stores (live status from publishing API) -->
+      <div class="vercel-card p-5 mb-5" id="dashboard-stores-card">
+        <span class="text-[13px] font-medium text-[#0a0a0a] block mb-3">Connected stores</span>
+        <div id="dashboard-connected-body" class="text-sm text-[#525252]">
+          <p class="vercel-body mb-0">Loading connection status…</p>
         </div>
       </div>
 
@@ -131,11 +129,11 @@
           }
         }
         if (action && actionLabel) {
-          action.href = '/dashboard/upgrade';
+          action.href = 'javascript:void(0)';
           if (tier === 'starter') {
-            actionLabel.textContent = 'Choose paid plan';
+            actionLabel.textContent = 'Upgrade soon';
           } else {
-            actionLabel.textContent = 'Change plan';
+            actionLabel.textContent = 'Upgrade soon';
           }
           var icon = action.querySelector('i');
           if (icon) {
@@ -176,14 +174,67 @@
       refreshTierFromUsage();
 
       function getPublishingUrl() {
+        var host = window.location.hostname;
+        var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+        if ((host === 'localhost' || host === '127.0.0.1') && port === '3000') {
+          return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
+        }
         var meta = document.querySelector('meta[name="auralink-publishing-url"]');
         var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
-        var host = window.location.hostname;
         if (host && host !== 'localhost' && host !== '127.0.0.1') {
           var prodMeta = document.querySelector('meta[name="synclyst-publishing-url"]');
-          if (prodMeta && prodMeta.getAttribute('content')) url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+          if (prodMeta && prodMeta.getAttribute('content') && prodMeta.getAttribute('content').trim()) {
+            url = prodMeta.getAttribute('content').trim().replace(/\/$/, '');
+          } else if (host === 'synclyst.app' || host === 'www.synclyst.app') {
+            url = 'https://synclyst-publishing-299567386855.us-central1.run.app';
+          } else {
+            url = window.location.protocol + '//' + host + ':8001';
+          }
         }
         return url;
+      }
+
+      function escapeHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function renderConnectedStores(stores) {
+        var body = document.getElementById('dashboard-connected-body');
+        if (!body) return;
+        var shopify = stores && stores.shopify;
+        if (shopify && shopify.status === 'connected' && (shopify.shop_domain || shopify.shop_id)) {
+          var domain = String(shopify.shop_domain || shopify.shop_id || '').replace(/^https?:\/\//, '').split('/')[0];
+          var handle = domain.replace(/\.myshopify\.com$/i, '');
+          var adminProducts = 'https://admin.shopify.com/store/' + encodeURIComponent(handle) + '/products';
+          body.innerHTML =
+            '<div class="flex items-start gap-3">' +
+              '<img src="https://cdn.simpleicons.org/shopify/95BF47" alt="" class="w-8 h-8 shrink-0 mt-0.5 object-contain" width="32" height="32" />' +
+              '<div class="flex-1 min-w-0">' +
+                '<p class="text-sm font-semibold text-[#0a0a0a]">Shopify · live</p>' +
+                '<p class="text-xs text-[#525252] mt-0.5 break-all">' + escapeHtml(domain) + '</p>' +
+                '<a href="' + adminProducts + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 mt-3 text-sm font-semibold text-[#0a0a0a] no-underline hover:underline">' +
+                  'Open products in Shopify admin' +
+                  '<i data-lucide="external-link" class="w-3.5 h-3.5"></i>' +
+                '</a>' +
+                '<p class="text-xs text-[#71717a] mt-3 vercel-body">Listings you publish from SyncLyst sync to this store.</p>' +
+                '<a href="/connect-store?return=dashboard-home" class="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-[#525252] no-underline hover:underline">' +
+                  'Manage connection' +
+                '</a>' +
+              '</div>' +
+            '</div>';
+        } else {
+          body.innerHTML =
+            '<p class="vercel-body mb-3">Connect your Shopify store to publish drafts as live listings.</p>' +
+            '<a href="/connect-store?return=dashboard-home" class="inline-flex items-center gap-2 rounded-xl bg-[#0a0a0a] text-white px-4 py-2.5 text-sm font-semibold no-underline hover:bg-zinc-800 transition-colors">' +
+              '<img src="https://cdn.simpleicons.org/shopify/ffffff" alt="" class="w-4 h-4 object-contain" width="16" height="16" />' +
+              'Connect Shopify' +
+            '</a>';
+        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
       }
       function getToken() { try { return sessionStorage.getItem('auralink_jwt'); } catch (e) { return null; } }
       function fetchToken() {
@@ -343,7 +394,19 @@
             if (el && data && Array.isArray(data.listings)) el.textContent = String(data.listings.length);
             else if (el) el.textContent = '0';
           })
-          .catch(function() { var el = document.getElementById('dashboard-listed-count'); if (el) el.textContent = '0'; });
+          .catch(function() { var el = document.getElementById('dashboard-listed-count'); if (el) el.textContent = '0'; })
+          .then(function() {
+            return fetch(base + '/api/user/connected-stores', { headers: { 'Authorization': 'Bearer ' + t } })
+              .then(function(r) { return r.ok ? r.json() : null; })
+              .then(function(stores) { renderConnectedStores(stores || {}); })
+              .catch(function() {
+                var body = document.getElementById('dashboard-connected-body');
+                if (body) {
+                  body.innerHTML = '<p class="vercel-body text-[#71717a] mb-2">Could not load store status.</p>' +
+                    '<a href="/connect-store?return=dashboard-home" class="text-sm font-semibold text-[#0a0a0a] no-underline hover:underline">Try connecting Shopify</a>';
+                }
+              });
+          });
       }).then(function() {
         bindFallbackUserMenu();
         setFallbackAvatarFromSummary();

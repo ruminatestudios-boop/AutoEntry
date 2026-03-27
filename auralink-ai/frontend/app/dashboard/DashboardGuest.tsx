@@ -17,8 +17,6 @@ export default function DashboardGuest() {
   const [pushProductId, setPushProductId] = useState<string | null>(null);
   const [products, setProducts] = useState<{ id: string; copy_seo_title?: string }[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
-  const [shopifyStores, setShopifyStores] = useState<{ shop_domain: string }[]>([]);
-  const [shopInput, setShopInput] = useState("");
   const [selectedChannel, setSelectedChannel] = useState<string | null>("shopify");
   const [usage, setUsage] = useState<{ free_scans_used: number; free_scans_limit: number; can_scan: boolean } | null>(null);
   const [pushProductTitle, setPushProductTitle] = useState<string | null>(null);
@@ -32,6 +30,8 @@ export default function DashboardGuest() {
   const [simulatedStores, setSimulatedStores] = useState<string[]>([]);
   const [connectStoreSuccess, setConnectStoreSuccess] = useState<string | null>(null);
   const [apiConnected, setApiConnected] = useState<boolean | null>(null);
+  const [shopifyConnected, setShopifyConnected] = useState(false);
+  const [shopifyShopDomain, setShopifyShopDomain] = useState<string | null>(null);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -60,10 +60,31 @@ export default function DashboardGuest() {
   }, []);
 
   useEffect(() => {
-    apiFetch("/api/v1/shopify/stores", {})
-      .then((r) => (r.ok ? r.json() : { stores: [] }))
-      .then((d: { stores?: { shop_domain: string }[] }) => setShopifyStores(d.stores ?? []))
-      .catch(() => setShopifyStores([]));
+    // Shopify connection is owned by the publishing service (not the backend API).
+    fetch("/api/publishing/token")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const token = d?.token;
+        if (!token) return null;
+        return fetch("/__synclyst_publishing/api/user/connected-stores", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      })
+      .then((r) => (r && r.ok ? r.json() : null))
+      .then((stores) => {
+        const s = stores?.shopify;
+        const connected = s && s.status === "connected";
+        setShopifyConnected(!!connected);
+        setShopifyShopDomain(connected ? String(s.shop_domain || s.shop_id || "") : null);
+        if (!connected) {
+          setPushChannels((prev) => prev.filter((c) => c !== "shopify"));
+        }
+      })
+      .catch(() => {
+        setShopifyConnected(false);
+        setShopifyShopDomain(null);
+        setPushChannels((prev) => prev.filter((c) => c !== "shopify"));
+      });
     apiFetch("/api/v1/usage", {})
       .then((r) => (r.ok ? r.json() : null))
       .then((u) => setUsage(u))
@@ -128,15 +149,8 @@ export default function DashboardGuest() {
     setPushChannels(["shopify"]);
   };
 
-  const connectShopify = () => {
-    const shop = shopInput.trim() || "your-store";
-    const domain = shop.includes(".myshopify.com") ? shop : `${shop}.myshopify.com`;
-    setSimulatedStores((prev) => (prev.includes(domain) ? prev : [...prev, domain]));
-    setConnectStoreSuccess(domain);
-  };
-
   const connectedShopDomains = [
-    ...shopifyStores.map((s) => s.shop_domain),
+    ...(shopifyShopDomain ? [shopifyShopDomain] : []),
     ...simulatedStores,
   ];
   const hasShopifyConnected = connectedShopDomains.length > 0;
@@ -180,7 +194,7 @@ export default function DashboardGuest() {
           {usage && !usage.can_scan && (
             <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", display: "inline-block" }}>
               <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#991b1b" }}>You&apos;ve used all 3 free scans.</span>
-              <Link href="/dashboard/upgrade" style={{ display: "block", marginTop: "0.5rem", fontSize: "0.875rem", fontWeight: 600, color: "var(--accent)" }}>Upgrade to continue →</Link>
+              <Link href="/landing.html#waitlist" style={{ display: "block", marginTop: "0.5rem", fontSize: "0.875rem", fontWeight: 600, color: "var(--accent)" }}>Join waitlist →</Link>
             </div>
           )}
         </div>
@@ -360,7 +374,7 @@ export default function DashboardGuest() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "0.75rem" }}>
               {MARKETPLACES.map((m) => {
                 const isShopify = m.id === "shopify";
-                const connected = isShopify && hasShopifyConnected;
+                const connected = isShopify && shopifyConnected;
                 const available = isShopify;
                 return (
                   <button
@@ -393,26 +407,19 @@ export default function DashboardGuest() {
             {selectedChannel === "shopify" && (
               <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid var(--border)" }}>
                 <h4 style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--text)", marginBottom: "0.5rem" }}>Connect Shopify</h4>
-                {hasShopifyConnected ? (
+                {shopifyConnected ? (
                   <p style={{ color: "var(--muted)", fontSize: "0.875rem" }}>
                     Connected: {connectedShopDomains.join(", ")}. Add another store below.
                   </p>
                 ) : null}
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "0.75rem" }}>
-                  <input
-                    type="text"
-                    placeholder="your-store.myshopify.com"
-                    value={shopInput}
-                    onChange={(e) => setShopInput(e.target.value)}
-                    style={{ padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid var(--border)", background: "#fff", color: "var(--text)", width: "100%", boxSizing: "border-box" }}
-                  />
                   <button
                     type="button"
-                    onClick={connectShopify}
+                    onClick={() => { window.location.href = "/connect-store?return=stores-list"; }}
                     className="glass-cta"
                     style={{ padding: "0.5rem 1rem", borderRadius: "8px", fontWeight: 600, cursor: "pointer", color: "#fff", width: "100%" }}
                   >
-                    Connect store
+                    {shopifyConnected ? "Connect another store" : "Connect store"}
                   </button>
                 </div>
               </div>

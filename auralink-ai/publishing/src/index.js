@@ -66,8 +66,16 @@ app.use(express.json());
 
 app.get('/auth/shopify/status', (req, res) => {
   const configured = !!(process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET);
-  const appUrl = process.env.APP_URL || 'http://localhost:8001';
-  const redirectUri = `${appUrl.replace(/\/$/, '')}/auth/shopify/callback`;
+  const publicInstallEnabled = /^(1|true|yes)$/i.test(process.env.SHOPIFY_PUBLIC_INSTALL_ENABLED || '');
+  const appUrl = (process.env.APP_URL || 'http://localhost:8001').replace(/\/$/, '');
+  const redirectUriOverride = (process.env.SHOPIFY_REDIRECT_URI || '').trim();
+  const redirectUri = redirectUriOverride || `${appUrl}/auth/shopify/callback`;
+  const localRedirectUri = 'http://localhost:8001/auth/shopify/callback';
+  const extraRedirectUris = (process.env.SHOPIFY_ADDITIONAL_REDIRECT_URIS || '')
+    .split(',')
+    .map((u) => u.trim())
+    .filter(Boolean);
+  const recommendedRedirectUris = Array.from(new Set([redirectUri, localRedirectUri, ...extraRedirectUris]));
   const devTok = (process.env.SHOPIFY_DEV_ACCESS_TOKEN || '').trim();
   const devShop = (process.env.SHOPIFY_DEV_SHOP_DOMAIN || '').trim();
   const devBypass = !!(devTok && devShop);
@@ -78,7 +86,9 @@ app.get('/auth/shopify/status', (req, res) => {
     : null;
   res.json({
     shopify_configured: configured,
+    public_install_enabled: publicInstallEnabled,
     redirect_uri: redirectUri,
+    recommended_redirect_uris: recommendedRedirectUris,
     dev_shopify_bypass,
     dev_shop_domain,
   });
