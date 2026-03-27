@@ -293,7 +293,7 @@ export default function ScrollMorphHero() {
               </p>
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 md:text-4xl">
-              Stop listing manually
+              Snap a photo. AI lists it on Shopify
             </h1>
             <motion.p
               initial={{ opacity: 0 }}
@@ -334,7 +334,7 @@ export default function ScrollMorphHero() {
             </p>
           </div>
           <h2 className="text-3xl md:text-5xl font-semibold text-zinc-900 tracking-tight mb-4">
-            Stop listing manually
+            Snap a photo. AI lists it on Shopify
           </h2>
           <p className="text-sm md:text-base text-zinc-500 max-w-xl leading-relaxed mb-6">
             Snap a photo. AI writes the title, description, price and tags.
