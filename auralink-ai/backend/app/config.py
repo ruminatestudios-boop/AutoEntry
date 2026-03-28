@@ -74,6 +74,10 @@ class Settings(BaseSettings):
     # Integrations: webhook secret for listing-published (optional)
     integrations_webhook_secret: str = ""
 
+    # Starter tier: monthly free product scans (env override for quick waitlist testing, e.g. 1).
+    # Production: omit or set to 3.
+    starter_scan_limit: int = 3
+
     # Stripe billing
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""

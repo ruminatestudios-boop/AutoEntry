@@ -135,6 +135,21 @@
       </div>
     </div>
   </div>
+
+  <!-- Scan limit (402): same waitlist UX as dashboard upload — modal instead of only redirecting -->
+  <div id="waitlist-quota-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4 bg-black/45" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="waitlist-quota-title">
+    <div class="vercel-card max-w-md w-full p-6 shadow-xl relative">
+      <button type="button" id="waitlist-quota-close" class="absolute top-3 right-3 text-zinc-400 hover:text-zinc-700 text-xl leading-none" aria-label="Close">×</button>
+      <h2 id="waitlist-quota-title" class="text-lg font-bold text-[#0a0a0a] pr-8 mb-2">Scan limit reached</h2>
+      <p id="waitlist-quota-message" class="text-sm text-[#525252] mb-4">You have used all free scans. Join the waitlist and we will email you when paid plans open.</p>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="email" id="waitlist-quota-email" placeholder="you@company.com" class="flex-1 rounded-xl border border-[#e5e5e5] px-3 py-2.5 text-sm text-[#0a0a0a]" autocomplete="email" />
+        <button type="button" id="waitlist-quota-submit" class="rounded-xl bg-[#0a0a0a] text-white text-sm font-semibold px-4 py-2.5 whitespace-nowrap">Join waitlist</button>
+      </div>
+      <p id="waitlist-quota-status" class="hidden text-xs mt-2"></p>
+      <p id="waitlist-quota-footer-links" class="text-xs text-zinc-500 mt-4 mb-0"><a href="/landing.html#waitlist" class="text-[#111] font-medium underline">Open waitlist on homepage</a> · <a href="/scan" class="text-[#111] font-medium underline">Back to scan</a></p>
+    </div>
+  </div>
   <script>
     document.addEventListener('keydown', function(e) {
       if (e.key !== 'ArrowLeft') return;
@@ -253,6 +268,36 @@
         if (errorMsg) errorMsg.textContent = message || 'Extraction failed. Try again.';
       }
 
+      function publishingBase() {
+        var host = window.location.hostname;
+        var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+        var isLocal = host === 'localhost' || host === '127.0.0.1';
+        if (isLocal && (port === '3000' || port === '3001')) return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
+        if (host === 'synclyst.app' || host === 'www.synclyst.app') return 'https://synclyst-publishing-299567386855.us-central1.run.app';
+        return window.location.protocol + '//' + host + ':8001';
+      }
+
+      function showWaitlistQuotaModal(limit) {
+        extractionDone = true;
+        extractionInFlight = false;
+        setWaiting(false);
+        if (cardEl) cardEl.classList.add('hidden');
+        if (errorWrap) errorWrap.classList.add('hidden');
+        var titleEl = document.getElementById('waitlist-quota-title');
+        if (titleEl) titleEl.textContent = 'Scan limit reached';
+        var msgEl = document.getElementById('waitlist-quota-message');
+        if (msgEl) {
+          var n = typeof limit === 'number' && limit > 0 ? limit : 3;
+          msgEl.textContent = 'You have used all ' + n + ' free scan' + (n === 1 ? '' : 's') + '. Join the waitlist and we will email you when paid plans open.';
+        }
+        var modal = document.getElementById('waitlist-quota-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+      }
+
       var pending = null;
       try {
         var raw = sessionStorage.getItem(PENDING_SCAN_KEY);
@@ -317,7 +362,7 @@
           sessionStorage.removeItem('auralink_review_draft');
           sessionStorage.setItem(DRAFT_LISTING_KEY, JSON.stringify(payload));
         } catch (e) {}
-        setTimeout(redirectToFlow3, 500);
+        setTimeout(redirectToFlow3, 300);
       }
 
       function tick() {
@@ -404,8 +449,15 @@
         })
           .then(function(r) {
           if (r.status === 402) {
-            window.location.href = '/landing.html#waitlist';
-            return null;
+            return r.json().then(function(body) {
+              var lim = 3;
+              if (body && typeof body.scans_limit === 'number' && body.scans_limit > 0) lim = body.scans_limit;
+              showWaitlistQuotaModal(lim);
+              return null;
+            }).catch(function() {
+              showWaitlistQuotaModal(3);
+              return null;
+            });
           }
           if (!r.ok) {
             return r.text().then(function(t) {
@@ -461,6 +513,56 @@
         }
         showError(msg);
       });
+
+      (function wireWaitlistModal() {
+        var modalEl = document.getElementById('waitlist-quota-modal');
+        var closeBtn = document.getElementById('waitlist-quota-close');
+        var submitBtn = document.getElementById('waitlist-quota-submit');
+        var emailInput = document.getElementById('waitlist-quota-email');
+        var statusEl = document.getElementById('waitlist-quota-status');
+        function setWlStatus(kind, text) {
+          if (!statusEl) return;
+          statusEl.textContent = text || '';
+          statusEl.classList.remove('hidden');
+          statusEl.style.color = kind === 'ok' ? '#166534' : kind === 'warn' ? '#92400e' : '#991b1b';
+        }
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function() {
+            window.location.href = '/landing.html#waitlist';
+          });
+        }
+        if (modalEl) {
+          modalEl.addEventListener('click', function(e) {
+            if (e.target === modalEl) window.location.href = '/landing.html#waitlist';
+          });
+        }
+        if (submitBtn && emailInput) {
+          submitBtn.addEventListener('click', function() {
+            var email = (emailInput.value || '').trim();
+            if (!email || email.indexOf('@') === -1) {
+              setWlStatus('err', 'Enter a valid email.');
+              return;
+            }
+            submitBtn.disabled = true;
+            setWlStatus('warn', 'Adding you to waitlist…');
+            fetch(publishingBase() + '/auth/waitlist', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email, source: 'reading-product-402' }),
+            })
+              .then(function(res) {
+                if (!res.ok) throw new Error('fail');
+                setWlStatus('ok', 'You are on the waitlist. We will email you when paid plans open.');
+              })
+              .catch(function() {
+                setWlStatus('err', 'Could not join right now. Try the homepage waitlist or try again.');
+              })
+              .finally(function() {
+                submitBtn.disabled = false;
+              });
+          });
+        }
+      })();
     })();
   </script>
 </body>

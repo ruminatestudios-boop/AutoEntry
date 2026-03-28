@@ -13,6 +13,8 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <meta name="view-transition" content="same-origin" />
+  <!-- Waitlist popup on first "Publish to Shopify": content="true" to show; "false" = publish immediately. -->
+  <meta name="synclyst-waitlist-publish-shopify-popup" content="false" />
   <title>Review | Listing Flow | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -448,6 +450,21 @@
       </div>
     </div>
   </div>
+
+  <div id="waitlist-publish-shopify-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4 bg-black/45" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="waitlist-publish-shopify-title">
+    <div class="max-w-md w-full rounded-2xl border border-[#e5e5e5] bg-white p-6 shadow-xl relative">
+      <button type="button" id="waitlist-publish-shopify-close" class="absolute top-3 right-3 text-zinc-400 hover:text-zinc-700 text-xl leading-none" aria-label="Close">×</button>
+      <h2 id="waitlist-publish-shopify-title" class="text-lg font-bold text-[#0a0a0a] pr-8 mb-2">Before you publish</h2>
+      <p id="waitlist-publish-shopify-message" class="text-sm text-[#525252] mb-4">We are onboarding merchants in batches. Add your email to join the waitlist for paid plans — then we will continue with publish.</p>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="email" id="waitlist-publish-shopify-email" placeholder="you@company.com" class="flex-1 rounded-xl border border-[#e5e5e5] px-3 py-2.5 text-sm text-[#0a0a0a]" autocomplete="email" />
+        <button type="button" id="waitlist-publish-shopify-submit" class="rounded-xl bg-[#0a0a0a] text-white text-sm font-semibold px-4 py-2.5 whitespace-nowrap">Join waitlist</button>
+      </div>
+      <p id="waitlist-publish-shopify-status" class="hidden text-xs mt-2"></p>
+      <button type="button" id="waitlist-publish-shopify-continue" class="mt-4 w-full rounded-xl bg-[#0a0a0a] text-white text-sm font-semibold py-3 px-4">Continue to publish</button>
+      <p class="text-xs text-zinc-500 mt-3 mb-0"><a href="/landing.html#waitlist" class="text-[#111] font-medium underline">Open waitlist on homepage</a></p>
+    </div>
+  </div>
   <script>
     (function() {
       // Show "Shopify connected" or error when returning from OAuth
@@ -785,6 +802,83 @@
         }
         return url;
       }
+
+      var WAITLIST_PUBLISH_LS_KEY = 'synclyst_waitlist_publish_shopify_shown';
+      var waitlistPublishContinueCb = null;
+
+      function showWaitlistPublishModal(onContinue) {
+        waitlistPublishContinueCb = typeof onContinue === 'function' ? onContinue : null;
+        var modal = document.getElementById('waitlist-publish-shopify-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+      }
+
+      function dismissWaitlistPublishModalAndRunPublish() {
+        try {
+          localStorage.setItem(WAITLIST_PUBLISH_LS_KEY, '1');
+        } catch (e) {}
+        var modal = document.getElementById('waitlist-publish-shopify-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+        var cb = waitlistPublishContinueCb;
+        waitlistPublishContinueCb = null;
+        if (typeof cb === 'function') cb();
+      }
+
+      (function wireWaitlistPublishModal() {
+        var modalEl = document.getElementById('waitlist-publish-shopify-modal');
+        var closeBtn = document.getElementById('waitlist-publish-shopify-close');
+        var continueBtn = document.getElementById('waitlist-publish-shopify-continue');
+        var submitBtn = document.getElementById('waitlist-publish-shopify-submit');
+        var emailInput = document.getElementById('waitlist-publish-shopify-email');
+        var statusEl = document.getElementById('waitlist-publish-shopify-status');
+        function setSt(kind, text) {
+          if (!statusEl) return;
+          statusEl.textContent = text || '';
+          statusEl.classList.remove('hidden');
+          statusEl.style.color = kind === 'ok' ? '#166534' : kind === 'warn' ? '#92400e' : '#991b1b';
+        }
+        if (closeBtn) closeBtn.addEventListener('click', dismissWaitlistPublishModalAndRunPublish);
+        if (continueBtn) continueBtn.addEventListener('click', dismissWaitlistPublishModalAndRunPublish);
+        if (modalEl) {
+          modalEl.addEventListener('click', function(e) {
+            if (e.target === modalEl) dismissWaitlistPublishModalAndRunPublish();
+          });
+        }
+        if (submitBtn && emailInput) {
+          submitBtn.addEventListener('click', function() {
+            var email = (emailInput.value || '').trim();
+            if (!email || email.indexOf('@') === -1) {
+              setSt('err', 'Enter a valid email.');
+              return;
+            }
+            submitBtn.disabled = true;
+            setSt('warn', 'Adding you to waitlist…');
+            var base = getPublishingUrl().replace(/\/$/, '');
+            fetch(base + '/auth/waitlist', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email, source: 'flow-3-publish-shopify' }),
+            })
+              .then(function(res) {
+                if (!res.ok) throw new Error('fail');
+                setSt('ok', 'You are on the waitlist. Tap Continue to publish.');
+              })
+              .catch(function() {
+                setSt('err', 'Could not join right now. You can still continue to publish.');
+              })
+              .finally(function() {
+                submitBtn.disabled = false;
+              });
+          });
+        }
+      })();
 
       // Connect Shopify page removed from scan flow: do not redirect to it on load. User goes reading-product → review → flow-verifying.
       // (function requireShopifyConnected() { ... })();
@@ -2148,17 +2242,10 @@
           product_type: d.product_type || d.category || ''
         };
 
-        // Temporary shortcut: skip auth/connect/publish flow and go straight to success.
-        var SKIP_SHOPIFY_LOGIN_FOR_NOW = true;
-        if (SKIP_SHOPIFY_LOGIN_FOR_NOW) {
-          try {
-            sessionStorage.setItem('auralink_last_publish_platforms', JSON.stringify(['shopify']));
-          } catch (e) {}
-          if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate('/listing/published');
-          else window.location.href = '/listing/published';
-          return;
-        }
+        var metaWaitPub = document.querySelector('meta[name="synclyst-waitlist-publish-shopify-popup"]');
+        var waitlistPublishPopupEnabled = !metaWaitPub || metaWaitPub.getAttribute('content') !== 'false';
 
+        function executePublishFlow() {
         // Flow order: flow-3 → /listing/published (same as flow-success.html via Next rewrite).
         var pubUrl = getPublishingUrl();
         var nextBtn = document.getElementById('review-next-btn');
@@ -2268,6 +2355,17 @@
             }
             setTimeout(function() { alert(msg); }, 0);
           });
+        }
+
+        if (waitlistPublishPopupEnabled) {
+          try {
+            if (!localStorage.getItem(WAITLIST_PUBLISH_LS_KEY)) {
+              showWaitlistPublishModal(executePublishFlow);
+              return;
+            }
+          } catch (err) {}
+        }
+        executePublishFlow();
       });
 
       (function maybeAutoPublishFromSuccessPage() {

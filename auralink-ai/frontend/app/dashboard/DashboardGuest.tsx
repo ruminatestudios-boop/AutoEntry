@@ -87,7 +87,27 @@ export default function DashboardGuest() {
       });
     apiFetch("/api/v1/usage", {})
       .then((r) => (r.ok ? r.json() : null))
-      .then((u) => setUsage(u))
+      .then((u: Record<string, unknown> | null) => {
+        if (!u) {
+          setUsage(null);
+          return;
+        }
+        const used =
+          typeof u.scans_used === "number"
+            ? u.scans_used
+            : typeof u.free_scans_used === "number"
+              ? u.free_scans_used
+              : 0;
+        const limit =
+          typeof u.scans_limit === "number"
+            ? u.scans_limit
+            : typeof u.free_scans_limit === "number"
+              ? u.free_scans_limit
+              : 3;
+        const can =
+          typeof u.can_scan === "boolean" ? u.can_scan : used < limit;
+        setUsage({ free_scans_used: used, free_scans_limit: limit, can_scan: can });
+      })
       .catch(() => setUsage(null));
   }, []);
 

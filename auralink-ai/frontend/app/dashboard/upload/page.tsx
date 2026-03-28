@@ -15,6 +15,8 @@ export default function UploadPage() {
   const [waitlistEmail, setWaitlistEmail] = useState("");
   const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
   const [waitlistStatus, setWaitlistStatus] = useState<{ type: "ok" | "err" | "warn"; text: string } | null>(null);
+  /** Shown in modal; set from 402 JSON `scans_limit` (matches backend STARTER_SCAN_LIMIT). */
+  const [waitlistScansLimit, setWaitlistScansLimit] = useState(3);
 
   const submitWaitlist = async () => {
     const email = waitlistEmail.trim();
@@ -60,6 +62,14 @@ export default function UploadPage() {
         }),
       });
       if (res.status === 402) {
+        let limit = 3;
+        try {
+          const j = (await res.json()) as { scans_limit?: number };
+          if (typeof j.scans_limit === "number" && j.scans_limit > 0) limit = j.scans_limit;
+        } catch {
+          /* keep default */
+        }
+        setWaitlistScansLimit(limit);
         setError("Scan limit reached. Join the waitlist to unlock paid plans.");
         setShowWaitlistModal(true);
         return;
@@ -242,7 +252,7 @@ export default function UploadPage() {
               </button>
             </div>
             <p style={{ color: "var(--muted)", fontSize: "0.875rem", marginTop: 0, marginBottom: "0.75rem" }}>
-              You have used all 10 free scans. Join the waitlist and we will email you when paid plans open.
+              You have used all {waitlistScansLimit} free scan{waitlistScansLimit === 1 ? "" : "s"}. Join the waitlist and we will email you when paid plans open.
             </p>
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <input

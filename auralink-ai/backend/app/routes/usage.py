@@ -4,7 +4,7 @@ User usage: tier + scan quota for paywall flow.
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import verify_clerk
-from app.db import get_supabase, get_scan_usage
+from app.db import get_supabase, get_scan_usage, starter_monthly_limit
 
 router = APIRouter()
 
@@ -17,7 +17,8 @@ async def get_usage(_auth: dict = Depends(verify_clerk)):
     """
     supabase = get_supabase()
     if not supabase:
-        return {"tier": "starter", "scans_used": 0, "scans_limit": 10, "can_scan": True, "demo": True}
+        lim = starter_monthly_limit()
+        return {"tier": "starter", "scans_used": 0, "scans_limit": lim, "can_scan": True, "demo": True}
     user_id = _auth.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Missing user id")

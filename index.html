@@ -581,7 +581,7 @@
                             <span class="text-[#666] text-sm ml-1">/mo</span>
                         </div>
                         <ul class="space-y-3 mb-8 flex-1 text-sm text-[#666] border-t border-[#eaeaea] pt-6">
-                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i><strong class="text-[#111]">10 scans per month</strong></li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i><strong class="text-[#111]">3 scans per month</strong></li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Basic AI extraction</li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Shopify integration</li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Saves to Shopify drafts</li>
@@ -990,7 +990,7 @@
             { q: "Is my Shopify store safe when I connect it?", a: "Yes. Synclyst connects via Shopify's official<br>OAuth system — the same secure method used by thousands of Shopify apps.<br>We only request the permissions needed to create listings." },
             { q: "Can I cancel my subscription anytime?", a: "Yes. No contracts, no cancellation fees.<br>Cancel from your account settings<br>and you keep access until the end of your billing period." },
             { q: "Do unused scans roll over to next month?", a: "No, scans reset monthly.<br>If you regularly hit your limit early<br>it's a sign the next plan up will save you more time and money." },
-            { q: "Is there a limit to how many products I can scan?", a: "Starter includes 10 free scans per month; Pro includes 100; Growth includes 500; Scale includes unlimited scans. When you hit your limit, we'll prompt you to upgrade." },
+            { q: "Is there a limit to how many products I can scan?", a: "Starter includes 3 free scans per month; Pro includes 100; Growth includes 500; Scale includes unlimited scans. When you hit your limit, we'll prompt you to upgrade or join the waitlist." },
             { q: "Is my store data and product imagery secure?", a: "Security is our priority. We use enterprise-grade encryption and never share your product data or images with third parties. Your data is used only to generate your specific listings." }
         ];
         const faqContainer = document.getElementById('faq-container');
@@ -1065,7 +1065,7 @@
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">4. Credits &amp; Billing</h4>
-                <p>Starter: 10 scans per month. Pro, Growth, and Scale billed monthly in advance. Fees non-refundable unless required by law. Pricing changes with 30 days notice.</p>
+                <p>Starter: 3 scans per month. Pro, Growth, and Scale billed monthly in advance. Fees non-refundable unless required by law. Pricing changes with 30 days notice.</p>
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">5. AI Content &amp; Liability</h4>
@@ -1139,7 +1139,7 @@
         window.closeModal = closeModal;
 
         // Scan limit and upgrade modal (per-tier limits; scans reset monthly)
-        var TIER_LIMITS = { starter: 10, pro: 100, growth: 500, scale: Infinity };
+        var TIER_LIMITS = { starter: 3, pro: 100, growth: 500, scale: Infinity };
         function getScansStorageKey() {
           var d = new Date();
           return 'synclyst_scans_' + d.getFullYear() + '_' + String(d.getMonth() + 1).padStart(2, '0');

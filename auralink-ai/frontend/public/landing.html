@@ -312,8 +312,8 @@
       <h2 id="upgrade-modal-title" class="text-xl font-bold text-zinc-900 mb-2">Scan limit reached</h2>
       <p id="upgrade-modal-message" class="text-zinc-600 text-sm leading-relaxed mb-6">You've used all your scans for this month on your current plan. Upgrade to get more scans and unlock more features.</p>
       <div class="flex flex-col sm:flex-row gap-3">
-        <a href="/landing.html#waitlist" id="upgrade-modal-view-plans" class="inline-flex items-center justify-center gap-2 bg-zinc-900 text-white font-semibold px-5 py-3 rounded-xl hover:bg-zinc-800 transition-colors">
-          Join waitlist
+        <a href="#pricing" id="upgrade-modal-view-plans" class="inline-flex items-center justify-center gap-2 bg-zinc-900 text-white font-semibold px-5 py-3 rounded-xl hover:bg-zinc-800 transition-colors">
+          View pricing
           <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
         </a>
         <button type="button" id="upgrade-modal-close" class="inline-flex items-center justify-center px-5 py-3 rounded-xl border border-zinc-300 text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors">
@@ -366,28 +366,13 @@
                     Everything you need to sell — title, description, price &amp; tags — done for you instantly.
                 </p>
                 <div class="max-w-2xl mx-auto w-full">
-                    <a href="/home.html?mode=scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center justify-center gap-2.5 group bg-black w-full">
+                    <a href="/scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center justify-center gap-2.5 group bg-black w-full">
                         <div class="relative flex items-center justify-center w-5 h-5 overflow-hidden">
                             <i data-lucide="camera" class="w-5 h-5 relative z-10"></i>
                             <div class="absolute left-0 right-0 h-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] animate-scan-sweep z-20"></div>
                         </div>
                         Scan Your First Item
                     </a>
-                </div>
-                <div class="mt-8 max-w-2xl mx-auto rounded-xl border border-[#dcdcdc] bg-white p-5 sm:p-6 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="w-8 h-8 rounded-lg border border-[#eaeaea] bg-white flex items-center justify-center shrink-0">
-                            <img src="https://cdn.simpleicons.org/shopify/000000" alt="" class="w-4 h-4 object-contain" referrerPolicy="no-referrer" />
-                        </div>
-                        <p class="text-[1.1rem] sm:text-[1.2rem] leading-none font-semibold text-[#111]">Shopify Waitlist</p>
-                        <span class="text-[0.75rem] font-semibold text-amber-600 uppercase tracking-wide">Early Access</span>
-                    </div>
-                    <p class="text-sm text-[#555] mb-4 vercel-body">One-click Shopify publishing is opening soon. Join to get first access.</p>
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <input id="landing-waitlist-email" type="email" placeholder="you@company.com" class="flex-1 rounded-xl border border-[#e5e5e5] bg-white px-3.5 py-3 text-sm text-[#111] focus:outline-none focus:ring-2 focus:ring-zinc-200" />
-                        <button id="landing-waitlist-btn" type="button" class="rounded-xl bg-black text-white px-5 py-3 text-sm font-semibold border border-black hover:bg-[#1a1a1a] transition-colors">Join waitlist</button>
-                    </div>
-                    <p id="landing-waitlist-status" class="hidden text-xs mt-2"></p>
                 </div>
             </div>
             <div class="mt-20 max-w-6xl mx-auto">
@@ -603,7 +588,7 @@
                             <span class="text-[#666] text-sm ml-1">/mo</span>
                         </div>
                         <ul class="space-y-3 mb-8 flex-1 text-sm text-[#666] border-t border-[#eaeaea] pt-6">
-                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i><strong class="text-[#111]">10 scans per month</strong></li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i><strong class="text-[#111]">3 scans per month</strong></li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Basic AI extraction</li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Shopify integration</li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Saves to Shopify drafts</li>
@@ -944,7 +929,7 @@
         // Roadmap Voting
         const votes = { etsy: 1, ebay: 6, tiktok: 0, amazon: 0, depop: 0, vinted: 4, lazada: 0, walmart: 0, shopee: 0, poshmark: 0, facebook: 0 };
         const connectors = [
-            { id: 'shopify', name: 'Shopify', status: 'On waitlist', icon: 'shopify.com', disabled: true },
+            { id: 'shopify', name: 'Shopify', status: 'Active', icon: 'shopify.com', disabled: false },
             { id: 'etsy', name: 'Etsy', status: 'Coming Soon', icon: 'etsy.com' },
             { id: 'ebay', name: 'eBay', status: 'Coming Soon', icon: 'ebay.com', logoUrl: '/assets/ebay-logo.png' },
             { id: 'tiktok', name: 'TikTok Shop', status: 'Coming Soon', icon: 'tiktok.com' },
@@ -974,7 +959,7 @@
             const btn = document.createElement(isActive ? 'a' : 'button');
             btn.className = `vercel-card p-6 flex flex-col items-center justify-center text-center group transition-all duration-200 ${isActive ? 'cursor-pointer hover:scale-[1.02] hover:border-black hover:shadow-lg' : (isDisabled ? 'cursor-not-allowed opacity-75' : 'cursor-pointer hover:scale-[1.02]')}`;
             if (isActive) {
-                btn.href = window.synclystAppUrl('/home.html?mode=scan');
+                btn.href = window.synclystAppUrl('/scan');
                 btn.setAttribute('aria-label', `List on ${c.name}`);
             }
             const gridIconBoxCls = 'inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-200 bg-zinc-50';
@@ -1015,7 +1000,7 @@
             { q: "Is my Shopify store safe when I connect it?", a: "Yes. Synclyst connects via Shopify's official<br>OAuth system — the same secure method used by thousands of Shopify apps.<br>We only request the permissions needed to create listings." },
             { q: "Can I cancel my subscription anytime?", a: "Yes. No contracts, no cancellation fees.<br>Cancel from your account settings<br>and you keep access until the end of your billing period." },
             { q: "Do unused scans roll over to next month?", a: "No, scans reset monthly.<br>If you regularly hit your limit early<br>it's a sign the next plan up will save you more time and money." },
-            { q: "Is there a limit to how many products I can scan?", a: "Starter includes 10 free scans per month; Pro includes 100; Growth includes 500; Scale includes unlimited scans. When you hit your limit, we'll prompt you to upgrade." },
+            { q: "Is there a limit to how many products I can scan?", a: "Starter includes 3 free scans per month; Pro includes 100; Growth includes 500; Scale includes unlimited scans. When you hit your limit, we'll prompt you to upgrade." },
             { q: "Is my store data and product imagery secure?", a: "Security is our priority. We use enterprise-grade encryption and never share your product data or images with third parties. Your data is used only to generate your specific listings." }
         ];
         const faqContainer = document.getElementById('faq-container');
@@ -1090,7 +1075,7 @@
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">4. Credits &amp; Billing</h4>
-                <p>Starter: 10 scans per month. Pro, Growth, and Scale billed monthly in advance. Fees non-refundable unless required by law. Pricing changes with 30 days notice.</p>
+                <p>Starter: 3 scans per month. Pro, Growth, and Scale billed monthly in advance. Fees non-refundable unless required by law. Pricing changes with 30 days notice.</p>
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">5. AI Content &amp; Liability</h4>
@@ -1164,7 +1149,7 @@
         window.closeModal = closeModal;
 
         // Scan limit and upgrade modal (per-tier limits; scans reset monthly)
-        var TIER_LIMITS = { starter: 10, pro: 100, growth: 500, scale: Infinity };
+        var TIER_LIMITS = { starter: 3, pro: 100, growth: 500, scale: Infinity };
         function getScansStorageKey() {
           var d = new Date();
           return 'synclyst_scans_' + d.getFullYear() + '_' + String(d.getMonth() + 1).padStart(2, '0');
@@ -1232,8 +1217,7 @@
           upgradeViewPlans.addEventListener('click', function(e) {
             e.preventDefault();
             closeUpgradeModal();
-            // Quota hit flow: keep users in pre-launch waitlist mode.
-            window.location.href = '/landing.html#waitlist';
+            window.location.href = '/landing.html#pricing';
           });
         }
         var PRICING_PRELAUNCH = true;
@@ -1279,7 +1263,8 @@
             if (!tier) return;
             // Paid tiers are paused pre-launch.
             if (tier === 'pro' || tier === 'growth' || tier === 'scale') {
-              window.location.href = '/landing.html#waitlist';
+              var el = document.getElementById('pricing');
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
               return;
             }
             // Starter: sign up then dashboard (free tier)
@@ -1695,55 +1680,6 @@
           if (popup) popup.addEventListener('click', function(e) { if (e.target === popup) { popup.classList.add('hidden'); popup.classList.remove('flex'); } });
         }
         });
-    </script>
-    <script>
-      (function() {
-        var emailEl = document.getElementById('landing-waitlist-email');
-        var btnEl = document.getElementById('landing-waitlist-btn');
-        var statusEl = document.getElementById('landing-waitlist-status');
-        if (!emailEl || !btnEl || !statusEl) return;
-
-        function setStatus(kind, text) {
-          statusEl.textContent = text || '';
-          statusEl.classList.remove('hidden');
-          statusEl.style.color = kind === 'ok' ? '#166534' : (kind === 'warn' ? '#92400e' : '#991b1b');
-        }
-
-        function publishingBase() {
-          var host = window.location.hostname;
-          var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
-          var isLocal = host === 'localhost' || host === '127.0.0.1';
-          if (isLocal && (port === '3000' || port === '3001')) return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
-          if (host === 'synclyst.app' || host === 'www.synclyst.app') return 'https://synclyst-publishing-299567386855.us-central1.run.app';
-          return window.location.protocol + '//' + host + ':8001';
-        }
-
-        btnEl.addEventListener('click', function() {
-          var email = (emailEl.value || '').trim();
-          if (!email || email.indexOf('@') === -1) {
-            setStatus('err', 'Enter a valid email.');
-            return;
-          }
-          btnEl.disabled = true;
-          btnEl.textContent = 'Joining…';
-          setStatus('warn', 'Adding you to waitlist…');
-          fetch(publishingBase() + '/auth/waitlist', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, source: 'landing-hero' }),
-          })
-            .then(function(r) {
-              if (!r.ok) return r.json().catch(function(){ return null; }).then(function(j){ throw new Error((j && j.error) || ('waitlist_failed_' + r.status)); });
-              return r.json();
-            })
-            .then(function() { setStatus('ok', 'You are on the waitlist. We’ll email you when Shopify is live.'); })
-            .catch(function() { setStatus('err', 'Could not join right now. Please try again.'); })
-            .finally(function() {
-              btnEl.disabled = false;
-              btnEl.textContent = 'Join waitlist';
-            });
-        });
-      })();
     </script>
 </body>
 </html>
