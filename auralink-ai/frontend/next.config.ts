@@ -10,8 +10,17 @@ const resolvedPublicApiUrl =
   process.env.AURALINK_BACKEND_URL?.trim() ||
   "";
 
+/**
+ * Rewrite `/__synclyst_publishing/*` → this base URL (must be set for production Vercel builds).
+ * If unset on Vercel, Next defaulted to 127.0.0.1:8001 and the proxy 404’d on synclyst.app.
+ * Override with PUBLISHING_PROXY_TARGET in Vercel → Environment Variables (Production).
+ */
+const defaultPublishingProxyForVercel =
+  "https://synclyst-publishing-299567386855.us-central1.run.app";
 const publishingProxyTarget =
-  process.env.PUBLISHING_PROXY_TARGET?.trim() || "http://127.0.0.1:8001";
+  process.env.PUBLISHING_PROXY_TARGET?.trim() ||
+  (process.env.VERCEL === "1" ? defaultPublishingProxyForVercel : "") ||
+  "http://127.0.0.1:8001";
 
 /**
  * Homepage: `/` rewrites to public/landing.html (beforeFiles so it beats app routes).
