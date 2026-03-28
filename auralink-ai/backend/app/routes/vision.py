@@ -1,6 +1,8 @@
 """
 Vision extraction: MultimodalProcessor → UCP/schema.org attributes, Fact-Feel-Proof copy.
 """
+from __future__ import annotations
+
 import asyncio
 import base64
 import logging
