@@ -59,6 +59,8 @@ class Settings(BaseSettings):
     clerk_publishable_key: str = ""
     clerk_secret_key: str = ""
     clerk_jwks_url: str = "https://api.clerk.com/v1/jwks"  # Override if needed
+    # Local dev only: when true and frontend_url host is localhost, allow a dev-user auth fallback.
+    allow_local_dev_auth_fallback: bool = False
 
     # Shopify OAuth (Partner Dashboard app credentials)
     shopify_client_id: str = ""
@@ -71,6 +73,10 @@ class Settings(BaseSettings):
 
     # Integrations: webhook secret for listing-published (optional)
     integrations_webhook_secret: str = ""
+
+    # Starter tier: monthly free product scans (env override for quick waitlist testing, e.g. 1).
+    # Production: omit or set to 3.
+    starter_scan_limit: int = 3
 
     # Stripe billing
     stripe_secret_key: str = ""

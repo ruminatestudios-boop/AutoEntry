@@ -7,10 +7,8 @@ import { apiFetch } from "@/lib/api";
 export default function ProductsPage() {
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [list, setList] = useState<unknown[]>([]);
-  const [stores, setStores] = useState<{ shop_domain: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [syncing, setSyncing] = useState<string | null>(null);
   const highlightRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
@@ -26,37 +24,12 @@ export default function ProductsPage() {
       .then(setList)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-    apiFetch("/api/v1/shopify/stores", {})
-      .then((r) => (r.ok ? r.json() : { stores: [] }))
-      .then((d: { stores?: { shop_domain: string }[] }) => setStores(d.stores ?? []))
-      .catch(() => setStores([]));
   }, []);
 
   useEffect(() => {
     if (!highlightId || !list.length) return;
     highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [highlightId, list]);
-
-  const syncToShopify = async (productId: string) => {
-    if (stores.length === 0) {
-      alert("Connect a Shopify store first (Dashboard → Connect Shopify)");
-      return;
-    }
-    setSyncing(productId);
-    try {
-      const res = await apiFetch(`/api/v1/products/${productId}/sync/shopify`, {
-        method: "POST",
-        body: JSON.stringify({ shop_domain: stores[0].shop_domain }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      alert(`Sync queued! Task: ${data.task_id}`);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Sync failed");
-    } finally {
-      setSyncing(null);
-    }
-  };
 
   if (loading) return <p style={{ padding: "2rem" }}>Loading products…</p>;
   if (error) return <p style={{ padding: "2rem", color: "#f87171" }}>Error: {error}</p>;
@@ -133,22 +106,6 @@ export default function ProductsPage() {
               >
                 Push to marketplaces
               </Link>
-              <button
-                type="button"
-                onClick={() => syncToShopify(String(p.id))}
-                disabled={!!syncing || stores.length === 0}
-                style={{
-                  padding: "0.35rem 0.75rem",
-                  fontSize: "0.875rem",
-                  background: stores.length ? "#10b981" : "var(--muted)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: stores.length && !syncing ? "pointer" : "not-allowed",
-                }}
-              >
-                {syncing === String(p.id) ? "Syncing…" : "Sync to Shopify (live)"}
-              </button>
             </div>
           </li>
           );

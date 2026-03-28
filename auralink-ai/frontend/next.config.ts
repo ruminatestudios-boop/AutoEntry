@@ -72,6 +72,12 @@ const nextConfig: NextConfig = {
         destination: "/connect-store",
         permanent: false,
       },
+      /** Canonical dashboard root should always land on the selected hub page. */
+      {
+        source: "/dashboard",
+        destination: "/dashboard/home",
+        permanent: false,
+      },
       /** Clean slug for static dashboard hub (Next app still uses /dashboard for Clerk). */
       {
         source: "/dashboard-home.html",

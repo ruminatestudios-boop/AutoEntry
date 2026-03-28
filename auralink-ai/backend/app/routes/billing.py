@@ -9,6 +9,7 @@ Assumes Supabase tables exist:
 from contextlib import contextmanager
 import os
 from typing import Optional
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 import httpx
@@ -18,6 +19,58 @@ from app.config import get_settings
 from app.db import get_supabase, upsert_user_billing
 
 router = APIRouter()
+
+
+def _is_local_dev_runtime() -> bool:
+    """Allow SSL fallback only for local development hosts."""
+    settings = get_settings()
+    host = (urlparse(settings.frontend_url).hostname or "").lower()
+    return host in {"localhost", "127.0.0.1", "::1"}
+
+
+def _stripe_http_request(
+    *,
+    method: str,
+    url: str,
+    stripe_secret_key: str,
+    data: Optional[dict] = None,
+    params: Optional[dict] = None,
+) -> httpx.Response:
+    """
+    Stripe request with explicit CA bundle.
+    Local dev fallback: if local cert chain is broken, retry once with verify=False.
+    """
+    verify_target = True
+    try:
+        import certifi  # type: ignore
+
+        verify_target = certifi.where()
+    except Exception:
+        verify_target = True
+
+    with _without_proxy_env():
+        try:
+            with httpx.Client(timeout=30.0, trust_env=False, verify=verify_target) as client:
+                return client.request(
+                    method,
+                    url,
+                    headers={"Authorization": f"Bearer {stripe_secret_key}"},
+                    data=data,
+                    params=params,
+                )
+        except httpx.HTTPError as e:
+            msg = str(e)
+            ssl_error = "CERTIFICATE_VERIFY_FAILED" in msg or "certificate verify failed" in msg.lower()
+            if ssl_error and _is_local_dev_runtime():
+                with httpx.Client(timeout=30.0, trust_env=False, verify=False) as client:  # noqa: S501 (dev-only fallback)
+                    return client.request(
+                        method,
+                        url,
+                        headers={"Authorization": f"Bearer {stripe_secret_key}"},
+                        data=data,
+                        params=params,
+                    )
+            raise HTTPException(status_code=502, detail=f"Stripe connection error: {msg}") from e
 
 
 @contextmanager
@@ -89,13 +142,12 @@ def _create_checkout_session_direct(
     if email:
         data["customer_email"] = email
 
-    with _without_proxy_env():
-        with httpx.Client(timeout=30.0, trust_env=False) as client:
-            resp = client.post(
-                "https://api.stripe.com/v1/checkout/sessions",
-                headers={"Authorization": f"Bearer {stripe_secret_key}"},
-                data=data,
-            )
+    resp = _stripe_http_request(
+        method="POST",
+        url="https://api.stripe.com/v1/checkout/sessions",
+        stripe_secret_key=stripe_secret_key,
+        data=data,
+    )
     if resp.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Stripe error: {resp.text}")
     body = resp.json()
@@ -111,16 +163,15 @@ def _create_portal_session_direct(
     customer_id: str,
     return_url: str,
 ):
-    with _without_proxy_env():
-        with httpx.Client(timeout=30.0, trust_env=False) as client:
-            resp = client.post(
-                "https://api.stripe.com/v1/billing_portal/sessions",
-                headers={"Authorization": f"Bearer {stripe_secret_key}"},
-                data={
-                    "customer": customer_id,
-                    "return_url": return_url,
-                },
-            )
+    resp = _stripe_http_request(
+        method="POST",
+        url="https://api.stripe.com/v1/billing_portal/sessions",
+        stripe_secret_key=stripe_secret_key,
+        data={
+            "customer": customer_id,
+            "return_url": return_url,
+        },
+    )
     if resp.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Stripe error: {resp.text}")
     body = resp.json()
@@ -135,13 +186,12 @@ def _fetch_checkout_session_direct(
     stripe_secret_key: str,
     session_id: str,
 ) -> dict:
-    with _without_proxy_env():
-        with httpx.Client(timeout=30.0, trust_env=False) as client:
-            resp = client.get(
-                f"https://api.stripe.com/v1/checkout/sessions/{session_id}",
-                headers={"Authorization": f"Bearer {stripe_secret_key}"},
-                params={"expand[]": "subscription"},
-            )
+    resp = _stripe_http_request(
+        method="GET",
+        url=f"https://api.stripe.com/v1/checkout/sessions/{session_id}",
+        stripe_secret_key=stripe_secret_key,
+        params={"expand[]": "subscription"},
+    )
     if resp.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Stripe error: {resp.text}")
     body = resp.json()

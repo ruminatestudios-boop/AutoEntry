@@ -1,25 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { apiFetch, API_BASE } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 // Clerk paused for testing — no token passed; backend allows guest usage.
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [savedProductId, setSavedProductId] = useState<string | null>(null);
-  const [stores, setStores] = useState<{ shop_domain: string }[]>([]);
   const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistStatus, setWaitlistStatus] = useState<{ type: "ok" | "err" | "warn"; text: string } | null>(null);
+  /** Shown in modal; set from 402 JSON `scans_limit` (matches backend STARTER_SCAN_LIMIT). */
+  const [waitlistScansLimit, setWaitlistScansLimit] = useState(3);
 
-  useEffect(() => {
-    apiFetch("/api/v1/shopify/stores", {})
-      .then((r) => (r.ok ? r.json() : { stores: [] }))
-      .then((d) => setStores(d.stores || []))
-      .catch(() => setStores([]));
-  }, []);
+  const submitWaitlist = async () => {
+    const email = waitlistEmail.trim();
+    if (!email || !email.includes("@")) {
+      setWaitlistStatus({ type: "err", text: "Enter a valid email." });
+      return;
+    }
+
+    setWaitlistSubmitting(true);
+    setWaitlistStatus({ type: "warn", text: "Adding you to waitlist..." });
+    try {
+      const res = await fetch("/__synclyst_publishing/auth/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "upload-scan-limit" }),
+      });
+      if (!res.ok) throw new Error("waitlist_failed");
+      setWaitlistStatus({ type: "ok", text: "You are on the waitlist. We will email you when paid plans open." });
+    } catch {
+      setWaitlistStatus({ type: "err", text: "Could not join waitlist. Please try again." });
+    } finally {
+      setWaitlistSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +62,16 @@ export default function UploadPage() {
         }),
       });
       if (res.status === 402) {
-        setError("Scan limit reached. Upgrade to continue.");
-        window.location.href = "/dashboard/upgrade";
+        let limit = 3;
+        try {
+          const j = (await res.json()) as { scans_limit?: number };
+          if (typeof j.scans_limit === "number" && j.scans_limit > 0) limit = j.scans_limit;
+        } catch {
+          /* keep default */
+        }
+        setWaitlistScansLimit(limit);
+        setError("Scan limit reached. Join the waitlist to unlock paid plans.");
+        setShowWaitlistModal(true);
         return;
       }
       if (!res.ok) throw new Error(await res.text());
@@ -122,45 +151,6 @@ export default function UploadPage() {
             >
               Save as draft
             </button>
-            {savedProductId && stores.length === 0 && (
-              <span style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
-                <Link href="/dashboard" style={{ color: "var(--accent)" }}>Connect Shopify</Link> to sync
-              </span>
-            )}
-            {savedProductId && stores.length > 0 && (
-              <button
-                type="button"
-                onClick={async () => {
-                try {
-                  setError(null);
-                  setSyncing(true);
-                  const res = await apiFetch(`/api/v1/products/${savedProductId}/sync/shopify`, {
-                    method: "POST",
-                    body: JSON.stringify({ shop_domain: stores[0].shop_domain }),
-                  });
-                    if (!res.ok) throw new Error(await res.text());
-                    const data = await res.json();
-                    alert(`Sync queued! Task: ${data.task_id}`);
-                  } catch (err) {
-                    setError(err instanceof Error ? err.message : String(err));
-                  } finally {
-                    setSyncing(false);
-                  }
-                }}
-                disabled={syncing}
-                style={{
-                  padding: "0.5rem 1rem",
-                  background: "#10b981",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  fontWeight: 600,
-                  cursor: syncing ? "not-allowed" : "pointer",
-                }}
-              >
-                {syncing ? "Syncing…" : "Sync to Shopify (live)"}
-              </button>
-            )}
             {savedProductId && (
               <Link
                 href={`/dashboard?push_product=${savedProductId}`}
@@ -177,7 +167,7 @@ export default function UploadPage() {
                 Push to marketplaces →
               </Link>
             )}
-            {result && stores.length > 0 && (
+            {result && (
               <a
                 href="/review"
                 onClick={() => {
@@ -219,6 +209,100 @@ export default function UploadPage() {
           <pre style={{ padding: "1rem", background: "var(--surface)", borderRadius: "8px", overflow: "auto", fontSize: "0.875rem" }}>
             {JSON.stringify(result, null, 2)}
           </pre>
+        </div>
+      )}
+      {showWaitlistModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            background: "rgba(0, 0, 0, 0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowWaitlistModal(false);
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "28rem",
+              background: "#fff",
+              borderRadius: "12px",
+              border: "1px solid var(--border)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+              padding: "1rem",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700 }}>Scan limit reached</h3>
+              <button
+                type="button"
+                onClick={() => setShowWaitlistModal(false)}
+                style={{ border: "none", background: "transparent", color: "var(--muted)", cursor: "pointer", fontSize: "1.25rem", lineHeight: 1 }}
+                aria-label="Close waitlist modal"
+              >
+                ×
+              </button>
+            </div>
+            <p style={{ color: "var(--muted)", fontSize: "0.875rem", marginTop: 0, marginBottom: "0.75rem" }}>
+              You have used all {waitlistScansLimit} free scan{waitlistScansLimit === 1 ? "" : "s"}. Join the waitlist and we will email you when paid plans open.
+            </p>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <input
+                type="email"
+                value={waitlistEmail}
+                onChange={(e) => setWaitlistEmail(e.target.value)}
+                placeholder="you@company.com"
+                style={{
+                  flex: 1,
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
+                  padding: "0.6rem 0.75rem",
+                  fontSize: "0.875rem",
+                }}
+              />
+              <button
+                type="button"
+                onClick={submitWaitlist}
+                disabled={waitlistSubmitting}
+                style={{
+                  border: "1px solid #111",
+                  background: "#111",
+                  color: "#fff",
+                  borderRadius: "8px",
+                  padding: "0.6rem 0.9rem",
+                  fontWeight: 600,
+                  cursor: waitlistSubmitting ? "not-allowed" : "pointer",
+                }}
+              >
+                {waitlistSubmitting ? "Joining..." : "Join waitlist"}
+              </button>
+            </div>
+            {waitlistStatus && (
+              <p
+                style={{
+                  marginTop: "0.65rem",
+                  marginBottom: 0,
+                  fontSize: "0.75rem",
+                  color:
+                    waitlistStatus.type === "ok"
+                      ? "#166534"
+                      : waitlistStatus.type === "warn"
+                        ? "#92400e"
+                        : "#991b1b",
+                }}
+              >
+                {waitlistStatus.text}
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>

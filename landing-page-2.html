@@ -453,8 +453,8 @@
                 <div>
                     <h4 class="text-sm font-bold mb-6">Social</h4>
                     <div class="flex gap-4">
-                        <a href="#" class="text-[#666] hover:text-black transition-colors inline-flex items-center justify-center" aria-label="Product Hunt"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M9.5 7.5V16.5M9.5 7.5h2.75C14.05 7.5 15.75 8.9 15.75 10.25S14.05 13 12.25 13H9.5"/></svg></a>
-                        <a href="https://www.instagram.com/synclyst/" target="_blank" rel="noopener noreferrer" class="text-[#666] hover:text-black transition-colors" aria-label="Instagram"><i data-lucide="instagram" class="w-5 h-5"></i></a>
+                        <a href="https://www.instagram.com/synclyst/" target="_blank" rel="noopener noreferrer" class="text-[#666] hover:text-black transition-colors inline-flex items-center justify-center" aria-label="Instagram"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+                        <a href="https://www.tiktok.com/@synclyst" target="_blank" rel="noopener noreferrer" class="text-[#666] hover:text-black transition-colors inline-flex items-center justify-center" aria-label="TikTok"><svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M14 3h2.2c.2 1.7 1.2 3 2.8 3.7V9a7.2 7.2 0 0 1-3-1v6.2a5.2 5.2 0 1 1-5.1-5.2c.2 0 .4 0 .6.1v2.6a2.6 2.6 0 1 0 2.5 2.6V3z"></path></svg></a>
                     </div>
                 </div>
             </div>
@@ -627,7 +627,9 @@
             const btn = document.createElement('button');
             btn.className = `vercel-card p-6 flex flex-col items-center justify-center text-center group transition-all ${c.status === 'Coming Soon' ? 'cursor-pointer hover:scale-[1.02]' : 'cursor-default'}`;
             btn.innerHTML = `
-                <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="w-10 h-10 mb-4 rounded-lg object-contain transition-all" referrerPolicy="no-referrer">
+                <span class="inline-flex items-center justify-center w-10 h-10 mb-4 rounded-lg border border-zinc-200 bg-zinc-50">
+                    <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="w-8 h-8 object-contain transition-all" referrerPolicy="no-referrer">
+                </span>
                 <span class="text-sm font-bold mb-2">${c.name}</span>
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${c.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-zinc-50 text-zinc-500 border-zinc-100'}">
                     ${c.status}

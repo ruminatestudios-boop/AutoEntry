@@ -135,8 +135,8 @@
         </div>
       </div>
 
-      <button type="button" id="plans-upgrade-btn" class="w-full py-3 rounded-xl border-2 border-zinc-900 bg-zinc-900 text-white font-semibold text-sm hover:bg-zinc-800 transition-colors">
-        Upgrade
+      <button type="button" id="plans-upgrade-btn" disabled class="w-full py-3 rounded-xl border border-zinc-200 bg-zinc-100 text-zinc-500 font-semibold text-sm cursor-not-allowed">
+        Upgrade soon
       </button>
     </main>
   </div>
@@ -175,11 +175,7 @@
         return 'pro';
       }
 
-      var upgradeBtn = document.getElementById('plans-upgrade-btn');
-      if (upgradeBtn) upgradeBtn.addEventListener('click', function() {
-        sessionStorage.setItem('auralink_selected_plan', getSelectedPlan());
-        window.location.href = 'checkout.html';
-      });
+      // Upgrades are temporarily disabled pre-launch.
     })();
   </script>
 </body>

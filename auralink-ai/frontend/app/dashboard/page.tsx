@@ -46,7 +46,7 @@ export default function DashboardPage() {
         <DashboardClient />
       </SignedIn>
       <SignedOut>
-        <RedirectToSignIn redirectUrl="/dashboard" />
+        <RedirectToSignIn redirectUrl="/dashboard/home" />
       </SignedOut>
     </>
   );

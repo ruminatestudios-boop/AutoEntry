@@ -4,6 +4,7 @@ Uses JWKS from Clerk to verify Bearer tokens.
 """
 from typing import Optional
 import base64
+from urllib.parse import urlparse
 
 import jwt
 from fastapi import Depends, HTTPException, Request
@@ -13,6 +14,15 @@ from app.config import get_settings
 
 _security = HTTPBearer(auto_error=False)
 _jwks_client: Optional[jwt.PyJWKClient] = None
+
+
+def _is_local_dev_runtime() -> bool:
+    """Allow auth fallback only for localhost-based development."""
+    settings = get_settings()
+    if not getattr(settings, "allow_local_dev_auth_fallback", False):
+        return False
+    host = (urlparse(settings.frontend_url).hostname or "").lower()
+    return host in {"localhost", "127.0.0.1", "::1"}
 
 
 def _derive_clerk_jwks_url_from_publishable_key(publishable_key: str) -> Optional[str]:
@@ -73,6 +83,8 @@ async def verify_clerk(
         return {"sub": "dev", "sid": "dev"}
     token = credentials.credentials if credentials else None
     if not token:
+        if _is_local_dev_runtime():
+            return {"sub": "dev-local-user", "sid": "dev-local-session"}
         raise HTTPException(status_code=401, detail="Missing or invalid authorization")
     try:
         jwks = _get_jwks_client()
@@ -88,8 +100,12 @@ async def verify_clerk(
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError as e:
+        if _is_local_dev_runtime():
+            return {"sub": "dev-local-user", "sid": "dev-local-session"}
         raise HTTPException(status_code=401, detail="Invalid token")
     except Exception as e:
+        if _is_local_dev_runtime():
+            return {"sub": "dev-local-user", "sid": "dev-local-session"}
         raise HTTPException(status_code=401, detail=str(e))
 
 

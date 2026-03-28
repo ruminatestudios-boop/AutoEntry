@@ -25,18 +25,35 @@ function signHs256(payload: Record<string, unknown>, secret: string) {
 // Exchanges a Clerk session for a Synclyst publishing JWT (HS256).
 // Static HTML flows use this to call the publishing service without a shared dev token.
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let userId: string | null = null;
+  try {
+    const authResult = await auth();
+    userId = authResult.userId;
+  } catch {
+    userId = null;
+  }
 
-  // Keep a default to match publishing service fallback; override in prod with env.
   const secret =
     process.env.PUBLISHING_JWT_SECRET?.trim() ||
     process.env.JWT_SECRET?.trim() ||
-    "dev-secret-change-in-production";
+    (process.env.NODE_ENV !== "production" ? "dev-secret-change-in-production" : "");
+  if (!secret) {
+    return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+  }
+  // Dev/guest fallback: allow local flows without Clerk.
+  // Publishing service already treats this as "dev-local".
+  if (!userId && process.env.NODE_ENV !== "production") userId = "dev-local";
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const now = Math.floor(Date.now() / 1000);
   const token = signHs256(
-    { sub: userId, userId, iat: now, exp: now + 60 * 60 * 24 * 7 },
+    {
+      sub: userId,
+      userId,
+      iat: now,
+      exp: now + 60 * 60 * 24 * 7,
+      source: "clerk",
+    },
     secret
   );
   return NextResponse.json({ token, user_id: userId });

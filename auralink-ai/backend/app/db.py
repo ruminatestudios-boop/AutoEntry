@@ -459,11 +459,22 @@ def upsert_description_variation(
 # ---------------------------------------------------------------------------
 
 TIER_LIMITS = {
-    "starter": 10,
+    "starter": 3,
     "pro": 100,
     "growth": 500,
     "scale": 10**9,  # treat as unlimited
 }
+
+
+def starter_monthly_limit() -> int:
+    """Effective starter scan cap (env STARTER_SCAN_LIMIT); clamped for safety."""
+    from app.config import get_settings
+
+    try:
+        n = int(get_settings().starter_scan_limit)
+    except (TypeError, ValueError):
+        n = TIER_LIMITS["starter"]
+    return max(1, min(10_000, n))
 
 
 def _month_key() -> str:
@@ -536,7 +547,10 @@ def upsert_user_billing(
 def get_scan_usage(supabase, clerk_user_id: str) -> dict:
     """Return { tier, scans_used, scans_limit, can_scan } for the user (monthly quota)."""
     tier = get_user_tier(supabase, clerk_user_id) if supabase else "starter"
-    limit = TIER_LIMITS.get(tier, TIER_LIMITS["starter"])
+    if tier == "starter":
+        limit = starter_monthly_limit()
+    else:
+        limit = TIER_LIMITS.get(tier, TIER_LIMITS["starter"])
     used = 0
     try:
         r = (

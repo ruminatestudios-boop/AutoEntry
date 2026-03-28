@@ -7,7 +7,7 @@ import logging
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 from pydantic import ValidationError
 import httpx
 
@@ -156,7 +156,13 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
         if user_id and supabase:
             usage = get_scan_usage(supabase, user_id)
             if not usage.get("can_scan", True):
-                raise HTTPException(status_code=402, detail="Scan limit reached. Upgrade to continue.")
+                return JSONResponse(
+                    status_code=402,
+                    content={
+                        "detail": "Scan limit reached. Upgrade to continue.",
+                        "scans_limit": int(usage.get("scans_limit", 3)),
+                    },
+                )
         try:
             result = await asyncio.wait_for(
                 run_invoice_extraction(raw_b64, mime, ocr_snippets, extraction_type),
@@ -199,7 +205,13 @@ async def extract(request: VisionExtractionRequest, _auth: dict = Depends(option
     if user_id and supabase:
         usage = get_scan_usage(supabase, user_id)
         if not usage.get("can_scan", True):
-            raise HTTPException(status_code=402, detail="Scan limit reached. Upgrade to continue.")
+            return JSONResponse(
+                status_code=402,
+                content={
+                    "detail": "Scan limit reached. Upgrade to continue.",
+                    "scans_limit": int(usage.get("scans_limit", 3)),
+                },
+            )
 
     raw_b64 = request.image_base64
     mime = request.mime_type or "image/jpeg"

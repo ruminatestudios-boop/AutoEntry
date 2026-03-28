@@ -34,6 +34,22 @@
     .smart-suggest-banner .smart-suggest-icon-wrap { flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; background: #fff; border: 1px solid #e4e4e7; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
     .smart-suggest-banner .smart-suggest-icon-wrap img,
     .smart-suggest-banner .smart-suggest-icon-wrap svg { display: block; }
+    .smart-suggest-banner .smart-suggest-icon-wrap { position: relative; overflow: hidden; }
+    .smart-suggest-banner .smart-suggest-icon-wrap .scan-line {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, rgba(10, 10, 10, 0.78), transparent);
+      border-radius: 9999px;
+      filter: drop-shadow(0 0 10px rgba(10, 10, 10, 0.18));
+      animation: scanSweep 1.6s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes scanSweep {
+      0% { top: 6px; opacity: 0.75; }
+      100% { top: calc(100% - 10px); opacity: 1; }
+    }
     .smart-suggest-banner .smart-suggest-text { flex: 1; min-width: 0; }
     .smart-suggest-banner .smart-suggest-title { font-size: 13px; font-weight: 600; color: #18181b; display: block; line-height: 1.3; margin-bottom: 0; }
     .smart-suggest-banner .smart-suggest-desc { font-size: 12px; font-weight: 400; color: #52525b; line-height: 1.35; display: block; margin-top: 4px; }
@@ -83,6 +99,7 @@
             <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
             <line x1="7" x2="17" y1="12" y2="12" />
           </svg>
+          <span class="scan-line"></span>
         </div>
         <div class="smart-suggest-text">
           <span class="smart-suggest-title">What we’re doing with your scan</span>
@@ -116,6 +133,21 @@
         <span class="w-10 h-10 shrink-0" aria-hidden="true"></span>
         <span class="w-10 h-10 shrink-0" aria-hidden="true"></span>
       </div>
+    </div>
+  </div>
+
+  <!-- Scan limit (402): same waitlist UX as dashboard upload — modal instead of only redirecting -->
+  <div id="waitlist-quota-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4 bg-black/45" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="waitlist-quota-title">
+    <div class="vercel-card max-w-md w-full p-6 shadow-xl relative">
+      <button type="button" id="waitlist-quota-close" class="absolute top-3 right-3 text-zinc-400 hover:text-zinc-700 text-xl leading-none" aria-label="Close">×</button>
+      <h2 id="waitlist-quota-title" class="text-lg font-bold text-[#0a0a0a] pr-8 mb-2">Scan limit reached</h2>
+      <p id="waitlist-quota-message" class="text-sm text-[#525252] mb-4">You have used all free scans. Join the waitlist and we will email you when paid plans open.</p>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="email" id="waitlist-quota-email" placeholder="you@company.com" class="flex-1 rounded-xl border border-[#e5e5e5] px-3 py-2.5 text-sm text-[#0a0a0a]" autocomplete="email" />
+        <button type="button" id="waitlist-quota-submit" class="rounded-xl bg-[#0a0a0a] text-white text-sm font-semibold px-4 py-2.5 whitespace-nowrap">Join waitlist</button>
+      </div>
+      <p id="waitlist-quota-status" class="hidden text-xs mt-2"></p>
+      <p id="waitlist-quota-footer-links" class="text-xs text-zinc-500 mt-4 mb-0"><a href="/landing.html#waitlist" class="text-[#111] font-medium underline">Open waitlist on homepage</a> · <a href="/scan" class="text-[#111] font-medium underline">Back to scan</a></p>
     </div>
   </div>
   <script>
@@ -236,6 +268,36 @@
         if (errorMsg) errorMsg.textContent = message || 'Extraction failed. Try again.';
       }
 
+      function publishingBase() {
+        var host = window.location.hostname;
+        var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+        var isLocal = host === 'localhost' || host === '127.0.0.1';
+        if (isLocal && (port === '3000' || port === '3001')) return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
+        if (host === 'synclyst.app' || host === 'www.synclyst.app') return 'https://synclyst-publishing-299567386855.us-central1.run.app';
+        return window.location.protocol + '//' + host + ':8001';
+      }
+
+      function showWaitlistQuotaModal(limit) {
+        extractionDone = true;
+        extractionInFlight = false;
+        setWaiting(false);
+        if (cardEl) cardEl.classList.add('hidden');
+        if (errorWrap) errorWrap.classList.add('hidden');
+        var titleEl = document.getElementById('waitlist-quota-title');
+        if (titleEl) titleEl.textContent = 'Scan limit reached';
+        var msgEl = document.getElementById('waitlist-quota-message');
+        if (msgEl) {
+          var n = typeof limit === 'number' && limit > 0 ? limit : 3;
+          msgEl.textContent = 'You have used all ' + n + ' free scan' + (n === 1 ? '' : 's') + '. Join the waitlist and we will email you when paid plans open.';
+        }
+        var modal = document.getElementById('waitlist-quota-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+      }
+
       var pending = null;
       try {
         var raw = sessionStorage.getItem(PENDING_SCAN_KEY);
@@ -259,6 +321,7 @@
       apiUrl = (apiUrl || '').trim().replace(/\/$/, '') || 'http://localhost:8000';
       var host = window.location.hostname;
       var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
+      var fallbackApiUrl = (prodBackend && prodBackend.getAttribute('content')) ? prodBackend.getAttribute('content').trim().replace(/\/$/, '') : '';
       // On localhost go directly to backend (avoids Next.js proxy timeouts).
       // Backend CORS is configured for local dev.
       if (host === 'localhost' || host === '127.0.0.1') {
@@ -268,6 +331,9 @@
       } else if (host) {
         apiUrl = window.location.origin;
       }
+
+      // If you're on localhost but want Cloud Run, we can auto-fallback on network failure.
+      var triedFallback = false;
 
       var start = Date.now();
       /** Vision + OCR + web enrichment can exceed 45s; align with landing/index extract timeout. */
@@ -296,7 +362,7 @@
           sessionStorage.removeItem('auralink_review_draft');
           sessionStorage.setItem(DRAFT_LISTING_KEY, JSON.stringify(payload));
         } catch (e) {}
-        setTimeout(redirectToFlow3, 500);
+        setTimeout(redirectToFlow3, 300);
       }
 
       function tick() {
@@ -365,24 +431,33 @@
 
       extractionInFlight = true;
       setWaiting(true);
-      var abort = new AbortController();
-      var extractionTimeoutId = setTimeout(function() { try { abort.abort(); } catch (e) {} }, EXTRACTION_TIMEOUT_MS);
 
-      fetch(apiUrl + '/api/v1/vision/extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: abort.signal,
-        body: JSON.stringify({
-          image_base64: pending.base64,
-          mime_type: 'image/jpeg',
-          include_ocr: true,
-          skip_web_enrichment: false
+      function runExtract() {
+        var abort = new AbortController();
+        var extractionTimeoutId = setTimeout(function() { try { abort.abort(); } catch (e) {} }, EXTRACTION_TIMEOUT_MS);
+
+        return fetch(apiUrl + '/api/v1/vision/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: abort.signal,
+          body: JSON.stringify({
+            image_base64: pending.base64,
+            mime_type: 'image/jpeg',
+            include_ocr: true,
+            skip_web_enrichment: false
+          })
         })
-      })
-        .then(function(r) {
+          .then(function(r) {
           if (r.status === 402) {
-            showError('Free scans used. Upgrade to continue.');
-            return null;
+            return r.json().then(function(body) {
+              var lim = 3;
+              if (body && typeof body.scans_limit === 'number' && body.scans_limit > 0) lim = body.scans_limit;
+              showWaitlistQuotaModal(lim);
+              return null;
+            }).catch(function() {
+              showWaitlistQuotaModal(3);
+              return null;
+            });
           }
           if (!r.ok) {
             return r.text().then(function(t) {
@@ -392,30 +467,102 @@
             });
           }
           return r.json();
-        })
-        .then(function(data) {
-          clearTimeout(extractionTimeoutId);
-          if (!data || extractionDone) return;
-          extractionOk = true;
-          setWaiting(false);
-          completionRamp = { from: lastPct, start: Date.now(), data: data };
-        })
-        .catch(function(err) {
-          clearTimeout(extractionTimeoutId);
-          if (extractionDone) return;
-          setWaiting(false);
-          var raw = (err && err.message) ? String(err.message) : '';
-          var networkFail = err && (err.name === 'TypeError' || raw === 'Failed to fetch' || raw === 'fetch failed' || raw.indexOf('NetworkError') !== -1);
-          var msg;
-          if (err && err.name === 'AbortError') {
-            msg = 'Extraction timed out. Make sure the backend is running on ' + apiUrl + ' (open /health) and try again.';
-          } else if (networkFail) {
-            msg = 'Cannot reach the vision API at ' + apiUrl + '. Start the Python backend (port 8000), confirm ' + apiUrl + '/health, then scan again.';
-          } else {
-            msg = raw || 'Could not read the image. Try again or use a different photo.';
-          }
-          showError(msg);
-        });
+          })
+          .then(function(data) {
+            clearTimeout(extractionTimeoutId);
+            if (!data || extractionDone) return;
+            extractionOk = true;
+            setWaiting(false);
+            completionRamp = { from: lastPct, start: Date.now(), data: data };
+          })
+          .catch(function(err) {
+            clearTimeout(extractionTimeoutId);
+            throw err;
+          });
+      }
+
+      runExtract().catch(function(err) {
+        if (extractionDone) return;
+        setWaiting(false);
+        var raw = (err && err.message) ? String(err.message) : '';
+        var networkFail = err && (err.name === 'TypeError' || raw === 'Failed to fetch' || raw === 'fetch failed' || raw.indexOf('NetworkError') !== -1);
+
+        // Auto-fallback: if localhost backend isn't reachable, try Cloud Run once.
+        if (!triedFallback && networkFail && (host === 'localhost' || host === '127.0.0.1') && fallbackApiUrl && apiUrl.indexOf('localhost:8000') !== -1) {
+          triedFallback = true;
+          apiUrl = fallbackApiUrl;
+          setWaiting(true);
+          return runExtract().catch(function(err2) {
+            if (extractionDone) return;
+            setWaiting(false);
+            var raw2 = (err2 && err2.message) ? String(err2.message) : '';
+            var msg2 = (err2 && err2.name === 'AbortError')
+              ? 'Extraction timed out. Make sure the backend is reachable at ' + apiUrl + ' (open /health) and try again.'
+              : (raw2 || ('Cannot reach the vision API at ' + apiUrl + '.'));
+            showError(msg2);
+          });
+        }
+
+        var msg;
+        if (err && err.name === 'AbortError') {
+          msg = 'Extraction timed out. Make sure the backend is running on ' + apiUrl + ' (open /health) and try again.';
+        } else if (networkFail) {
+          msg = 'Cannot reach the vision API at ' + apiUrl + '. If you are using Cloud Run, ensure it is public and supports CORS for this site.';
+        } else {
+          msg = raw || 'Could not read the image. Try again or use a different photo.';
+        }
+        showError(msg);
+      });
+
+      (function wireWaitlistModal() {
+        var modalEl = document.getElementById('waitlist-quota-modal');
+        var closeBtn = document.getElementById('waitlist-quota-close');
+        var submitBtn = document.getElementById('waitlist-quota-submit');
+        var emailInput = document.getElementById('waitlist-quota-email');
+        var statusEl = document.getElementById('waitlist-quota-status');
+        function setWlStatus(kind, text) {
+          if (!statusEl) return;
+          statusEl.textContent = text || '';
+          statusEl.classList.remove('hidden');
+          statusEl.style.color = kind === 'ok' ? '#166534' : kind === 'warn' ? '#92400e' : '#991b1b';
+        }
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function() {
+            window.location.href = '/landing.html#waitlist';
+          });
+        }
+        if (modalEl) {
+          modalEl.addEventListener('click', function(e) {
+            if (e.target === modalEl) window.location.href = '/landing.html#waitlist';
+          });
+        }
+        if (submitBtn && emailInput) {
+          submitBtn.addEventListener('click', function() {
+            var email = (emailInput.value || '').trim();
+            if (!email || email.indexOf('@') === -1) {
+              setWlStatus('err', 'Enter a valid email.');
+              return;
+            }
+            submitBtn.disabled = true;
+            setWlStatus('warn', 'Adding you to waitlist…');
+            fetch(publishingBase() + '/auth/waitlist', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email, source: 'reading-product-402' }),
+            })
+              .then(function(res) {
+                if (!res.ok) throw new Error('fail');
+                setWlStatus('ok', 'You are on the waitlist. We will email you when paid plans open.');
+              })
+              .catch(function() {
+                setWlStatus('err', 'Could not join right now. Try the homepage waitlist or try again.');
+              })
+              .finally(function() {
+                submitBtn.disabled = false;
+              });
+          });
+        }
+      })();
     })();
   </script>
 </body>

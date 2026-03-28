@@ -40,7 +40,8 @@
             box-shadow: none;
         }
         .pricing-card--inactive {
-            opacity: 0.65;
+            opacity: 0.55;
+            filter: grayscale(0.35);
         }
         /* Free tier always greyed out; paid tiers stay black and active */
         .pricing-card--free {
@@ -58,6 +59,10 @@
         .pricing-card--free .text-4xl { color: #737373 !important; }
         .pricing-card--free .text-\[#666\] { color: #a3a3a3 !important; }
         .pricing-card--free .text-emerald-600 { color: #a7a7a7 !important; }
+        .pricing-tier-btn[disabled] {
+            cursor: not-allowed !important;
+            opacity: 0.85;
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -307,8 +312,8 @@
       <h2 id="upgrade-modal-title" class="text-xl font-bold text-zinc-900 mb-2">Scan limit reached</h2>
       <p id="upgrade-modal-message" class="text-zinc-600 text-sm leading-relaxed mb-6">You've used all your scans for this month on your current plan. Upgrade to get more scans and unlock more features.</p>
       <div class="flex flex-col sm:flex-row gap-3">
-        <a href="/dashboard/upgrade" id="upgrade-modal-view-plans" class="inline-flex items-center justify-center gap-2 bg-zinc-900 text-white font-semibold px-5 py-3 rounded-xl hover:bg-zinc-800 transition-colors">
-          View plans
+        <a href="#pricing" id="upgrade-modal-view-plans" class="inline-flex items-center justify-center gap-2 bg-zinc-900 text-white font-semibold px-5 py-3 rounded-xl hover:bg-zinc-800 transition-colors">
+          View pricing
           <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
         </a>
         <button type="button" id="upgrade-modal-close" class="inline-flex items-center justify-center px-5 py-3 rounded-xl border border-zinc-300 text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors">
@@ -332,8 +337,8 @@
                 <span class="text-lg font-semibold tracking-tight text-[#111]">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span>
             </a>
             <div class="hidden md:flex items-center gap-4 flex-1 justify-end min-w-0">
-                <a href="/sign-in?redirect_url=/dashboard" class="text-sm text-[#555] hover:text-[#111] transition-colors">Login</a>
-                <a href="/sign-up?redirect_url=/dashboard" class="bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition-all no-underline">
+                <a href="/sign-in?redirect_url=/dashboard/home" class="text-sm text-[#555] hover:text-[#111] transition-colors">Login</a>
+                <a href="/sign-up?redirect_url=/dashboard/home" class="bg-black text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 transition-all no-underline">
                     Sign up
                 </a>
             </div>
@@ -360,18 +365,13 @@
                     What used to take 20 minutes now takes one tap.<br>
                     Everything you need to sell — title, description, price &amp; tags — done for you instantly.
                 </p>
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="/home.html?mode=scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center gap-2.5 group inline-flex bg-black">
+                <div class="max-w-2xl mx-auto w-full">
+                    <a href="/scan" class="scan-hero-btn text-white px-8 py-3.5 rounded-xl font-semibold border border-black transition-all flex items-center justify-center gap-2.5 group bg-black w-full">
                         <div class="relative flex items-center justify-center w-5 h-5 overflow-hidden">
                             <i data-lucide="camera" class="w-5 h-5 relative z-10"></i>
                             <div class="absolute left-0 right-0 h-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] animate-scan-sweep z-20"></div>
                         </div>
                         Scan Your First Item
-                    </a>
-                    <a href="/flow-batch-upload.html" class="bg-white text-[#111] px-8 py-3.5 rounded-xl font-semibold border border-[#eaeaea] hover:bg-zinc-50 transition-all inline-flex items-center gap-2">
-                        <i data-lucide="layers" class="w-5 h-5"></i>
-                        Batch Upload
-                        <span class="text-[10px] font-semibold text-amber-600 uppercase">Premium</span>
                     </a>
                 </div>
             </div>
@@ -588,7 +588,7 @@
                             <span class="text-[#666] text-sm ml-1">/mo</span>
                         </div>
                         <ul class="space-y-3 mb-8 flex-1 text-sm text-[#666] border-t border-[#eaeaea] pt-6">
-                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i><strong class="text-[#111]">10 scans per month</strong></li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i><strong class="text-[#111]">3 scans per month</strong></li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Basic AI extraction</li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Shopify integration</li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Saves to Shopify drafts</li>
@@ -619,7 +619,7 @@
                             <li class="flex items-center gap-3 text-[#999]"><span class="w-4 shrink-0 text-center">—</span>Batch processing</li>
                             <li class="flex items-center gap-3 text-[#999]"><span class="w-4 shrink-0 text-center">—</span>Smart suggest</li>
                         </ul>
-                        <button type="button" data-tier="pro" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade plan</button>
+                        <button type="button" data-tier="pro" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade now</button>
                     </div>
                     <!-- Growth (Most popular) - black accent -->
                     <div class="pricing-card vercel-card p-8 flex flex-col border-2 border-black shadow-[0_0_40px_rgba(0,0,0,0.06)] relative transition-all duration-200" data-tier="growth">
@@ -642,7 +642,7 @@
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Batch processing</li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Priority support</li>
                         </ul>
-                        <button type="button" data-tier="growth" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-black text-white border border-black hover:bg-zinc-800 transition-all">Upgrade plan</button>
+                        <button type="button" data-tier="growth" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-black text-white border border-black hover:bg-zinc-800 transition-all">Upgrade now</button>
                     </div>
                     <!-- Scale -->
                     <div class="pricing-card vercel-card p-8 flex flex-col transition-all duration-200" data-tier="scale">
@@ -665,7 +665,7 @@
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>API access</li>
                             <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>Dedicated support</li>
                         </ul>
-                        <button type="button" data-tier="scale" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade plan</button>
+                        <button type="button" data-tier="scale" class="pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all">Upgrade now</button>
                     </div>
                 </div>
             </div>
@@ -731,8 +731,18 @@
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-[#eaeaea] text-xs text-[#555]">
                 <p>© 2026 SyncLyst AI. All rights reserved.</p>
                 <div class="flex gap-6 items-center text-[#555]">
-                    <a href="#" class="hover:text-[#111] transition-colors inline-flex items-center justify-center" aria-label="Product Hunt"><svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M9.5 7.5V16.5M9.5 7.5h2.75C14.05 7.5 15.75 8.9 15.75 10.25S14.05 13 12.25 13H9.5"/></svg></a>
-                    <a href="https://www.instagram.com/synclyst/" target="_blank" rel="noopener noreferrer" class="hover:text-[#111] transition-colors" aria-label="Instagram"><i data-lucide="instagram" class="w-4 h-4 inline"></i></a>
+                    <a href="https://www.instagram.com/synclyst/" target="_blank" rel="noopener noreferrer" class="hover:text-[#111] transition-colors inline-flex items-center justify-center" aria-label="Instagram">
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                        </svg>
+                    </a>
+                    <a href="https://www.tiktok.com/@synclyst" target="_blank" rel="noopener noreferrer" class="hover:text-[#111] transition-colors inline-flex items-center justify-center" aria-label="TikTok">
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M14 3h2.2c.2 1.7 1.2 3 2.8 3.7V9a7.2 7.2 0 0 1-3-1v6.2a5.2 5.2 0 1 1-5.1-5.2c.2 0 .4 0 .6.1v2.6a2.6 2.6 0 1 0 2.5 2.6V3z"></path>
+                        </svg>
+                    </a>
                 </div>
             </div>
         </div>
@@ -919,7 +929,7 @@
         // Roadmap Voting
         const votes = { etsy: 1, ebay: 6, tiktok: 0, amazon: 0, depop: 0, vinted: 4, lazada: 0, walmart: 0, shopee: 0, poshmark: 0, facebook: 0 };
         const connectors = [
-            { id: 'shopify', name: 'Shopify', status: 'Active', icon: 'shopify.com' },
+            { id: 'shopify', name: 'Shopify', status: 'Active', icon: 'shopify.com', disabled: false },
             { id: 'etsy', name: 'Etsy', status: 'Coming Soon', icon: 'etsy.com' },
             { id: 'ebay', name: 'eBay', status: 'Coming Soon', icon: 'ebay.com', logoUrl: '/assets/ebay-logo.png' },
             { id: 'tiktok', name: 'TikTok Shop', status: 'Coming Soon', icon: 'tiktok.com' },
@@ -944,30 +954,36 @@
         }
 
         connectors.forEach(c => {
-            const isActive = c.status === 'Active';
+            const isDisabled = !!c.disabled;
+            const isActive = c.status === 'Active' && !isDisabled;
             const btn = document.createElement(isActive ? 'a' : 'button');
-            btn.className = `vercel-card p-6 flex flex-col items-center justify-center text-center group transition-all duration-200 ${isActive ? 'cursor-pointer hover:scale-[1.02] hover:border-black hover:shadow-lg' : 'cursor-pointer hover:scale-[1.02]'}`;
+            btn.className = `vercel-card p-6 flex flex-col items-center justify-center text-center group transition-all duration-200 ${isActive ? 'cursor-pointer hover:scale-[1.02] hover:border-black hover:shadow-lg' : (isDisabled ? 'cursor-not-allowed opacity-75' : 'cursor-pointer hover:scale-[1.02]')}`;
             if (isActive) {
-                btn.href = window.synclystAppUrl('/home.html?mode=scan');
+                btn.href = window.synclystAppUrl('/scan');
                 btn.setAttribute('aria-label', `List on ${c.name}`);
             }
-            const gridImgCls = 'w-10 h-10 rounded-lg object-contain transition-transform duration-200 block group-hover:scale-105';
+            const gridIconBoxCls = 'inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-200 bg-zinc-50';
+            const gridImgCls = 'w-8 h-8 object-contain transition-transform duration-200 block group-hover:scale-105';
             btn.innerHTML = `
                 <span class="inline-block mb-4 ${isActive ? 'integration-icon-live' : ''}">
-                    <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="${gridImgCls}" referrerPolicy="no-referrer">
+                    <span class="${gridIconBoxCls}">
+                        <img src="${c.logoUrl || ('https://www.google.com/s2/favicons?domain=' + c.icon + '&sz=128')}" alt="${c.name}" class="${gridImgCls}" referrerPolicy="no-referrer">
+                    </span>
                 </span>
                 <span class="text-sm font-bold mb-2">${c.name}</span>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-zinc-50 text-zinc-500 border-zinc-100'}">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (isDisabled ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-zinc-50 text-zinc-500 border-zinc-100')}">
                     ${c.status}
                 </span>
-                ${!isActive ? `<span class="mt-2 text-xs font-medium text-[#666]" id="vote-${c.id}">${votes[c.id]} votes</span>` : ''}
+                ${(!isActive && !isDisabled) ? `<span class="mt-2 text-xs font-medium text-[#666]" id="vote-${c.id}">${votes[c.id]} votes</span>` : ''}
             `;
-            if (!isActive) {
+            if (!isActive && !isDisabled) {
                 btn.onclick = () => {
                     votes[c.id]++;
                     document.getElementById(`vote-${c.id}`).innerText = `${votes[c.id]} votes`;
                     updateStats();
                 };
+            } else if (isDisabled) {
+                btn.disabled = true;
             }
             grid.appendChild(btn);
         });
@@ -984,7 +1000,7 @@
             { q: "Is my Shopify store safe when I connect it?", a: "Yes. Synclyst connects via Shopify's official<br>OAuth system — the same secure method used by thousands of Shopify apps.<br>We only request the permissions needed to create listings." },
             { q: "Can I cancel my subscription anytime?", a: "Yes. No contracts, no cancellation fees.<br>Cancel from your account settings<br>and you keep access until the end of your billing period." },
             { q: "Do unused scans roll over to next month?", a: "No, scans reset monthly.<br>If you regularly hit your limit early<br>it's a sign the next plan up will save you more time and money." },
-            { q: "Is there a limit to how many products I can scan?", a: "Starter includes 10 free scans per month; Pro includes 100; Growth includes 500; Scale includes unlimited scans. When you hit your limit, we'll prompt you to upgrade." },
+            { q: "Is there a limit to how many products I can scan?", a: "Starter includes 3 free scans per month; Pro includes 100; Growth includes 500; Scale includes unlimited scans. When you hit your limit, we'll prompt you to upgrade." },
             { q: "Is my store data and product imagery secure?", a: "Security is our priority. We use enterprise-grade encryption and never share your product data or images with third parties. Your data is used only to generate your specific listings." }
         ];
         const faqContainer = document.getElementById('faq-container');
@@ -1059,7 +1075,7 @@
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">4. Credits &amp; Billing</h4>
-                <p>Starter: 10 scans per month. Pro, Growth, and Scale billed monthly in advance. Fees non-refundable unless required by law. Pricing changes with 30 days notice.</p>
+                <p>Starter: 3 scans per month. Pro, Growth, and Scale billed monthly in advance. Fees non-refundable unless required by law. Pricing changes with 30 days notice.</p>
             </section>
             <section>
                 <h4 class="text-black font-bold mb-2 uppercase tracking-widest text-[10px]">5. AI Content &amp; Liability</h4>
@@ -1133,7 +1149,7 @@
         window.closeModal = closeModal;
 
         // Scan limit and upgrade modal (per-tier limits; scans reset monthly)
-        var TIER_LIMITS = { starter: 10, pro: 100, growth: 500, scale: Infinity };
+        var TIER_LIMITS = { starter: 3, pro: 100, growth: 500, scale: Infinity };
         function getScansStorageKey() {
           var d = new Date();
           return 'synclyst_scans_' + d.getFullYear() + '_' + String(d.getMonth() + 1).padStart(2, '0');
@@ -1201,11 +1217,10 @@
           upgradeViewPlans.addEventListener('click', function(e) {
             e.preventDefault();
             closeUpgradeModal();
-            // Quota hit flow: take user straight into paid checkout flow
-            var nextTier = getNextUpgradeTier();
-            window.location.href = window.synclystAppUrl('/dashboard/upgrade?tier=' + nextTier + '&autostart=1');
+            window.location.href = '/landing.html#pricing';
           });
         }
+        var PRICING_PRELAUNCH = true;
         function renderPricingCards() {
           var current = getTier();
           var cards = document.querySelectorAll('.pricing-card');
@@ -1213,16 +1228,23 @@
           cards.forEach(function(card) {
             var tier = card.getAttribute('data-tier');
             var btn = card.querySelector('.pricing-tier-btn');
-            var isCurrent = tier === current;
-            /* Only grey out free tier (Starter); Pro, Growth, Scale stay black and active */
-            if (tier !== 'starter') card.classList.remove('pricing-card--inactive');
+            if (PRICING_PRELAUNCH) {
+              card.classList.add('pricing-card--inactive');
+            } else if (tier !== 'starter') {
+              card.classList.remove('pricing-card--inactive');
+            }
             if (btn) {
-              btn.disabled = isCurrent;
-              if (isCurrent) {
-                btn.textContent = 'Current plan';
-                btn.className = 'pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-zinc-100 text-zinc-600 border border-zinc-200 cursor-default transition-all';
+              if (PRICING_PRELAUNCH) {
+                btn.disabled = true;
+                btn.textContent = 'Upgrade soon';
+                btn.className = 'pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-zinc-100 text-zinc-500 border border-zinc-200 transition-all';
+              } else if (tier === 'starter') {
+                btn.disabled = false;
+                btn.textContent = 'Start for Free';
+                btn.className = 'pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-white text-black border border-[#eaeaea] hover:border-black transition-all';
               } else {
-                btn.textContent = tier === 'starter' ? 'Start for Free' : 'Upgrade plan';
+                btn.disabled = false;
+                btn.textContent = 'Upgrade now';
                 if (tier === 'growth') {
                   btn.className = 'pricing-tier-btn w-full py-2.5 rounded-lg font-medium bg-black text-white border border-black hover:bg-zinc-800 transition-all';
                 } else {
@@ -1239,14 +1261,15 @@
             if (btn.disabled) return;
             var tier = btn.getAttribute('data-tier');
             if (!tier) return;
-            // Paid tiers: go to app upgrade flow → Stripe Checkout
+            // Paid tiers are paused pre-launch.
             if (tier === 'pro' || tier === 'growth' || tier === 'scale') {
-              window.location.href = window.synclystAppUrl('/dashboard/upgrade?tier=' + tier + '&autostart=1');
+              var el = document.getElementById('pricing');
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
               return;
             }
             // Starter: sign up then dashboard (free tier)
             if (tier === 'starter') {
-              window.location.href = window.synclystAppUrl('/sign-up?redirect_url=/dashboard');
+              window.location.href = window.synclystAppUrl('/sign-up?redirect_url=/dashboard/home');
               return;
             }
             if (getTier() !== tier) setTier(tier);
