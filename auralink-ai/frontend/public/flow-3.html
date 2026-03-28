@@ -784,8 +784,12 @@
       function getPublishingUrl() {
         var host = window.location.hostname;
         var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
-        // Next dev (localhost:3000): use same-origin rewrite → publishing (see next.config.ts /__synclyst_publishing/*)
-        if ((host === 'localhost' || host === '127.0.0.1') && port === '3000') {
+        // Same-origin proxy → publishing (Next rewrites /__synclyst_publishing to Cloud Run). Avoids CORS and
+        // mismatches when the browser calls publishing APIs from synclyst.app (matches dashboard + connect page).
+        if ((host === 'localhost' || host === '127.0.0.1') && (port === '3000' || port === '3001')) {
+          return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
+        }
+        if (host === 'synclyst.app' || host === 'www.synclyst.app') {
           return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
         }
         var meta = document.querySelector('meta[name="auralink-publishing-url"]');
