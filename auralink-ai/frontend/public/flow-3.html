@@ -784,13 +784,17 @@
       function getPublishingUrl() {
         var host = window.location.hostname;
         var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
-        // Same-origin proxy → publishing (Next rewrites /__synclyst_publishing to Cloud Run). Avoids CORS and
-        // mismatches when the browser calls publishing APIs from synclyst.app (matches dashboard + connect page).
+        // Local dev: same-origin proxy → publishing (no CORS). Production: call Cloud Run directly — large POSTs
+        // (listing JSON with base64 photos) exceed Vercel’s ~4.5MB body limit when proxied via /__synclyst_publishing (HTTP 413).
         if ((host === 'localhost' || host === '127.0.0.1') && (port === '3000' || port === '3001')) {
           return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
         }
         if (host === 'synclyst.app' || host === 'www.synclyst.app') {
-          return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
+          var pm = document.querySelector('meta[name="synclyst-publishing-url"]');
+          var direct = (pm && pm.getAttribute('content') && pm.getAttribute('content').trim())
+            ? pm.getAttribute('content').trim().replace(/\/$/, '')
+            : 'https://synclyst-publishing-299567386855.us-central1.run.app';
+          return direct;
         }
         var meta = document.querySelector('meta[name="auralink-publishing-url"]');
         var url = (meta && meta.getAttribute('content')) ? meta.getAttribute('content').trim().replace(/\/$/, '') : 'http://localhost:8001';
