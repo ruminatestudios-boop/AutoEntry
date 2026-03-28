@@ -816,15 +816,42 @@
             }, 100);
             devBypassBtn.addEventListener('click', function() {
               devBypassBtn.disabled = true;
-              fetch('/api/publishing/token')
-                .then(function(r) { return r.json(); })
-                .then(function(d) {
-                  if (d && d.token) {
-                    try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {}
-                  }
-                  window.location.href = devBypassRedirectUrl(status.dev_shop_domain);
+              var shopDomain = status.dev_shop_domain;
+              var pubBase = getPublishingBase().replace(/\/$/, '');
+
+              function storeJwtAndRedirect(d) {
+                if (!d || !d.token) {
+                  showConnectError(
+                    '<p class="mb-0"><strong>No session token returned.</strong> On <strong>localhost</strong>, start publishing: <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">npm run dev:all</code> (or <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">cd auralink-ai/publishing && npm run dev</code>). On <strong>production</strong>, sign in first, then try again.</p>',
+                    'dev-token and /api/publishing/token both failed or returned no token'
+                  );
+                  devBypassBtn.disabled = false;
+                  return;
+                }
+                try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {}
+                window.location.href = devBypassRedirectUrl(shopDomain);
+              }
+
+              // Prefer publishing /auth/dev-token (same-origin proxy on :3000) — no Clerk required for local demo.
+              fetch(pubBase + '/auth/dev-token', { credentials: 'same-origin' })
+                .then(function(r) {
+                  if (r.ok) return r.json();
+                  return fetch('/api/publishing/token', { credentials: 'same-origin' }).then(function(r2) {
+                    return r2.json().then(function(j) {
+                      if (!r2.ok) throw new Error((j && j.error) || ('HTTP ' + r2.status));
+                      return j;
+                    });
+                  });
                 })
-                .catch(function() { devBypassBtn.disabled = false; });
+                .then(storeJwtAndRedirect)
+                .catch(function(err) {
+                  var msg = String(err && err.message ? err.message : err);
+                  showConnectError(
+                    '<p class="mb-0"><strong>Could not start demo session.</strong> Confirm the publishing API is running (local: port <strong>8001</strong>) and refresh. If you are on the live site, <a href="/sign-in?redirect_url=' + encodeURIComponent('/connect-store') + '" class="font-semibold underline">sign in</a> and try again.</p>',
+                    msg
+                  );
+                  devBypassBtn.disabled = false;
+                });
             });
           })
           .catch(function() {});
