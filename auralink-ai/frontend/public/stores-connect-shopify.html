@@ -807,7 +807,8 @@
           .then(function(r) { return r.json(); })
           .then(function(status) {
             publicInstallEnabled = status && status.public_install_enabled === true;
-            if (status.shopify_configured || !status.dev_shopify_bypass || !status.dev_shop_domain) return;
+            // Show bypass whenever dev token + shop are set (even if OAuth keys exist — demo path).
+            if (!status.dev_shopify_bypass || !status.dev_shop_domain) return;
             devBypassPanel.classList.remove('hidden');
             if (typeof hideConnectError === 'function') hideConnectError();
             setTimeout(function() {
