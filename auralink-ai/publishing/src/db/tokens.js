@@ -5,6 +5,34 @@ import { isDevMode, devGetTokenRow, devUpsertToken, devGetConnectedStores, devSe
 
 const DEV_USER_UUID = '00000000-0000-0000-0000-000000000001';
 
+/** Synthetic Shopify row from SHOPIFY_DEV_* env (local or optional production demo). */
+function shopifyDevEnvRow() {
+  const shop = (process.env.SHOPIFY_DEV_SHOP_DOMAIN || '')
+    .trim()
+    .replace(/\.myshopify\.com$/i, '') + '.myshopify.com';
+  return {
+    access_token: process.env.SHOPIFY_DEV_ACCESS_TOKEN,
+    refresh_token: null,
+    expires_at: null,
+    shop_id: shop,
+    shop_domain: shop,
+    status: 'connected',
+  };
+}
+
+/**
+ * Use env Admin API token for Shopify when:
+ * - in-memory dev (no Supabase), or
+ * - SHOPIFY_DEV_TOKEN_APPLIES_IN_PRODUCTION=1 (single-store demo on Cloud Run; disable for real multi-tenant).
+ */
+function shopifyUniversalDevTokenEnabled() {
+  const tok = (process.env.SHOPIFY_DEV_ACCESS_TOKEN || '').trim();
+  const domain = (process.env.SHOPIFY_DEV_SHOP_DOMAIN || '').trim();
+  if (!tok || !domain) return false;
+  if (isDevMode()) return true;
+  return /^(1|true|yes)$/i.test(process.env.SHOPIFY_DEV_TOKEN_APPLIES_IN_PRODUCTION || '');
+}
+
 /** When using Supabase, map dev-local to the dev user UUID so FK to users(id) is satisfied. */
 export function storageUserId(userId) {
   const db = getSupabase();
@@ -17,17 +45,13 @@ export async function getTokenRow(userId, platform) {
   if (isDevMode()) {
     // Dev-token bypass: use env Shopify token so publish works without OAuth (survives restarts).
     if (platform === 'shopify' && process.env.SHOPIFY_DEV_ACCESS_TOKEN && process.env.SHOPIFY_DEV_SHOP_DOMAIN) {
-      const shop = process.env.SHOPIFY_DEV_SHOP_DOMAIN.replace(/\.myshopify\.com$/i, '') + '.myshopify.com';
-      return {
-        access_token: process.env.SHOPIFY_DEV_ACCESS_TOKEN,
-        refresh_token: null,
-        expires_at: null,
-        shop_id: shop,
-        shop_domain: shop,
-        status: 'connected',
-      };
+      return shopifyDevEnvRow();
     }
     return devGetTokenRow(userId, platform);
+  }
+  // Production + Supabase: optional same env token for all users (demo only).
+  if (platform === 'shopify' && shopifyUniversalDevTokenEnabled()) {
+    return shopifyDevEnvRow();
   }
   const db = getSupabase();
   if (!db) return null;
@@ -125,5 +149,11 @@ export async function getConnectedStores(userId) {
       };
     }
   });
+  if (platforms.includes('shopify') && shopifyUniversalDevTokenEnabled()) {
+    const shop = (process.env.SHOPIFY_DEV_SHOP_DOMAIN || '')
+      .trim()
+      .replace(/\.myshopify\.com$/i, '') + '.myshopify.com';
+    out.shopify = { status: 'connected', shop_domain: shop, shop_id: shop };
+  }
   return out;
 }
