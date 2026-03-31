@@ -62,7 +62,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id'],
 }));
-app.use(express.json());
+// Large universal_data payloads (base64 photos) exceed express.json default (~100kb). Cloud Run max request ~32 MiB.
+// If JSON_BODY_LIMIT is set in Cloud Run, keep it ≤ 31mb or you will still get PayloadTooLargeError from raw-body.
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '31mb' }));
 
 app.get('/auth/shopify/status', (req, res) => {
   const configured = !!(process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET);

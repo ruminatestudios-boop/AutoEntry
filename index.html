@@ -369,7 +369,7 @@
             </div>
             <div class="mt-20 max-w-6xl mx-auto">
                 <div class="relative rounded-xl border border-[#eaeaea] bg-white shadow-[0_0_80px_rgba(0,0,0,0.05)] overflow-hidden">
-                    <video src="https://cdn.shopify.com/videos/c/o/v/fd32bb276dc64999a7a3bc00066f58ef.mp4" class="rounded-xl w-full h-auto object-cover" muted loop playsinline autoplay></video>
+                    <video src="https://cdn.shopify.com/videos/c/o/v/a1339d2915174ff39f33e43a26d6925c.mp4" class="rounded-xl w-full h-auto object-cover" muted loop playsinline autoplay></video>
                 </div>
             </div>
         </section>
@@ -865,16 +865,14 @@
             marqueeContent.appendChild(div);
         });
 
-        // Video Carousel (7 testimonials × 3 for seamless loop; videos play muted + loop when in view)
+        // Video Carousel (5 testimonials × 3 for seamless loop; videos play muted + loop when in view)
         const DEFAULT_TESTIMONIAL_VIDEO = 'https://cdn.shopify.com/videos/c/o/v/fd32bb276dc64999a7a3bc00066f58ef.mp4';
         const videos = [
-            { tag: 'Sneaker resellers', title: 'SNEAKER RESELLERS', desc: 'AI identifies model, colourway and condition instantly. No more looking up spec sheets. Listed in under 40 seconds.' },
             { tag: 'Vintage resellers', title: 'VINTAGE RESELLERS', desc: 'Reads the graphic, identifies the band, era and tag type automatically. Saves 35 minutes of research per listing.' },
-            { tag: 'Tech resellers', title: 'TECH RESELLERS', desc: 'Extracts model number, specs and condition from one photo. SEO titles written better than you could manually.' },
-            { tag: 'Handmade sellers', title: 'HANDMADE SELLERS', desc: 'Describes materials, dimensions and craft detail automatically. Spend your time making, not listing.' },
-            { tag: 'Clothing brands', title: 'CLOTHING BRANDS', desc: 'New season drops listed in minutes not hours. Size, material, colour and description all extracted instantly.' },
-            { tag: 'Collectibles sellers', title: 'COLLECTIBLES SELLERS', desc: 'Reads title, author, edition and condition from the cover alone. Your entire stock listed in one sitting.' },
-            { tag: 'Streetwear sellers', title: 'STREETWEAR SELLERS', desc: 'Team, size, brand and condition identified in seconds. List an entire new drop before your competitors do.' },
+            { tag: 'Tech resellers', title: 'TECH RESELLERS', videoUrl: 'https://cdn.shopify.com/videos/c/o/v/9c42a5069c744c0288c2387c047360ee.mp4', desc: 'Extracts model number, specs and condition from one photo. SEO titles written better than you could manually.' },
+            { tag: 'Vintage t-shirts', title: 'VINTAGE T-SHIRTS', videoUrl: 'https://cdn.shopify.com/videos/c/o/v/57a6e2366c094d429af16859614a4133.mp4', desc: 'Reads the graphic, artist and era from one shot. Tag type, fit and condition in the listing—without the manual research rabbit hole.' },
+            { tag: 'Sneakers', title: 'SNEAKERS', videoUrl: 'https://cdn.shopify.com/videos/c/o/v/4bb6c6deb3b14a039520904f6711ded0.mp4', desc: 'Reads brand, silhouette and size from the shoe and label. Colorway, condition and resale-ready titles in one scan—not a spreadsheet per pair.' },
+            { tag: 'Modern footwear', title: 'MODERN FOOTWEAR', videoUrl: 'https://cdn.shopify.com/videos/c/o/v/16c8c969d72a432fbbff99c9ba713eb1.mp4', desc: 'Search-ready titles and meta for athletic and everyday shoes. Listing-quality cues from one workflow—running, training and lifestyle SKUs without retyping SEO every time.' },
         ];
         const carousel = document.getElementById('video-carousel');
         const displayVideos = [...videos, ...videos, ...videos];
@@ -893,11 +891,77 @@
                   )
                 : null;
 
+        function synclystApplyTestimonialPosters(root) {
+            if (!root) return;
+            var bySrc = {};
+            root.querySelectorAll('.testimonial-video').forEach(function (el) {
+                if (el.getAttribute('data-synclyst-poster-fixed') === '1') return;
+                var s = el.getAttribute('src') || '';
+                if (!s) return;
+                if (!bySrc[s]) bySrc[s] = [];
+                bySrc[s].push(el);
+            });
+            Object.keys(bySrc).forEach(function (src) {
+                var list = bySrc[src];
+                var probe = document.createElement('video');
+                probe.crossOrigin = 'anonymous';
+                probe.muted = true;
+                probe.playsInline = true;
+                probe.setAttribute('playsinline', '');
+                probe.preload = 'auto';
+                probe.src = src;
+                try { probe.load(); } catch (e) {}
+                var done = false;
+                function cleanup() {
+                    if (done) return;
+                    done = true;
+                    try {
+                        probe.remove();
+                    } catch (e) {}
+                }
+                probe.addEventListener('loadedmetadata', function () {
+                    var d = probe.duration;
+                    var t = 0.35;
+                    if (d && isFinite(d) && d > 0) {
+                        t = Math.min(Math.max(0.05, d * 0.15), Math.max(0.05, d - 0.04));
+                    }
+                    try {
+                        probe.currentTime = t;
+                    } catch (e) {
+                        cleanup();
+                    }
+                });
+                probe.addEventListener('seeked', function () {
+                    try {
+                        var w = probe.videoWidth;
+                        var h = probe.videoHeight;
+                        if (!w || !h) {
+                            cleanup();
+                            return;
+                        }
+                        var maxEdge = 720;
+                        var scale = Math.min(1, maxEdge / Math.max(w, h));
+                        var cw = Math.max(1, Math.round(w * scale));
+                        var ch = Math.max(1, Math.round(h * scale));
+                        var canvas = document.createElement('canvas');
+                        canvas.width = cw;
+                        canvas.height = ch;
+                        canvas.getContext('2d').drawImage(probe, 0, 0, cw, ch);
+                        var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                        list.forEach(function (v) {
+                            v.poster = dataUrl;
+                        });
+                    } catch (e) {}
+                    cleanup();
+                });
+                probe.addEventListener('error', cleanup);
+            });
+        }
+
         displayVideos.forEach((v, i) => {
             const div = document.createElement('div');
             div.className = 'flex-none w-[280px] md:w-[320px] video-card';
-            const slot = i % videos.length;
-            const posterSrc = v.thumbnailUrl || `https://picsum.photos/seed/synclyst-v${slot}/400/700`;
+            const posterSrc = v.thumbnailUrl || '';
             const videoSrc = v.videoUrl || DEFAULT_TESTIMONIAL_VIDEO;
             div.innerHTML = `
                 <div class="vercel-card overflow-hidden flex flex-col h-full">
@@ -905,7 +969,7 @@
                         <div class="absolute top-4 left-4 z-20">
                             <span class="bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-full">${v.tag}</span>
                         </div>
-                        <video src="${videoSrc}" poster="${posterSrc}" class="testimonial-video absolute inset-0 w-full h-full object-cover" muted loop playsinline autoplay preload="metadata"></video>
+                        <video src="${videoSrc}" poster="${posterSrc}" data-synclyst-poster-fixed="${v.thumbnailUrl ? '1' : ''}" crossorigin="anonymous" class="testimonial-video absolute inset-0 w-full h-full object-cover" muted loop playsinline autoplay preload="metadata"></video>
                     </div>
                     <div class="p-6">
                         <h3 class="text-sm font-bold uppercase tracking-wider mb-1">${v.title}</h3>
@@ -918,6 +982,7 @@
             else div.querySelector('.testimonial-video')?.play?.().catch(() => {});
             carousel.appendChild(div);
         });
+        synclystApplyTestimonialPosters(carousel);
 
         // Roadmap Voting
         const votes = { etsy: 1, ebay: 6, tiktok: 0, amazon: 0, depop: 0, vinted: 4, lazada: 0, walmart: 0, shopee: 0, poshmark: 0, facebook: 0 };
