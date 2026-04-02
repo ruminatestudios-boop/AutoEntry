@@ -22,11 +22,18 @@ const publishingProxyTarget =
   (process.env.VERCEL === "1" ? defaultPublishingProxyForVercel : "") ||
   "http://127.0.0.1:8001";
 
+/** Root `/` content: `demo` (default) or `landing` when you switch the main site back to marketing. */
+const homepageDestination =
+  process.env.SYNCLYST_HOMEPAGE?.trim().toLowerCase() === "landing"
+    ? "/landing.html"
+    : "/demo.html";
+
 /**
- * Homepage: `/` rewrites to public/landing.html (beforeFiles so it beats app routes).
+ * Homepage: `/` rewrites to `homepageDestination` (demo.html by default; set SYNCLYST_HOMEPAGE=landing to switch).
+ * `/landing.html` stays the full marketing page at a stable URL.
  *
  * Listing flow — typical user order (single-item, scan path):
- * 1. / (and /landing.html) — marketing; CTA → /scan
+ * 1. `/` — demo (default) or marketing if SYNCLYST_HOMEPAGE=landing; `/landing.html` — full marketing; CTA → /scan
  * 2. /scan (aliases: /home.html?mode=scan, /landing.html?mode=scan → redirect) — camera/upload → extraction → continue
  * 3. /reading-product (aliases: /flow-2.html, /flow-2, /flow/processing → redirect) — “Reading your product” / progress
  * 4. /review (aliases: /listing/review; file: flow-3.html) — edit listing, publish; /flow-3.html redirects to /review
@@ -99,8 +106,10 @@ const nextConfig: NextConfig = {
     const pubBase = publishingProxyTarget.replace(/\/$/, "");
     return {
       beforeFiles: [
-        /** Marketing homepage at synclyst.app `/` (URL bar stays `/`). */
-        { source: "/", destination: "/landing.html" },
+        /** Main site root: demo by default; override with SYNCLYST_HOMEPAGE=landing (URL bar stays `/`). */
+        { source: "/", destination: homepageDestination },
+        /** Same demo at `/demo` (bookmark/share); `?mode=scan` opens scan. */
+        { source: "/demo", destination: "/demo.html" },
       ],
       afterFiles: [
         ...listingFlowRewrites,

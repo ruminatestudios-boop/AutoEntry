@@ -1,4 +1,4 @@
-# Railway build and deploy (Root Directory = auto-entry)
+# Legacy Railway config (optional). Production is documented for Google Cloud Run — see DEPLOY-CLOUD-RUN.md
 # https://docs.railway.com/reference/build-and-start-commands
 
 [build]

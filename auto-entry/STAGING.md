@@ -1,6 +1,6 @@
 # Shopify staging: edit live, push to production later
 
-Use **staging** to see changes in the Shopify admin as you edit. When you’re happy, **push to production** (Railway).
+Use **staging** to see changes in the Shopify admin as you edit. When you’re happy, **push to production** (e.g. Cloud Run).
 
 ---
 
@@ -31,7 +31,7 @@ When you want the same version live for everyone:
    git commit -m "Your message"
    git push origin main
    ```
-2. **Railway** will deploy from `main`. Once the deploy finishes, production (e.g. `https://auto-entry-app-production-4dda.up.railway.app`) will show the new version.
+2. **Cloud Run** (or your CI) will deploy from `main`. Once the deploy finishes, production (your Cloud Run URL) will show the new version.
 3. In **Shopify Partners**, your app URL and redirect URLs should point at that production URL so the installed app uses production.
 
 ---
@@ -41,6 +41,6 @@ When you want the same version live for everyone:
 | Mode        | How                          | Where you see it                    |
 |------------|-------------------------------|-------------------------------------|
 | **Staging**   | `npm run dev` (local + tunnel) | Shopify admin → dev preview URL     |
-| **Production** | `git push origin main` → Railway | Live app URL (e.g. Railway) + admin |
+| **Production** | `git push origin main` → deploy pipeline | Live app URL (e.g. Cloud Run) + admin |
 
 Use staging to edit and preview in Shopify; use push to ship to production.

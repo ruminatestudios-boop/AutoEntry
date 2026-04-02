@@ -1,14 +1,10 @@
 import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
-import { BlockStack, Text, InlineGrid, Card, Box } from "@shopify/polaris";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { DashboardPageLayout } from "../components/DashboardPageLayout";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useActionData, useLoaderData, useSubmit, useSearchParams, useNavigation } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
-
-const accentGreen = "#6be575";
-const darkTeal = "#004c46";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -140,206 +136,388 @@ export default function Pricing() {
   const plans = [
     {
       name: "Free",
+      tagline: "Try the full capture flow",
       price: "$0",
-      scans: "5 Scans",
-      description: "Test the app",
-      features: ["AI product scanning", "Auto SKU generation", "5 scans"],
+      priceHint: "per month",
+      scans: "5 scans / month",
+      blurb:
+        "Run real captures through Auto Entry with a small monthly allowance—ideal for testing AI titles, images, and variants before you commit.",
+      features: [
+        "AI capture from photos: structured product data for Shopify",
+        "Auto SKU suggestions and variant detection",
+        "Sync drafts to your catalog for review before publish",
+        "5 scans per billing period; upgrade when you need more",
+      ],
       action: currentPlan === "FREE" ? "Current" : "Downgrade",
       value: "FREE",
-      disabled: currentPlan === "FREE"
+      disabled: currentPlan === "FREE",
     },
     {
       name: "Starter",
+      tagline: "Boutiques & small catalogs",
       price: "$19.99",
-      scans: "100 Scans / mo",
-      description: "Small boutiques",
-      features: ["Everything in Free", "100 monthly scans", "Priority support"],
+      priceHint: "per month",
+      scans: "100 scans / month",
+      blurb:
+        "A steady monthly allowance for shops that add new products regularly but don’t need hundreds of scans every week.",
+      features: [
+        "Everything in Free, with a higher monthly scan cap",
+        "100 AI captures per billing period",
+        "Priority email support when you need help",
+        "Best for single-location stores and lean teams",
+      ],
       action: currentPlan === "Starter" ? "Current" : "Upgrade",
       value: "Starter",
-      disabled: currentPlan === "Starter"
+      disabled: currentPlan === "Starter",
     },
     {
       name: "Growth",
+      tagline: "Scaling product intake",
       price: "$49.99",
-      scans: "500 Scans / mo",
-      description: "Growing stores",
-      features: ["Everything in Starter", "500 monthly scans", "Voice variants"],
+      priceHint: "per month",
+      scans: "500 scans / month",
+      blurb:
+        "Built for growing brands onboarding collections, seasonal drops, or multiple suppliers—more headroom without jumping to enterprise tooling.",
+      features: [
+        "Everything in Starter, with 5× the monthly scans",
+        "Voice-friendly flows for hands-free variant notes (where enabled)",
+        "Room for higher weekly volume and repeat capture sessions",
+        "Still billed as a simple flat subscription in Shopify",
+      ],
       action: currentPlan === "Growth" ? "Current" : "Upgrade",
       value: "Growth",
       disabled: currentPlan === "Growth",
-      popular: true
+      popular: true,
     },
     {
       name: "Power",
+      tagline: "High volume & multi-user",
       price: "$99.99",
-      scans: "1,000 Scans / mo",
-      description: "High-volume",
-      features: ["Everything in Growth", "1,000 monthly scans", "API access"],
+      priceHint: "per month",
+      scans: "1,000 scans / month",
+      blurb:
+        "Maximum monthly allowance on standard billing—suited to agencies, large catalogs, or teams running batch capture days.",
+      features: [
+        "Everything in Growth with the highest included scan tier",
+        "1,000 AI captures per billing period before top-ups",
+        "Workflows that fit team handoffs (capture → review → publish)",
+        "Pair with scan top-ups if you ever spike above the cap",
+      ],
       action: currentPlan === "Power" ? "Current" : "Upgrade",
       value: "Power",
-      disabled: currentPlan === "Power"
-    }
+      disabled: currentPlan === "Power",
+    },
   ];
 
   const topups = [
-    { scans: "100", price: "$9.99", value: "TopUp100", perScan: "$0.10/scan" },
-    { scans: "500", price: "$39.99", value: "TopUp500", perScan: "$0.08/scan", popular: true },
-    { scans: "1,000", price: "$69.99", value: "TopUp1000", perScan: "$0.07/scan" }
+    {
+      scans: "100",
+      title: "100 bonus scans",
+      tagline: "About $0.10 per scan · quick boost",
+      price: "$9.99",
+      priceHint: "one-time",
+      blurb:
+        "Add a hundred extra captures for a short spike—product drops, inventory counts, or photo days—without changing your monthly plan.",
+      features: [
+        "Stacks on top of your subscription allowance until you use it",
+        "Single Shopify charge; no recurring fee",
+        "Ideal when you’re mildly over your monthly cap",
+        "Works with every subscription tier",
+      ],
+      value: "TopUp100",
+      popular: false,
+    },
+    {
+      scans: "500",
+      title: "500 bonus scans",
+      tagline: "About $0.08 per scan · best value",
+      price: "$39.99",
+      priceHint: "one-time",
+      blurb:
+        "Our most popular pack: serious headroom for seasonal uploads or clearing a backlog without jumping to the next subscription tier.",
+      features: [
+        "Lower effective rate than smaller packs",
+        "Bonus balance stays available until consumed",
+        "Checkout stays inside Shopify Billing",
+        "Pair with Growth or Power when volume is uneven month to month",
+      ],
+      value: "TopUp500",
+      popular: true,
+    },
+    {
+      scans: "1,000",
+      title: "1,000 bonus scans",
+      tagline: "About $0.07 per scan · bulk top-up",
+      price: "$69.99",
+      priceHint: "one-time",
+      blurb:
+        "Maximum standard top-up for agencies and large catalogs that need a deep reserve before the next renewal cycle.",
+      features: [
+        "Lowest per-scan rate among fixed packs",
+        "One-time purchase; renew your subscription separately as usual",
+        "Use across multiple batch sessions until the balance hits zero",
+        "Receipt and charge visibility in your Shopify admin",
+      ],
+      value: "TopUp1000",
+      popular: false,
+    },
   ];
+
+  const [openPlanId, setOpenPlanId] = useState(currentPlan);
+  const [openTopupId, setOpenTopupId] = useState<string | null>(() =>
+    topups.find((t) => t.popular)?.value ?? topups[0]?.value ?? null,
+  );
+
+  useEffect(() => {
+    setOpenPlanId(currentPlan);
+  }, [currentPlan]);
+
+  const planCtaLabel = (plan: (typeof plans)[number]) => {
+    if (submittingPlan === plan.value) return "Redirecting…";
+    if (plan.disabled) return "Current plan";
+    if (plan.action === "Downgrade") return "Downgrade";
+    return "Upgrade plan";
+  };
+
+  const faqs = [
+    {
+      q: "How does Shopify billing work?",
+      a: "Subscriptions are billed through your Shopify account on the same cycle as your store. You approve charges in Shopify; Auto Entry never stores your card.",
+    },
+    {
+      q: "Can I change or cancel my plan?",
+      a: "Yes. Upgrade anytime from this page. To move to Free or cancel a paid plan, use the downgrade flow — your subscription is managed like any other Shopify app billing.",
+    },
+    {
+      q: "Do monthly scans roll over?",
+      a: "Monthly plan allowances reset each billing period. Unused scans do not roll over. Top-ups add bonus scans on top of your plan when you need extra capacity.",
+    },
+    {
+      q: "Are there hidden fees?",
+      a: "No. You pay the listed subscription or one-time top-up price shown here. Shopify may apply taxes per your store settings.",
+    },
+  ];
+
+  const topupCtaLabel = (topup: (typeof topups)[number]) => {
+    if (submittingPlan === topup.value) return "Redirecting…";
+    return "Buy top-up";
+  };
 
   return (
     <DashboardPageLayout
+      heroAccent="dashboard"
       title="Pricing"
       headerTitle="Pricing"
-      subtitle="Choose a plan that fits your store."
+      subtitle="Monthly plans for AI product capture, plus optional scan top-ups when you need more."
     >
-      <BlockStack gap="600">
-        <BlockStack gap="300">
-          <Text as="h2" variant="headingLg" fontWeight="bold" style={{ color: darkTeal }}>
-            Plans
-          </Text>
-          <InlineGrid columns={4} gap="400">
-            {plans.map((plan) => (
-              <Card key={plan.name}>
-                <Box padding="400">
-                  <BlockStack gap="300">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
-                      <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
-                        {plan.name}
-                      </Text>
-                      {plan.popular && (
-                        <span
-                          style={{
-                            background: "#f97316",
-                            color: "#ffffff",
-                            fontSize: "11px",
-                            fontWeight: "600",
-                            padding: "2px 8px",
-                            borderRadius: "100px",
-                            whiteSpace: "nowrap",
-                            border: "1px solid #ea580c",
-                          }}
-                        >
-                          Popular
+      <div className="support-page pricing-page">
+        <div className="pricing-page__split">
+          <div className="pricing-page__plans">
+            <p className="marketing-unified-capture-label">Subscriptions</p>
+            <h3 className="pricing-accordion__heading">Select a plan</h3>
+            <div className="pricing-plans-stack pricing-accordion" role="list">
+              {plans.map((plan) => {
+                const isOpen = openPlanId === plan.value;
+                return (
+                  <div
+                    key={plan.value}
+                    role="listitem"
+                    className={
+                      "pricing-accordion__card" +
+                      (isOpen ? " pricing-accordion__card--open" : "") +
+                      (plan.popular ? " pricing-accordion__card--popular" : "") +
+                      (plan.disabled ? " pricing-accordion__card--current" : "")
+                    }
+                  >
+                    <button
+                      type="button"
+                      className="pricing-accordion__trigger"
+                      aria-expanded={isOpen}
+                      aria-controls={`plan-panel-${plan.value}`}
+                      id={`plan-trigger-${plan.value}`}
+                      onClick={() =>
+                        setOpenPlanId((prev) => (prev === plan.value ? null : plan.value))
+                      }
+                    >
+                      <span
+                        className={
+                          "pricing-accordion__radio" +
+                          (isOpen ? " pricing-accordion__radio--on" : "")
+                        }
+                        aria-hidden
+                      />
+                      <span className="pricing-accordion__trigger-main">
+                        <span className="pricing-accordion__title-row">
+                          <span className="pricing-accordion__name">{plan.name}</span>
+                          {plan.popular ? (
+                            <span className="pricing-accordion__pill">Popular</span>
+                          ) : null}
                         </span>
-                      )}
-                    </div>
-                    <BlockStack gap="200">
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "4px" }}>
-                        <Text as="span" variant="bodySm" tone="subdued">Price</Text>
-                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{plan.price}</Text>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "4px" }}>
-                        <Text as="span" variant="bodySm" tone="subdued">Scans</Text>
-                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{plan.scans}</Text>
-                      </div>
-                    </BlockStack>
-                    <Text as="p" variant="bodySm" tone="subdued" style={{ color: "#1a1a1a", margin: 0 }}>
-                      {plan.description}
-                    </Text>
-                    <BlockStack gap="100">
-                      {plan.features.slice(0, 3).map((f, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <div style={{ width: "4px", height: "4px", background: darkTeal, borderRadius: "50%" }} />
-                          <Text as="span" variant="bodySm" tone="subdued">{f}</Text>
+                        <span className="pricing-accordion__tagline">{plan.tagline}</span>
+                      </span>
+                      <span className="pricing-accordion__trigger-price">
+                        <span className="pricing-accordion__price">{plan.price}</span>
+                        <span className="pricing-accordion__unit">{plan.priceHint}</span>
+                      </span>
+                    </button>
+                    {isOpen ? (
+                      <div
+                        className="pricing-accordion__panel"
+                        id={`plan-panel-${plan.value}`}
+                        role="region"
+                        aria-labelledby={`plan-trigger-${plan.value}`}
+                      >
+                        <p className="pricing-accordion__blurb">{plan.blurb}</p>
+                        <p className="pricing-accordion__allowance">{plan.scans}</p>
+                        <h4 className="pricing-accordion__includes-label">What&apos;s included</h4>
+                        <ul
+                          className="pricing-accordion__features"
+                          aria-label={`${plan.name} features`}
+                        >
+                          {plan.features.map((f) => (
+                            <li key={f} className="pricing-accordion__feature">
+                              <span className="pricing-accordion__check" aria-hidden />
+                              <span>{f}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="pricing-accordion__divider" role="presentation" />
+                        <div className="pricing-accordion__cta-row">
+                          <button
+                            type="button"
+                            className={
+                              "pricing-accordion__cta" +
+                              (plan.disabled ? " pricing-accordion__cta--muted" : "") +
+                              (plan.popular && !plan.disabled ? " pricing-accordion__cta--accent" : "")
+                            }
+                            onClick={() => handleUpgrade(plan.value)}
+                            disabled={
+                              plan.disabled || (isSubmitting && submittingPlan !== plan.value)
+                            }
+                          >
+                            {planCtaLabel(plan)}
+                          </button>
                         </div>
-                      ))}
-                    </BlockStack>
-                    <button
-                      type="button"
-                      onClick={() => handleUpgrade(plan.value)}
-                      disabled={plan.disabled || (isSubmitting && submittingPlan !== plan.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 16px",
-                        background: plan.disabled ? "#e5e7eb" : darkTeal,
-                        color: plan.disabled ? "#6b7280" : "white",
-                        border: "none",
-                        borderRadius: "8px",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        cursor: plan.disabled ? "not-allowed" : "pointer",
-                        marginTop: "4px",
-                        opacity: submittingPlan === plan.value ? 0.9 : 1,
-                      }}
-                    >
-                      {submittingPlan === plan.value ? "Redirecting to payment…" : plan.action}
-                    </button>
-                  </BlockStack>
-                </Box>
-              </Card>
-            ))}
-          </InlineGrid>
-        </BlockStack>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-        <BlockStack gap="300">
-          <Text as="h2" variant="headingLg" fontWeight="bold" style={{ color: darkTeal }}>
-            Scan Top-Ups
-          </Text>
-          <InlineGrid columns={3} gap="400">
-            {topups.map((topup) => (
-              <Card key={topup.value}>
-                <Box padding="400">
-                  <BlockStack gap="300">
-                    <div style={{ position: "relative" }}>
-                      <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
-                        {topup.scans} Scans
-                      </Text>
-                      {topup.popular && (
-                        <span
-                          style={{
-                            position: "absolute",
-                            top: "-2px",
-                            right: 0,
-                            background: darkTeal,
-                            color: "white",
-                            fontSize: "10px",
-                            fontWeight: "600",
-                            padding: "2px 8px",
-                            borderRadius: "100px",
-                          }}
-                        >
-                          Best Value
-                        </span>
-                      )}
-                    </div>
-                    <BlockStack gap="200">
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Text as="span" variant="bodySm" tone="subdued">Price</Text>
-                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{topup.price}</Text>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Text as="span" variant="bodySm" tone="subdued">Per scan</Text>
-                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>{topup.perScan}</Text>
-                      </div>
-                    </BlockStack>
+          <div className="pricing-page__topups">
+            <p className="marketing-unified-capture-label">Add-ons</p>
+            <h3 className="pricing-accordion__heading">Scan top-ups</h3>
+            <p className="pricing-page__topups-lede">
+              One-time packs when you go over your monthly allowance — same checkout as subscriptions.
+            </p>
+            <div className="pricing-plans-stack pricing-accordion" role="list">
+              {topups.map((topup) => {
+                const isOpen = openTopupId === topup.value;
+                return (
+                  <div
+                    key={topup.value}
+                    role="listitem"
+                    className={
+                      "pricing-accordion__card" +
+                      (isOpen ? " pricing-accordion__card--open" : "") +
+                      (topup.popular ? " pricing-accordion__card--popular" : "")
+                    }
+                  >
                     <button
                       type="button"
-                      onClick={() => handleUpgrade(topup.value)}
-                      disabled={isSubmitting && submittingPlan !== topup.value}
-                      style={{
-                        width: "100%",
-                        padding: "10px 16px",
-                        background: darkTeal,
-                        color: "white",
-                        border: "none",
-                        borderRadius: "8px",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                        marginTop: "4px",
-                        opacity: submittingPlan === topup.value ? 0.9 : 1,
-                      }}
+                      className="pricing-accordion__trigger"
+                      aria-expanded={isOpen}
+                      aria-controls={`topup-panel-${topup.value}`}
+                      id={`topup-trigger-${topup.value}`}
+                      onClick={() =>
+                        setOpenTopupId((prev) => (prev === topup.value ? null : topup.value))
+                      }
                     >
-                      {submittingPlan === topup.value ? "Redirecting to payment…" : "Buy Now"}
+                      <span
+                        className={
+                          "pricing-accordion__radio" +
+                          (isOpen ? " pricing-accordion__radio--on" : "")
+                        }
+                        aria-hidden
+                      />
+                      <span className="pricing-accordion__trigger-main">
+                        <span className="pricing-accordion__title-row">
+                          <span className="pricing-accordion__name">{topup.title}</span>
+                          {topup.popular ? (
+                            <span className="pricing-accordion__pill">Best value</span>
+                          ) : null}
+                        </span>
+                        <span className="pricing-accordion__tagline">{topup.tagline}</span>
+                      </span>
+                      <span className="pricing-accordion__trigger-price">
+                        <span className="pricing-accordion__price">{topup.price}</span>
+                        <span className="pricing-accordion__unit">{topup.priceHint}</span>
+                      </span>
                     </button>
-                  </BlockStack>
-                </Box>
-              </Card>
+                    {isOpen ? (
+                      <div
+                        className="pricing-accordion__panel"
+                        id={`topup-panel-${topup.value}`}
+                        role="region"
+                        aria-labelledby={`topup-trigger-${topup.value}`}
+                      >
+                        <p className="pricing-accordion__blurb">{topup.blurb}</p>
+                        <p className="pricing-accordion__allowance">{topup.scans} bonus scans</p>
+                        <h4 className="pricing-accordion__includes-label">What you get</h4>
+                        <ul
+                          className="pricing-accordion__features"
+                          aria-label={`${topup.title} details`}
+                        >
+                          {topup.features.map((f) => (
+                            <li key={f} className="pricing-accordion__feature">
+                              <span className="pricing-accordion__check" aria-hidden />
+                              <span>{f}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="pricing-accordion__divider" role="presentation" />
+                        <div className="pricing-accordion__cta-row">
+                          <button
+                            type="button"
+                            className={
+                              "pricing-accordion__cta" +
+                              (topup.popular ? " pricing-accordion__cta--accent" : "")
+                            }
+                            onClick={() => handleUpgrade(topup.value)}
+                            disabled={isSubmitting && submittingPlan !== topup.value}
+                          >
+                            {topupCtaLabel(topup)}
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <section
+          className="pricing-page__faq-full"
+          aria-labelledby="pricing-faq-heading"
+        >
+          <p className="marketing-unified-capture-label">Help</p>
+          <h2 id="pricing-faq-heading" className="pricing-page__faq-full-title">
+            Common questions
+          </h2>
+          <div className="pricing-faq pricing-faq--full" role="region" aria-label="Pricing questions">
+            {faqs.map((item) => (
+              <details key={item.q} className="pricing-faq__item">
+                <summary className="pricing-faq__summary">{item.q}</summary>
+                <p className="pricing-faq__answer">{item.a}</p>
+              </details>
             ))}
-          </InlineGrid>
-        </BlockStack>
-      </BlockStack>
+          </div>
+        </section>
+      </div>
     </DashboardPageLayout>
   );
 }

@@ -40,5 +40,5 @@ scopes = "write_inventory,write_products"
 
 [auth]
 # Must match application_url origin (replace before launch).
-redirect_urls = [ "https://auto-entry-app-production-4dda.up.railway.app/api/auth" ]
+redirect_urls = [ "https://auto-entry-app-production-4dda.up.railway.app/auth/callback" ]
 

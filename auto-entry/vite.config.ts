@@ -20,13 +20,16 @@ if (
 const host = new URL(process.env.SHOPIFY_APP_URL || "http://localhost")
   .hostname;
 
+const serverPort = Number(process.env.PORT || 3000);
+
 let hmrConfig;
 if (host === "localhost") {
+  // Same port as HTTP server avoids "64999 already in use" when multiple Vite/CLI runs overlap.
   hmrConfig = {
     protocol: "ws",
     host: "localhost",
-    port: 64999,
-    clientPort: 64999,
+    port: serverPort,
+    clientPort: serverPort,
   };
 } else {
   hmrConfig = {
@@ -43,7 +46,9 @@ export default defineConfig({
     cors: {
       preflightContinue: true,
     },
-    port: Number(process.env.PORT || 3000),
+    port: serverPort,
+    // Fail fast if PORT is taken instead of silently using the next port (avoids SHOPIFY_APP_URL / localhost mismatch).
+    strictPort: true,
     hmr: hmrConfig,
     fs: {
       // See https://vitejs.dev/config/server-options.html#server-fs-allow for more information

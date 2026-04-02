@@ -7,6 +7,8 @@ application_url = "https://auto-entry-app-production-4dda.up.railway.app"
 embedded = true
 
 [build]
+# Set true while developing locally so Partners app URL + redirects follow the CLI tunnel (required when production host is down).
+# Set false before release if you want Partners to stay on production URLs without running dev.
 automatically_update_urls_on_dev = true
 
 # Webhook URIs must be full HTTPS URLs in production (https://shopify.dev/docs/apps/build/compliance/privacy-law-compliance)
@@ -34,4 +36,4 @@ compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"
 scopes = "write_inventory,write_products"
 
 [auth]
-redirect_urls = [ "https://auto-entry-app-production-4dda.up.railway.app/api/auth" ]
+redirect_urls = [ "https://auto-entry-app-production-4dda.up.railway.app/auth/callback" ]

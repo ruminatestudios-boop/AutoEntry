@@ -17,12 +17,12 @@
 
 ## 2. Your side (you do)
 
-- [ ] **Deploy** the app to production (Fly, Heroku, Railway, etc.) if not already.
+- [ ] **Deploy** the app to production (Google Cloud Run, Fly, Railway, etc.) if not already.
 - [ ] **Env vars** on production host: `SHOPIFY_APP_URL`, `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`, `GOOGLE_GENERATIVE_AI_API_KEY`, `DATABASE_URL`, optional `SERPAPI_API_KEY`.
 - [x] **Shopify Partner Dashboard:** App URL and redirect URLs point at production (`shopify.app.toml`: `application_url` + `auth.redirect_urls` = `https://auto-entry.fly.dev`; syncs to Partners on deploy).
 - [ ] **Google Cloud Vision** (optional): Set the secret on Fly so OCR works in production — steps in **`VISION-ON-FLY.md`**. Skip and the app still runs; Gemini analyzes images without Vision OCR.
 - [ ] **App Store listing:** Icon 1200×1200, support email (no “Shopify”), emergency contact (email + phone), Privacy URL = `https://your-domain/privacy`, Terms URL = `https://your-domain/terms`, refund policy if required, description/screenshots. **Details:** use checklist + copy in **`APP-STORE-LISTING.md`** (icon, URLs, support, description, screenshots). Mark done when saved in Partners.
-- [ ] **Hosting:** Using Fly and hitting 502? You can switch to **Railway** — see **`DEPLOY-RAILWAY.md`**.
+- [ ] **Hosting:** Prefer **Cloud Run** — **`DEPLOY-CLOUD-RUN.md`**. Fly 502? See **`FLY-502-FIX.md`** or **`DEPLOY-RAILWAY.md`**.
 ---
 
 ## 3. How to resume this conversation tomorrow

@@ -3,20 +3,7 @@ import { Link } from "@remix-run/react";
 import { DashboardPageLayout } from "../components/DashboardPageLayout";
 
 const backToSupportButton = (
-    <Link
-        to="/app/support"
-        aria-label="Back to Support"
-        style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            cursor: "pointer",
-            fontSize: "20px",
-            lineHeight: 1,
-            textDecoration: "none",
-        }}
-    >
+    <Link to="/app/support" aria-label="Back to Support" className="app-page-hero-close">
         ×
     </Link>
 );
@@ -52,14 +39,14 @@ export default function PrivacyPolicy() {
                                         We use the collected information to:
                                     </Text>
                                     <ul>
-                                        <li><Text as="p">Analyze images using AI models (Gemini Flash).</Text></li>
+                                        <li><Text as="p">Analyze images using cloud-based AI models.</Text></li>
                                         <li><Text as="p">Create and manage product drafts in your Shopify store.</Text></li>
                                         <li><Text as="p">Manage your subscription and usage limits.</Text></li>
                                     </ul>
 
                                     <Text as="h2" variant="headingMd">3. Data Sharing</Text>
                                     <Text as="p">
-                                        We share image data with Google (via Gemini API) for the sole purpose of AI analysis. We do not sell your data to third parties.
+                                        We share image data with our AI service providers for analysis only. We do not sell your data to third parties.
                                     </Text>
 
                                     <Text as="h2" variant="headingMd">4. Data Retention</Text>

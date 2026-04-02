@@ -26,39 +26,15 @@ export function VoiceStep({
 }: VoiceStepProps) {
     return (
         <BlockStack gap="400">
-            <div style={{ textAlign: "center", animation: "fadeIn 0.6s ease-out" }}>
-                <Text as="h2" variant="headingLg" fontWeight="bold"><span style={{ fontSize: "18px" }}>Add Variants</span></Text>
-                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--mobile-text-muted)" }}>Speak or type options like "Sizes S to XL".</p>
+            <div className="mobile-capture-head" style={{ animation: "fadeIn 0.6s ease-out" }}>
+                <h2 className="mobile-capture-head__title">Add Variants</h2>
+                <p className="mobile-capture-head__subtitle">Speak or type options like \"Sizes S to XL\".</p>
             </div>
 
-            <div style={{
-                padding: "24px 16px",
-                background: isRecording ? "rgba(239, 68, 68, 0.06)" : "linear-gradient(135deg, rgba(107, 229, 117, 0.06) 0%, rgba(107, 229, 117, 0.12) 50%, rgba(107, 229, 117, 0.08) 100%)",
-                borderRadius: "12px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "16px",
-                border: isRecording ? "1px solid rgba(239, 68, 68, 0.25)" : "1px solid rgba(107, 229, 117, 0.25)",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-            }}>
+            <div className={"mobile-voice-card" + (isRecording ? " mobile-voice-card--recording" : "")}>
                 <button
                     onClick={isRecording ? () => setIsRecording(false) : startRecording}
-                    style={{
-                        width: "72px",
-                        height: "72px",
-                        borderRadius: "50%",
-                        background: isRecording ? "#ef4444" : "var(--mobile-accent)",
-                        border: "none",
-                        color: isRecording ? "white" : "#1a1a1a",
-                        cursor: "pointer",
-                        boxShadow: isRecording ? "0 0 0 12px rgba(239, 68, 68, 0.2)" : "0 8px 24px rgba(107, 229, 117, 0.35)",
-                        transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        animation: isRecording ? "pulse 1.5s infinite" : "none"
-                    }}
+                    className={"mobile-voice-btn" + (isRecording ? " mobile-voice-btn--recording" : "")}
                 >
                     {isRecording ? (
                         <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
@@ -74,7 +50,7 @@ export function VoiceStep({
                     )}
                 </button>
                 <div style={{ textAlign: 'center' }}>
-                    <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: isRecording ? "#ef4444" : "var(--mobile-accent)" }}>
+                    <p className={"mobile-voice-status" + (isRecording ? " mobile-voice-status--recording" : "")}>
                         {isRecording ? "Listening..." : "Tap to Speak"}
                     </p>
                     {voiceError && (
@@ -92,18 +68,8 @@ export function VoiceStep({
                     value={transcript}
                     onChange={(e) => setTranscript(e.target.value)}
                     placeholder="Or type here (e.g. Small, Medium, Large)"
-                    style={{
-                        width: "100%",
-                        padding: "14px 16px",
-                        borderRadius: "12px",
-                        border: "1px solid var(--mobile-border)",
-                        fontSize: "15px",
-                        minHeight: "100px",
-                        fontFamily: "inherit",
-                        background: "#fff",
-                        boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)",
-                        transition: "border-color 0.2s"
-                    }}
+                    className="mobile-textarea"
+                    style={{ minHeight: "100px" }}
                 />
             </div>
 

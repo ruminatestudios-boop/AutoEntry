@@ -1,82 +1,86 @@
-import {
-    BlockStack,
-    Text,
-    Box,
-    Card,
-    InlineGrid,
-} from "@shopify/polaris";
+import { BlockStack, Text, Box, Card } from "@shopify/polaris";
 import { Link } from "@remix-run/react";
 import { DashboardPageLayout } from "../components/DashboardPageLayout";
 
-const accentGreen = "#6be575";
-const darkTeal = "#004c46";
-
 export default function SupportPage() {
-    return (
-        <DashboardPageLayout
-            title="Support"
-            headerTitle="Support & Help"
-            subtitle="Need help with Auto Entry? We're here for you."
-        >
-            <BlockStack gap="600">
-                <InlineGrid columns={['twoThirds', 'oneThird']} gap="400">
-                    <Card>
-                        <Box padding="500">
-                            <BlockStack gap="400">
-                                <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
-                                    Contact Us
-                                </Text>
-                                <BlockStack gap="300">
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                                        <Text as="span" variant="bodyMd" tone="subdued">Email Support</Text>
-                                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>infoautoentry@gmail.com</Text>
-                                    </div>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                                        <Text as="span" variant="bodyMd" tone="subdued">Operating Hours</Text>
-                                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>Mon-Fri, 9AM-5PM EST</Text>
-                                    </div>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                                        <Text as="span" variant="bodyMd" tone="subdued">Typical Response</Text>
-                                        <Text as="span" variant="bodyMd" fontWeight="bold" style={{ color: darkTeal }}>&lt; 12 hours</Text>
-                                    </div>
-                                </BlockStack>
-                                <Text as="p" variant="bodyMd" tone="subdued" style={{ color: "#1a1a1a" }}>
-                                    We're dedicated to helping you scale your business with speed and accuracy.
-                                    <br />
-                                    Drop us a line and we'll get back to you as soon as possible.
-                                </Text>
-                            </BlockStack>
-                        </Box>
-                    </Card>
+  return (
+    <DashboardPageLayout
+      heroAccent="dashboard"
+      title="Support"
+      headerTitle="Support & Help"
+      subtitle="Need help with Auto Entry? We're here for you."
+    >
+      <div className="support-page">
+        <div className="support-page__grid">
+          <div className="support-panel">
+            <Card>
+              <Box padding="500">
+                <BlockStack gap="400">
+                  <p className="marketing-unified-capture-label">Contact</p>
+                  <Text as="h3" variant="headingLg" fontWeight="bold" className="support-panel__title">
+                    We&apos;re here to help
+                  </Text>
+                  <BlockStack gap="300">
+                    <div className="support-contact-row">
+                      <Text as="span" variant="bodyMd" tone="subdued">
+                        Email support
+                      </Text>
+                      <Text as="span" variant="bodyMd" fontWeight="bold" className="app-section-heading">
+                        infoautoentry@gmail.com
+                      </Text>
+                    </div>
+                    <div className="support-contact-row">
+                      <Text as="span" variant="bodyMd" tone="subdued">
+                        Operating hours
+                      </Text>
+                      <Text as="span" variant="bodyMd" fontWeight="bold" className="app-section-heading">
+                        Mon–Fri, 9AM–5PM EST
+                      </Text>
+                    </div>
+                    <div className="support-contact-row">
+                      <Text as="span" variant="bodyMd" tone="subdued">
+                        Typical response
+                      </Text>
+                      <Text as="span" variant="bodyMd" fontWeight="bold" className="app-section-heading">
+                        &lt; 12 hours
+                      </Text>
+                    </div>
+                  </BlockStack>
+                  <p className="support-body-text">
+                    We&apos;re dedicated to helping you scale your business with speed and accuracy. Drop us a line and
+                    we&apos;ll get back to you as soon as possible.
+                  </p>
+                </BlockStack>
+              </Box>
+            </Card>
+          </div>
 
-                    <Card>
-                        <Box padding="500">
-                            <BlockStack gap="400">
-                                <Text as="h3" variant="headingMd" fontWeight="bold" style={{ color: darkTeal }}>
-                                    Quick Links
-                                </Text>
-                                <BlockStack gap="200">
-                                    {[
-                                        { label: "Documentation", to: "/app/docs" },
-                                        { label: "Pricing Plans", to: "/app/pricing" },
-                                        { label: "Privacy Policy", to: "/app/privacy" },
-                                        { label: "Terms of Service", to: "/app/terms" }
-                                    ].map((link) => (
-                                        <div key={link.label}>
-                                            <Link
-                                                to={link.to}
-                                                style={{ fontWeight: 500, color: "#1a1a1a", textDecoration: "underline" }}
-                                            >
-                                                {link.label}
-                                            </Link>
-                                        </div>
-                                    ))}
-                                </BlockStack>
-                            </BlockStack>
-                        </Box>
-                    </Card>
-                </InlineGrid>
-            </BlockStack>
-        </DashboardPageLayout>
-    );
+          <div className="support-panel">
+            <Card>
+              <Box padding="500">
+                <BlockStack gap="400">
+                  <p className="marketing-unified-capture-label">Resources</p>
+                  <Text as="h3" variant="headingLg" fontWeight="bold" className="support-panel__title">
+                    Quick links
+                  </Text>
+                  <nav className="support-links-stack" aria-label="Quick links">
+                    {[
+                      { label: "Documentation", to: "/app/docs" },
+                      { label: "Pricing plans", to: "/app/pricing" },
+                      { label: "Privacy policy", to: "/app/privacy" },
+                      { label: "Terms of service", to: "/app/terms" },
+                    ].map((link) => (
+                      <Link key={link.to} to={link.to} className="support-link-pill">
+                        {link.label}
+                      </Link>
+                    ))}
+                  </nav>
+                </BlockStack>
+              </Box>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </DashboardPageLayout>
+  );
 }

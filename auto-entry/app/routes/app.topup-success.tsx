@@ -43,7 +43,7 @@ export default function TopUpSuccess() {
     }, [navigate]);
 
     return (
-        <DashboardPageLayout title="Success" subtitle="Success">
+        <DashboardPageLayout title="Top-up complete" subtitle="Your bonus scans are ready to use.">
             <div style={{
                 display: "flex",
                 alignItems: "center",

@@ -2,50 +2,95 @@ import { Page } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import type { ReactNode } from "react";
 
-const PRIMARY_TEAL = "#1a514d";
-
 type Props = {
   title: string;
   subtitle: string;
-  /** Optional main banner heading (defaults to "Auto Entry") */
+  /**
+   * `home` — dashboard only: tight main, no page hero (content supplies the unified panel).
+   * `page` — all other screens: light gray canvas + hero strip + body (default).
+   */
+  variant?: "home" | "page";
+  /** Match home dashboard hero: mint gradient band at top of the page title card */
+  heroAccent?: "none" | "dashboard";
+  /** Main page name shown in the hero (falls back to `title`) */
   headerTitle?: string;
-  /** Optional second line under the subtitle (e.g. for Support page tagline) */
+  /** Optional second line under the subtitle */
   subtitleDetail?: string;
   headerRight?: ReactNode;
   children: ReactNode;
 };
 
-export function DashboardPageLayout({ title, subtitle, headerTitle = "Auto Entry", subtitleDetail, headerRight, children }: Props) {
+export function DashboardPageLayout({
+  title,
+  subtitle,
+  variant = "page",
+  heroAccent = "none",
+  headerTitle,
+  subtitleDetail,
+  headerRight,
+  children,
+}: Props) {
+  const pageLabel = headerTitle ?? title;
+
+  if (variant === "home") {
+    return (
+      <Page>
+        <div className="dashboard-home dashboard-marketing">
+          <TitleBar title={title} />
+          <main className="marketing-main marketing-main--tight">{children}</main>
+        </div>
+      </Page>
+    );
+  }
+
   return (
     <Page>
-      <div className="dashboard-home">
+      <div className="dashboard-home dashboard-marketing">
         <TitleBar title={title} />
-        <div
-          className="dashboard-header"
-          style={{
-            background: PRIMARY_TEAL,
-            color: "white",
-            padding: "20px 24px",
-            marginBottom: "24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "24px",
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 700, letterSpacing: "-0.02em" }}>
-              {headerTitle}
-            </h1>
-            <p style={{ margin: "4px 0 0", fontSize: "14px", opacity: 0.92 }}>{subtitle}</p>
-            {subtitleDetail != null && (
-              <p style={{ margin: "4px 0 0", fontSize: "14px", opacity: 0.85 }}>{subtitleDetail}</p>
-            )}
+        <main className="marketing-main marketing-main--page">
+          <div className="app-page-stack">
+            <header
+              className={
+                heroAccent === "dashboard"
+                  ? "app-page-hero-card app-page-hero-card--dashboard"
+                  : "app-page-hero-card"
+              }
+            >
+              {heroAccent === "dashboard" ? (
+                <div className="app-page-hero-card__dashboard-top">
+                  <div className="app-page-hero-card__row">
+                    <div className="app-page-hero-card__copy">
+                      <p className="app-page-hero-card__eyebrow">Auto Entry · {pageLabel}</p>
+                      <h1 className="app-page-hero-card__title">{pageLabel}</h1>
+                      <p className="app-page-hero-card__subtitle">{subtitle}</p>
+                      {subtitleDetail != null ? (
+                        <p className="app-page-hero-card__detail">{subtitleDetail}</p>
+                      ) : null}
+                    </div>
+                    {headerRight != null ? (
+                      <div className="app-page-hero-card__actions">{headerRight}</div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <div className="app-page-hero-card__row">
+                  <div className="app-page-hero-card__copy">
+                    <p className="app-page-hero-card__eyebrow">Auto Entry · {pageLabel}</p>
+                    <h1 className="app-page-hero-card__title">{pageLabel}</h1>
+                    <p className="app-page-hero-card__subtitle">{subtitle}</p>
+                    {subtitleDetail != null ? (
+                      <p className="app-page-hero-card__detail">{subtitleDetail}</p>
+                    ) : null}
+                  </div>
+                  {headerRight != null ? (
+                    <div className="app-page-hero-card__actions">{headerRight}</div>
+                  ) : null}
+                </div>
+              )}
+            </header>
+            <div className="app-page-body">{children}</div>
           </div>
-          {headerRight != null ? headerRight : null}
-        </div>
-        {children}
+        </main>
       </div>
     </Page>
   );
