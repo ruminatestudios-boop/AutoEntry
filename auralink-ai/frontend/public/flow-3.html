@@ -202,7 +202,7 @@
     <!-- Header: landing-style -->
     <header class="shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
       <div id="flow3-header-left"></div>
-      <a href="/landing.html" class="inline-flex items-center justify-self-center no-underline text-[#111] leading-none py-0.5"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <a href="/demo" class="inline-flex items-center justify-self-center no-underline text-[#111] leading-none py-0.5"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
       <div class="justify-self-end"></div>
     </header>
     <main class="flex-1 px-5 pt-6 pb-6 overflow-auto">
@@ -463,6 +463,20 @@
       <p id="waitlist-publish-shopify-status" class="hidden text-xs mt-2"></p>
       <button type="button" id="waitlist-publish-shopify-continue" class="mt-4 w-full rounded-xl bg-[#0a0a0a] text-white text-sm font-semibold py-3 px-4">Continue to publish</button>
       <p class="text-xs text-zinc-500 mt-3 mb-0"><a href="/landing.html#waitlist" class="text-[#111] font-medium underline">Open waitlist on homepage</a></p>
+    </div>
+  </div>
+
+  <!-- Demo scan flow: Publish to Shopify opens same waitlist UX as /demo (synclyst_demo_active set when starting a demo scan) -->
+  <div id="demo-limit-modal" class="fixed inset-0 z-[210] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-[2px]" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="demo-limit-modal-summary">
+    <div class="max-w-[440px] w-full rounded-3xl border border-zinc-100/80 bg-white p-8 sm:p-10 shadow-[0_25px_80px_-12px_rgba(0,0,0,0.35)] relative text-center" onclick="event.stopPropagation()">
+      <button type="button" id="demo-limit-modal-dismiss" class="absolute top-4 right-4 w-9 h-9 rounded-full text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 flex items-center justify-center text-lg leading-none" aria-label="Close">×</button>
+      <p class="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-3">Waitlist</p>
+      <p id="demo-limit-modal-summary" class="text-xl sm:text-2xl font-semibold tracking-tight text-[#0a0a0a] mb-3 leading-snug text-balance">Your listing is ready.</p>
+      <p class="text-sm text-zinc-500 vercel-body mb-6 text-balance">Join the waitlist — beta with full Shopify publishing opens soon.</p>
+      <label class="sr-only" for="demo-limit-email">Email</label>
+      <input type="email" id="demo-limit-email" autocomplete="email" placeholder="e.g. alex@mybrand.com" class="w-full rounded-xl border border-[#eaeaea] bg-zinc-50/80 px-4 py-3.5 text-sm text-[#111] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 mb-3 text-left" />
+      <button type="button" id="demo-limit-submit" class="w-full rounded-xl bg-black text-white font-semibold py-3.5 text-sm border border-black hover:bg-zinc-900">Join the waitlist</button>
+      <p id="demo-limit-status" class="hidden text-sm mt-3" role="status"></p>
     </div>
   </div>
   <script>
@@ -811,6 +825,32 @@
         return url;
       }
 
+      function isDemoUser() {
+        try {
+          return localStorage.getItem('synclyst_demo_active') === '1';
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function showDemoLimitModal() {
+        var modal = document.getElementById('demo-limit-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+      }
+
+      function hideDemoLimitModal() {
+        var modal = document.getElementById('demo-limit-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+      }
+
       var WAITLIST_PUBLISH_LS_KEY = 'synclyst_waitlist_publish_shopify_shown';
       var waitlistPublishContinueCb = null;
 
@@ -880,6 +920,58 @@
               })
               .catch(function() {
                 setSt('err', 'Could not join right now. You can still continue to publish.');
+              })
+              .finally(function() {
+                submitBtn.disabled = false;
+              });
+          });
+        }
+      })();
+
+      (function wireDemoLimitModal() {
+        var modalEl = document.getElementById('demo-limit-modal');
+        var dismissBtn = document.getElementById('demo-limit-modal-dismiss');
+        var submitBtn = document.getElementById('demo-limit-submit');
+        var emailInput = document.getElementById('demo-limit-email');
+        var statusEl = document.getElementById('demo-limit-status');
+        function setSt(kind, text) {
+          if (!statusEl) return;
+          statusEl.textContent = text || '';
+          statusEl.classList.remove('hidden');
+          statusEl.style.color =
+            kind === 'ok' ? '#166534' : kind === 'warn' ? '#92400e' : '#991b1b';
+        }
+        if (dismissBtn) dismissBtn.addEventListener('click', hideDemoLimitModal);
+        if (modalEl) {
+          modalEl.addEventListener('click', function(e) {
+            if (e.target === modalEl) hideDemoLimitModal();
+          });
+        }
+        if (submitBtn && emailInput) {
+          submitBtn.addEventListener('click', function() {
+            var email = (emailInput.value || '').trim();
+            if (!email || email.indexOf('@') === -1) {
+              setSt('err', 'Enter a valid email.');
+              return;
+            }
+            submitBtn.disabled = true;
+            setSt('warn', 'Joining…');
+            var base = getPublishingUrl().replace(/\/$/, '');
+            fetch(base + '/auth/waitlist', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: email,
+                source: 'demo-review-publish-waitlist',
+                note: 'Demo review: Publish to Shopify → waitlist for beta',
+              }),
+            })
+              .then(function(res) {
+                if (!res.ok) throw new Error('fail');
+                setSt('ok', "You're on the list. We'll be in touch.");
+              })
+              .catch(function() {
+                setSt('err', 'Something went wrong. Try again shortly.');
               })
               .finally(function() {
                 submitBtn.disabled = false;
@@ -2195,6 +2287,10 @@
 
       document.getElementById('review-next-btn').addEventListener('click', function(e) {
         e.preventDefault();
+        if (isDemoUser()) {
+          showDemoLimitModal();
+          return;
+        }
         var nextBtn = document.getElementById('review-next-btn');
         persistDraftFromDom();
         var d = loadDraft();
