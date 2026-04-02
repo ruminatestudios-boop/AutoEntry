@@ -8,8 +8,8 @@ Deep audit of the codebase after push to Shopify. Use this to confirm everything
 
 | Item | Status | Notes |
 |------|--------|--------|
-| **shopify.app.toml** | ✅ | `application_url` = `https://auto-entry-app-production-4dda.up.railway.app` |
-| **Auth redirect** | ✅ | `redirect_urls` = same Railway URL + `/api/auth` |
+| **shopify.app.toml** | ✅ | `application_url` = Cloud Run URL (see `DEPLOY-CLOUD-RUN.md`) |
+| **Auth redirect** | ✅ | `redirect_urls` = same production URL + `/api/auth` |
 | **Client ID** | ✅ | Set in toml |
 | **Scopes** | ✅ | `write_inventory, write_products` |
 | **Webhooks API version** | ✅ | 2025-01 (matches shopify.server.ts) |
@@ -94,15 +94,15 @@ Migrations: `createdAt` on ScannedProduct is in migration `20260213171652_add_sc
 
 ## 4. Environment variables
 
-### Required in production (Railway)
+### Required in production (Cloud Run / any host)
 
 | Variable | Required | Used for |
 |----------|----------|----------|
 | **SHOPIFY_API_KEY** | ✅ | Shopify auth |
 | **SHOPIFY_API_SECRET** | ✅ | Shopify auth |
-| **SHOPIFY_APP_URL** | ✅ | OAuth & redirects (must be full Railway URL with https) |
+| **SHOPIFY_APP_URL** | ✅ | OAuth & redirects (must be full production URL with https) |
 | **SCOPES** | ✅ | e.g. `write_inventory,write_products` |
-| **DATABASE_URL** | ✅ (or volume) | SQLite path; or set via RAILWAY_VOLUME_MOUNT_PATH |
+| **DATABASE_URL** | ✅ (or volume) | SQLite path; or `DATA_MOUNT_PATH` / `RAILWAY_VOLUME_MOUNT_PATH` |
 | **GOOGLE_GENERATIVE_AI_API_KEY** | ✅ | Gemini (scan + variant parse) |
 | **NODE_ENV** | ✅ | `production` |
 
@@ -113,8 +113,8 @@ Migrations: `createdAt` on ScannedProduct is in migration `20260213171652_add_sc
 | **SERPAPI_API_KEY** | Image search (dashboard “find images”) |
 | **GOOGLE_APPLICATION_CREDENTIALS** / **GOOGLE_APPLICATION_CREDENTIALS_JSON** | Vision OCR (optional; Gemini works without it) |
 | **SHOP_CUSTOM_DOMAIN** | Custom shop domain |
-| **PORT** | Do not set on Railway; Railway injects it |
-| **RAILWAY_VOLUME_MOUNT_PATH** | Volume for SQLite (e.g. `/data`) |
+| **PORT** | Do not set on Cloud Run / Railway; host injects it |
+| **DATA_MOUNT_PATH** / **RAILWAY_VOLUME_MOUNT_PATH** | Optional volume for SQLite (e.g. `/data`) |
 
 ---
 
@@ -188,9 +188,9 @@ Migrations: `createdAt` on ScannedProduct is in migration `20260213171652_add_sc
 |------|--------|
 | **Dockerfile** | ✅ Node 20 bookworm-slim, build + docker-start |
 | **Start** | ✅ `scripts/production-start.cjs` → vision creds, `npm run setup` (prisma generate + migrate deploy), remix-serve |
-| **Railway** | ✅ App URL in toml points to Railway |
+| **Production host** | ✅ App URL in toml points to Cloud Run (or chosen host) |
 | **Migrations** | ✅ Run on startup via `setup` |
-| **No custom PORT** | ✅ Leave unset on Railway |
+| **No custom PORT** | ✅ Leave unset on Cloud Run / Railway |
 
 ---
 
@@ -206,12 +206,12 @@ Migrations: `createdAt` on ScannedProduct is in migration `20260213171652_add_sc
 
 ## 9. What to verify in production
 
-1. **Railway**  
+1. **Cloud Run**  
    - Latest deploy from `main` succeeded.  
    - Variables set: SHOPIFY_API_KEY, SHOPIFY_API_SECRET, SHOPIFY_APP_URL, SCOPES, DATABASE_URL (or volume), GOOGLE_GENERATIVE_AI_API_KEY, NODE_ENV=production.
 
 2. **Shopify Partners**  
-   - App URL = `https://auto-entry-app-production-4dda.up.railway.app`.  
+   - App URL = your Cloud Run URL (see `DEPLOY-CLOUD-RUN.md`).  
    - Allowed redirection URL(s) include that origin + `/api/auth`.
 
 3. **Store**  

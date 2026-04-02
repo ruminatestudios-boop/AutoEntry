@@ -4,9 +4,10 @@ interface PricingModalProps {
     isOpen: boolean;
     onClose: () => void;
     shop: string;
+    apiKey: string;
 }
 
-export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
+export function PricingModal({ isOpen, onClose, shop, apiKey }: PricingModalProps) {
     if (!isOpen) return null;
 
     const plans = [
@@ -14,6 +15,7 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
             name: "Starter",
             price: "$19.99",
             limit: "100",
+            description: "Small boutiques",
             features: ["Everything in Free", "100 monthly scans", "Batch scanning", "Priority support"],
             popular: false,
             value: "Starter"
@@ -22,6 +24,7 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
             name: "Growth",
             price: "$49.99",
             limit: "500",
+            description: "Growing stores",
             features: ["Everything in Starter", "500 monthly scans", "Voice variants", "Advanced analytics"],
             popular: true,
             value: "Growth"
@@ -30,7 +33,8 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
             name: "Power",
             price: "$99.99",
             limit: "1,000",
-            features: ["Everything in Growth", "1,000 monthly scans", "API access", "Custom integrations"],
+            description: "High-volume",
+            features: ["Everything in Growth", "1,000 monthly scans", "Team workflows", "Custom integrations"],
             popular: false,
             value: "Power"
         }
@@ -79,12 +83,12 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
                         <div
                             key={p.name}
                             style={{
-                                background: p.popular ? "linear-gradient(135deg, rgba(107, 229, 117, 0.08) 0%, rgba(107, 229, 117, 0.14) 50%, rgba(107, 229, 117, 0.06) 100%)" : "white",
-                                borderRadius: "12px",
-                                border: p.popular ? "1px solid rgba(107, 229, 117, 0.4)" : "1px solid var(--mobile-border)",
-                                padding: "18px",
+                                background: "white",
+                                borderRadius: "16px",
+                                border: p.popular ? "1px solid rgba(107, 229, 117, 0.55)" : "1px solid var(--mobile-border)",
+                                padding: "16px",
                                 position: "relative",
-                                boxShadow: p.popular ? "0 4px 20px rgba(107, 229, 117, 0.15)" : "none"
+                                boxShadow: p.popular ? "0 10px 28px rgba(107, 229, 117, 0.12)" : "0 6px 18px rgba(0,0,0,0.06)"
                             }}
                         >
                             {p.popular && (
@@ -112,10 +116,11 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
                             <BlockStack gap="400">
                                 <BlockStack gap="100">
                                     <Text as="h3" variant="headingSm" fontWeight="medium">{p.name}</Text>
-                                    <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+                                    <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
                                         <Text as="h1" variant="heading3xl" fontWeight="bold">{p.price}</Text>
-                                        <Text as="span" variant="bodySm" tone="subdued">/mo</Text>
+                                        <Text as="span" variant="bodySm" tone="subdued">/monthly</Text>
                                     </div>
+                                    <Text as="p" variant="bodySm" tone="subdued">{p.description}</Text>
                                 </BlockStack>
 
                                 <div
@@ -134,8 +139,22 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
 
                                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                     {p.features.map((f, idx) => (
-                                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                            <div style={{ width: "4px", height: "4px", background: "#475569", borderRadius: "50%" }} />
+                                        <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                                            <div style={{
+                                                width: "18px",
+                                                height: "18px",
+                                                borderRadius: "999px",
+                                                background: "rgba(107, 229, 117, 0.22)",
+                                                border: "1px solid rgba(26, 81, 77, 0.2)",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                fontSize: "12px",
+                                                fontWeight: 800,
+                                                color: "var(--mobile-primary)",
+                                                marginTop: "1px",
+                                                flexShrink: 0
+                                            }}>✓</div>
                                             <Text as="span" variant="bodySm" tone="subdued">{f}</Text>
                                         </div>
                                     ))}
@@ -143,15 +162,16 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
 
                                 <button
                                     onClick={() => {
-                                        const url = `https://${shop}/admin/apps/auto-entry/app/pricing?plan=${p.value}`;
+                                        // Use client_id (api key) deep link so it works for all installs.
+                                        const url = `https://${shop}/admin/apps/${encodeURIComponent(apiKey)}/app/pricing?plan=${encodeURIComponent(p.value)}`;
                                         window.location.href = url;
                                     }}
                                     style={{
                                         width: "100%",
                                         padding: "12px",
-                                        background: p.popular ? "var(--mobile-accent)" : "white",
-                                        color: p.popular ? "#1a1a1a" : "#1a1a1a",
-                                        border: p.popular ? "none" : "1px solid var(--mobile-border)",
+                                        background: "linear-gradient(180deg, #111827 0%, #000000 100%)",
+                                        color: "white",
+                                        border: "none",
                                         borderRadius: "12px",
                                         fontWeight: 700,
                                         fontSize: "15px",
@@ -159,7 +179,7 @@ export function PricingModal({ isOpen, onClose, shop }: PricingModalProps) {
                                         marginTop: "6px"
                                     }}
                                 >
-                                    Choose {p.name}
+                                    Start {p.name}
                                 </button>
                             </BlockStack>
                         </div>

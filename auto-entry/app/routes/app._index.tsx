@@ -22,7 +22,9 @@ import {
   AppProvider,
   Badge,
   Button,
+  Icon,
 } from "@shopify/polaris";
+import { DeleteIcon, DuplicateIcon } from "@shopify/polaris-icons";
 import enTranslations from "@shopify/polaris/locales/en.json";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -580,7 +582,7 @@ export default function Index() {
             next.delete(listedId);
             return next;
           });
-        }, 500);
+        }, 720);
       }
     } else if (listProductFetcher.data?.error) {
       shopify.toast.show("Listing Failed: " + listProductFetcher.data.error);
@@ -619,7 +621,7 @@ export default function Index() {
           return next;
         });
         setProductToDelete(null);
-      }, 500);
+      }, 720);
     }
   };
 
@@ -659,19 +661,19 @@ export default function Index() {
     <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
       {scanCount >= freeLimit ? (
         <>
-          <span style={{ fontSize: "14px", opacity: 0.95 }}>Scan limit reached · {freeLimit} scans used</span>
+          <span style={{ fontSize: "13px", color: "#71717a" }}>Scan limit reached · {freeLimit} scans used</span>
           <Link url="/app/pricing">
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "white", textDecoration: "underline", opacity: 0.95 }}>Upgrade</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#1a514d", textDecoration: "underline" }}>Upgrade</span>
           </Link>
         </>
       ) : (
         <>
-          <span style={{ fontSize: "14px", opacity: 0.95 }}>Free Plan · {scanCount} of {freeLimit} scans</span>
-          <div style={{ width: "72px", height: "4px", background: "rgba(255,255,255,0.25)", borderRadius: "999px", overflow: "hidden" }}>
+          <span style={{ fontSize: "13px", color: "#71717a" }}>Free · {scanCount}/{freeLimit} scans</span>
+          <div style={{ width: "72px", height: "4px", background: "#e4e4e7", borderRadius: "999px", overflow: "hidden" }}>
             <div className="dashboard-header-progress-fill" style={{ width: (Math.min(100, (scanCount / freeLimit) * 100)) + "%", height: "100%", borderRadius: "999px", transition: "width 0.3s ease" }} />
           </div>
           <Link url="/app/pricing">
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "white", textDecoration: "underline", opacity: 0.95 }}>Plans</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#1a514d", textDecoration: "underline" }}>Plans</span>
           </Link>
         </>
       )}
@@ -679,15 +681,41 @@ export default function Index() {
   ) : undefined;
 
   return (
-    <DashboardPageLayout title="Auto Entry Dashboard" subtitle="Dashboard" headerRight={headerRight}>
-        <BlockStack gap="500">
+    <DashboardPageLayout variant="home" title="Auto Entry Dashboard" subtitle="Dashboard">
+        <BlockStack gap="400">
         <style>{`
-          @keyframes slideAndFadeOut {
-            0% { transform: translateX(0); opacity: 1; max-height: 500px; margin-bottom: 20px; }
-            100% { transform: translateX(-100%); opacity: 0; max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
+          /* Exit: slide left + fade together in the main beat; collapse height only at the very end */
+          @keyframes scanCardExit {
+            0% {
+              opacity: 1;
+              transform: translate3d(0, 0, 0);
+              max-height: 720px;
+            }
+            34% {
+              opacity: 1;
+              transform: translate3d(-8px, 0, 0);
+              max-height: 720px;
+            }
+            84% {
+              opacity: 0;
+              transform: translate3d(-58px, 0, 0);
+              max-height: 720px;
+            }
+            100% {
+              opacity: 0;
+              transform: translate3d(-64px, 0, 0);
+              max-height: 0;
+              min-height: 0;
+              padding-top: 0;
+              padding-bottom: 0;
+              padding-left: 0;
+              padding-right: 0;
+              margin: 0;
+              border-width: 0;
+            }
           }
           .card-animating-out {
-            animation: slideAndFadeOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+            animation: scanCardExit 0.68s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
             pointer-events: none;
             overflow: hidden;
           }
@@ -699,78 +727,129 @@ export default function Index() {
           }
         `}</style>
 
-        {/* Hero: AirAsia-style — white card, green CTA, QR right */}
+        {/* Single compact panel: hero + pills + QR */}
         <Layout>
           <Layout.Section>
-            <Card>
-              <Box padding="600" data-qr-section>
-                <InlineStack align="space-between" blockAlign="center" gap="800" wrap={false}>
-                  <BlockStack gap="400">
-                    <Text as="h2" variant="headingLg" fontWeight="bold" style={{ fontSize: "26px", lineHeight: 1.3 }}>
-                      <span style={{ color: primaryTeal }}>Intelligent Inventory</span>
-                      <span style={{ color: "#004c46" }}> Capturing</span>
-                    </Text>
-                    <Text as="p" variant="bodyMd" style={{ fontSize: "17px", color: primaryTeal }}>
-                      <span style={{ color: primaryTeal }}>Automate product entry with AI. </span>
-                      <span style={{ color: accentGreen, fontWeight: 600 }}>Fast, accurate, synced to Shopify.</span>
-                    </Text>
-                    <BlockStack gap="300">
-                      <Text as="p" variant="bodyMd" style={{ color: "#1a1a1a", fontSize: "16px" }}>
-                        Sync your mobile — scan QR to link.
+            <div className="marketing-unified-panel" data-qr-section>
+              <div className="marketing-unified-top">
+                <div className="marketing-unified-lead">
+                  <p className="marketing-unified-eyebrow">Auto Entry · Dashboard</p>
+                  <h2 className="marketing-unified-headline">
+                    Instant listings{" "}
+                    <span className="marketing-hero-gradient">No manual entry</span>
+                  </h2>
+                  <p className="marketing-unified-tagline">
+                    Point. Shoot. Product card populated — review and publish in Shopify
+                  </p>
+                  <div className="marketing-pill-strip" role="list" aria-label="Highlights">
+                    <div className="marketing-pill-strip__part" role="listitem">
+                      <kbd>Fast</kbd> scan &amp; extract
+                    </div>
+                    <div className="marketing-pill-strip__part" role="listitem">
+                      <kbd>AI</kbd> titles, images &amp; variants
+                    </div>
+                    <div className="marketing-pill-strip__part" role="listitem">
+                      <kbd>Sync</kbd> to your catalog
+                    </div>
+                  </div>
+                </div>
+                {isFree && headerRight != null ? (
+                  <div className="marketing-unified-plan">{headerRight}</div>
+                ) : null}
+              </div>
+              <div className="marketing-unified-bottom">
+                <div className="marketing-unified-bottom-main">
+                  <p className="marketing-unified-capture-label">On your phone</p>
+                  <ul className="marketing-hero-bullets marketing-hero-bullets--compact">
+                    <li>Link your phone — scan the QR to open the mobile capture flow.</li>
+                    <li>Smart capture — photo in; titles, images, and variants out.</li>
+                    <li>Review and publish when you&apos;re ready — synced to Shopify.</li>
+                    <li>Stay signed in on mobile until you finish the batch; refresh the dashboard if the link expires.</li>
+                    <li>
+                      Drafts appear on this dashboard as you capture — hop back here to fine-tune titles,
+                      images, and variants before you publish.
+                    </li>
+                  </ul>
+                </div>
+                <div
+                  id="mobile-scan-qr"
+                  className={`marketing-qr-invite${atFreeLimit ? " marketing-qr-invite--free" : ""}`}
+                >
+                  {atFreeLimit ? (
+                    <BlockStack gap="200">
+                      <Text as="p" variant="bodySm" fontWeight="semibold">
+                        You&apos;ve used your 5 free scans
                       </Text>
-                      <Text as="p" variant="bodyMd" style={{ color: "#1a1a1a", fontSize: "16px" }}>
-                        Smart capture — photo, AI extracts data.
+                      <Text as="p" variant="bodySm">
+                        Upgrade to keep scanning.
                       </Text>
-                      <Text as="p" variant="bodyMd" style={{ color: "#1a1a1a", fontSize: "16px" }}>
-                        Review in Shopify when ready.
-                      </Text>
+                      <Button
+                        variant="primary"
+                        tone="success"
+                        onClick={() => setUpgradeModalOpen(true)}
+                        fullWidth
+                      >
+                        Upgrade
+                      </Button>
                     </BlockStack>
-                  </BlockStack>
-                  <Box id="mobile-scan-qr" padding="400" background="bg-surface-secondary" borderRadius="300" minWidth="200px">
-                    <BlockStack gap="300">
-                      {atFreeLimit ? (
+                  ) : typeof window !== "undefined" && sessionId ? (
+                    (() => {
+                      const mobileUrl = `${appUrl}/mobile/${sessionId}`;
+                      const copyLink = () => {
+                        navigator.clipboard.writeText(mobileUrl);
+                        shopify.toast.show("Link copied");
+                      };
+                      return (
                         <>
-                          <Text as="p" variant="bodyMd" fontWeight="semibold" style={{ color: textDark }}>
-                            You've used your 5 free scans
-                          </Text>
-                          <Text as="p" variant="bodySm" tone="subdued">
-                            Upgrade your plan to keep scanning.
-                          </Text>
-                          <Button variant="primary" tone="success" onClick={() => setUpgradeModalOpen(true)}>
-                            Upgrade
-                          </Button>
-                        </>
-                      ) : typeof window !== "undefined" && sessionId ? (
-                        <>
-                          <InlineStack align="center" blockAlign="center" gap="200">
-                            <Box background="bg-surface-primary" padding="200" borderRadius="200" borderWidth="025" borderColor="border-secondary">
-                              <QRCodeSVG value={appUrl + "/mobile/" + sessionId} size={160} level="M" includeMargin={false} />
-                            </Box>
-                          </InlineStack>
-                          <Button
-                            variant="primary"
-                            tone="success"
-                            onClick={() => { navigator.clipboard.writeText(appUrl + "/mobile/" + sessionId); shopify.toast.show("URL copied"); }}
+                          <div className="marketing-qr-invite__header">
+                            <h3 className="marketing-qr-invite__title">Mobile capture</h3>
+                          </div>
+                          <div className="marketing-qr-invite__rule" role="presentation" />
+                          <div className="marketing-qr-invite__main">
+                            <div className="marketing-qr-invite__qr-frame">
+                              <QRCodeSVG value={mobileUrl} size={152} level="M" includeMargin={false} />
+                            </div>
+                            <ul className="marketing-qr-invite__bullets">
+                              <li>Scan the code with your camera to open capture on your phone.</li>
+                              <li>
+                                Or tap <strong>Copy link</strong> below and paste it in{" "}
+                                <strong>Safari</strong> or <strong>Chrome</strong> on your device.
+                              </li>
+                              <li>
+                                When you&apos;re done on your phone, come back here to review and save
+                                your product to Shopify.
+                              </li>
+                            </ul>
+                          </div>
+                          <div className="marketing-qr-invite__or-wrap" aria-hidden="true">
+                            <span className="marketing-qr-invite__or-line" />
+                            <span className="marketing-qr-invite__or-text">Or copy this link</span>
+                            <span className="marketing-qr-invite__or-line" />
+                          </div>
+                          <button
+                            type="button"
+                            className="marketing-qr-invite__copy-pill"
+                            onClick={copyLink}
+                            aria-label="Copy mobile capture link"
                           >
-                            Copy URL
-                          </Button>
-                          <div style={{ textAlign: "center" }}>
-                            <Text as="p" variant="bodySm" tone="subdued">Scan to open</Text>
-                          </div>
+                            <span className="marketing-qr-invite__copy-icon" aria-hidden>
+                              <Icon source={DuplicateIcon} />
+                            </span>
+                            <span className="marketing-qr-invite__copy-text">{mobileUrl}</span>
+                          </button>
                         </>
-                      ) : (
-                        <>
-                          <Text as="p" variant="bodySm" tone="subdued">Initializing…</Text>
-                          <div style={{ textAlign: "center" }}>
-                            <Text as="p" variant="bodySm" tone="subdued">Scan to open</Text>
-                          </div>
-                        </>
-                      )}
-                    </BlockStack>
-                  </Box>
-                </InlineStack>
-              </Box>
-            </Card>
+                      );
+                    })()
+                  ) : (
+                    <div className="marketing-qr-invite__loading">
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        Initializing…
+                      </Text>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </Layout.Section>
         </Layout>
         {/* Recent Scans Grid */}
@@ -931,9 +1010,13 @@ export default function Index() {
                             border: "1px solid rgba(107, 229, 117, 0.25)",
                             display: "flex",
                             flexDirection: "column",
-                            transition: "all 0.2s ease",
+                            transition: animatingIds.has(scan.id) ? "none" : "all 0.2s ease",
                             position: "relative",
-                            ...(animatingIds.has(scan.id) && { animation: 'slideAndFadeOut 0.5s forwards', pointerEvents: 'none' })
+                            ...(animatingIds.has(scan.id) && {
+                              animation: "scanCardExit 0.68s cubic-bezier(0.22, 1, 0.36, 1) forwards",
+                              pointerEvents: "none" as const,
+                              overflow: "hidden",
+                            }),
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.transform = "translateY(-2px)";
@@ -977,7 +1060,7 @@ export default function Index() {
                             <Text as="p" variant="bodySm" tone="subdued">{scan.productType || "Uncategorized"}</Text>
                             <div style={{ marginTop: "auto", paddingTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "6px" }}>
                               <Text as="span" variant="headingSm" fontWeight="semibold">{scan.price ? currencySymbol + scan.price : "—"}</Text>
-                              <div style={{ display: "flex", gap: "6px" }}>
+                              <div className="scan-action-row">
                                 {scan.status === 'PUBLISHED' ? (
                                   <Button
                                     variant="secondary"
@@ -988,51 +1071,33 @@ export default function Index() {
                                     In Shopify
                                   </Button>
                                 ) : (
-                                  <Button
-                                    variant="primary"
-                                    size="slim"
+                                  <button
+                                    type="button"
+                                    className="scan-action-btn scan-action-btn--review scan-action-btn--compact"
                                     onClick={() => {
                                       setScannedProduct(scan);
                                       setInitialProductData(scan);
                                       setIsModalOpen(true);
                                     }}
-                                    tone="success"
                                   >
                                     Review
-                                  </Button>
+                                  </button>
                                 )}
                                 <button
+                                  type="button"
+                                  className="scan-action-btn scan-action-btn--delete scan-action-btn--compact"
                                   onClick={() => handleDeleteProduct(scan.id)}
                                   disabled={deleteProductFetcher.state === "submitting"}
-                                  style={{
-                                    padding: "8px",
-                                    background: "#f3f4f6",
-                                    color: "#6b7280",
-                                    border: "1px solid #e5e7eb",
-                                    borderRadius: "6px",
-                                    cursor: deleteProductFetcher.state === "submitting" ? "not-allowed" : "pointer",
-                                    fontSize: "13px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    transition: "all 0.15s ease",
-                                    opacity: deleteProductFetcher.state === "submitting" ? 0.6 : 1
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    if (deleteProductFetcher.state !== "submitting") {
-                                      e.currentTarget.style.background = "#fee2e2";
-                                      e.currentTarget.style.borderColor = "#fecaca";
-                                      e.currentTarget.style.color = "#dc2626";
-                                    }
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = "#f3f4f6";
-                                    e.currentTarget.style.borderColor = "#e5e7eb";
-                                    e.currentTarget.style.color = "#6b7280";
-                                  }}
+                                  aria-label="Delete draft"
                                   title="Delete draft"
                                 >
-                                  {deleteProductFetcher.state === "submitting" ? "..." : "🗑️"}
+                                  {deleteProductFetcher.state === "submitting" ? (
+                                    <span className="scan-action-btn__spinner">…</span>
+                                  ) : (
+                                    <span className="scan-action-btn__delete-icon">
+                                      <Icon source={DeleteIcon} />
+                                    </span>
+                                  )}
                                 </button>
                               </div>
                             </div>
@@ -1055,8 +1120,12 @@ export default function Index() {
                             alignItems: "center",
                             justifyContent: "space-between",
                             boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-                            transition: "all 0.15s ease",
-                            ...(animatingIds.has(scan.id) && { animation: 'slideAndFadeOut 0.5s forwards', pointerEvents: 'none' })
+                            transition: animatingIds.has(scan.id) ? "none" : "all 0.15s ease",
+                            ...(animatingIds.has(scan.id) && {
+                              animation: "scanCardExit 0.68s cubic-bezier(0.22, 1, 0.36, 1) forwards",
+                              pointerEvents: "none" as const,
+                              overflow: "hidden",
+                            }),
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)";
@@ -1117,86 +1186,46 @@ export default function Index() {
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: "20px", flexShrink: 0 }}>
                             <Text as="span" variant="headingMd" fontWeight="semibold">{scan.price ? currencySymbol + scan.price : "—"}</Text>
-                            <div style={{ display: "flex", gap: "8px" }}>
+                            <div className="scan-action-row">
                                 {scan.status === 'PUBLISHED' ? (
                                   <button
+                                    type="button"
+                                    className="scan-action-btn scan-action-btn--outline"
                                     onClick={() => window.open('https://admin.shopify.com/store/' + shopSettings.shop.replace('.myshopify.com', '') + '/products', '_blank')}
                                     title="Opens Shopify Admin. The product is saved as a draft — review and approve it there before publishing to your store."
-                                    style={{
-                                      padding: "8px 16px",
-                                      background: "white",
-                                      color: primaryTeal,
-                                      border: "1px solid " + primaryTeal,
-                                      borderRadius: "10px",
-                                    cursor: "pointer",
-                                    fontSize: "13px",
-                                    fontWeight: 600,
-                                    minWidth: "120px",
-                                    transition: "all 0.15s ease"
-                                  }}
-                                >
-                                  Review draft in Shopify
-                                </button>
-                              ) : (
+                                  >
+                                    Review draft in Shopify
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="scan-action-btn scan-action-btn--review"
+                                    onClick={() => {
+                                      setScannedProduct(scan);
+                                      setInitialProductData(scan);
+                                      setIsModalOpen(true);
+                                    }}
+                                  >
+                                    Review
+                                  </button>
+                                )}
                                 <button
-                                  className="dashboard-btn-primary"
-                                  onClick={() => {
-                                    setScannedProduct(scan);
-                                    setInitialProductData(scan);
-                                    setIsModalOpen(true);
-                                  }}
-                                  style={{
-                                    padding: "8px 16px",
-                                    background: accentGreen,
-                                    color: "#1a1a1a",
-                                    border: "none",
-                                    borderRadius: "10px",
-                                    cursor: "pointer",
-                                    fontSize: "13px",
-                                    fontWeight: 600,
-                                    minWidth: "80px",
-                                    transition: "all 0.15s ease"
-                                  }}
-                                  onMouseEnter={(e) => { e.currentTarget.style.background = "#5bd366"; }}
-                                  onMouseLeave={(e) => { e.currentTarget.style.background = accentGreen; }}
+                                  type="button"
+                                  className="scan-action-btn scan-action-btn--delete"
+                                  onClick={() => handleDeleteProduct(scan.id)}
+                                  disabled={deleteProductFetcher.state === "submitting"}
+                                  aria-label="Delete draft"
+                                  title="Delete draft"
                                 >
-                                  Review
+                                  {deleteProductFetcher.state === "submitting" ? (
+                                    <span className="scan-action-btn__spinner">…</span>
+                                  ) : (
+                                    <span className="scan-action-btn__delete-icon">
+                                      <Icon source={DeleteIcon} />
+                                    </span>
+                                  )}
                                 </button>
-                              )}
-                              <button
-                                onClick={() => handleDeleteProduct(scan.id)}
-                                disabled={deleteProductFetcher.state === "submitting"}
-                                style={{
-                                  padding: "8px 12px",
-                                  background: "#f3f4f6",
-                                  color: "#6b7280",
-                                  border: "1px solid #e5e7eb",
-                                  borderRadius: "6px",
-                                  cursor: deleteProductFetcher.state === "submitting" ? "not-allowed" : "pointer",
-                                  fontSize: "13px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  transition: "all 0.15s ease",
-                                  opacity: deleteProductFetcher.state === "submitting" ? 0.6 : 1
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (deleteProductFetcher.state !== "submitting") {
-                                    e.currentTarget.style.background = "#fee2e2";
-                                    e.currentTarget.style.borderColor = "#fecaca";
-                                    e.currentTarget.style.color = "#dc2626";
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = "#f3f4f6";
-                                  e.currentTarget.style.borderColor = "#e5e7eb";
-                                  e.currentTarget.style.color = "#6b7280";
-                                }}
-                                title="Delete draft"
-                              >
-                                {deleteProductFetcher.state === "submitting" ? "..." : "🗑️"}
-                              </button>
-                            </div>
+                              </div>
                           </div>
                         </div>
                       ))}
@@ -1215,39 +1244,30 @@ export default function Index() {
           setInitialProductData(null);
         }}
         title="Review Scanned Product"
+        size="large"
         footer={
           <div className="review-modal-footer-actions">
             <InlineStack gap="200">
-            <Button
-              variant="plain"
-              onClick={() => {
-                updateProductFetcher.submit(
-                  { product: JSON.stringify(scannedProduct) },
-                  { method: "POST", action: "/api/update-product" }
-                );
-              }}
-              disabled={!hasChanges}
-              loading={updateProductFetcher.state === "submitting"}
-            >
-              <span style={{ color: "#1a1a1a" }}>Save</span>
-            </Button>
+            <div style={{ marginRight: "18px" }}>
+              <Button
+                variant="plain"
+                onClick={() => {
+                  updateProductFetcher.submit(
+                    { product: JSON.stringify(scannedProduct) },
+                    { method: "POST", action: "/api/update-product" }
+                  );
+                }}
+                disabled={!hasChanges}
+                loading={updateProductFetcher.state === "submitting"}
+              >
+                <span style={{ color: "#1a1a1a" }}>Save</span>
+              </Button>
+            </div>
             <button
               type="button"
+              className="review-product-modal__btn-primary"
               onClick={() => handleListProduct()}
               disabled={listProductFetcher.state === "submitting"}
-              style={{
-                background: "#6be575",
-                color: "#1a1a1a",
-                border: "1px solid #6be575",
-                borderRadius: "10px",
-                padding: "8px 16px",
-                fontWeight: 600,
-                boxShadow: "none",
-                cursor: listProductFetcher.state === "submitting" ? "wait" : "pointer",
-                fontSize: "14px",
-              }}
-              onMouseEnter={(e) => { if (listProductFetcher.state !== "submitting") { e.currentTarget.style.background = "#5bd366"; e.currentTarget.style.borderColor = "#5bd366"; } }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "#6be575"; e.currentTarget.style.borderColor = "#6be575"; }}
             >
               {listProductFetcher.state === "submitting" ? "Loading…" : "Review in Shopify"}
             </button>
@@ -1257,21 +1277,12 @@ export default function Index() {
       >
         <Modal.Section>
           {scannedProduct && (
+            <div className="review-product-modal">
             <InlineGrid columns={{ xs: '1', md: ['oneThird', 'twoThirds'] }} gap="400">
               <div style={{ minWidth: 0 }}>
                 <div style={{ position: 'sticky', top: 0 }}>
                   <BlockStack gap="300">
-                    <div style={{
-                      aspectRatio: '1/1',
-                      background: '#f9fafb',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      border: '1px solid #e1e3e5',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      position: 'relative'
-                    }}>
+                    <div className="review-product-modal__image-frame">
                       {scannedProduct.imageUrls && scannedProduct.imageUrls.length > 0 ? (
                         <img src={scannedProduct.imageUrls[0]} alt="Main" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
@@ -1283,15 +1294,14 @@ export default function Index() {
                     </div>
 
                     {scannedProduct.imageUrls && scannedProduct.imageUrls.length > 0 && (
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '8px',
-                        width: '100%'
-                      }}>
+                      <div className="review-product-modal__thumb-grid">
                         {scannedProduct.imageUrls.map((url: string, index: number) => (
                           <div
                             key={index}
+                            className={
+                              "review-product-modal__thumb" +
+                              (index === 0 ? " review-product-modal__thumb--main" : "")
+                            }
                             draggable
                             onDragStart={() => setDraggedIndex(index)}
                             onDragOver={(e) => {
@@ -1307,41 +1317,13 @@ export default function Index() {
                               handleReorderImages(index);
                             }}
                             onClick={() => handleSetMainImage(index)}
-                            style={{
-                              position: 'relative',
-                              aspectRatio: '1/1',
-                              minWidth: 0,
-                              cursor: 'pointer',
-                              transition: 'transform 0.1s ease',
-                              border: index === 0 ? '2px solid #008060' : '1px solid #e1e3e5',
-                              padding: index === 0 ? '2px' : '0',
-                              borderRadius: '8px',
-                              overflow: 'visible'
-                            }}
                           >
                             <img
                               src={url}
                               alt={"Thumbnail " + index}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                borderRadius: '6px',
-                              }}
                             />
                             {index === 0 && (
-                              <div style={{
-                                position: 'absolute',
-                                bottom: -4,
-                                right: -4,
-                                background: '#008060',
-                                color: 'white',
-                                padding: '2px 6px',
-                                borderRadius: '8px',
-                                fontSize: '8px',
-                                fontWeight: 'bold',
-                                zIndex: 2
-                              }}>
+                              <div className="review-product-modal__main-badge">
                                 MAIN
                               </div>
                             )}
@@ -1378,25 +1360,11 @@ export default function Index() {
                     )}
 
                     <button
+                      type="button"
+                      className="review-product-modal__btn-outline"
                       onClick={handleAutoFindImages}
                       disabled={searchImagesFetcher.state === "submitting"}
                       title="Search the web for high-quality product photos and add them to your list"
-                      style={{
-                        padding: '8px 16px',
-                        background: 'white',
-                        color: '#1a1a1a',
-                        border: '1px solid #d1d5db',
-                        cursor: 'pointer',
-                        borderRadius: '4px',
-                        width: '100%',
-                        fontWeight: '600',
-                        fontSize: '13px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        marginTop: '8px'
-                      }}
                     >
                       {searchImagesFetcher.state === "submitting" ? (
                         <span>Searching for high-quality images...</span>
@@ -1460,19 +1428,13 @@ export default function Index() {
                 </FormLayout>
 
                 <BlockStack gap="400">
-                  <div style={{
-                    background: '#f9fafb',
-                    padding: '20px',
-                    borderRadius: '12px',
-                    border: '1px solid #e1e3e5',
-                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.8)'
-                  }}>
+                  <div className="review-product-modal__variants-panel">
                     <BlockStack gap="400">
                       <InlineStack align="space-between">
                         <Text as="h3" variant="headingMd" fontWeight="bold">Variants</Text>
-                        <span style={{ background: "rgba(107, 229, 117, 0.25)", color: "#1a514d", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "999px" }}>AI Powered</span>
+                        <span className="review-product-modal__ai-pill">AI Powered</span>
                       </InlineStack>
-                      <p style={{ margin: 0, fontSize: "11px", color: "#6d7175" }}>{voiceEnabled ? "Type or use Mic — browser may ask for microphone access. Speak e.g. \"Sizes S to XL\" or \"Colors red, blue\"." : "Type variants below. Voice (mic) is available on Growth and Power plans."}</p>
+                      <p className="review-product-modal__hint">{voiceEnabled ? "Type or use Mic — browser may ask for microphone access. Speak e.g. \"Sizes S to XL\" or \"Colors red, blue\"." : "Type variants below. Voice (mic) is available on Growth and Power plans."}</p>
 
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <div style={{ flex: 1 }}>
@@ -1528,23 +1490,10 @@ export default function Index() {
                           <span style={{ fontSize: '12px', fontWeight: 600, color: '#1a1a1a' }}>Mic</span>
                         </div>
                         <button
+                          type="button"
+                          className="review-product-modal__btn-teal"
                           onClick={handleParseVariants}
                           disabled={parseVariantsFetcher.state === "submitting" || !variantInput.trim()}
-                          style={{
-                            padding: '8px 16px',
-                            background: '#004c46',
-                            color: 'white',
-                            border: '1px solid #004c46',
-                            borderRadius: '6px',
-                            cursor: (parseVariantsFetcher.state === "submitting" || !variantInput.trim()) ? 'not-allowed' : 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            opacity: (parseVariantsFetcher.state === "submitting" || !variantInput.trim()) ? 0.6 : 1,
-                            transition: 'all 0.2s',
-                            boxShadow: 'none'
-                          }}
-                          onMouseEnter={(e) => { if (parseVariantsFetcher.state !== "submitting" && variantInput.trim()) { e.currentTarget.style.background = '#1a514d'; e.currentTarget.style.borderColor = '#1a514d'; } }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = '#004c46'; e.currentTarget.style.borderColor = '#004c46'; }}
                         >
                           {parseVariantsFetcher.state === "submitting" ? "Parsing..." : "Add"}
                         </button>
@@ -1562,7 +1511,7 @@ export default function Index() {
                                 if (!variantData || !variantData.options) return null;
 
                                 return variantData.options.map((opt: any, i: number) => (
-                                  <div key={i} style={{ background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                                  <div key={i} className="review-product-modal__variant-card">
                                     <BlockStack gap="200">
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <Text as="p" variant="bodySm" fontWeight="bold" tone="subdued">{opt.name.toUpperCase()}</Text>
@@ -1619,6 +1568,7 @@ export default function Index() {
                 </BlockStack>
               </BlockStack>
             </InlineGrid>
+            </div>
           )}
         </Modal.Section>
       </Modal>

@@ -3,7 +3,7 @@
 
 client_id = "34632082dd50358763db380203c1bff6"
 name = "Auto Entry"
-application_url = "https://auto-entry-app-production-4dda.up.railway.app"
+application_url = "https://auto-entry-pending-uc.a.run.app"
 embedded = true
 
 [build]
@@ -40,5 +40,5 @@ scopes = "write_inventory,write_products"
 
 [auth]
 # Must match application_url origin (replace before launch).
-redirect_urls = [ "https://auto-entry-app-production-4dda.up.railway.app/api/auth" ]
+redirect_urls = [ "https://auto-entry-pending-uc.a.run.app/api/auth" ]
 

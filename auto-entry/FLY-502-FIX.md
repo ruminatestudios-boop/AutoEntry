@@ -1,6 +1,6 @@
 # Fly 502 fix (Feb 2025)
 
-**Want to switch hosts?** You can deploy the same app to **Railway** instead; see **`DEPLOY-RAILWAY.md`** for step-by-step. The app uses a single production start script and Dockerfile that work on Fly, Railway, or Render.
+**Want to switch hosts?** You can deploy the same app to **Google Cloud Run** (see **`DEPLOY-CLOUD-RUN.md`**) or **Railway** (`DEPLOY-RAILWAY.md`). The app uses a single production start script and Dockerfile that work on Fly, Cloud Run, Railway, or Render.
 
 ## "Machine still active, refusing to start" [PM07]
 

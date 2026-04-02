@@ -1,6 +1,8 @@
-# Deploy Auto Entry to Railway (alternative to Fly)
+# Deploy Auto Entry to Railway (alternative to Fly / Cloud Run)
 
-Use this if you want to switch from Fly.io to Railway to avoid 502 or for a simpler deploy. Railway runs your existing Dockerfile and supports SQLite on a volume.
+> **Primary production path:** See **`DEPLOY-CLOUD-RUN.md`** for Google Cloud Run.
+
+Use this if you want to deploy on **Railway** instead. Railway runs your existing Dockerfile and supports SQLite on a volume.
 
 ---
 

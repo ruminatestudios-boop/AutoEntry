@@ -3,20 +3,7 @@ import { Link } from "@remix-run/react";
 import { DashboardPageLayout } from "../components/DashboardPageLayout";
 
 const backToSupportButton = (
-    <Link
-        to="/app/support"
-        aria-label="Back to Support"
-        style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            cursor: "pointer",
-            fontSize: "20px",
-            lineHeight: 1,
-            textDecoration: "none",
-        }}
-    >
+    <Link to="/app/support" aria-label="Back to Support" className="app-page-hero-close">
         ×
     </Link>
 );

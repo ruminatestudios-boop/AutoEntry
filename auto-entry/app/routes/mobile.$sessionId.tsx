@@ -27,7 +27,6 @@ import { useMobileScan } from "../core/hooks/useMobileScan";
 const TIPS = [
     { label: "Step 1: Capture", text: "Snap a clear photo of the product.", icon: <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg> },
     { label: "Step 2: Voice Variants", text: "Dictate options like 'Sizes S to XL'.", icon: <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg> },
-    { label: "Step 3: Desktop Review", text: "Batch review on your desktop.", icon: <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="2" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg> }
 ];
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -66,7 +65,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
             scanCount,
             limit,
             plan,
-            shop: scanSession.shop
+            shop: scanSession.shop,
+            apiKey: process.env.SHOPIFY_API_KEY || "",
         });
     } catch (e) {
         if (e instanceof Response) throw e;
@@ -315,7 +315,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 };
 
 export default function MobileCapture() {
-    const { sessionId, shop } = useLoaderData<typeof loader>();
+    const { sessionId, shop, apiKey, scanCount, limit, plan } = useLoaderData<typeof loader>();
     const [batchMode, setBatchMode] = useState(false);
     const {
         step, setStep, imagePreview, error, setError, voiceError, toastMessage, toastTone,
@@ -325,6 +325,7 @@ export default function MobileCapture() {
     } = useMobileScan({ sessionId: sessionId || "", batchMode });
 
     const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+    const [uiToast, setUiToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -351,23 +352,54 @@ export default function MobileCapture() {
             case "confirm":
                 return <ConfirmStep parsedVariants={parsedVariants} handleScanAnother={handleScanAnother} />;
             default:
-                return <CaptureStep imagePreview={imagePreview} fileInputRef={fileInputRef} galleryInputRef={galleryInputRef} handleCapture={onCaptureChange} currentTip={currentTip} tips={TIPS} onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} onScanNewProduct={handleScanAnother} batchMode={batchMode} onBatchModeChange={setBatchMode} />;
+                return (
+                    <CaptureStep
+                        imagePreview={imagePreview}
+                        fileInputRef={fileInputRef}
+                        galleryInputRef={galleryInputRef}
+                        handleCapture={onCaptureChange}
+                        currentTip={currentTip}
+                        tips={TIPS}
+                        onAnalyze={handleAnalyze}
+                        isAnalyzing={isAnalyzing}
+                        onScanNewProduct={handleScanAnother}
+                        remainingScans={Math.max(0, Number(limit || 0) - Number(scanCount || 0))}
+                        planName={String(plan || "FREE")}
+                        batchMode={batchMode}
+                        onBatchModeChange={setBatchMode}
+                    />
+                );
         }
+    };
+
+    const dashboardUrl = `https://${shop}/admin/apps/${encodeURIComponent(apiKey)}/app`;
+
+    const showUiToast = (message: string, tone: "success" | "error" = "success") => {
+        setUiToast({ message, tone });
+        setTimeout(() => setUiToast(null), 2600);
     };
 
     return (
         <AppProvider i18n={enTranslations}>
             <div className="mobile-container">
-                <MobileHeader title="Auto Entry" subtitle="Mobile Product Scanner" />
+                <MobileHeader title="Auto Entry" subtitle="Instant Listing Scanner" />
 
-                <div style={{ padding: "12px 12px 20px" }}>
-                    <div className="mobile-card">
-                        {renderStep()}
+                <main className="mobile-page">
+                    <div className="mobile-page__inner">
+                        <div className="mobile-card">
+                            {renderStep()}
+                        </div>
                     </div>
-                </div>
+                </main>
 
-                <PricingModal isOpen={isPricingModalOpen} onClose={() => setIsPricingModalOpen(false)} shop={shop} />
+                <PricingModal
+                    isOpen={isPricingModalOpen}
+                    onClose={() => setIsPricingModalOpen(false)}
+                    shop={shop}
+                    apiKey={apiKey}
+                />
                 {toastMessage && <Toast message={toastMessage} tone={toastTone} />}
+                {uiToast && <Toast message={uiToast.message} tone={uiToast.tone} />}
 
                 <style dangerouslySetInnerHTML={{
                     __html: `

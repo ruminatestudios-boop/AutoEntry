@@ -241,7 +241,7 @@ The app already implements mandatory compliance webhooks (`customers/data_reques
    npm run deploy
    ```
 2. In [Partners](https://partners.shopify.com) → your app → **App setup** → **Event subscriptions**, confirm the three compliance topics are listed.
-3. Ensure **App URL** is your production URL (e.g. `https://auto-entry-app-production-4dda.up.railway.app`).
+3. Ensure **App URL** is your production URL (e.g. your Cloud Run URL; see `DEPLOY-CLOUD-RUN.md`).
 4. In **Distribution** → **Run** to re-run the automated checks.
 
 No code changes are required once the config is deployed.

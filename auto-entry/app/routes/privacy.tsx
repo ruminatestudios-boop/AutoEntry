@@ -43,14 +43,14 @@ export default function PublicPrivacyPolicy() {
                                         We use the collected information to:
                                     </Text>
                                     <BlockStack gap="200" align="start">
-                                        <Text as="p">• Analyze images using AI models (Gemini Flash).</Text>
+                                        <Text as="p">• Analyze images using cloud-based AI models.</Text>
                                         <Text as="p">• Create and manage product drafts in your Shopify store.</Text>
                                         <Text as="p">• Manage your subscription and usage limits.</Text>
                                     </BlockStack>
 
                                     <Text as="h2" variant="headingMd">3. Data Sharing</Text>
                                     <Text as="p">
-                                        We share image data with Google (via Gemini API) for the sole purpose of AI analysis. We do not sell your data to third parties.
+                                        We share image data with our AI service providers for analysis only. We do not sell your data to third parties.
                                     </Text>
 
                                     <Text as="h2" variant="headingMd">4. Data Retention</Text>
