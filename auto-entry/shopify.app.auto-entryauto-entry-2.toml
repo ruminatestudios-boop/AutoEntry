@@ -2,7 +2,7 @@
 
 client_id = "1fa307ecdb044aca7d7612aec763b5d5"
 name = "Auto Entry"
-application_url = "https://auto-entry-pending-uc.a.run.app"
+application_url = "https://auto-entry-app-production-4dda.up.railway.app"
 embedded = true
 
 [build]
@@ -17,4 +17,4 @@ api_version = "2026-04"
 scopes = "write_inventory,write_products"
 
 [auth]
-redirect_urls = [ "https://auto-entry-pending-uc.a.run.app/api/auth" ]
+redirect_urls = [ "https://auto-entry-app-production-4dda.up.railway.app/auth/callback" ]

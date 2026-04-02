@@ -3,8 +3,7 @@
 
 client_id = "154110f7c573a30f0342a2f00f530b73"
 name = "Auto Entry"
-# Replace host with your Cloud Run URL after deploy (see DEPLOY-CLOUD-RUN.md).
-application_url = "https://auto-entry-pending-uc.a.run.app"
+application_url = "https://auto-entry-app-production-4dda.up.railway.app"
 embedded = true
 
 [build]
@@ -18,18 +17,18 @@ automatically_update_urls_on_dev = true
 api_version = "2026-01"
 
 [[webhooks.subscriptions]]
-uri = "https://auto-entry-pending-uc.a.run.app/webhooks/app/uninstalled"
+uri = "https://auto-entry-app-production-4dda.up.railway.app/webhooks/app/uninstalled"
 topics = ["app/uninstalled"]
 
 [[webhooks.subscriptions]]
-uri = "https://auto-entry-pending-uc.a.run.app/webhooks/app/scopes_update"
+uri = "https://auto-entry-app-production-4dda.up.railway.app/webhooks/app/scopes_update"
 topics = ["app/scopes_update"]
 
 # Mandatory compliance webhooks (GDPR) – single endpoint for all three (required for App Store)
 # https://shopify.dev/docs/apps/build/compliance/privacy-law-compliance
 # Endpoint must match App URL in Partner Dashboard: no trailing slash, same host.
 [[webhooks.subscriptions]]
-uri = "https://auto-entry-pending-uc.a.run.app/webhooks"
+uri = "https://auto-entry-app-production-4dda.up.railway.app/webhooks"
 compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
 
 [access_scopes]
@@ -37,4 +36,4 @@ compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"
 scopes = "write_inventory,write_products"
 
 [auth]
-redirect_urls = [ "https://auto-entry-pending-uc.a.run.app/api/auth" ]
+redirect_urls = [ "https://auto-entry-app-production-4dda.up.railway.app/auth/callback" ]
