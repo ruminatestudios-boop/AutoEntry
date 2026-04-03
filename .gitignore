@@ -5,6 +5,7 @@ node_modules
 .env.*
 !.env.example
 !api/.env.example
+!auralink-ai/frontend/.env.local.example
 config.js
 *.sqlite
 *.sqlite-journal

@@ -345,7 +345,7 @@
         <!-- Hero -->
         <section class="relative pt-32 pb-20 px-6 overflow-hidden bg-white">
             <div class="max-w-5xl mx-auto text-center">
-                <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-8 text-[#000]">
+                <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-8 text-[#000] text-center text-balance">
                     Snap a photo. AI lists it on Shopify
                 </h1>
                 <p class="text-lg md:text-xl text-[#555] max-w-2xl mx-auto mb-10 text-balance leading-relaxed vercel-body">
@@ -390,9 +390,9 @@
         <!-- Marquee: Shopify live -->
         <section class="py-5 border-y border-[#eaeaea] overflow-hidden bg-white">
             <div class="flex flex-wrap items-center justify-center gap-3 px-4">
-                <div class="inline-flex flex-wrap items-center justify-center gap-2 rounded-xl border border-[#eaeaea] bg-white px-5 py-3 shadow-sm">
-                    <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=128" alt="Shopify" class="h-5 w-5 rounded" referrerPolicy="no-referrer" />
-                    <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded text-white"><span>SHOPIFY </span><span class="text-emerald-500">LIVE NOW</span></span>
+                <div class="inline-flex flex-wrap items-center justify-center gap-3 rounded-xl border border-[#eaeaea] bg-white px-5 py-3 shadow-sm">
+                    <span class="text-sm font-semibold text-[#0a0a0a] tracking-tight">Shopify</span>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider py-0.5 px-2 bg-black rounded text-white"><span class="text-emerald-500">LIVE NOW</span></span>
                 </div>
             </div>
             <p class="text-center text-xs text-zinc-400 mt-2 mb-4 vercel-body">More integrations coming soon</p>
@@ -879,7 +879,22 @@
               }),
             })
               .then(function(r) {
-                if (!r.ok) throw new Error('fail');
+                return r.text().then(function(text) {
+                  var j = null;
+                  try {
+                    j = text ? JSON.parse(text) : null;
+                  } catch (e) {}
+                  if (!r.ok) {
+                    var serverMsg =
+                      j && j.error
+                        ? j.error
+                        : r.status === 503
+                          ? 'Waitlist isn’t set up yet (missing database config on the server).'
+                          : 'Something went wrong. Try again shortly.';
+                    throw new Error(serverMsg);
+                  }
+                  return j;
+                });
               })
               .then(function() {
                 if (statusEl) {
@@ -888,9 +903,10 @@
                 }
                 emailEl.value = '';
               })
-              .catch(function() {
+              .catch(function(err) {
                 if (statusEl) {
-                  statusEl.textContent = 'Something went wrong. Try again shortly.';
+                  statusEl.textContent =
+                    err && err.message ? err.message : 'Something went wrong. Try again shortly.';
                   statusEl.style.color = '#991b1b';
                 }
               })
