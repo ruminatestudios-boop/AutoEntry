@@ -188,7 +188,6 @@
       <a href="/landing.html" class="inline-flex items-center no-underline text-[#111]"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
       <a href="/flow-batch-upload.html" class="text-xs font-medium text-amber-600 hover:text-amber-700">Batch</a>
     </div>
-    <p id="scan-api-hint" class="hidden text-[10px] text-zinc-400 px-4 py-1 bg-zinc-100 border-b border-zinc-200 truncate" title="API URL used for extraction"></p>
     <div id="scan-step-camera" class="flex-1 flex flex-col items-center justify-center p-4 overflow-auto relative">
       <p class="section-label text-center mb-4 text-xs font-semibold uppercase tracking-widest text-zinc-500">[ scan product ]</p>
       <div class="scan-camera-viewport w-full max-w-md aspect-[3/4] rounded-2xl border border-zinc-200 bg-white overflow-hidden relative">
@@ -1339,12 +1338,6 @@
           var isSecureContext = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
           var stepCameraEl = document.getElementById('scan-step-camera');
           if (!isSecureContext && stepCameraEl) stepCameraEl.classList.add('camera-unavailable');
-
-          var scanApiHintEl = document.getElementById('scan-api-hint');
-          if (scanApiHintEl && window.AURALINK_CONFIG && window.AURALINK_CONFIG.API_URL && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            scanApiHintEl.textContent = 'Using API: ' + window.AURALINK_CONFIG.API_URL;
-            scanApiHintEl.classList.remove('hidden');
-          }
 
           var video = document.getElementById('scan-video');
           var stepCamera = document.getElementById('scan-step-camera');
