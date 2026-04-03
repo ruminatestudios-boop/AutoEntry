@@ -847,22 +847,6 @@
         lucide.createIcons();
 
         (function wireDemoHeroWaitlist() {
-          function getPublishingUrl() {
-            var host = window.location.hostname;
-            var port = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
-            if ((host === 'localhost' || host === '127.0.0.1') && (port === '3000' || port === '3001')) {
-              return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
-            }
-            // synclyst.app: same-origin proxy (Next rewrites → publishing). Avoids browser CORS / Cloud Run
-            // unauthenticated-invoker issues on direct POSTs to *.run.app. Small JSON only (waitlist).
-            if (host === 'synclyst.app' || host === 'www.synclyst.app') {
-              return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
-            }
-            var meta = document.querySelector('meta[name="auralink-publishing-url"]');
-            return (meta && meta.getAttribute('content'))
-              ? meta.getAttribute('content').trim().replace(/\/$/, '')
-              : 'http://localhost:8001';
-          }
           var form = document.getElementById('demo-hero-waitlist');
           var emailEl = document.getElementById('demo-hero-waitlist-email');
           var statusEl = document.getElementById('demo-hero-waitlist-status');
@@ -885,8 +869,7 @@
               statusEl.classList.remove('hidden');
               statusEl.style.color = '#92400e';
             }
-            var base = getPublishingUrl().replace(/\/$/, '');
-            fetch(base + '/auth/waitlist', {
+            fetch('/api/waitlist', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
