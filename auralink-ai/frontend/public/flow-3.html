@@ -825,6 +825,15 @@
         return url;
       }
 
+      /** Small POSTs only (waitlist). On synclyst.app use same-origin proxy — browser → Cloud Run often fails (CORS / IAM). */
+      function getPublishingWaitlistBase() {
+        var host = window.location.hostname;
+        if (host === 'synclyst.app' || host === 'www.synclyst.app') {
+          return window.location.origin.replace(/\/$/, '') + '/__synclyst_publishing';
+        }
+        return getPublishingUrl();
+      }
+
       function isDemoUser() {
         try {
           return localStorage.getItem('synclyst_demo_active') === '1';
@@ -908,7 +917,7 @@
             }
             submitBtn.disabled = true;
             setSt('warn', 'Adding you to waitlist…');
-            var base = getPublishingUrl().replace(/\/$/, '');
+            var base = getPublishingWaitlistBase().replace(/\/$/, '');
             fetch(base + '/auth/waitlist', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -956,7 +965,7 @@
             }
             submitBtn.disabled = true;
             setSt('warn', 'Joining…');
-            var base = getPublishingUrl().replace(/\/$/, '');
+            var base = getPublishingWaitlistBase().replace(/\/$/, '');
             fetch(base + '/auth/waitlist', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
