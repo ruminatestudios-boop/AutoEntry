@@ -61,6 +61,20 @@ uvicorn app.main:app --reload --port 8000
 - Create a Supabase project and run the SQL migrations in order:
   - `supabase/migrations/20250224000000_universal_products.sql`
   - `supabase/migrations/20250224100000_shopify_stores.sql`
+  - `supabase/migrations/20260402100000_waitlist_signups.sql` — **waitlist emails** from the demo (`POST /api/waitlist` on the Next app)
+
+### 2b. Demo waitlist on production (synclyst.app / Vercel)
+
+The homepage demo submits to **`POST /api/waitlist`** (`frontend/app/api/waitlist/route.ts`), which inserts into **`waitlist_signups`** in Supabase. You must do all of the following (we cannot set this up from CI without your dashboard access):
+
+1. **Supabase** → SQL Editor → run the migration file `supabase/migrations/20260402100000_waitlist_signups.sql` (or confirm table `waitlist_signups` exists).
+2. **Vercel** → your **frontend** project → Settings → Environment Variables → **Production**:
+   - `SUPABASE_URL` — Supabase project URL  
+   - `SUPABASE_SERVICE_ROLE_KEY` — **service_role** secret from Supabase → Settings → API (same value as `SUPABASE_SERVICE_KEY` in publishing is fine)
+3. **Redeploy** Production so the route can read those variables.
+4. **GitHub**: merge `main` on the repo Vercel is connected to (e.g. **SyncLyst**), if `/api/waitlist` is not deployed yet.
+
+For local testing, add the same two keys to `frontend/.env.local` and run `npm run dev`.
 
 ### 3. Frontend (Next.js 15)
 
