@@ -15,3 +15,5 @@ See `auralink-ai/frontend/.env.example` and `auralink-ai/LAUNCH-CHECKLIST.md`.
 At minimum: Clerk keys; backend URL as `NEXT_PUBLIC_API_URL` **or** `AURALINK_BACKEND_URL` (mapped in `next.config.ts`).
 
 If `/shopify/launch` 404s after a fix deploy, **Purge Cache** in Vercel (Deployment → … → Invalidate) or redeploy—old **404 responses can be CDN-cached** (`x-vercel-cache: HIT`).
+
+**`vercel.json`** in this folder adds an edge **redirect** `/shopify/launch` → `/api/shopify/oauth-start` so the App URL works even if Next’s matcher behaves differently. It is only loaded when **Root Directory** is set to **`auralink-ai/frontend`** (if Root Directory is the repo root, move the same `redirects` block to the root `vercel.json` or fix the Root Directory setting).
