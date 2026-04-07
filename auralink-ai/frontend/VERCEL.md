@@ -13,3 +13,5 @@ If `synclyst.app` shows **404** on `/dashboard`, `/sign-in`, etc., the project i
 See `auralink-ai/frontend/.env.example` and `auralink-ai/LAUNCH-CHECKLIST.md`.
 
 At minimum: Clerk keys; backend URL as `NEXT_PUBLIC_API_URL` **or** `AURALINK_BACKEND_URL` (mapped in `next.config.ts`).
+
+If `/shopify/launch` 404s after a fix deploy, **Purge Cache** in Vercel (Deployment → … → Invalidate) or redeploy—old **404 responses can be CDN-cached** (`x-vercel-cache: HIT`).
