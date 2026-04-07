@@ -63,6 +63,12 @@ const nextConfig: NextConfig = {
     : {}),
   async redirects() {
     return [
+      /**
+       * Shopify App URL → OAuth start (307). Fallback if Route Handler in app/shopify/launch
+       * is not matched; query string preserved for relative destination.
+       */
+      { source: "/shopify/launch", destination: "/api/shopify/oauth-start", permanent: false },
+      { source: "/shopify/launch/", destination: "/api/shopify/oauth-start", permanent: false },
       /** Prefer semantic URL in the address bar (query string preserved). */
       { source: "/flow-3.html", destination: "/review", permanent: false },
       /** Canonical scan URL: /home.html?mode=scan → /scan (home.html). /landing.html?mode=scan stays on landing (scan + publish CTA). */
@@ -100,11 +106,6 @@ const nextConfig: NextConfig = {
     const pubBase = publishingProxyTarget.replace(/\/$/, "");
     return {
       beforeFiles: [
-        /**
-         * Shopify App URL → OAuth start (before filesystem). Ensures /shopify/launch works on
-         * Vercel even if an App Router page was missing from an older production build; query string is preserved.
-         */
-        { source: "/shopify/launch", destination: "/api/shopify/oauth-start" },
         /** Main site root: demo by default; override with SYNCLYST_HOMEPAGE=landing (URL bar stays `/`). */
         { source: "/", destination: homepageDestination },
         /** Same demo at `/demo` (bookmark/share); `?mode=scan` opens scan. */
