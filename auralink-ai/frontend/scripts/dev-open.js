@@ -40,8 +40,9 @@ function waitForServer() {
   });
 }
 
-function openBrowser() {
-  return require("open")(DEV_URL);
+async function openBrowser() {
+  const { default: open } = await import("open");
+  return open(DEV_URL);
 }
 
 runInjectApiUrl();

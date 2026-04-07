@@ -54,6 +54,19 @@ CREATE TABLE IF NOT EXISTS publish_results (
 
 CREATE INDEX IF NOT EXISTS idx_publish_results_listing ON publish_results(listing_id);
 
+-- Waitlist (POST /auth/waitlist)
+CREATE TABLE IF NOT EXISTS waitlist_signups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  email TEXT NOT NULL,
+  platform TEXT NOT NULL DEFAULT 'shopify',
+  store_domain TEXT,
+  source TEXT,
+  note TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_waitlist_signups_email ON waitlist_signups(email);
+
 -- Optional: atomic increment for user total_listings
 CREATE OR REPLACE FUNCTION increment_total_listings(uid UUID)
 RETURNS void AS $$

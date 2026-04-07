@@ -65,15 +65,9 @@ const nextConfig: NextConfig = {
     return [
       /** Prefer semantic URL in the address bar (query string preserved). */
       { source: "/flow-3.html", destination: "/review", permanent: false },
-      /** Canonical scan step: was /home.html?mode=scan or /landing.html?mode=scan */
+      /** Canonical scan URL: /home.html?mode=scan → /scan (home.html). /landing.html?mode=scan stays on landing (scan + publish CTA). */
       {
         source: "/home.html",
-        has: [{ type: "query", key: "mode", value: "scan" }],
-        destination: "/scan",
-        permanent: false,
-      },
-      {
-        source: "/landing.html",
         has: [{ type: "query", key: "mode", value: "scan" }],
         destination: "/scan",
         permanent: false,
@@ -106,6 +100,11 @@ const nextConfig: NextConfig = {
     const pubBase = publishingProxyTarget.replace(/\/$/, "");
     return {
       beforeFiles: [
+        /**
+         * Shopify App URL → OAuth start (before filesystem). Ensures /shopify/launch works on
+         * Vercel even if an App Router page was missing from an older production build; query string is preserved.
+         */
+        { source: "/shopify/launch", destination: "/api/shopify/oauth-start" },
         /** Main site root: demo by default; override with SYNCLYST_HOMEPAGE=landing (URL bar stays `/`). */
         { source: "/", destination: homepageDestination },
         /** Same demo at `/demo` (bookmark/share); `?mode=scan` opens scan. */

@@ -17,7 +17,7 @@ export default function PrivacyPage() {
       </header>
       <main className="max-w-3xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Privacy Policy</h1>
-        <p className="text-zinc-500 text-sm mb-10">Last updated: 10 March 2026</p>
+        <p className="text-zinc-500 text-sm mb-10">Last updated: 3 April 2026</p>
 
         <div className="space-y-8 text-zinc-700 text-sm leading-relaxed">
           <section>
@@ -82,14 +82,29 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">8. Changes to This Policy</h2>
+            <h2 className="text-lg font-semibold text-zinc-900 mb-3">8. Shopify merchants (App Store compliance)</h2>
+            <p className="mb-2">
+              If you install SyncLyst from the Shopify App Store or connect a Shopify store, we receive OAuth credentials only as needed to create and manage product listings you choose to sync. We subscribe to Shopify&apos;s mandatory privacy webhooks.
+            </p>
+            <ul className="list-disc list-inside space-y-2 ml-2">
+              <li>
+                <strong className="text-zinc-900">Uninstall / shop data:</strong> After you remove the app, Shopify notifies us to delete data associated with your shop from our systems (for example, stored connection tokens for that shop). We complete processing within the timeframe Shopify requires.
+              </li>
+              <li>
+                <strong className="text-zinc-900">Customer data:</strong> Our publishing service is built to avoid storing Shopify customer or order personal data. If that changes in a future version, we will update this policy and honour customer data and redaction requests delivered via Shopify&apos;s compliance webhooks.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-zinc-900 mb-3">9. Changes to This Policy</h2>
             <p>
               We may update this Privacy Policy from time to time. We will notify you of significant changes by email or via a notice on the platform.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">9. Contact Us</h2>
+            <h2 className="text-lg font-semibold text-zinc-900 mb-3">10. Contact Us</h2>
             <p>
               For any privacy-related questions, contact us at: <a href="mailto:privacy@synclyst.app" className="text-zinc-900 font-medium underline hover:text-zinc-600">privacy@synclyst.app</a>
             </p>

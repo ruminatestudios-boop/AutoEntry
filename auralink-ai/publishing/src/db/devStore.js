@@ -131,3 +131,28 @@ export function devInsertConciergeRequest(req) {
 export function devListConciergeRequests() {
   return conciergeRequests.slice(0, 200);
 }
+
+/** Remove in-memory Shopify OAuth rows matching shop_domain (mandatory shop/redact webhook). */
+export function devDeleteShopifyTokensForShopDomain(shopDomain) {
+  const want = String(shopDomain || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\.+$/, '');
+  if (!want) return 0;
+  const wantNorm = want.endsWith('.myshopify.com') ? want : `${want.replace(/\.myshopify\.com$/i, '')}.myshopify.com`;
+  let removed = 0;
+  for (const [key, row] of tokens) {
+    const platform = row.platform || (key.includes(':') ? key.split(':').pop() : '');
+    if (platform !== 'shopify') continue;
+    const d = String(row.shop_domain || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\.+$/, '');
+    const rowNorm = d.endsWith('.myshopify.com') ? d : `${d.replace(/\.myshopify\.com$/i, '')}.myshopify.com`;
+    if (rowNorm === wantNorm) {
+      tokens.delete(key);
+      removed++;
+    }
+  }
+  return removed;
+}

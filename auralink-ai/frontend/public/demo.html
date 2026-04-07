@@ -98,27 +98,137 @@
             animation: scanSweep 2s ease-in-out infinite;
         }
         
-        /* Scan view: full-screen camera / result (when ?mode=scan) */
+        /* Scan view: match home.html /scan (white, frame guide, control bar) */
         #scan-view { display: none; }
         #scan-view.flex { display: flex; }
         #scan-view .scan-view-header a { color: #111 !important; }
+        .scan-camera-viewport {
+            width: min(100%, 430px);
+            flex: 1;
+            min-height: 320px;
+            border-radius: 0;
+            border: none;
+            box-shadow: none;
+        }
+        .scan-frame-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: min(48vw, 180px);
+            height: min(48vw, 180px);
+            transform: translate(-50%, -52%);
+            border: 1px dashed rgba(255, 255, 255, 0.45);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+        .scan-frame-guide::before,
+        .scan-frame-guide::after {
+            content: "";
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.75);
+            border-right: 0;
+            border-bottom: 0;
+        }
+        .scan-frame-guide::before {
+            top: 12px;
+            left: 12px;
+        }
+        .scan-frame-guide::after {
+            top: 12px;
+            right: 12px;
+            transform: scaleX(-1);
+        }
+        .scan-control-bar {
+            width: min(100%, 430px);
+            margin: 0 auto;
+            padding: 0.85rem 1.1rem calc(0.9rem + env(safe-area-inset-bottom, 0px));
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 0.5rem;
+            border-top: 1px solid #e5e5e5;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .scan-control-btn {
+            width: 3rem;
+            height: 3rem;
+            min-width: 3rem;
+            padding: 0;
+            border: 1px solid rgba(228, 228, 231, 0.95);
+            border-radius: 1rem;
+            background: rgba(250, 250, 250, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #18181b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+        }
+        .scan-control-btn:hover {
+            background: rgba(244, 244, 245, 0.95);
+            border-color: #d4d4d8;
+        }
+        .scan-control-btn:active {
+            transform: scale(0.96);
+        }
+        .scan-control-btn svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            stroke-width: 1.75;
+        }
+        .scan-capture-btn {
+            width: 4.25rem;
+            height: 4.25rem;
+            border-radius: 999px;
+            border: 3px solid #d4d4d8;
+            background: linear-gradient(180deg, #fafafa 0%, #e4e4e7 100%);
+            box-shadow:
+                0 0 0 2px #fafafa,
+                0 2px 10px rgba(0, 0, 0, 0.12);
+            padding: 0;
+            position: relative;
+        }
+        .scan-capture-btn::after {
+            content: "";
+            position: absolute;
+            inset: 50%;
+            transform: translate(-50%, -50%);
+            width: 3.1rem;
+            height: 3.1rem;
+            border-radius: 999px;
+            border: 1px solid #d4d4d8;
+            background: #fafafa;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            pointer-events: none;
+        }
         @media (max-width: 640px) {
-            #scan-view { background: #0a0a0a; }
+            #scan-view { background: #ffffff; }
             #scan-view #scan-step-result { background: #fafafa; }
             #scan-view #scan-step-camera { padding: 0; justify-content: stretch; }
-            #scan-view #scan-step-camera .section-label, #scan-view #scan-step-camera > p.text-zinc-500, #scan-view #scan-step-camera > p.text-zinc-400, #scan-view #scan-step-camera #scan-upload-btn { display: none; }
-            #scan-view #scan-step-camera .scan-upload-link {
-                display: flex !important; align-items: center; justify-content: center;
-                position: absolute;
-                bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px));
-                left: 50%; transform: translateX(-50%); z-index: 15;
-                white-space: nowrap;
+            #scan-view #scan-step-camera .scan-camera-viewport {
+                width: 100%;
+                max-width: none;
+                border-radius: 0;
+                min-height: 0;
             }
-            #scan-view #scan-step-camera .scan-upload-link.hidden { display: flex !important; }
-            #scan-view #scan-step-camera.camera-unavailable #scan-upload-btn { display: block !important; }
-            #scan-view #scan-step-camera .scan-camera-viewport { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; aspect-ratio: auto; border-radius: 0; border: none; }
-            #scan-view #scan-step-camera .scan-camera-viewport .flex.items-end { padding-bottom: max(1.25rem, env(safe-area-inset-bottom)); }
-            #scan-view #scan-step-camera #scan-camera-error { position: absolute; bottom: 6rem; left: 1rem; right: 1rem; max-width: none; }
+            #scan-view #scan-step-camera #scan-camera-error {
+                position: absolute;
+                bottom: 6.5rem;
+                left: 1rem;
+                right: 1rem;
+                max-width: none;
+                z-index: 30;
+            }
+            .scan-control-bar {
+                width: 100%;
+                max-width: none;
+            }
         }
         .btn-loading-spin { animation: spin 0.7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -200,31 +310,35 @@
 </head>
 <body class="synclyst-demo min-h-screen bg-white text-black selection:bg-black selection:text-white">
 
-  <!-- Scan view: product capture → SyncLyst extract (shown when ?mode=scan) -->
-  <div id="scan-view" class="fixed inset-0 z-[80] hidden flex-col bg-[#fafafa] text-[#111]">
-    <!-- Header: same logo + white band as flow-3.html -->
+  <!-- Scan view: product capture (shown when ?mode=scan); chrome matches /scan (home.html) -->
+  <div id="scan-view" class="fixed inset-0 z-[80] hidden flex-col bg-white text-zinc-900">
     <div class="scan-view-header shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
       <div></div>
       <a href="/" class="inline-flex items-center justify-self-center no-underline text-[#111] leading-none py-0.5"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
       <div class="justify-self-end"></div>
     </div>
-    <p id="scan-api-hint" class="hidden text-[10px] text-zinc-400 px-4 py-1 bg-zinc-100 border-b border-zinc-200 truncate" title="API URL used for extraction"></p>
-    <div id="scan-step-camera" class="flex-1 flex flex-col items-center justify-center p-4 overflow-auto relative">
-      <p class="section-label text-center mb-5 text-sm font-medium text-[#525252]">Scan product</p>
-      <div class="scan-camera-viewport w-full max-w-md aspect-[3/4] rounded-2xl border border-zinc-200 bg-white overflow-hidden relative">
+    <div id="scan-step-camera" class="flex-1 flex flex-col items-center justify-center p-0 overflow-hidden relative bg-white">
+      <div class="scan-camera-viewport bg-zinc-100 overflow-hidden relative">
         <video id="scan-video" class="w-full h-full object-cover" playsinline muted autoplay></video>
-        <div class="absolute inset-0 flex items-end justify-center p-4 sm:p-6 bg-gradient-to-t from-black/25 via-transparent to-transparent">
-          <button type="button" id="scan-capture-btn" aria-label="Capture photo" class="w-[4.5rem] h-[4.5rem] rounded-full bg-white border-2 border-[#e5e5e5] hover:scale-[0.98] active:scale-95 transition-transform shadow-[0_1px_3px_rgba(0,0,0,0.12)] ring-4 ring-white/30"></button>
+        <div class="scan-frame-guide" aria-hidden="true"></div>
+      </div>
+      <div id="scan-camera-error" class="text-red-600 text-sm mt-4 hidden max-w-md text-center rounded-2xl bg-red-50 border border-red-100 p-3"></div>
+      <input type="file" id="scan-upload-input" accept="image/*" class="hidden" />
+      <div class="scan-control-bar">
+        <div class="justify-self-start">
+          <button type="button" id="scan-upload-btn" class="scan-control-btn" aria-label="Upload from photos">
+            <i data-lucide="images" class="shrink-0"></i>
+          </button>
+        </div>
+        <div class="justify-self-center">
+          <button type="button" id="scan-capture-btn" aria-label="Capture photo" class="scan-capture-btn hover:scale-[0.99] active:scale-95 transition-transform"></button>
+        </div>
+        <div class="justify-self-end">
+          <button type="button" id="scan-rotate-camera-btn" class="scan-control-btn" aria-label="Flip camera">
+            <i data-lucide="rotate-cw" class="shrink-0"></i>
+          </button>
         </div>
       </div>
-      <p class="text-zinc-500 text-sm mt-4">Point at a product—we extract attributes, copy, and tags.</p>
-      <div id="scan-camera-error" class="text-red-600 text-sm mt-2 hidden max-w-md text-center rounded-xl bg-red-50 border border-red-200 p-3"></div>
-      <input type="file" id="scan-upload-input" accept="image/*" class="hidden" />
-      <button type="button" id="scan-upload-btn" class="mt-4 px-5 py-3 rounded-xl border border-[#e5e5e5] bg-white text-[#0a0a0a] text-sm font-semibold hover:bg-[#fafafa] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        Upload photo
-      </button>
-      <button type="button" id="scan-upload-link-mobile" class="scan-upload-link hidden mt-4 text-sm font-semibold text-[#0a0a0a] bg-white/95 backdrop-blur-sm border border-[#e5e5e5] rounded-xl px-5 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] no-underline hover:bg-white" aria-label="Upload photo">Upload photo</button>
-      <p class="text-[#71717a] text-xs mt-3 max-w-md text-center">Use upload if the camera isn’t available.</p>
     </div>
     <div id="scan-step-result" class="flex-1 hidden flex-col p-4 overflow-auto">
       <div class="max-w-md w-full mx-auto py-4">
@@ -365,13 +479,13 @@
                         <span class="text-[10px] font-semibold text-amber-600 uppercase">Premium</span>
                     </a>
                 </div>
-                <div class="w-full max-w-2xl mx-auto mt-10 text-center">
+                <div class="w-full max-w-2xl mx-auto mt-10 text-center px-4 sm:px-6">
                     <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">Waitlist</p>
-                    <form id="demo-hero-waitlist" class="rounded-2xl border border-[#eaeaea] bg-white p-5 sm:p-6 shadow-[0_0_40px_rgba(0,0,0,0.04)] text-center" novalidate>
+                    <form id="demo-hero-waitlist" class="rounded-2xl border-2 border-zinc-900/15 bg-white p-5 sm:p-6 shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-zinc-900/5 text-center" novalidate>
                         <p class="text-sm text-[#555] vercel-body mb-4 text-balance max-w-md mx-auto">Join the waitlist — beta with full Shopify publishing opens soon.</p>
                         <div class="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center max-w-xl mx-auto w-full">
                             <label class="sr-only" for="demo-hero-waitlist-email">Email</label>
-                            <input type="email" id="demo-hero-waitlist-email" name="email" required autocomplete="email" placeholder="e.g. alex@mybrand.com" class="flex-1 min-w-0 rounded-xl border border-[#eaeaea] bg-zinc-50/80 px-4 py-3.5 text-sm text-[#111] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-300 transition-shadow text-left" />
+                            <input type="email" id="demo-hero-waitlist-email" name="email" required autocomplete="email" placeholder="e.g. alex@mybrand.com" class="flex-1 min-w-0 rounded-xl border-2 border-zinc-900/70 bg-white px-4 py-3.5 text-sm text-[#111] font-medium placeholder:text-zinc-400 placeholder:font-normal shadow-inner shadow-zinc-900/5 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/25 focus:ring-offset-2 transition-[border-color,box-shadow] text-left" />
                             <button type="submit" id="demo-hero-waitlist-submit" class="shrink-0 rounded-xl bg-black text-white font-semibold px-6 py-3.5 text-sm border border-black hover:bg-zinc-900 transition-colors min-h-[3rem] sm:min-w-[10.5rem]">
                                 Join waitlist
                             </button>
@@ -1429,15 +1543,10 @@
           if (mainHeader) mainHeader.style.display = 'none';
           var scanView = document.getElementById('scan-view');
           if (scanView) { scanView.classList.remove('hidden'); scanView.classList.add('flex'); }
+          if (typeof lucide !== 'undefined') lucide.createIcons();
           var isSecureContext = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
           var stepCameraEl = document.getElementById('scan-step-camera');
           if (!isSecureContext && stepCameraEl) stepCameraEl.classList.add('camera-unavailable');
-
-          var scanApiHintEl = document.getElementById('scan-api-hint');
-          if (scanApiHintEl && window.AURALINK_CONFIG && window.AURALINK_CONFIG.API_URL && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            scanApiHintEl.textContent = 'Using API: ' + window.AURALINK_CONFIG.API_URL;
-            scanApiHintEl.classList.remove('hidden');
-          }
 
           var video = document.getElementById('scan-video');
           var stepCamera = document.getElementById('scan-step-camera');
@@ -1450,12 +1559,15 @@
           var bulletsEl = document.getElementById('scan-bullets');
           var tagsEl = document.getElementById('scan-tags');
           var cameraErrorEl = document.getElementById('scan-camera-error');
+          var rotateCameraBtn = document.getElementById('scan-rotate-camera-btn');
+          var scanContinueSampleBtn = document.getElementById('scan-continue-sample-btn');
           var doneBtn = document.getElementById('scan-done-btn');
           var saveDraftBtn = document.getElementById('scan-save-draft-btn');
           var toastEl = document.getElementById('scan-toast');
           var stream = null;
           var lastExtractionData = null;
           var lastCapturedBase64 = null;
+          var cameraFacing = 'environment';
           var extractAbortController = null;
           var EXTRACT_TIMEOUT_MS = 180000;
           var scanExtractErrorEl = document.getElementById('scan-extract-error');
@@ -1475,7 +1587,6 @@
             if (scanRetryExtractBtn && lastCapturedBase64) scanRetryExtractBtn.classList.remove('hidden');
             var extractAgainBtn = document.getElementById('scan-extract-again-btn');
             if (extractAgainBtn) extractAgainBtn.style.display = lastCapturedBase64 ? '' : 'none';
-            var scanContinueSampleBtn = document.getElementById('scan-continue-sample-btn');
             if (scanContinueSampleBtn && lastCapturedBase64) scanContinueSampleBtn.classList.remove('hidden');
             if (toastEl) toastEl.classList.add('hidden');
           }
@@ -1667,19 +1778,26 @@
             if (cameraErrorEl) { cameraErrorEl.textContent = ''; cameraErrorEl.classList.add('hidden'); }
             if (stepCamera) stepCamera.classList.remove('camera-unavailable');
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-              if (cameraErrorEl) { cameraErrorEl.textContent = 'Camera needs HTTPS. Use Upload photo below—it works for everyone.'; cameraErrorEl.classList.remove('hidden'); }
+              if (cameraErrorEl) { cameraErrorEl.textContent = 'Camera needs HTTPS. Use Upload in the toolbar—it works for everyone.'; cameraErrorEl.classList.remove('hidden'); }
               if (stepCamera) stepCamera.classList.add('camera-unavailable');
               return;
             }
-            var opts = { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
-            navigator.mediaDevices.getUserMedia(opts).then(function(s) { stream = s; video.srcObject = s; }).catch(function() {
+            if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
+            var tryFacing = { video: { facingMode: { ideal: cameraFacing }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
+            navigator.mediaDevices.getUserMedia(tryFacing).then(function(s) { stream = s; video.srcObject = s; }).catch(function() {
               navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(function(s) { stream = s; video.srcObject = s; }).catch(function() {
-                if (cameraErrorEl) { cameraErrorEl.textContent = 'Camera not available on this connection (e.g. iPhone needs HTTPS). Use Upload photo below—works on all devices.'; cameraErrorEl.classList.remove('hidden'); }
+                if (cameraErrorEl) { cameraErrorEl.textContent = 'Camera not available on this connection (e.g. iPhone needs HTTPS). Use Upload in the toolbar—works on all devices.'; cameraErrorEl.classList.remove('hidden'); }
                 if (stepCamera) stepCamera.classList.add('camera-unavailable');
               });
             });
           }
           startCamera();
+
+          if (rotateCameraBtn) rotateCameraBtn.addEventListener('click', function() {
+            cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+            startCamera();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          });
 
           if (captureBtn) captureBtn.addEventListener('click', function() {
             if (!window.SYNCLYST_DEMO_PAGE && typeof canScan === 'function' && !canScan()) { showUpgradeModal(); return; }
@@ -1724,9 +1842,6 @@
               reader.readAsDataURL(file);
             });
           }
-          var uploadLinkMobile = document.getElementById('scan-upload-link-mobile');
-          if (uploadLinkMobile && uploadInput) uploadLinkMobile.addEventListener('click', function() { uploadInput.click(); });
-
           var scanResultUploadBtn = document.getElementById('scan-result-upload-btn');
           var scanResultUploadInput = document.getElementById('scan-result-upload-input');
           if (scanResultUploadBtn && scanResultUploadInput) {

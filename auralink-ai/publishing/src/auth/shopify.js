@@ -1,6 +1,7 @@
 import axios from 'axios';
 import crypto from 'crypto';
 import dns from 'dns';
+import jwt from 'jsonwebtoken';
 import { getSupabase } from '../db/client.js';
 import { upsertToken } from '../db/tokens.js';
 
@@ -8,6 +9,32 @@ const SHOPIFY_API_KEY = process.env.SHOPIFY_API_KEY;
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET;
 const APP_URL = process.env.APP_URL || 'http://localhost:8001';
 const SHOPIFY_REDIRECT_URI = (process.env.SHOPIFY_REDIRECT_URI || '').trim();
+
+/** Same secret the Next.js app uses for `/api/shopify/oauth-start` (HS256). */
+function oauthStartJwtSecret() {
+  return (process.env.PUBLISHING_JWT_SECRET || process.env.JWT_SECRET || '').trim();
+}
+
+/**
+ * Verifies short-lived JWT from frontend `/api/shopify/oauth-start` (binds Clerk user to shop).
+ * @returns {string|null} user id
+ */
+export function verifyShopifyOAuthStartToken(startToken, shopQuery) {
+  const secret = oauthStartJwtSecret();
+  if (!startToken || !secret) return null;
+  try {
+    const decoded = jwt.verify(String(startToken), secret, { algorithms: ['HS256'] });
+    if (decoded.purpose !== 'shopify_oauth_start') return null;
+    const expected = normalizeMyshopifyDomainOrEmpty(decoded.shop);
+    const actual = normalizeMyshopifyDomainOrEmpty(shopQuery);
+    if (!expected || !actual || expected !== actual) return null;
+    const uid = decoded.sub || decoded.userId;
+    if (!uid || typeof uid !== 'string') return null;
+    return uid;
+  } catch {
+    return null;
+  }
+}
 
 function normalizeHostOrEmpty(input) {
   const raw = String(input || '').trim();
@@ -322,9 +349,13 @@ export async function handleShopifyCallback(query) {
   } catch (_) {
     userId = stateStr;
   }
-  // When user installs via Partner Dashboard "Generate link" (Custom app), state may be missing.
-  // Default to dev-local so the token is stored for the same user flow-3 / dev-token uses.
+  // Public App Store: never attribute installs to a shared dev user.
   if (!userId) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'Missing OAuth state (user). Open SyncLyst, sign in, then connect Shopify from the dashboard or App URL.'
+      );
+    }
     userId = process.env.SHOPIFY_FALLBACK_USER_ID || 'dev-local';
   }
   const cleanShop = shop.replace(/\.myshopify\.com$/, '') + '.myshopify.com';
