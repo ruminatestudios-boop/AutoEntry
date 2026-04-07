@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/shopify/launch",
+      "destination": "/api/shopify/oauth-start",
+      "permanent": false
+    },
+    {
+      "source": "/shopify/launch/",
+      "destination": "/api/shopify/oauth-start",
+      "permanent": false
+    }
+  ]
+}
