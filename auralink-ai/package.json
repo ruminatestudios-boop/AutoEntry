@@ -4,6 +4,6 @@
   "description": "Run backend, publishing, and frontend for the master flow",
   "scripts": {
     "inject": "cd frontend && node scripts/inject-api-url.js",
-    "start": "npm run inject && npx concurrently -n be,pub,fe -c blue,green,magenta \"cd backend && python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000\" \"cd publishing && node src/index.js\" \"cd frontend && npm run dev:no-open\""
+    "start": "npm run inject && npx concurrently -n be,pub,fe -c blue,green,magenta \"cd backend && python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000\" \"cd publishing && node src/index.js\" \"cd frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 NEXT_PUBLIC_PUBLISHING_API_URL=http://localhost:8001 PUBLISHING_JWT_SECRET=dev-secret-change-in-production JWT_SECRET=dev-secret-change-in-production npm run dev:no-open\""
   }
 }

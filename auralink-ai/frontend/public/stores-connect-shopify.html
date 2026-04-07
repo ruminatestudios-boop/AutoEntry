@@ -352,7 +352,7 @@
         lower = lower.replace(/\.+$/, '').replace(/^www\./, '');
         if (!lower) return '';
         if (lower.indexOf('.myshopify.com') !== -1) return lower;
-        // A plain shop handle (no dots) is still valid for /auth/shopify?shop=...
+        // A plain shop handle (no dots) is still valid for /api/shopify/oauth-start?shop=...
         if (lower.indexOf('.') === -1) return lower;
         return '';
       }
@@ -561,7 +561,8 @@
               if (data && data.user_id) {
                 if (data.token) try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {}
                 var goAuth = function(shopParamOrDomain) {
-                  var authUrl = pubBase + '/auth/shopify?shop=' + encodeURIComponent(shopParamOrDomain) + '&user_id=' + encodeURIComponent(data.user_id) + '&return_to=' + encodeURIComponent(returnToPath);
+                  var appOrigin = window.location.origin.replace(/\/$/, '');
+                  var authUrl = appOrigin + '/api/shopify/oauth-start?shop=' + encodeURIComponent(shopParamOrDomain) + '&return_to=' + encodeURIComponent(returnToPath);
                   window.location.href = authUrl;
                 };
                 // If user typed a direct shop handle or myshopify domain, skip resolver.

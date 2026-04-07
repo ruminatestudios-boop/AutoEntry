@@ -7,7 +7,10 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test:translators": "node scripts/test-translators.js"
+    "dev:serve": "node src/index.js",
+    "test:translators": "node scripts/test-translators.js",
+    "shopify:login": "npx @shopify/cli@latest auth login",
+    "shopify:deploy-config": "npx @shopify/cli@latest app deploy --path . --no-build --allow-updates"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

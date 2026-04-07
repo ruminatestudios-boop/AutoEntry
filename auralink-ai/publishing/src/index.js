@@ -9,6 +9,7 @@ import { authRouter } from './routes/auth.js';
 import { publishRouter } from './routes/publish.js';
 import { storesRouter } from './routes/stores.js';
 import { exportRouter } from './routes/export.js';
+import { shopifyComplianceRouter } from './routes/shopifyComplianceWebhooks.js';
 
 const app = express();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -62,13 +63,27 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id'],
 }));
+// Shopify mandatory GDPR webhooks: HMAC is computed over the raw body — must not use express.json() first.
+app.use(
+  '/webhooks/shopify/compliance',
+  express.raw({
+    type: (req) => String(req.headers['content-type'] || '').toLowerCase().includes('application/json'),
+    limit: '256kb',
+  }),
+  shopifyComplianceRouter
+);
 // Large universal_data payloads (base64 photos) exceed express.json default (~100kb). Cloud Run max request ~32 MiB.
 // If JSON_BODY_LIMIT is set in Cloud Run, keep it ≤ 31mb or you will still get PayloadTooLargeError from raw-body.
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '31mb' }));
 
 app.get('/auth/shopify/status', (req, res) => {
   const configured = !!(process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET);
-  const publicInstallEnabled = /^(1|true|yes)$/i.test(process.env.SHOPIFY_PUBLIC_INSTALL_ENABLED || '');
+  const publicInstallDisabled = /^(1|true|yes)$/i.test(
+    (process.env.SHOPIFY_PUBLIC_INSTALL_DISABLED || '').trim()
+  );
+  const publicInstallEnabled =
+    !publicInstallDisabled &&
+    !/^(0|false|no)$/i.test((process.env.SHOPIFY_PUBLIC_INSTALL_ENABLED || 'true').trim());
   const appUrl = (process.env.APP_URL || 'http://localhost:8001').replace(/\/$/, '');
   const redirectUriOverride = (process.env.SHOPIFY_REDIRECT_URI || '').trim();
   const redirectUri = redirectUriOverride || `${appUrl}/auth/shopify/callback`;
@@ -113,6 +128,7 @@ app.get('/', (req, res) => {
       publish: 'POST /api/listings/publish',
       connectedStores: 'GET /api/user/connected-stores',
       shopifyAuth: 'GET /auth/shopify?shop=your-store.myshopify.com',
+      shopifyComplianceWebhooks: 'POST /webhooks/shopify/compliance (mandatory for App Store)',
     },
   });
 });
