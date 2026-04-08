@@ -15,7 +15,7 @@ redirect_urls = [
 ]
 
 [webhooks]
-api_version = "2025-01"
+api_version = "2026-04"
 
 # Shopify requires `topics` on each subscription; compliance_topics are added alongside.
 # app/uninstalled hits the same URI — handler acknowledges unknown topics with 200.

@@ -10,7 +10,9 @@ import crypto from 'crypto';
 import { getSupabase } from '../db/client.js';
 import { isDevMode, devDeleteShopifyTokensForShopDomain } from '../db/devStore.js';
 
-const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET;
+function webhookSigningSecret() {
+  return String(process.env.SHOPIFY_API_SECRET || process.env.SHOPIFY_CLIENT_SECRET || '').trim();
+}
 
 export function normalizeShopifyDomain(input) {
   const raw = String(input || '').trim().toLowerCase();
@@ -22,14 +24,26 @@ export function normalizeShopifyDomain(input) {
 
 /**
  * @param {Buffer} rawBody
- * @param {string|undefined} hmacHeader X-Shopify-Hmac-Sha256
+ * @param {string|undefined} hmacHeader X-Shopify-Hmac-Sha256 (base64 digest)
+ * @see https://shopify.dev/docs/apps/build/authentication-authorization/webhooks#verify-the-webhook
  */
 export function verifyShopifyWebhookHmac(rawBody, hmacHeader) {
-  if (!SHOPIFY_API_SECRET || !hmacHeader || !Buffer.isBuffer(rawBody)) return false;
-  const digest = crypto.createHmac('sha256', SHOPIFY_API_SECRET).update(rawBody).digest('base64');
+  const secret = webhookSigningSecret();
+  if (!secret || !hmacHeader || !Buffer.isBuffer(rawBody)) return false;
+  const received = String(hmacHeader).trim();
+  const generated = crypto.createHmac('sha256', secret).update(rawBody).digest('base64');
+
   try {
-    const a = Buffer.from(digest, 'utf8');
-    const b = Buffer.from(String(hmacHeader).trim(), 'utf8');
+    const a = Buffer.from(generated, 'base64');
+    const b = Buffer.from(received, 'base64');
+    if (a.length === b.length && a.length > 0 && crypto.timingSafeEqual(a, b)) return true;
+  } catch {
+    /* fall through */
+  }
+
+  try {
+    const a = Buffer.from(generated, 'utf8');
+    const b = Buffer.from(received, 'utf8');
     if (a.length !== b.length) return false;
     return crypto.timingSafeEqual(a, b);
   } catch {

@@ -64,11 +64,17 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id'],
 }));
 // Shopify mandatory GDPR webhooks: HMAC is computed over the raw body — must not use express.json() first.
+// Accept any Content-Type so Shopify’s delivery (or proxies) still populate req.body as a Buffer.
+if (!(process.env.SHOPIFY_API_SECRET || process.env.SHOPIFY_CLIENT_SECRET || '').trim()) {
+  console.warn('[publishing] SHOPIFY_API_SECRET is unset — compliance webhooks will fail HMAC (401)');
+}
 app.use(
   '/webhooks/shopify/compliance',
   express.raw({
-    type: (req) => String(req.headers['content-type'] || '').toLowerCase().includes('application/json'),
-    limit: '256kb',
+    type: '*/*',
+    // Compliance payloads can exceed 256kb (e.g. large orders_requested arrays).
+    // Keep this comfortably above typical payload sizes while still bounded.
+    limit: (process.env.SHOPIFY_WEBHOOK_RAW_LIMIT || '2mb').toString(),
   }),
   shopifyComplianceRouter
 );
