@@ -309,7 +309,8 @@ function getRedirectUri() {
 
 /** Build Shopify OAuth authorize URL. Accepts (shop, stateStr) or legacy (stateJsonString). */
 export function getShopifyAuthUrl(shopOrState, stateStr) {
-  const scopes = 'write_products,read_products,write_inventory';
+  // Keep in sync with Access scopes on the app version in Shopify Partners.
+  const scopes = 'read_products,write_products,read_inventory,write_inventory';
   let shop = '';
   let stateStrOut = stateStr;
   if (typeof shopOrState === 'string' && shopOrState.trim() !== '') {

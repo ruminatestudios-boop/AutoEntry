@@ -1,5 +1,6 @@
 # Cloud Build config for auto-deploying synclyst-publishing to Cloud Run on push to main.
 # Create a trigger in Cloud Build that points to this file (e.g. auralink-ai/publishing/cloudbuild.yaml).
+# Last image refresh trigger bump: 2026-04-03 (redeploy if GET /auth/shopify returns legacy 401 JSON).
 # Optional: set "Included files filter" to auralink-ai/publishing/** so only publishing changes trigger.
 steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'

@@ -161,7 +161,7 @@ export default function DashboardClient() {
   };
 
   const connectShopify = () => {
-    window.location.href = "/connect-store?return=stores-list";
+    window.location.href = "/shopify/launch?return=stores-list";
   };
 
   if (!isLoaded) {
