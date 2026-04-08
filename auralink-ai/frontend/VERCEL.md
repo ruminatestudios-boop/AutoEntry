@@ -16,4 +16,8 @@ At minimum: Clerk keys; backend URL as `NEXT_PUBLIC_API_URL` **or** `AURALINK_BA
 
 If `/shopify/launch` 404s after a fix deploy, **Purge Cache** in Vercel (Deployment → … → Invalidate) or redeploy—old **404 responses can be CDN-cached** (`x-vercel-cache: HIT`).
 
-**`vercel.json`** in this folder adds an edge **redirect** `/shopify/launch` → `/api/shopify/oauth-start` so the App URL works even if Next’s matcher behaves differently. It is only loaded when **Root Directory** is set to **`auralink-ai/frontend`** (if Root Directory is the repo root, move the same `redirects` block to the root `vercel.json` or fix the Root Directory setting).
+**`vercel.json`** adds an edge **redirect** `/shopify/launch` → `/api/shopify/oauth-start`.
+- **Root Directory = `auralink-ai/frontend`** → uses **`auralink-ai/frontend/vercel.json`**.
+- **Root Directory = repo root (`.`)** → uses the **repo root** `vercel.json` (same `redirects` only; do not strip the Next build).
+
+If `main` includes these files but `/shopify/launch` still 404s with **`x-clerk-auth-*`** on that path, Production is not serving the latest build: confirm the Vercel Git integration targets **this repo** and **`main`**, check the deployment **commit SHA**, then **Redeploy** (purge cache if needed).
