@@ -128,7 +128,30 @@ if (enabled.includes('shopify')) {
     signShopifyState,
     parseShopifyState,
     resolveShopifyShopDomain,
+    verifyShopifyOAuthStartToken,
   } = await import('../auth/shopify.js');
+
+  function requireShopifyOAuthUser(req, res, next) {
+    const shopRaw = (req.query.shop || '').toString().trim();
+    const startToken = (req.query.start_token || '').toString().trim();
+    let userId = startToken ? verifyShopifyOAuthStartToken(startToken, shopRaw) : null;
+    if (!userId) {
+      const allowLegacy =
+        process.env.NODE_ENV !== 'production' ||
+        /^(1|true|yes)$/i.test((process.env.ALLOW_LEGACY_SHOPIFY_USER_ID_QUERY || '').trim());
+      const legacyId = (req.headers['x-user-id'] || req.query?.user_id || '').toString().trim();
+      if (allowLegacy && legacyId) userId = legacyId;
+    }
+    if (!userId) {
+      const base = FRONTEND_URL.split(',')[0].replace(/\/$/, '');
+      const returnTo = encodeURIComponent((req.query.return_to || req.query.returnTo || 'dashboard/home').toString());
+      const shopEnc = encodeURIComponent(shopRaw);
+      const resume = `${base}/api/shopify/oauth-start?shop=${shopEnc}&return_to=${returnTo}`;
+      return res.redirect(`${base}/sign-in?redirect_url=${encodeURIComponent(resume)}`);
+    }
+    req.userId = userId;
+    next();
+  }
 
   authRouter.post('/shopify/custom-token', requireUser, async (req, res) => {
     try {
@@ -216,7 +239,7 @@ if (enabled.includes('shopify')) {
     }
   });
 
-  authRouter.get('/shopify', requireUser, (req, res) => {
+  authRouter.get('/shopify', requireShopifyOAuthUser, (req, res) => {
     const shop = (req.query.shop || '').trim().toLowerCase();
     const returnTo = req.query.return_to || req.query.returnTo || '';
     const base = FRONTEND_URL.replace(/\/$/, '');

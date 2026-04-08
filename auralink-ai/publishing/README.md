@@ -59,8 +59,8 @@ Multi-platform listing publish service. One POST with a universal listing → pu
 ## Registering developer accounts and OAuth apps
 
 ### Shopify
-- **To go live without App Store approval:** use a **Custom app**. Follow **[SHOPIFY-CUSTOM-APP-SETUP.md](./SHOPIFY-CUSTOM-APP-SETUP.md)** for step-by-step setup (create app, set redirect URL, generate install link, verify).
-- Create app in [Shopify Partner Dashboard](https://partners.shopify.com) → Apps → Create app → **Create app manually** (Custom). Do not choose “for the App Store.”
+- **Custom app (no App Store review):** **[SHOPIFY-CUSTOM-APP-SETUP.md](./SHOPIFY-CUSTOM-APP-SETUP.md)** — Partners → Custom distribution, install link.
+- **Public / App Store app:** **[SHOPIFY-PUBLIC-APP-PARTNERS-SETUP.md](./SHOPIFY-PUBLIC-APP-PARTNERS-SETUP.md)** — choose **Public distribution** (you cannot convert Custom → Public later; create a new app if needed). Then **[SHOPIFY-APP-STORE-LAUNCH.md](./SHOPIFY-APP-STORE-LAUNCH.md)** for webhooks, redirect URL, production checks.
 - Set redirect URL: `{APP_URL}/auth/shopify/callback` (exact match required).
 - Scopes: `write_products`, `read_products`, `write_inventory`.
 
@@ -110,8 +110,9 @@ Only **Shopify** is enabled by default. This keeps the product focused and makes
 | GET | `/health` | Service health |
 | GET | `/api/listings/enabled-platforms` | List of enabled platform ids (for UI) |
 | GET | `/api/listings/platform-fields` | Required/optional fields per enabled platform |
-| GET | `/auth/shopify?shop=store.myshopify.com` | Start Shopify OAuth (requires `x-user-id` or `user_id`) |
+| GET | `/auth/shopify?shop=…&start_token=…` | Start Shopify OAuth (signed `start_token` from Next `/api/shopify/oauth-start`; prod rejects bare `user_id` unless `ALLOW_LEGACY_SHOPIFY_USER_ID_QUERY=1`) |
 | GET | `/auth/shopify/callback` | Shopify OAuth callback |
+| POST | `/webhooks/shopify/compliance` | Mandatory GDPR webhooks (`customers/data_request`, `customers/redact`, `shop/redact`); raw JSON body + HMAC |
 | GET | `/auth/tiktok` | Start TikTok OAuth |
 | GET | `/auth/tiktok/callback` | TikTok callback |
 | GET | `/auth/ebay` | Start eBay OAuth |

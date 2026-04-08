@@ -11,6 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/flow-page-transition.css" />
     <script src="/js/flow-page-transition.js"></script>
+    <script src="/js/synclyst-publish-from-draft.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -218,6 +219,13 @@
       <button type="button" id="scan-upload-link-mobile" class="scan-upload-link hidden mt-4 text-sm font-semibold text-[#0a0a0a] bg-white/95 backdrop-blur-sm border border-[#e5e5e5] rounded-xl px-5 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] no-underline hover:bg-white" aria-label="Upload photo">Upload photo</button>
       <p class="text-[#71717a] text-xs mt-3 max-w-md text-center">Use upload if the camera isn’t available.</p>
     </div>
+    <div id="scan-step-reading" class="flex-1 hidden flex-col items-center justify-center p-6 overflow-auto">
+      <div class="inline-flex items-center gap-3 text-zinc-800">
+        <span class="btn-loading-spin inline-block w-6 h-6 border-2 border-zinc-300 border-t-zinc-900 rounded-full shrink-0"></span>
+        <span class="text-base font-semibold">Extracting your product…</span>
+      </div>
+      <p class="text-sm text-zinc-500 mt-3 text-center max-w-sm">AI is drafting your listing from this photo. This usually takes under a minute.</p>
+    </div>
     <div id="scan-step-result" class="flex-1 hidden flex-col p-4 overflow-auto">
       <div class="max-w-md w-full mx-auto py-4">
         <div class="flex items-center justify-between mb-4">
@@ -257,6 +265,10 @@
           <div class="p-5 bg-zinc-50/50">
             <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">Next steps</p>
             <div class="flex flex-col gap-3">
+              <button type="button" id="scan-publish-shopify-btn" disabled class="w-full py-3.5 px-4 rounded-xl bg-[#96bf48] text-white font-semibold text-[15px] hover:opacity-95 transition-opacity border border-[#7cab3a] shadow-sm inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none">
+                <img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=64" alt="" class="w-5 h-5 rounded" width="20" height="20" />
+                Publish to Shopify (draft)
+              </button>
               <button type="button" id="scan-done-btn" class="w-full py-3.5 px-4 rounded-xl bg-zinc-900 text-white font-semibold text-[15px] hover:bg-zinc-800 transition-colors">
                 Scan another / Upload another
               </button>
@@ -806,7 +818,7 @@
           function needsRewrite(href) {
             if (!href || typeof href !== 'string' || href.charAt(0) !== '/') return false;
             if (href.indexOf('/synclyst-logo') === 0) return false;
-            var appPaths = ['/dashboard', '/sign-in', '/sign-up', '/home.html', '/scan', '/review'];
+            var appPaths = ['/dashboard', '/sign-in', '/sign-up', '/home.html', '/scan', '/review', '/connect-store', '/listing/published'];
             for (var i = 0; i < appPaths.length; i++) {
               var pre = appPaths[i];
               if (href === pre || href.indexOf(pre + '?') === 0 || href.indexOf(pre + '/') === 0) return true;
@@ -1357,6 +1369,22 @@
           if (mainHeader) mainHeader.style.display = 'none';
           var scanView = document.getElementById('scan-view');
           if (scanView) { scanView.classList.remove('hidden'); scanView.classList.add('flex'); }
+          /* Production: publishing service disables /auth/dev-token; exchange Clerk session for publishing JWT. Same-origin (or synclyst-app-origin) required for cookies. */
+          (function prefetchPublishingJwtIfNeeded() {
+            try {
+              if (sessionStorage.getItem('auralink_jwt')) return;
+            } catch (e) {}
+            var tokenPath = '/api/publishing/token';
+            var tokenUrl = typeof window.synclystAppUrl === 'function' ? window.synclystAppUrl(tokenPath) : tokenPath;
+            fetch(tokenUrl, { credentials: 'include' })
+              .then(function(r) { return r.ok ? r.json() : null; })
+              .then(function(d) {
+                if (d && d.token) {
+                  try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e2) {}
+                }
+              })
+              .catch(function() {});
+          })();
           var isSecureContext = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
           var stepCameraEl = document.getElementById('scan-step-camera');
           if (!isSecureContext && stepCameraEl) stepCameraEl.classList.add('camera-unavailable');
@@ -1380,11 +1408,64 @@
           var lastCapturedBase64 = null;
           var extractAbortController = null;
           var EXTRACT_TIMEOUT_MS = 180000;
+          var SCAN_RETURN_PATH = '/landing.html?mode=scan';
+
+          function persistDraftForShopifyFromLanding() {
+            if (!lastExtractionData) return false;
+            var data = lastExtractionData;
+            var att = data.attributes || {};
+            var suggestedPrice = 199;
+            if (att.price_value != null && typeof att.price_value === 'number' && att.price_value > 0) suggestedPrice = att.price_value;
+            else if (att.price_display && typeof att.price_display === 'string') {
+              var m = att.price_display.replace(/[^\d.]/g, '').match(/[\d.]+/);
+              if (m && parseFloat(m[0]) > 0) suggestedPrice = parseFloat(m[0]);
+            }
+            var payload = { extraction: data, suggested_price: suggestedPrice };
+            if (capturedImg && capturedImg.src && capturedImg.src.indexOf('data:') === 0) payload.imageDataUrl = capturedImg.src;
+            try {
+              sessionStorage.removeItem('auralink_review_draft');
+              sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
+              sessionStorage.setItem('synclyst_selected_platform', 'shopify');
+              try { sessionStorage.setItem('auralink_selected_marketplaces', JSON.stringify(['shopify'])); } catch (e2) {}
+              return true;
+            } catch (err) {
+              if (err.name === 'QuotaExceededError') {
+                delete payload.imageDataUrl;
+                try {
+                  sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
+                  sessionStorage.setItem('synclyst_selected_platform', 'shopify');
+                  sessionStorage.setItem('auralink_selected_marketplaces', JSON.stringify(['shopify']));
+                } catch (e3) { return false; }
+                return true;
+              }
+              return false;
+            }
+          }
+
+          function beginScanProcessing(rawBase64) {
+            if (!rawBase64 || rawBase64.length < 100) {
+              if (cameraErrorEl) { cameraErrorEl.textContent = 'Invalid image.'; cameraErrorEl.classList.remove('hidden'); }
+              return;
+            }
+            var b64 = rawBase64.indexOf(',') >= 0 ? rawBase64.split(',')[1] : rawBase64;
+            lastCapturedBase64 = b64;
+            if (capturedImg) capturedImg.src = 'data:image/jpeg;base64,' + b64;
+            if (cameraErrorEl) cameraErrorEl.classList.add('hidden');
+            if (stream) {
+              stream.getTracks().forEach(function(t) { t.stop(); });
+              stream = null;
+            }
+            if (stepCamera) { stepCamera.classList.add('hidden'); stepCamera.classList.remove('flex'); }
+            if (stepResult) { stepResult.classList.add('hidden'); stepResult.classList.remove('flex'); }
+            if (stepReading) { stepReading.classList.remove('hidden'); stepReading.classList.add('flex'); }
+            runExtraction(b64);
+          }
           var scanExtractErrorEl = document.getElementById('scan-extract-error');
           var scanRetryExtractBtn = document.getElementById('scan-retry-extract-btn');
 
           function showExtractError(titleMessage, hintMessage) {
             if (stepReading) { stepReading.classList.add('hidden'); stepReading.classList.remove('flex'); }
+            if (stepCamera) { stepCamera.classList.add('hidden'); stepCamera.classList.remove('flex'); }
             if (stepResult) { stepResult.classList.remove('hidden'); stepResult.classList.add('flex'); }
             lastExtractionData = null;
             if (seoTitleEl) { seoTitleEl.textContent = titleMessage; seoTitleEl.classList.add('text-red-600', 'scan-result-value--error'); }
@@ -1400,10 +1481,15 @@
             var scanContinueSampleBtn = document.getElementById('scan-continue-sample-btn');
             if (scanContinueSampleBtn && lastCapturedBase64) scanContinueSampleBtn.classList.remove('hidden');
             if (toastEl) toastEl.classList.add('hidden');
+            var publishBtnErr = document.getElementById('scan-publish-shopify-btn');
+            if (publishBtnErr) { publishBtnErr.disabled = true; publishBtnErr.removeAttribute('aria-busy'); }
           }
 
           function showExtractSuccess(data) {
             lastExtractionData = data;
+            if (stepReading) { stepReading.classList.add('hidden'); stepReading.classList.remove('flex'); }
+            if (stepCamera) { stepCamera.classList.add('hidden'); stepCamera.classList.remove('flex'); }
+            if (stepResult) { stepResult.classList.remove('hidden'); stepResult.classList.add('flex'); }
             if (seoTitleEl) seoTitleEl.classList.remove('text-red-600', 'scan-result-value--error');
             if (attributesEl) attributesEl.classList.remove('scan-result-value--error');
             if (tagsEl) tagsEl.classList.remove('scan-result-value--error');
@@ -1429,27 +1515,13 @@
             bulletsEl.innerHTML = '';
             (copy.bullet_points || []).forEach(function(b) { var li = document.createElement('li'); li.textContent = b; bulletsEl.appendChild(li); });
             tagsEl.textContent = (tags.search_keywords || []).join(', ') || (tags.category || '—');
-            var suggestedPrice = 199;
-            if (att.price_value != null && typeof att.price_value === 'number' && att.price_value > 0) suggestedPrice = att.price_value;
-            else if (att.price_display && typeof att.price_display === 'string') { var match = att.price_display.replace(/[^\d.]/g, '').match(/[\d.]+/); if (match && parseFloat(match[0]) > 0) suggestedPrice = parseFloat(match[0]); }
-            function saveAndGo(payload) {
-              try {
-                sessionStorage.removeItem('auralink_review_draft');
-                sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload));
-                sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(window.synclystAppUrl('/reading-product')); else window.location.href = window.synclystAppUrl('/reading-product');
-                return true;
-              } catch (err) { return false; }
+            var publishBtn = document.getElementById('scan-publish-shopify-btn');
+            if (publishBtn) {
+              publishBtn.disabled = false;
+              publishBtn.removeAttribute('aria-busy');
+              publishBtn.innerHTML = '<img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=64" alt="" class="w-5 h-5 rounded" width="20" height="20" /> Publish to Shopify (draft)';
             }
-            var payload = { extraction: data, suggested_price: suggestedPrice };
-            if (capturedImg && capturedImg.src && capturedImg.src.startsWith('data:')) payload.imageDataUrl = capturedImg.src;
-            if (!saveAndGo(payload)) {
-              delete payload.imageDataUrl;
-              if (!saveAndGo(payload)) {
-                try { sessionStorage.removeItem('auralink_review_draft'); sessionStorage.setItem('auralink_draft_listing', JSON.stringify(payload)); sessionStorage.setItem('synclyst_selected_platform', 'shopify'); } catch (e) {}
-                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(window.synclystAppUrl('/reading-product')); else window.location.href = window.synclystAppUrl('/reading-product');
-              }
-            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
           }
 
           function showConversionPopupAfterResult(data) {
@@ -1541,44 +1613,6 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
           }
 
-          function savePendingScanAndGoToFlow2(base64, onError) {
-            var dataUrl = (base64.indexOf('data:') === 0) ? base64 : ('data:image/jpeg;base64,' + base64);
-            var rawB64 = base64.indexOf(',') >= 0 ? base64.split(',')[1] : base64;
-            var img = new Image();
-            img.onload = function() {
-              var maxPx = 720;
-              var w = img.naturalWidth || img.width;
-              var h = img.naturalHeight || img.height;
-              var b64 = rawB64;
-              if (w > maxPx || h > maxPx) {
-                var scale = maxPx / Math.max(w, h);
-                var c = document.createElement('canvas');
-                c.width = Math.round(w * scale);
-                c.height = Math.round(h * scale);
-                var ctx = c.getContext('2d');
-                ctx.drawImage(img, 0, 0, c.width, c.height);
-                b64 = c.toDataURL('image/jpeg', 0.82).split(',')[1];
-              }
-              try {
-                sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: b64 }));
-                sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(window.synclystAppUrl('/reading-product')); else window.location.href = window.synclystAppUrl('/reading-product');
-              } catch (e) {
-                if (onError) onError(e);
-              }
-            };
-            img.onerror = function() {
-              try {
-                sessionStorage.setItem('auralink_pending_scan', JSON.stringify({ base64: rawB64 }));
-                sessionStorage.setItem('synclyst_selected_platform', 'shopify');
-                if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(window.synclystAppUrl('/reading-product')); else window.location.href = window.synclystAppUrl('/reading-product');
-              } catch (e) {
-                if (onError) onError(e);
-              }
-            };
-            img.src = dataUrl;
-          }
-
           function startCamera() {
             if (cameraErrorEl) { cameraErrorEl.textContent = ''; cameraErrorEl.classList.add('hidden'); }
             if (stepCamera) stepCamera.classList.remove('camera-unavailable');
@@ -1609,11 +1643,8 @@
             if (!video.videoWidth || !video.videoHeight) { if (cameraErrorEl) { cameraErrorEl.textContent = 'Camera not ready.'; cameraErrorEl.classList.remove('hidden'); } return; }
             if (!base64 || base64.length < 100) { if (cameraErrorEl) { cameraErrorEl.textContent = 'Invalid image.'; cameraErrorEl.classList.remove('hidden'); } return; }
             if (cameraErrorEl) cameraErrorEl.classList.add('hidden');
-            if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
             if (typeof incrementScansUsed === 'function') incrementScansUsed();
-            savePendingScanAndGoToFlow2(base64, function() {
-              if (cameraErrorEl) { cameraErrorEl.textContent = 'Could not save image. Try again.'; cameraErrorEl.classList.remove('hidden'); }
-            });
+            beginScanProcessing(base64);
           });
 
           var uploadInput = document.getElementById('scan-upload-input');
@@ -1630,12 +1661,9 @@
                 var dataUrl = reader.result;
                 var base64 = dataUrl.indexOf(',') >= 0 ? dataUrl.split(',')[1] : dataUrl;
                 if (!base64 || base64.length < 100) return;
-                if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
                 uploadInput.value = '';
                 if (typeof incrementScansUsed === 'function') incrementScansUsed();
-                savePendingScanAndGoToFlow2(base64, function() {
-                  if (cameraErrorEl) { cameraErrorEl.textContent = 'Could not save image. Try again.'; cameraErrorEl.classList.remove('hidden'); }
-                });
+                beginScanProcessing(base64);
               };
               reader.readAsDataURL(file);
             });
@@ -1658,9 +1686,7 @@
                 if (!base64 || base64.length < 100) return;
                 scanResultUploadInput.value = '';
                 if (typeof incrementScansUsed === 'function') incrementScansUsed();
-                savePendingScanAndGoToFlow2(base64, function() {
-                  if (cameraErrorEl) { cameraErrorEl.textContent = 'Could not save image. Try again.'; cameraErrorEl.classList.remove('hidden'); }
-                });
+                beginScanProcessing(base64);
               };
               reader.readAsDataURL(file);
             });
@@ -1668,10 +1694,18 @@
 
           if (doneBtn) doneBtn.addEventListener('click', function() {
             stepResult.classList.add('hidden'); stepResult.classList.remove('flex');
+            if (stepReading) { stepReading.classList.add('hidden'); stepReading.classList.remove('flex'); }
             stepCamera.classList.remove('hidden');
+            stepCamera.classList.add('flex');
             capturedImg.src = '';
             lastExtractionData = null;
             lastCapturedBase64 = null;
+            var pubReset = document.getElementById('scan-publish-shopify-btn');
+            if (pubReset) {
+              pubReset.disabled = true;
+              pubReset.removeAttribute('aria-busy');
+              pubReset.innerHTML = '<img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=64" alt="" class="w-5 h-5 rounded" width="20" height="20" /> Publish to Shopify (draft)';
+            }
             if (uploadInput) uploadInput.value = '';
             if (scanRetryExtractBtn) scanRetryExtractBtn.classList.add('hidden');
             var scanResultUploadRow = document.getElementById('scan-result-upload-row');
@@ -1709,6 +1743,52 @@
               })
               .catch(function() { saveDraftBtn.disabled = false; saveDraftBtn.innerHTML = 'Save as draft'; });
           });
+
+          var publishShopifyBtn = document.getElementById('scan-publish-shopify-btn');
+          if (publishShopifyBtn) {
+            publishShopifyBtn.addEventListener('click', function() {
+              if (!lastExtractionData) return;
+              if (!window.SynclystPublishFromDraft || typeof window.SynclystPublishFromDraft.publish !== 'function') {
+                alert('Publish script failed to load. Refresh the page and try again.');
+                return;
+              }
+              if (!persistDraftForShopifyFromLanding()) {
+                alert('Could not save your draft in the browser. Try “Save as draft” or free some storage.');
+                return;
+              }
+              publishShopifyBtn.disabled = true;
+              publishShopifyBtn.setAttribute('aria-busy', 'true');
+              publishShopifyBtn.innerHTML = '<span class="inline-flex items-center gap-2"><span class="btn-loading-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>Publishing…</span>';
+              window.SynclystPublishFromDraft.publish({ timeoutMs: 120000 })
+                .then(function() {
+                  var path = (window.SYNCYLST_LISTING_PUBLISHED_URL) || '/listing/published';
+                  var url = typeof window.synclystAppUrl === 'function' ? window.synclystAppUrl(path) : path;
+                  if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(url);
+                  else window.location.href = url;
+                })
+                .catch(function(err) {
+                  publishShopifyBtn.disabled = false;
+                  publishShopifyBtn.removeAttribute('aria-busy');
+                  publishShopifyBtn.innerHTML = '<img src="https://www.google.com/s2/favicons?domain=shopify.com&sz=64" alt="" class="w-5 h-5 rounded" width="20" height="20" /> Publish to Shopify (draft)';
+                  var code = err && err.code ? err.code : '';
+                  if (code === 'NO_TOKEN') {
+                    persistDraftForShopifyFromLanding();
+                    window.location.href = window.synclystAppUrl('/sign-in?redirect_url=' + encodeURIComponent(SCAN_RETURN_PATH));
+                    return;
+                  }
+                  if (code === 'SHOPIFY_NOT_CONNECTED') {
+                    persistDraftForShopifyFromLanding();
+                    window.location.href = window.synclystAppUrl('/connect-store?return=' + encodeURIComponent(SCAN_RETURN_PATH));
+                    return;
+                  }
+                  var msg = err && err.message ? err.message : 'Publish failed.';
+                  if (msg === 'Failed to fetch' || (err && err.name === 'TypeError')) {
+                    msg = 'Could not reach the publishing service. If you are testing locally, run the publishing API (see auralink-ai/publishing).';
+                  }
+                  alert(msg);
+                });
+            });
+          }
 
           if (scanContinueSampleBtn) scanContinueSampleBtn.addEventListener('click', function() {
             if (!lastExtractionData) return;

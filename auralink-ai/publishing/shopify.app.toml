@@ -1,0 +1,25 @@
+# App Store config for `shopify app deploy` (publishes webhooks incl. mandatory compliance).
+# Sync with Dev Dashboard: same client_id, URLs, and scopes.
+
+name = "SyncLyst"
+client_id = "9689201284b5118b5ed9dc84416f3952"
+application_url = "https://synclyst.app/shopify/launch"
+embedded = false
+
+[access_scopes]
+scopes = "write_inventory,read_inventory,read_products,write_products"
+
+[auth]
+redirect_urls = [
+  "https://synclyst-publishing-299567386855.us-central1.run.app/auth/shopify/callback",
+]
+
+[webhooks]
+api_version = "2025-01"
+
+# Shopify requires `topics` on each subscription; compliance_topics are added alongside.
+# app/uninstalled hits the same URI — handler acknowledges unknown topics with 200.
+[[webhooks.subscriptions]]
+topics = [ "app/uninstalled" ]
+compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+uri = "https://synclyst-publishing-299567386855.us-central1.run.app/webhooks/shopify/compliance"

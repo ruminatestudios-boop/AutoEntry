@@ -63,17 +63,17 @@ const nextConfig: NextConfig = {
     : {}),
   async redirects() {
     return [
+      /**
+       * Shopify App URL → OAuth start (307). Fallback if Route Handler in app/shopify/launch
+       * is not matched; query string preserved for relative destination.
+       */
+      { source: "/shopify/launch", destination: "/api/shopify/oauth-start", permanent: false },
+      { source: "/shopify/launch/", destination: "/api/shopify/oauth-start", permanent: false },
       /** Prefer semantic URL in the address bar (query string preserved). */
       { source: "/flow-3.html", destination: "/review", permanent: false },
-      /** Canonical scan step: was /home.html?mode=scan or /landing.html?mode=scan */
+      /** Canonical scan URL: /home.html?mode=scan → /scan (home.html). /landing.html?mode=scan stays on landing (scan + publish CTA). */
       {
         source: "/home.html",
-        has: [{ type: "query", key: "mode", value: "scan" }],
-        destination: "/scan",
-        permanent: false,
-      },
-      {
-        source: "/landing.html",
         has: [{ type: "query", key: "mode", value: "scan" }],
         destination: "/scan",
         permanent: false,
