@@ -21,6 +21,8 @@ APIs (Run, Artifact Registry, Cloud Build) should already be enabled from the ba
 
 From the **monorepo root** (SyncLyst):
 
+**One command (same as below):** from `auralink-ai/publishing`, run `./scripts/deploy-cloud-run.sh` (optional env: `GCP_PROJECT_ID`, `GCP_REGION`, `CLOUD_RUN_SERVICE`).
+
 ```bash
 cd auralink-ai/publishing
 
