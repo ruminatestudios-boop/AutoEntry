@@ -28,7 +28,7 @@ export default function PrivacyPage() {
         </nav>
       </header>
 
-      <main className="legal-main pt-24 sm:pt-28">
+      <main className="legal-main">
         <article className="legal-article legal-prose">
           <h1>Privacy Policy</h1>
           <p className="legal-updated">Last Updated: April 2026</p>

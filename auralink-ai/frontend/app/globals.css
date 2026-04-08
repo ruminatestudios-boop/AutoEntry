@@ -394,6 +394,8 @@ a:hover {
   flex-direction: column;
   /* Match landing: clean white canvas (no gradient) */
   background: #ffffff;
+  /* When a legal page uses a fixed header (e.g. /privacy), ensure content never sits underneath it. */
+  padding-top: 4rem;
 }
 .legal-layout-header {
   flex-shrink: 0;
@@ -440,7 +442,7 @@ a:hover {
   border-bottom: none;
   border-radius: 0;
   box-shadow: none;
-  padding: 2rem 1.25rem 2.5rem;
+  padding: 2.5rem 1.25rem 2.5rem;
 }
 @media (min-width: 640px) {
   .legal-article {
