@@ -8,11 +8,15 @@ import {
 
 export const runtime = "nodejs";
 
+/** Same default host as `next.config.ts` publishing proxy when running on Vercel. */
+const defaultPublishingUrlOnVercel =
+  "https://synclyst-publishing-299567386855.us-central1.run.app";
+
 function publishingBaseUrl(): string {
   const u =
     process.env.PUBLISHING_APP_URL?.trim() ||
     process.env.NEXT_PUBLIC_PUBLISHING_API_URL?.trim() ||
-    "";
+    (process.env.VERCEL === "1" ? defaultPublishingUrlOnVercel : "");
   return u.replace(/\/$/, "");
 }
 
