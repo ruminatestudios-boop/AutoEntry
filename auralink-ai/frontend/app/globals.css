@@ -386,3 +386,115 @@ a:hover {
 [data-localization-key*="secure"] {
   display: none !important;
 }
+
+/* —— Legal pages (privacy, terms): matches landing / flow shell —— */
+.legal-page-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* Match landing: clean white canvas (no gradient) */
+  background: #ffffff;
+}
+.legal-layout-header {
+  flex-shrink: 0;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.legal-layout-header a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+.legal-layout-header a:hover {
+  opacity: 0.9;
+}
+.legal-layout-header .legal-logo-mark {
+  height: 1.375rem;
+  width: auto;
+  display: block;
+}
+.legal-main {
+  flex: 1;
+  /* Flat document layout (screenshot): centered column with side rules */
+  padding: 0 1rem 3rem;
+}
+@media (min-width: 640px) {
+  .legal-main {
+    padding: 0 1.5rem 4rem;
+  }
+}
+.legal-article {
+  max-width: 52rem;
+  margin: 0 auto;
+  background: #ffffff;
+  border-left: 1px solid #eaeaea;
+  border-right: 1px solid #eaeaea;
+  border-top: none;
+  border-bottom: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 2rem 1.25rem 2.5rem;
+}
+@media (min-width: 640px) {
+  .legal-article {
+    padding: 2.5rem 3rem 3rem;
+  }
+}
+.legal-prose > section + section {
+  margin-top: 1.75rem;
+}
+.legal-prose h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  line-height: 1.15;
+  margin: 0 0 0.35rem;
+}
+.legal-prose .legal-updated {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin: 0 0 1.75rem;
+}
+.legal-prose h2 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.65rem;
+}
+.legal-prose p {
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: #52525b;
+  margin: 0 0 0.65rem;
+}
+.legal-prose ul {
+  margin: 0.35rem 0 0.75rem;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: #52525b;
+}
+.legal-prose li {
+  margin-bottom: 0.4rem;
+}
+.legal-prose strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.legal-prose a {
+  color: var(--text);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.legal-prose a:hover {
+  color: var(--accent-dim);
+}

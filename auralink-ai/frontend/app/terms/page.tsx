@@ -7,120 +7,143 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-zinc-900">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 py-4">
-          <Link href="/landing.html" className="font-bold text-zinc-900 hover:text-zinc-600">
-            SyncLyst
-          </Link>
-        </div>
+    <div className="legal-page-root">
+      <header className="legal-layout-header">
+        <Link href="/landing.html">
+          <img
+            className="legal-logo-mark"
+            src="/assets/synclyst-logo.svg"
+            alt="SyncLyst"
+            width={120}
+            height={24}
+          />
+        </Link>
       </header>
-      <main className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Terms of Service</h1>
-        <p className="text-zinc-500 text-sm mb-10">Last updated: 10 March 2026</p>
 
-        <div className="space-y-8 text-zinc-700 text-sm leading-relaxed">
-          <section>
-            <p className="mb-4">
-              By accessing or using Synclyst.app, you agree to be bound by these Terms of Service. Please read them carefully.
-            </p>
-          </section>
+      <main className="legal-main">
+        <article className="legal-article legal-prose">
+          <h1>Terms of Service</h1>
+          <p className="legal-updated">Last updated: 10 March 2026</p>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">1. About SyncLyst</h2>
             <p>
-              SyncLyst AI provides a software-as-a-service platform that uses artificial intelligence to generate product listings from photos and sync them to e-commerce platforms including Shopify, Etsy, eBay, and TikTok Shop.
+              By accessing or using Synclyst.app, you agree to be bound by these Terms of Service. Please read them
+              carefully.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">2. Eligibility</h2>
+            <h2>1. About SyncLyst</h2>
             <p>
-              You must be at least 18 years old and capable of entering into a binding contract to use SyncLyst. By using the service, you confirm that you meet these requirements.
+              SyncLyst AI provides a software-as-a-service platform that uses artificial intelligence to generate
+              product listings from photos and sync them to e-commerce platforms including Shopify, Etsy, eBay, and TikTok
+              Shop.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">3. Account Responsibility</h2>
+            <h2>2. Eligibility</h2>
             <p>
-              You are responsible for maintaining the security of your account credentials. You are responsible for all activity that occurs under your account. Notify us immediately at <a href="mailto:support@synclyst.app" className="text-zinc-900 font-medium underline hover:text-zinc-600">support@synclyst.app</a> if you suspect unauthorised access.
+              You must be at least 18 years old and capable of entering into a binding contract to use SyncLyst. By using
+              the service, you confirm that you meet these requirements.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">4. Acceptable Use</h2>
-            <p className="mb-2">
-              You agree not to: upload images that are illegal, infringe third-party intellectual property, or violate any applicable laws. You agree not to attempt to reverse engineer, copy, or resell any part of SyncLyst. You agree not to use the platform to generate listings for counterfeit or prohibited goods.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">5. Credits and Billing</h2>
+            <h2>3. Account Responsibility</h2>
             <p>
-              SyncLyst operates on a credit-based model. Free accounts receive 3 scans per month. Paid plans are billed monthly in advance. All fees are non-refundable unless required by law. We reserve the right to change pricing with 30 days notice.
+              You are responsible for maintaining the security of your account credentials. You are responsible for all
+              activity that occurs under your account. Notify us immediately at{" "}
+              <a href="mailto:support@synclyst.app">support@synclyst.app</a> if you suspect unauthorised access.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">6. Platform Integrations</h2>
+            <h2>4. Acceptable Use</h2>
             <p>
-              SyncLyst connects to third-party platforms via their official APIs. We are not responsible for changes to third-party APIs, platform policy changes, or downtime on connected platforms. Continued availability of integrations is not guaranteed.
+              You agree not to: upload images that are illegal, infringe third-party intellectual property, or violate any
+              applicable laws. You agree not to attempt to reverse engineer, copy, or resell any part of SyncLyst. You
+              agree not to use the platform to generate listings for counterfeit or prohibited goods.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">7. AI-Generated Content</h2>
+            <h2>5. Credits and Billing</h2>
             <p>
-              Listings generated by SyncLyst are produced by artificial intelligence. You are responsible for reviewing all AI-generated content before publishing. We make no guarantee that generated titles, descriptions, or tags are accurate, complete, or compliant with any platform&apos;s requirements.
+              SyncLyst operates on a credit-based model. Free accounts receive 3 scans per month. Paid plans are billed
+              monthly in advance. All fees are non-refundable unless required by law. We reserve the right to change
+              pricing with 30 days notice.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">8. Intellectual Property</h2>
+            <h2>6. Platform Integrations</h2>
             <p>
-              You retain ownership of all photos and product data you upload. By using SyncLyst, you grant us a limited licence to process your content for the purpose of generating listings. We retain ownership of all SyncLyst software, branding, and AI models.
+              SyncLyst connects to third-party platforms via their official APIs. We are not responsible for changes to
+              third-party APIs, platform policy changes, or downtime on connected platforms. Continued availability of
+              integrations is not guaranteed.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">9. Limitation of Liability</h2>
+            <h2>7. AI-Generated Content</h2>
             <p>
-              SyncLyst is provided &quot;as is&quot; without warranties of any kind. To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, or consequential damages arising from your use of the platform, including lost revenue or data.
+              Listings generated by SyncLyst are produced by artificial intelligence. You are responsible for reviewing
+              all AI-generated content before publishing. We make no guarantee that generated titles, descriptions, or
+              tags are accurate, complete, or compliant with any platform&apos;s requirements.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">10. Termination</h2>
+            <h2>8. Intellectual Property</h2>
             <p>
-              We reserve the right to suspend or terminate your account at any time for violation of these Terms. You may cancel your account at any time from your account settings.
+              You retain ownership of all photos and product data you upload. By using SyncLyst, you grant us a limited
+              licence to process your content for the purpose of generating listings. We retain ownership of all SyncLyst
+              software, branding, and AI models.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">11. Governing Law</h2>
+            <h2>9. Limitation of Liability</h2>
             <p>
-              These Terms are governed by the laws of England and Wales. Any disputes shall be subject to the exclusive jurisdiction of the courts of England and Wales.
+              SyncLyst is provided &quot;as is&quot; without warranties of any kind. To the maximum extent permitted by
+              law, we shall not be liable for any indirect, incidental, or consequential damages arising from your use
+              of the platform, including lost revenue or data.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">12. Changes to These Terms</h2>
+            <h2>10. Termination</h2>
             <p>
-              We may update these Terms from time to time. Continued use of SyncLyst after changes constitutes acceptance of the updated Terms.
+              We reserve the right to suspend or terminate your account at any time for violation of these Terms. You may
+              cancel your account at any time from your account settings.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">13. Contact</h2>
+            <h2>11. Governing Law</h2>
             <p>
-              For any questions about these Terms, contact us at: <a href="mailto:legal@synclyst.app" className="text-zinc-900 font-medium underline hover:text-zinc-600">legal@synclyst.app</a>
+              These Terms are governed by the laws of England and Wales. Any disputes shall be subject to the exclusive
+              jurisdiction of the courts of England and Wales.
             </p>
           </section>
-        </div>
 
-        <p className="mt-12 pt-6 border-t border-zinc-200">
-          <Link href="/landing.html" className="text-zinc-600 hover:text-zinc-900 font-medium">← Back to home</Link>
-        </p>
+          <section>
+            <h2>12. Changes to These Terms</h2>
+            <p>
+              We may update these Terms from time to time. Continued use of SyncLyst after changes constitutes acceptance
+              of the updated Terms.
+            </p>
+          </section>
+
+          <section>
+            <h2>13. Contact</h2>
+            <p>
+              For any questions about these Terms, contact us at:{" "}
+              <a href="mailto:legal@synclyst.app">legal@synclyst.app</a>
+            </p>
+          </section>
+        </article>
       </main>
     </div>
   );
