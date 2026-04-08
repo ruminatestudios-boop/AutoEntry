@@ -70,10 +70,8 @@
     })();
   </script>
   <div id="synclyst-flow-shell" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
-    <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
-      <div id="connect-header-left" class="min-w-0 justify-self-start"></div>
-      <a href="/landing.html" class="inline-flex items-center justify-self-center no-underline text-[#111]"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
-      <div class="justify-self-end"></div>
+    <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 flex items-center justify-center">
+      <a href="/landing.html" class="inline-flex items-center no-underline text-[#111]"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
     </header>
     <main class="flex-1 px-5 pt-6 pb-6 overflow-auto flex flex-col" id="connect-main">
       <div class="flex flex-col items-center mb-6">
@@ -209,20 +207,22 @@
         </div>
       </div>
 
-      <div class="rounded-xl bg-[#fafafa] border border-[#e5e5e5] p-4 mb-8">
+      <div class="rounded-xl bg-[#fafafa] border border-[#e5e5e5] p-4 mb-2">
         <p class="text-sm text-[#525252]">You’ll be sent to Shopify to sign in and approve access. SyncLyst can then create and update product listings. You approve every listing before it goes live.</p>
+      </div>
+
+      <div class="mt-auto pt-4 pb-2 shrink-0 border-t border-[#e5e5e5]">
+        <a
+          id="connect-footer-nav"
+          href="/dashboard/home"
+          class="block w-full py-4 rounded-xl bg-white text-[#0a0a0a] font-semibold text-[17px] border-2 border-[#0a0a0a] text-center no-underline hover:bg-[#f5f5f5] active:bg-[#ebebeb] transition-colors"
+        >
+          Back to dashboard
+        </a>
       </div>
 
     </main>
   </div>
-  <script>
-    document.addEventListener('keydown', function(e) {
-      if (e.key !== 'ArrowLeft') return;
-      if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement && document.activeElement.tagName || '')) return;
-      e.preventDefault();
-      history.back();
-    });
-  </script>
   <script>
     (function() {
       function getApiBase() {
@@ -411,30 +411,33 @@
       var params = new URLSearchParams(window.location.search);
       var returnTo = params.get('return');
       var forceTokenMode = (params.get('mode') || '').toLowerCase() === 'token' || params.get('token') === '1';
-      var headerLeft = document.getElementById('connect-header-left');
-      function setHeaderBack(href, label) {
-        if (!headerLeft) return;
-        headerLeft.innerHTML = '<a href="' + href + '" class="text-sm text-[#555] hover:text-[#111] transition-colors no-underline">' + label + '</a>';
-      }
-      var backHref = '/stores-list.html';
-      if (returnTo === 'flow-marketplaces') {
-        backHref = '/flow-marketplaces.html';
-        setHeaderBack(backHref, '← Choose marketplaces');
-      } else if (returnTo === 'flow-connect') {
-        backHref = '/flow-connect.html';
-        setHeaderBack(backHref, '← Connect your stores');
-      } else if (returnTo === 'review' || returnTo === 'flow-3' || returnTo === 'flow-3.html') {
-        backHref = '/review';
-      } else if (returnTo === 'flow-batch-review') {
-        backHref = '/flow-batch-review.html';
-        setHeaderBack(backHref, '← Back to batch');
-      } else if (returnTo === 'stores-list') {
-        backHref = '/stores-list.html';
-        setHeaderBack(backHref, '← Back to stores');
-      } else if (returnTo === 'dashboard-home') {
-        backHref = '/dashboard/home';
-        setHeaderBack(backHref, '← Dashboard');
-      }
+      (function setupConnectFooterNav() {
+        var el = document.getElementById('connect-footer-nav');
+        if (!el) return;
+        var href = '/dashboard/home';
+        var label = 'Back to dashboard';
+        if (returnTo === 'flow-marketplaces') {
+          href = '/flow-marketplaces.html';
+          label = 'Back to marketplaces';
+        } else if (returnTo === 'flow-connect') {
+          href = '/flow-connect.html';
+          label = 'Back to connect stores';
+        } else if (returnTo === 'review' || returnTo === 'flow-3' || returnTo === 'flow-3.html') {
+          href = '/review';
+          label = 'Back to review';
+        } else if (returnTo === 'flow-batch-review') {
+          href = '/flow-batch-review.html';
+          label = 'Back to batch';
+        } else if (returnTo === 'stores-list') {
+          href = '/stores-list.html';
+          label = 'Back to stores';
+        } else if (returnTo === 'dashboard-home') {
+          href = '/dashboard/home';
+          label = 'Back to dashboard';
+        }
+        el.setAttribute('href', href);
+        el.textContent = label;
+      })();
       var redirectUriLink = document.getElementById('redirect-uri-link');
       if (redirectUriLink) {
         redirectUriLink.href = getPublishingBase() + '/auth/shopify/status';
