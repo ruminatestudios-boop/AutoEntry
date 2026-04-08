@@ -435,7 +435,7 @@ export default function DashboardGuest() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "0.75rem" }}>
                   <button
                     type="button"
-                    onClick={() => { window.location.href = "/connect-store?return=stores-list"; }}
+                    onClick={() => { window.location.href = "/shopify/launch?return=stores-list"; }}
                     className="glass-cta"
                     style={{ padding: "0.5rem 1rem", borderRadius: "8px", fontWeight: 600, cursor: "pointer", color: "#fff", width: "100%" }}
                   >

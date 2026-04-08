@@ -20,6 +20,50 @@ function publishingBaseUrl(): string {
   return u.replace(/\/$/, "");
 }
 
+/** Align `/connect-store?return=` keys with publishing `return_to` paths. */
+function normalizeConnectReturnTo(raw: string | undefined | null): string {
+  const r = (raw ?? "").trim();
+  if (!r) return "dashboard/home";
+  switch (r) {
+    case "dashboard-home":
+    case "dashboard/home":
+      return "dashboard/home";
+    case "review":
+    case "flow-3":
+    case "flow-3.html":
+      return "review";
+    case "flow-batch-review":
+      return "flow-batch-review.html";
+    case "stores-list":
+      return "stores-list.html";
+    case "flow-marketplaces":
+      return "review";
+    case "flow-connect":
+      return "flow-connect-done.html";
+    default:
+      return r;
+  }
+}
+
+function connectStoreReturnParam(returnTo: string): string | null {
+  switch (returnTo) {
+    case "dashboard/home":
+      return "dashboard-home";
+    case "review":
+      return "review";
+    case "flow-batch-review.html":
+      return "flow-batch-review";
+    case "stores-list.html":
+      return "stores-list";
+    case "flow-connect-done.html":
+      return "flow-connect";
+    case "flow-marketplaces":
+      return "flow-marketplaces";
+    default:
+      return null;
+  }
+}
+
 /**
  * Starts Shopify OAuth on the publishing API with a signed start_token (binds Clerk user → shop).
  * Use from connect UI: GET /api/shopify/oauth-start?shop=…&return_to=…
@@ -27,14 +71,22 @@ function publishingBaseUrl(): string {
  */
 export async function GET(request: NextRequest) {
   const shopRaw = request.nextUrl.searchParams.get("shop")?.trim() || "";
-  const returnTo =
-    request.nextUrl.searchParams.get("return_to")?.trim() || "dashboard/home";
+  const returnRaw =
+    request.nextUrl.searchParams.get("return_to")?.trim() ||
+    request.nextUrl.searchParams.get("return")?.trim() ||
+    "";
+  const returnTo = normalizeConnectReturnTo(returnRaw || "dashboard/home");
 
   if (!shopRaw) {
-    return NextResponse.json(
-      { error: "Missing shop", hint: "Add ?shop=your-store.myshopify.com" },
-      { status: 400 }
-    );
+    const connect = new URL("/connect-store", request.nextUrl.origin);
+    const rawReturn = request.nextUrl.searchParams.get("return")?.trim();
+    if (rawReturn) {
+      connect.searchParams.set("return", rawReturn);
+    } else {
+      const ret = connectStoreReturnParam(returnTo);
+      if (ret) connect.searchParams.set("return", ret);
+    }
+    return NextResponse.redirect(connect, 307);
   }
 
   const shopNorm = normalizeMyshopifyDomain(shopRaw);
@@ -54,6 +106,7 @@ export async function GET(request: NextRequest) {
     const resume = new URL("/api/shopify/oauth-start", origin);
     resume.searchParams.set("shop", shopNorm);
     resume.searchParams.set("return_to", returnTo);
+    resume.searchParams.delete("return");
     const signIn = new URL("/sign-in", origin);
     signIn.searchParams.set("redirect_url", resume.pathname + resume.search);
     return NextResponse.redirect(signIn);

@@ -221,7 +221,7 @@
                   '<i data-lucide="external-link" class="w-3.5 h-3.5"></i>' +
                 '</a>' +
                 '<p class="text-xs text-[#71717a] mt-3 vercel-body">Listings you publish from SyncLyst sync to this store.</p>' +
-                '<a href="/connect-store?return=dashboard-home" class="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-[#525252] no-underline hover:underline">' +
+                '<a href="/shopify/launch?return=dashboard-home" class="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-[#525252] no-underline hover:underline">' +
                   'Manage connection' +
                 '</a>' +
               '</div>' +
@@ -229,7 +229,7 @@
         } else {
           body.innerHTML =
             '<p class="vercel-body mb-3">Connect your Shopify store to publish drafts as live listings.</p>' +
-            '<a href="/connect-store?return=dashboard-home" class="inline-flex items-center gap-2 rounded-xl bg-[#0a0a0a] text-white px-4 py-2.5 text-sm font-semibold no-underline hover:bg-zinc-800 transition-colors">' +
+            '<a href="/shopify/launch?return=dashboard-home" class="inline-flex items-center gap-2 rounded-xl bg-[#0a0a0a] text-white px-4 py-2.5 text-sm font-semibold no-underline hover:bg-zinc-800 transition-colors">' +
               '<img src="https://cdn.simpleicons.org/shopify/ffffff" alt="" class="w-4 h-4 object-contain" width="16" height="16" />' +
               'Connect Shopify' +
             '</a>';
@@ -403,7 +403,7 @@
                 var body = document.getElementById('dashboard-connected-body');
                 if (body) {
                   body.innerHTML = '<p class="vercel-body text-[#71717a] mb-2">Could not load store status.</p>' +
-                    '<a href="/connect-store?return=dashboard-home" class="text-sm font-semibold text-[#0a0a0a] no-underline hover:underline">Try connecting Shopify</a>';
+                    '<a href="/shopify/launch?return=dashboard-home" class="text-sm font-semibold text-[#0a0a0a] no-underline hover:underline">Try connecting Shopify</a>';
                 }
               });
           });

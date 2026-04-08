@@ -28,6 +28,47 @@
   </script>
 </head>
 <body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
+  <script>
+    (function synclystProdShopifyConnectSkip() {
+      try {
+        var h = location.hostname;
+        if (h !== "synclyst.app" && h !== "www.synclyst.app") return;
+        var sp = new URLSearchParams(location.search);
+        if (sp.get("error") || sp.get("message")) return;
+        if ((sp.get("mode") || "").toLowerCase() === "token" || sp.get("token") === "1") return;
+        var rawShop = (sp.get("shop") || "").trim();
+        if (!rawShop) return;
+        function normShop(s) {
+          s = String(s || "").split("?")[0].split("#")[0].replace(/\/+$/, "").trim();
+          var lower = s.toLowerCase();
+          if (lower.indexOf("admin.shopify.com/store/") !== -1) {
+            try {
+              var tail = lower.replace(/^https?:\/\//, "").split("/store/")[1] || "";
+              var handle = tail.split("/")[0].trim();
+              if (handle && handle !== "admin") return handle + ".myshopify.com";
+            } catch (e) {}
+          }
+          lower = lower.replace(/^https?:\/\//, "");
+          if (lower.indexOf("/") !== -1) lower = lower.split("/")[0];
+          lower = lower.replace(/\.+$/, "").replace(/^www\./, "");
+          if (!lower) return "";
+          if (lower.indexOf(".myshopify.com") !== -1) return lower;
+          if (lower.indexOf(".") === -1) return lower;
+          return "";
+        }
+        var shop = normShop(rawShop);
+        if (!shop || shop === "admin.myshopify.com" || shop === "admin") return;
+        var ret = (sp.get("return_to") || sp.get("return") || "").trim();
+        var qs =
+          "?shop=" +
+          encodeURIComponent(shop) +
+          (ret ? "&return=" + encodeURIComponent(ret) : "");
+        location.replace(
+          location.origin.replace(/\/$/, "") + "/api/shopify/oauth-start" + qs
+        );
+      } catch (e) {}
+    })();
+  </script>
   <div id="synclyst-flow-shell" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
     <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
       <div id="connect-header-left" class="min-w-0 justify-self-start"></div>
@@ -107,8 +148,8 @@
         <div id="shop-error-dev" class="hidden mt-2 text-xs text-red-950/90 font-mono whitespace-pre-wrap break-words border-t border-red-200/80 pt-2"></div>
       </div>
 
-      <!-- Option C: connect via Admin API token (fastest; no app distribution wait) -->
-      <details class="rounded-xl bg-white border border-[#e5e5e5] p-4 mb-4 shadow-sm" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+      <!-- Option C: custom-app token path — hidden on synclyst.app (public app / App Store OAuth only) -->
+      <details id="shopify-custom-token-details" class="rounded-xl bg-white border border-[#e5e5e5] p-4 mb-4 shadow-sm" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
         <summary class="cursor-pointer select-none list-none">
           <span class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Fastest connect (recommended)</span>
           <span class="block text-sm text-[#525252] mt-1">No Shopify app approval needed. Paste one token.</span>
@@ -456,6 +497,19 @@
         if (returnTo === 'dashboard-home') return 'dashboard/home';
         return '';
       }
+
+      function isProductionSynclystHost() {
+        var h = window.location.hostname || '';
+        return h === 'synclyst.app' || h === 'www.synclyst.app';
+      }
+      (function applyProductionConnectStoreUi() {
+        if (!isProductionSynclystHost()) return;
+        var alt = document.getElementById('shopify-custom-token-details');
+        if (alt) {
+          alt.classList.add('hidden');
+          alt.setAttribute('aria-hidden', 'true');
+        }
+      })();
 
       var shopInput = document.getElementById('shop-input');
       var connectBtn = document.getElementById('connect-btn');
@@ -808,8 +862,8 @@
           .then(function(r) { return r.json(); })
           .then(function(status) {
             publicInstallEnabled = status && status.public_install_enabled === true;
-            // Show bypass whenever dev token + shop are set (even if OAuth keys exist — demo path).
-            if (!status.dev_shopify_bypass || !status.dev_shop_domain) return;
+            // Never show dev bypass on production; only when publishing advertises it (local / demo).
+            if (isProductionSynclystHost() || !status.dev_shopify_bypass || !status.dev_shop_domain) return;
             devBypassPanel.classList.remove('hidden');
             if (typeof hideConnectError === 'function') hideConnectError();
             setTimeout(function() {
