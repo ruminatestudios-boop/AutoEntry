@@ -7,113 +7,128 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-zinc-900">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 py-4">
-          <Link href="/landing.html" className="font-bold text-zinc-900 hover:text-zinc-600">
-            SyncLyst
+    <div className="legal-page-root">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#eaeaea]">
+        <nav
+          className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between relative"
+          aria-label="Main"
+        >
+          {/* Match landing.html: logo is viewport-centered within the nav track via absolute + balanced flex-1 sides */}
+          <div className="flex-1 min-w-0" aria-hidden="true" />
+          <Link
+            href="/landing.html"
+            className="flex items-center gap-2 flex-shrink-0 absolute left-1/2 -translate-x-1/2 no-underline"
+          >
+            <span className="text-lg font-semibold tracking-tight text-[#111]">
+              Synclyst{" "}
+              <sup className="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup>
+            </span>
           </Link>
-        </div>
+          <div className="flex-1 min-w-0" aria-hidden="true" />
+        </nav>
       </header>
-      <main className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Privacy Policy</h1>
-        <p className="text-zinc-500 text-sm mb-10">Last updated: 3 April 2026</p>
 
-        <div className="space-y-8 text-zinc-700 text-sm leading-relaxed">
-          <section>
-            <p className="mb-4">
-              SyncLyst AI (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) operates Synclyst.app. This Privacy Policy explains how we collect, use, and protect your information when you use our service.
-            </p>
-          </section>
+      <main className="legal-main pt-24 sm:pt-28">
+        <article className="legal-article legal-prose">
+          <h1>Privacy Policy</h1>
+          <p className="legal-updated">Last Updated: April 2026</p>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">1. Information We Collect</h2>
-            <ul className="list-disc list-inside space-y-2 ml-2">
-              <li><strong className="text-zinc-900">Account Information:</strong> When you sign up, we collect your name and email address.</li>
-              <li><strong className="text-zinc-900">Product Photos:</strong> Images you upload to generate listings. These are processed by our AI and not stored permanently after processing.</li>
-              <li><strong className="text-zinc-900">Usage Data:</strong> We collect information about how you use the app, including scans performed, listings created, and features accessed.</li>
-              <li><strong className="text-zinc-900">Payment Information:</strong> Billing is handled by a third-party payment processor. We do not store your card details.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">2. How We Use Your Information</h2>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>To provide and improve our service, including generating product listings from photos.</li>
-              <li>To sync your listings to connected platforms such as Shopify, Etsy, eBay, and TikTok Shop.</li>
-              <li>To send you important account updates, billing notices, and product announcements.</li>
-              <li>To improve the AI model&apos;s accuracy and performance over time (using anonymised data only).</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">3. Third-Party Integrations</h2>
+            <h2>Introduction</h2>
             <p>
-              When you connect SyncLyst to a third-party platform (e.g. Shopify), you authorise us to access and write to that platform on your behalf. We only request the permissions necessary to create and manage product listings. You can disconnect any integration at any time from your dashboard.
+              SyncLyst AI (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) operates the Synclyst application and
+              Synclyst.app. This Privacy Policy explains how we collect, use, and protect your information when you use
+              our service, including when you install or use SyncLyst as a Shopify merchant.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">4. Data Retention</h2>
-            <p>
-              Product photos uploaded for scanning are deleted from our servers within 24 hours of processing. Listing drafts and account data are retained for as long as your account is active. You may request deletion of your account and all associated data at any time by contacting us at <a href="mailto:privacy@synclyst.app" className="text-zinc-900 font-medium underline hover:text-zinc-600">privacy@synclyst.app</a>.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">5. Data Security</h2>
-            <p>
-              We use industry-standard encryption (TLS/HTTPS) to protect data in transit. Access to user data is restricted to authorised personnel only.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">6. Your Rights (UK/EEA Users)</h2>
-            <p className="mb-2">
-              Under GDPR, you have the right to: access the data we hold about you, request correction or deletion, object to processing, and request data portability. To exercise any of these rights, contact us at <a href="mailto:privacy@synclyst.app" className="text-zinc-900 font-medium underline hover:text-zinc-600">privacy@synclyst.app</a>.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">7. Cookies</h2>
-            <p>
-              We use essential cookies to keep you logged in and to maintain session state. We do not use advertising or tracking cookies.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">8. Shopify merchants (App Store compliance)</h2>
-            <p className="mb-2">
-              If you install SyncLyst from the Shopify App Store or connect a Shopify store, we receive OAuth credentials only as needed to create and manage product listings you choose to sync. We subscribe to Shopify&apos;s mandatory privacy webhooks.
-            </p>
-            <ul className="list-disc list-inside space-y-2 ml-2">
+            <h2>1. Information We Collect</h2>
+            <ul>
               <li>
-                <strong className="text-zinc-900">Uninstall / shop data:</strong> After you remove the app, Shopify notifies us to delete data associated with your shop from our systems (for example, stored connection tokens for that shop). We complete processing within the timeframe Shopify requires.
+                <strong>Merchant Account Information:</strong> When you install the app via Shopify OAuth, we collect
+                your name, email address, and shop domain to manage your account and billing.
               </li>
               <li>
-                <strong className="text-zinc-900">Customer data:</strong> Our publishing service is built to avoid storing Shopify customer or order personal data. If that changes in a future version, we will update this policy and honour customer data and redaction requests delivered via Shopify&apos;s compliance webhooks.
+                <strong>Product Data &amp; Photos:</strong> Images you upload to generate listings. These are processed
+                by our AI and deleted from our servers within 24 hours.
+              </li>
+              <li>
+                <strong>Usage Data:</strong> Information about scans performed, listings created, and features
+                accessed to improve app performance.
+              </li>
+              <li>
+                <strong>Payment:</strong> Billing is handled via Shopify&apos;s Billing API or a secure third-party
+                processor. We do not store your credit card details.
               </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">9. Changes to This Policy</h2>
+            <h2>2. How We Use Your Information</h2>
             <p>
-              We may update this Privacy Policy from time to time. We will notify you of significant changes by email or via a notice on the platform.
+              We use your data to provide core services: generating product listings from photos and syncing them to
+              your connected platforms (Shopify, Etsy, eBay, etc.). We use anonymized, aggregated data to improve our
+              AI models. We do not sell your personal data to third parties.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-zinc-900 mb-3">10. Contact Us</h2>
+            <h2>3. Shopify Mandatory Webhooks &amp; GDPR Compliance</h2>
             <p>
-              For any privacy-related questions, contact us at: <a href="mailto:privacy@synclyst.app" className="text-zinc-900 font-medium underline hover:text-zinc-600">privacy@synclyst.app</a>
+              Synclyst is fully compliant with Shopify&apos;s mandatory privacy requirements. We have implemented the
+              following webhooks to protect your data:
+            </p>
+            <ul>
+              <li>
+                <strong>customers/data_request:</strong> Although Synclyst does not store customer personal data, we
+                provide a structured response to any request from Shopify on behalf of a customer.
+              </li>
+              <li>
+                <strong>customers/redact:</strong> We automatically fulfill requests to delete customer personal data if
+                any were transiently processed.
+              </li>
+              <li>
+                <strong>shop/redact:</strong> Within 48 hours of you uninstalling the app, we purge all shop-related data
+                and access tokens from our database.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>4. Third-Party Integrations</h2>
+            <p>
+              When you connect SyncLyst to a third-party platform (e.g., eBay), you authorize us to access and write to
+              that platform on your behalf. We only request the minimum permissions necessary. You can disconnect
+              integrations at any time from your dashboard.
             </p>
           </section>
-        </div>
 
-        <p className="mt-12 pt-6 border-t border-zinc-200">
-          <Link href="/landing.html" className="text-zinc-600 hover:text-zinc-900 font-medium">← Back to home</Link>
-        </p>
+          <section>
+            <h2>5. Data Security</h2>
+            <p>
+              We use industry-standard TLS/HTTPS encryption. Access to user data is restricted to authorized personnel
+              only.
+            </p>
+          </section>
+
+          <section>
+            <h2>6. Your Rights (UK/EEA/US State Laws)</h2>
+            <p>
+              Under GDPR and evolving US state privacy laws (CCPA/Indiana/Kentucky/Rhode Island), you have the right to
+              access, correct, or delete your data. To exercise these rights, contact us at:{" "}
+              <a href="mailto:synclyst@gmail.com">synclyst@gmail.com</a>
+            </p>
+          </section>
+
+          <section>
+            <h2>7. Changes &amp; Contact</h2>
+            <p>We may update this policy. Significant changes will be notified via email.</p>
+            <p>
+              Contact: <a href="mailto:synclyst@gmail.com">synclyst@gmail.com</a>
+            </p>
+          </section>
+        </article>
       </main>
     </div>
   );
