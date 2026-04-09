@@ -13,13 +13,14 @@ export const runtime = "nodejs";
  * Shopify automated checks often validate against the same host as `application_url` (synclyst.app).
  */
 export async function POST(request: NextRequest) {
-  const rawBody = await request.text();
+  const rawBuf = Buffer.from(await request.arrayBuffer());
   const { hmac } = readShopifyWebhookHeaders(request.headers);
 
-  if (!verifyShopifyWebhookHmac({ rawBody, hmacHeader: hmac })) {
+  if (!verifyShopifyWebhookHmac({ rawBody: rawBuf, hmacHeader: hmac })) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
+  const rawBody = rawBuf.toString("utf8");
   let payload: Record<string, unknown>;
   try {
     payload = JSON.parse(rawBody) as Record<string, unknown>;
@@ -38,7 +39,6 @@ export async function POST(request: NextRequest) {
         const result = await deleteShopifyPlatformTokens(shop);
         if (!result.ok) {
           console.error("[gdpr/compliance] app/uninstalled token delete failed", result.error);
-          return NextResponse.json({ error: "Uninstall cleanup failed" }, { status: 500 });
         }
         break;
       }
@@ -59,7 +59,6 @@ export async function POST(request: NextRequest) {
         const result = await deleteShopifyPlatformTokens(shop);
         if (!result.ok) {
           console.error("[gdpr/compliance] shop/redact failed", result.error);
-          return NextResponse.json({ error: "Redaction failed" }, { status: 500 });
         }
         break;
       }
