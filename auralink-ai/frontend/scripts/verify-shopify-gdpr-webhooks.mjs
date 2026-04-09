@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 /**
- * Step-2 style check: POST each mandatory GDPR webhook path without HMAC.
- * Expect HTTP 401 + JSON { error: "Invalid HMAC" } when routes + verification are live.
- * Expect 404 if the deployment is missing the App Router handlers.
+ * POST each GDPR path without HMAC. Expect 401 + body "Unauthorized" (Shopify-style).
  *
  * Usage:
  *   SYNCLYST_BASE_URL=https://synclyst.app node scripts/verify-shopify-gdpr-webhooks.mjs
@@ -12,10 +10,17 @@ const base =
   process.env.SYNCLYST_BASE_URL?.replace(/\/$/, "") || "https://synclyst.app";
 
 const paths = [
+  "/api/shopify/webhooks/gdpr/compliance",
   "/api/shopify/webhooks/gdpr/customers-data-request",
   "/api/shopify/webhooks/gdpr/customers-redact",
   "/api/shopify/webhooks/gdpr/shop-redact",
 ];
+
+function isUnauthorized401(status, bodySnippet) {
+  if (status !== 401) return false;
+  const s = bodySnippet.trim();
+  return s === "Unauthorized" || s.includes("Invalid HMAC");
+}
 
 async function main() {
   let failed = false;
@@ -33,7 +38,7 @@ async function main() {
     } catch {
       bodySnippet = "(no body)";
     }
-    const ok = res.status === 401 && bodySnippet.includes("Invalid HMAC");
+    const ok = isUnauthorized401(res.status, bodySnippet);
     if (!ok) {
       failed = true;
       console.error(`FAIL ${res.status} ${url}`);
@@ -44,12 +49,14 @@ async function main() {
   }
   if (failed) {
     console.error(
-      "\nExpected 401 with Invalid HMAC for each path (unsigned POST).",
-      "\nIf you see 404, deploy the GDPR webhook routes to this host (Synclyst main + Vercel)."
+      "\nExpected 401 Unauthorized for unsigned POST (HMAC required).",
+      "\n404 = route not deployed (merge + Vercel deploy)."
     );
     process.exit(1);
   }
-  console.log("\nAll GDPR webhook routes respond with HMAC verification (Shopify checks should pass once URLs + secret match).");
+  console.log(
+    "\nAll GDPR paths enforce HMAC. Register mandatory topics at /api/shopify/webhooks/gdpr/compliance (shopify.app.toml) + SHOPIFY_API_SECRET on Vercel."
+  );
 }
 
 main().catch((e) => {
