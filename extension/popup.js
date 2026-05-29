@@ -632,6 +632,7 @@ function renderDraftLibraryOverlayUI(list) {
     openBtn.type = "button";
     openBtn.className = "settings-library-open";
     openBtn.textContent = "Open";
+    const cachedRow = (it.cachedRow && typeof it.cachedRow === "object") ? it.cachedRow : null;
     openBtn.addEventListener("click", (e) => {
       try {
         e.preventDefault();
@@ -639,12 +640,12 @@ function renderDraftLibraryOverlayUI(list) {
       } catch {
         /* ignore */
       }
-      openLibrarySession(sid);
+      openLibrarySession(sid, cachedRow);
     });
 
     row.appendChild(meta);
     row.appendChild(openBtn);
-    row.addEventListener("click", () => openLibrarySession(sid));
+    row.addEventListener("click", () => openLibrarySession(sid, cachedRow));
     wrap.appendChild(row);
   }
 }
@@ -666,13 +667,19 @@ async function upsertDraftLibraryItem(item) {
     updatedAtMs: typeof item.updatedAtMs === "number" && Number.isFinite(item.updatedAtMs) ? item.updatedAtMs : Date.now(),
     stamp: safeTrimStr(item && item.stamp),
     imageUrl: safeTrimStr(item && item.imageUrl),
+    // Store full listing row so Open restores instantly from cache (no server round-trip).
+    cachedRow: (item && item.cachedRow != null) ? item.cachedRow : undefined,
   };
   const list = await readDraftLibrary();
   const out = [next];
+  // Deduplicate by sessionId — one entry per session, latest version wins.
+  // Each phone scan produces a new session ID (synced via background.js SNAP_PAIR_COMPLETE),
+  // so one scan = one entry. Older entries with the same session are replaced.
   for (const it of list) {
     if (!it || typeof it !== "object") continue;
     const s0 = safeTrimStr(it.sessionId);
     if (!s0) continue;
+    // Drop any older entry for the same session — `next` (at index 0) is already the latest.
     if (s0.toLowerCase() === sid.toLowerCase()) continue;
     out.push(it);
     if (out.length >= DRAFT_LIBRARY_MAX_ITEMS) break;
@@ -713,9 +720,35 @@ function clearDraftLibrary() {
   }
 }
 
-function openLibrarySession(sessionId) {
+function openLibrarySession(sessionId, cachedRow) {
   const sid = safeTrimStr(sessionId);
   if (!sid) return;
+
+  // If we have cached listing data, restore instantly without a reload or server fetch.
+  if (cachedRow && typeof cachedRow === "object") {
+    try {
+      chrome.storage.local.set({ snap_pair_session_id: sid, [STORAGE_PREFERS_QR_HOME]: false });
+      snapPairSessionId = sid;
+      // Pre-load the cached listing BEFORE continueToListing() so refreshLoadedSubstate()
+      // sees a hydrated listing and goes straight to the listing screen (not the QR/waiting screen).
+      lastPayload = cachedRow;
+      listingHydrated = true;
+      lastAppliedListingStamp = null;
+      lastAppliedImageUrl = null;
+      // Close the library overlay if open.
+      try {
+        const overlay = document.getElementById("library-overlay");
+        if (overlay) overlay.classList.add("hidden");
+      } catch { /* ignore */ }
+      continueToListing();
+      applyListing(cachedRow);
+      return;
+    } catch {
+      /* fall through to reload if anything fails */
+    }
+  }
+
+  // Fallback: reload and fetch from server.
   try {
     chrome.storage.local.set({ snap_pair_session_id: sid, [STORAGE_PREFERS_QR_HOME]: false }, () => {
       window.location.reload();
@@ -780,6 +813,7 @@ function renderDraftLibraryUI(list) {
     openBtn.type = "button";
     openBtn.className = "settings-library-open";
     openBtn.textContent = "Open";
+    const cachedRowNonOverlay = (it.cachedRow && typeof it.cachedRow === "object") ? it.cachedRow : null;
     openBtn.addEventListener("click", (e) => {
       try {
         e.preventDefault();
@@ -787,12 +821,12 @@ function renderDraftLibraryUI(list) {
       } catch {
         /* ignore */
       }
-      openLibrarySession(sid);
+      openLibrarySession(sid, cachedRowNonOverlay);
     });
 
     row.appendChild(meta);
     row.appendChild(openBtn);
-    row.addEventListener("click", () => openLibrarySession(sid));
+    row.addEventListener("click", () => openLibrarySession(sid, cachedRowNonOverlay));
     wrap.appendChild(row);
   }
 }
@@ -2803,6 +2837,8 @@ function applyListing(row) {
           updatedAtMs: ms,
           stamp: rawStamp,
           imageUrl: thumb,
+          // Cache the full listing row so Open is instant (no server fetch needed).
+          cachedRow: lastPayload,
         });
       })();
     }
@@ -3561,25 +3597,6 @@ window.addEventListener("beforeunload", () => {
     if (initial && !initial.empty && initial.listing && sessionListingHasContent(initial.listing)) {
       applyListing(initial.listing);
     }
-
-    // Check for a pending product saved by Claude Desktop (MCP magic_fill).
-    // Runs in background — doesn't block the UI. Only applies if snap session has no content.
-    (async () => {
-      try {
-        const mcpOrigin = SYNCLYST_ORIGIN_LIVE.replace(/\/$/, "");
-        const r = await fetchWithTimeout(`${mcpOrigin}/api/mcp-pending`, { credentials: "include" }, 5000);
-        if (!r || !r.ok) return;
-        const j = await r.json();
-        if (!j || !j.found || !j.listing) return;
-        // Only apply MCP product if snap session didn't already load content
-        if (listingHydrated && sessionListingHasContent(lastPayload)) return;
-        applyListing(j.listing);
-        setStatus("✨ Loaded from Claude Desktop");
-      } catch {
-        /* MCP pending check failed silently — snap session is the primary flow */
-      }
-    })();
-
     refreshLoadedSubstate();
 
     let savedPlatform = normalizeLegacyPlatformId(uiPrefs[STORAGE_LAST_PLATFORM]);
