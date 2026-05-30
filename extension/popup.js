@@ -316,6 +316,7 @@ let lastAppliedListingStamp = null;
 /** One-shot: skip auto-advance when re-applying an existing listing while restoring QR home from storage. */
 /** When true, we just received a "new scan/upload" signal and are waiting for listing content. */
 let extractionPending = false;
+let suppressMergeNextPoll = false;
 let extractionStartedAtMs = 0;
 let extractionTickerId = null;
 
@@ -672,15 +673,16 @@ async function upsertDraftLibraryItem(item) {
   };
   const list = await readDraftLibrary();
   const out = [next];
-  // Deduplicate by sessionId — one entry per session, latest version wins.
-  // Each phone scan produces a new session ID (synced via background.js SNAP_PAIR_COMPLETE),
-  // so one scan = one entry. Older entries with the same session are replaced.
+  const nextTitle = safeTrimStr(next.title).toLowerCase().slice(0, 40);
+  // Deduplicate by sessionId+title: same session + same title = same scan (update in place).
+  // Same session + different title = different product scan = keep as separate entry.
   for (const it of list) {
     if (!it || typeof it !== "object") continue;
     const s0 = safeTrimStr(it.sessionId);
     if (!s0) continue;
-    // Drop any older entry for the same session — `next` (at index 0) is already the latest.
-    if (s0.toLowerCase() === sid.toLowerCase()) continue;
+    const itTitle = safeTrimStr(it.title).toLowerCase().slice(0, 40);
+    // Only drop if BOTH session AND title match — this is the same scan being updated.
+    if (s0.toLowerCase() === sid.toLowerCase() && itTitle === nextTitle) continue;
     out.push(it);
     if (out.length >= DRAFT_LIBRARY_MAX_ITEMS) break;
   }
@@ -742,6 +744,10 @@ function openLibrarySession(sessionId, cachedRow) {
       } catch { /* ignore */ }
       continueToListing();
       applyListing(cachedRow);
+      // On the next server response, skip the stale-field merge so the real server data
+      // (correct product description) replaces whatever is in the cache.
+      suppressMergeNextPoll = true;
+      void burstPollUntilListing(sid, { stepMs: 400, maxAttempts: 8 });
       return;
     } catch {
       /* fall through to reload if anything fails */
@@ -2758,9 +2764,20 @@ function syncPayloadFromReviewFields() {
 /**
  * Later polls can return rows with image/price but blank title/description (partial writes / races).
  * If we already showed copy, keep it until the server sends non-blank replacements (user edits stay in sync via input listeners).
+ * IMPORTANT: only merge within the same scan (same updated_at stamp). If the stamp has changed,
+ * this is a new product scan — do NOT carry old description/title across to the new product.
  */
 function mergeListingCoreFromLastPayload(row) {
   if (!listingHydrated || !lastPayload) return row;
+  // After opening a library draft, the first server response must not merge stale cached fields.
+  if (suppressMergeNextPoll) {
+    suppressMergeNextPoll = false;
+    return row;
+  }
+  // If the server row has a newer stamp than what we last applied, it's a fresh scan — don't merge stale fields.
+  const rowStamp = row.updated_at != null ? String(row.updated_at).trim() : "";
+  const prevStamp = lastAppliedListingStamp != null ? String(lastAppliedListingStamp).trim() : "";
+  if (rowStamp && prevStamp && rowStamp !== prevStamp) return row;
   const out = { ...row };
   if (!pickStr(out.title) && pickStr(lastPayload.title)) out.title = lastPayload.title;
   const rowDesc = out.description != null ? String(out.description).trim() : "";
@@ -2929,7 +2946,9 @@ function openFullReviewInBrowser() {
     setStatus("Choose a marketplace in step 2 first.");
     return;
   }
-  const u = new URL("/extension-review", SYNCLYST_ORIGIN);
+  // Always open extension-review on app.synclyst.app — it's live there and served correctly.
+  const reviewBase = "https://app.synclyst.app";
+  const u = new URL("/extension-review", reviewBase);
   u.searchParams.set("s", snapPairSessionId);
   u.searchParams.set("platform", platform);
   chrome.tabs.create({ url: u.toString() });
