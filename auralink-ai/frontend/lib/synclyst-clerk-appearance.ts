@@ -40,5 +40,29 @@ export const synclystClerkAppearance = {
     dividerLine: "bg-[#e5e5e5]",
     dividerText: "text-[#71717a] text-xs",
     footer: "shadow-none border-t border-[#e5e5e5]",
+    userButtonPopoverCard: "synclyst-clerk-user-popover",
+    userButtonPopoverActionButton: "synclyst-clerk-user-menu-action",
+    userButtonPopoverActionButtonText: "synclyst-clerk-user-menu-action-text",
+    userButtonPopoverActionButtonIcon: "synclyst-clerk-user-menu-action-icon",
+    userButtonPopoverFooter: "text-[#525252]",
+    userPreviewMainIdentifier: "text-[#111827] font-semibold",
+    userPreviewSecondaryIdentifier: "text-[#525252]",
+  },
+};
+
+/** UserButton popover only — menu labels must be dark (popover renders in a portal). */
+export const synclystClerkUserButtonAppearance = {
+  ...synclystClerkAppearance,
+  variables: {
+    ...synclystClerkAppearance.variables,
+    colorText: "#111827",
+    colorTextSecondary: "#111827",
+    colorNeutral: "#111827",
+  },
+  elements: {
+    ...synclystClerkAppearance.elements,
+    userButtonPopoverActionButton: "synclyst-clerk-user-menu-action",
+    userButtonPopoverActionButtonText: "synclyst-clerk-user-menu-action-text",
+    userButtonPopoverActionButtonIcon: "synclyst-clerk-user-menu-action-icon",
   },
 };

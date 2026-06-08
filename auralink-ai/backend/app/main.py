@@ -19,8 +19,11 @@ from app.routes.developer_keys import router as dev_keys_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from app.db import get_supabase
+    from app.schema_bootstrap import ensure_developer_schema
+
+    ensure_developer_schema(get_supabase())
     yield
-    # Shutdown: close pools, etc. if needed
 
 
 def create_app() -> FastAPI:

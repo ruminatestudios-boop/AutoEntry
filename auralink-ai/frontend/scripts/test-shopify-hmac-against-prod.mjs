@@ -13,7 +13,7 @@
 import crypto from "crypto";
 
 const base =
-  process.env.SYNCLYST_BASE_URL?.replace(/\/$/, "") || "https://synclyst.app";
+  process.env.SYNCLYST_BASE_URL?.replace(/\/$/, "") || "https://app.synclyst.app";
 const secret = process.env.SHOPIFY_API_SECRET?.trim() || "";
 
 if (!secret) {

@@ -28,7 +28,7 @@ def _shopify_product_gid(legacy_product_id: int) -> str:
 
 def _fetch_shopify_orders(shop_domain: str, access_token: str, created_min: str, created_max: str) -> list:
     """Fetch orders from Shopify REST Admin API for the given date range."""
-    url = f"https://{shop_domain}/admin/api/2024-01/orders.json"
+    url = f"https://{shop_domain}/admin/api/2026-01/orders.json"
     all_orders = []
     params = {
         "status": "any",

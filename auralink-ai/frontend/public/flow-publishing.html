@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="view-transition" content="same-origin" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
-  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <meta name="synclyst-publishing-url" content="http://localhost:8001" />
   <title>Publishing | Listing Flow | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -149,7 +149,11 @@
         .catch(function(e) {
           if (doneBtn) doneBtn.classList.remove('hidden');
           var code = e && e.code;
-          if (code === 'NO_TOKEN' || code === 'SHOPIFY_NOT_CONNECTED') {
+          if (code === 'NO_TOKEN') {
+            window.location.href = '/sign-in?redirect_url=' + encodeURIComponent('/review?publish=1');
+            return;
+          }
+          if (code === 'SHOPIFY_NOT_CONNECTED') {
             window.location.href = '/connect-store?return=review';
             return;
           }

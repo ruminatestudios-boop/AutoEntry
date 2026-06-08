@@ -36,11 +36,6 @@ export async function getValidToken(userId, platform) {
     throw e;
   }
 
-  // Shopify: permanent token, no refresh
-  if (platform === 'shopify') {
-    return { accessToken, row };
-  }
-
   const expiresAt = row.expires_at ? new Date(row.expires_at).getTime() : 0;
   const now = Date.now();
   if (expiresAt && expiresAt - now > ONE_HOUR_MS) {
@@ -49,6 +44,14 @@ export async function getValidToken(userId, platform) {
 
   const refreshToken = getDecryptedRefreshToken(row);
   if (!refreshToken) {
+    if (platform === 'shopify') {
+      const e = new Error(
+        'Shopify token expired. Reconnect your store from Connect Shopify (public apps require expiring tokens).'
+      );
+      e.code = 'AUTH_ERROR';
+      e.platform = platform;
+      throw e;
+    }
     await setTokenStatus(userId, platform, 'expired');
     const e = new Error(`No refresh token: ${platform}`);
     e.code = 'AUTH_ERROR';
@@ -59,6 +62,9 @@ export async function getValidToken(userId, platform) {
   let refreshed;
   try {
     switch (platform) {
+      case 'shopify':
+        refreshed = await refreshShopify(refreshToken, row.shop_domain || row.shop_id);
+        break;
       case 'tiktok':
         refreshed = await refreshTikTok(refreshToken, row.shop_id);
         break;

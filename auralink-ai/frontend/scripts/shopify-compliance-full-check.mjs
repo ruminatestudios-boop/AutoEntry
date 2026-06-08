@@ -13,7 +13,7 @@
 import crypto from "crypto";
 
 const base =
-  process.env.SYNCLYST_BASE_URL?.replace(/\/$/, "") || "https://synclyst.app";
+  process.env.SYNCLYST_BASE_URL?.replace(/\/$/, "") || "https://app.synclyst.app";
 const cloudCompliance =
   process.env.CLOUD_RUN_COMPLIANCE_URL?.replace(/\/$/, "") ||
   "https://synclyst-publishing-299567386855.us-central1.run.app/webhooks/shopify/compliance";
@@ -109,7 +109,7 @@ async function main() {
   if (!ok) {
     console.error(
       "\nFix: Vercel Production → SHOPIFY_API_SECRET (API secret key, not Client ID). Redeploy.\n" +
-        "Cloud Run publishing → same secret. Partners compliance URLs → https://synclyst.app/api/shopify/webhooks/gdpr/compliance\n" +
+        "Cloud Run publishing → same secret. Partners compliance URLs → https://app.synclyst.app/api/shopify/webhooks/gdpr/compliance\n" +
         "Then: cd auralink-ai/publishing && npm run shopify:deploy-config\n"
     );
     process.exit(1);

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SyncLyst</title>
+  <script>
+    (function () {
+      function shopFromHost(hostB64) {
+        var raw = (hostB64 || "").trim();
+        if (!raw) return "";
+        try {
+          var normalized = raw.replace(/-/g, "+").replace(/_/g, "/");
+          var pad = "";
+          while ((normalized.length + pad.length) % 4) pad += "=";
+          var decoded = atob(normalized + pad);
+          var m = decoded.match(/admin\.shopify\.com\/store\/([^/?#]+)/i);
+          if (m && m[1]) {
+            var handle = m[1].trim().toLowerCase();
+            if (handle && handle !== "admin") return handle + ".myshopify.com";
+          }
+        } catch (e) {}
+        return "";
+      }
+      var params = new URLSearchParams(window.location.search);
+      var shop = (params.get("shop") || "").trim() || shopFromHost(params.get("host"));
+      if (shop) {
+        var api = "/api/shopify/oauth-start?shop=" + encodeURIComponent(shop) + "&return_to=list";
+        params.forEach(function (v, k) {
+          if (k !== "shop") api += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(v);
+        });
+        // Shopify Admin may load the App URL in an iframe during open/install flows.
+        // Break out to the top-level window so OAuth/navigation isn't blocked.
+        try {
+          if (window.top && window.top !== window.self) {
+            window.top.location.href = api;
+          } else {
+            window.location.replace(api);
+          }
+        } catch (e) {
+          window.location.replace(api);
+        }
+        return;
+      }
+      window.location.replace("/list");
+    })();
+  </script>
+</head>
+<body></body>
+</html>

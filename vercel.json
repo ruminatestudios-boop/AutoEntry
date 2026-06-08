@@ -1,0 +1,46 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "comment": "www/apex static deploy — send app routes to the Next.js project on app.synclyst.app",
+  "redirects": [
+    {
+      "source": "/shopify/launch",
+      "destination": "https://app.synclyst.app/shopify/launch",
+      "permanent": false
+    },
+    {
+      "source": "/shopify/launch/",
+      "destination": "https://app.synclyst.app/shopify/launch",
+      "permanent": false
+    },
+    {
+      "source": "/list",
+      "destination": "https://app.synclyst.app/list",
+      "permanent": false
+    },
+    {
+      "source": "/scan",
+      "destination": "https://app.synclyst.app/scan",
+      "permanent": false
+    },
+    {
+      "source": "/connect-store",
+      "destination": "https://app.synclyst.app/connect-store",
+      "permanent": false
+    },
+    {
+      "source": "/review",
+      "destination": "https://app.synclyst.app/review",
+      "permanent": false
+    },
+    {
+      "source": "/billing",
+      "destination": "https://app.synclyst.app/billing",
+      "permanent": false
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://app.synclyst.app/api/:path*",
+      "permanent": false
+    }
+  ]
+}

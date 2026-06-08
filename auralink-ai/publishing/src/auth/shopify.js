@@ -310,7 +310,7 @@ function getRedirectUri() {
 /** Build Shopify OAuth authorize URL. Accepts (shop, stateStr) or legacy (stateJsonString). */
 export function getShopifyAuthUrl(shopOrState, stateStr) {
   // Keep in sync with Access scopes on the app version in Shopify Partners.
-  const scopes = 'read_products,write_products,read_inventory,write_inventory';
+  const scopes = 'read_products,write_products,write_inventory';
   let shop = '';
   let stateStrOut = stateStr;
   if (typeof shopOrState === 'string' && shopOrState.trim() !== '') {
@@ -330,7 +330,28 @@ export function getShopifyAuthUrl(shopOrState, stateStr) {
   const shopNorm = shop.replace(/\.myshopify\.com$/i, '') + '.myshopify.com';
   if (!/\.myshopify\.com$/i.test(shopNorm) || shopNorm.length < 10) return null;
   if (!SHOPIFY_API_KEY || !SHOPIFY_API_SECRET) return null;
-  return `https://${shopNorm}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${scopes}&redirect_uri=${encodeURIComponent(getRedirectUri())}&state=${encodeURIComponent(stateStrOut || '{}')}`;
+  return `https://${shopNorm}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${scopes}&redirect_uri=${encodeURIComponent(getRedirectUri())}&state=${encodeURIComponent(stateStrOut || '{}')}&grant_options[]=offline`;
+}
+
+function shopifyExpiresAt(expiresInSec) {
+  const n = Number(expiresInSec);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return new Date(Date.now() + n * 1000).toISOString();
+}
+
+async function exchangeShopifyOAuthCode(cleanShop, code) {
+  const body = new URLSearchParams({
+    client_id: SHOPIFY_API_KEY,
+    client_secret: SHOPIFY_API_SECRET,
+    code: String(code),
+    expiring: '1',
+  });
+  const { data } = await axios.post(
+    `https://${cleanShop}/admin/oauth/access_token`,
+    body.toString(),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' } }
+  );
+  return data;
 }
 
 export async function handleShopifyCallback(query) {
@@ -360,28 +381,44 @@ export async function handleShopifyCallback(query) {
     userId = process.env.SHOPIFY_FALLBACK_USER_ID || 'dev-local';
   }
   const cleanShop = shop.replace(/\.myshopify\.com$/, '') + '.myshopify.com';
-  const { data } = await axios.post(
-    `https://${cleanShop}/admin/oauth/access_token`,
-    {
-      client_id: SHOPIFY_API_KEY,
-      client_secret: SHOPIFY_API_SECRET,
-      code,
-    },
-    { headers: { 'Content-Type': 'application/json' } }
-  );
+  const data = await exchangeShopifyOAuthCode(cleanShop, code);
   await upsertToken({
     user_id: userId,
     platform: 'shopify',
     access_token: data.access_token,
-    refresh_token: null,
-    expires_at: null,
+    refresh_token: data.refresh_token || null,
+    expires_at: shopifyExpiresAt(data.expires_in),
     shop_domain: cleanShop,
     shop_id: cleanShop,
     status: 'connected',
   });
+  try {
+    const { syncShopifyBillingForUser } = await import('../db/billingSync.js');
+    await syncShopifyBillingForUser(userId);
+  } catch (_) {}
   return { shop_domain: cleanShop, returnTo };
 }
 
-export async function refreshShopify() {
-  return Promise.resolve(null);
+/** Refresh an expiring offline Shopify access token (public apps require expiring tokens). */
+export async function refreshShopify(refreshToken, shopDomain) {
+  if (!SHOPIFY_API_KEY || !SHOPIFY_API_SECRET) throw new Error('Shopify app not configured');
+  const cleanShop = String(shopDomain || '')
+    .trim()
+    .replace(/\.myshopify\.com$/i, '') + '.myshopify.com';
+  const body = new URLSearchParams({
+    client_id: SHOPIFY_API_KEY,
+    client_secret: SHOPIFY_API_SECRET,
+    grant_type: 'refresh_token',
+    refresh_token: String(refreshToken),
+  });
+  const { data } = await axios.post(
+    `https://${cleanShop}/admin/oauth/access_token`,
+    body.toString(),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' } }
+  );
+  return {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token || refreshToken,
+    expires_at: shopifyExpiresAt(data.expires_in),
+  };
 }

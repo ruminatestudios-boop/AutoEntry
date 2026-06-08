@@ -6,11 +6,11 @@
 
 name = "SyncLyst"
 client_id = "a907e83507f284fd9cd84d520194dce9"
-application_url = "https://synclyst.app/shopify/launch"
+application_url = "https://app.synclyst.app/shopify/launch"
 embedded = false
 
 [access_scopes]
-scopes = "write_inventory,read_inventory,read_products,write_products"
+scopes = "write_inventory,read_products,write_products"
 
 [auth]
 redirect_urls = [
@@ -18,10 +18,14 @@ redirect_urls = [
 ]
 
 [webhooks]
-api_version = "2025-01"
+api_version = "2026-01"
 
 # Absolute URL avoids any ambiguity when application_url includes a path (/shopify/launch).
 [[webhooks.subscriptions]]
 topics = [ "app/uninstalled" ]
 compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
-uri = "https://synclyst.app/api/shopify/webhooks/gdpr/compliance"
+uri = "https://app.synclyst.app/api/shopify/webhooks/gdpr/compliance"
+
+[[webhooks.subscriptions]]
+topics = [ "app_subscriptions/update" ]
+uri = "https://synclyst-publishing-299567386855.us-central1.run.app/webhooks/shopify/billing"

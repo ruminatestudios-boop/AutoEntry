@@ -54,7 +54,7 @@ export default function TermsPage() {
             <p>
               You are responsible for maintaining the security of your account credentials. You are responsible for all
               activity that occurs under your account. Notify us immediately at{" "}
-              <a href="mailto:support@synclyst.app">support@synclyst.app</a> if you suspect unauthorised access.
+              <a href="mailto:synclyst@gmail.com">synclyst@gmail.com</a> if you suspect unauthorised access.
             </p>
           </section>
 
@@ -70,9 +70,11 @@ export default function TermsPage() {
           <section>
             <h2>5. Credits and Billing</h2>
             <p>
-              SyncLyst operates on a credit-based model. Free accounts receive 3 scans per month. Paid plans are billed
-              monthly in advance. All fees are non-refundable unless required by law. We reserve the right to change
-              pricing with 30 days notice.
+              SyncLyst is free to install; <strong>publishing to Shopify requires a paid plan</strong> (Pro, Growth, or
+              Scale). Starter includes limited scans only. Paid plans are billed monthly through the{" "}
+              <strong>Shopify Billing API</strong> on your connected store.
+              Manage subscriptions in Shopify Admin. All fees are non-refundable unless required by law. We reserve the
+              right to change pricing with 30 days notice.
             </p>
           </section>
 
@@ -140,7 +142,7 @@ export default function TermsPage() {
             <h2>13. Contact</h2>
             <p>
               For any questions about these Terms, contact us at:{" "}
-              <a href="mailto:legal@synclyst.app">legal@synclyst.app</a>
+              <a href="mailto:synclyst@gmail.com">synclyst@gmail.com</a>
             </p>
           </section>
         </article>

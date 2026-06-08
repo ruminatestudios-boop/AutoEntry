@@ -802,6 +802,27 @@ async def extract(
             if qk and supabase:
                 _consume_scan(supabase, qk, http_request)
             return fallback.model_dump()
+        if (
+            "invalid json" in lower_err
+            or "non-json" in lower_err
+            or "invalid extraction" in lower_err
+            or "empty output" in lower_err
+        ):
+            from app.services.vision_service import get_fallback_extraction
+            fallback = get_fallback_extraction()
+            fallback.extraction_copy.seo_title = "Item from photo"
+            fallback.extraction_copy.description = (
+                "We captured your photo but the AI could not finish reading every detail. "
+                "Please edit the title, description, price, and tags before publishing."
+            )
+            fallback.extraction_copy.bullet_points = ["Photo captured", "Edit details before publishing"]
+            fallback.confidence_score = 0.25
+            fallback.sources = {**(fallback.sources or {}), "fallback": "parse_error"}
+            supabase = get_supabase()
+            qk = _resolve_quota_key(http_request, _auth)
+            if qk and supabase:
+                _consume_scan(supabase, qk, http_request)
+            return fallback.model_dump()
         raise HTTPException(status_code=503, detail=err_msg) from None
     except Exception as e:
         logger.exception("Vision extraction failed")

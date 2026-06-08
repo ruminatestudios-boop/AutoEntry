@@ -6,6 +6,7 @@ import { getListingById, getListingsByUserId, insertListing, updateListingStatus
 import { publishToShopify, publishToTikTok, publishToEbay, publishToEtsy, publishToAmazon } from '../publish/publishers.js';
 import { validateListingForPlatform, getPlatformFieldsSummary, checkListingQuality } from '../config/platformFields.js';
 import { getEnabledPlatforms, isPlatformEnabled } from '../config/platforms.js';
+import { assertCanPublish } from '../db/billingSync.js';
 
 const publishRouter = Router();
 
@@ -83,6 +84,19 @@ function validateListing(listing) {
 publishRouter.post('/publish', authMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
+    try {
+      await assertCanPublish(userId);
+    } catch (billingErr) {
+      if (billingErr.code === 'BILLING_REQUIRED') {
+        return res.status(402).json({
+          error: billingErr.message,
+          code: 'billing_required',
+          billing: billingErr.billing,
+          upgrade_url: '/billing',
+        });
+      }
+      throw billingErr;
+    }
     const { listing_id, platforms } = req.body || {};
     if (!listing_id || !Array.isArray(platforms) || platforms.length === 0) {
       const msg = 'listing_id and platforms array required';

@@ -1,6 +1,6 @@
 /** Proxy POST /api/developers/subscribe → FastAPI /v1/developers/keys/subscribe */
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getClerkServerToken } from "@/lib/clerk-server-token";
 
 export const runtime = "nodejs";
 
@@ -12,8 +12,7 @@ const BACKEND = (
 
 export async function POST(req: Request) {
   try {
-    const { getToken } = await auth();
-    const token = await getToken();
+    const token = await getClerkServerToken();
     if (!token) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
     let bodyJson: unknown;

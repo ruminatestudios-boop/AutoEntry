@@ -7,7 +7,7 @@
  *   npm run verify:shopify-webhooks
  */
 const base =
-  process.env.SYNCLYST_BASE_URL?.replace(/\/$/, "") || "https://synclyst.app";
+  process.env.SYNCLYST_BASE_URL?.replace(/\/$/, "") || "https://app.synclyst.app";
 
 const paths = [
   "/api/shopify/webhooks/gdpr/compliance",

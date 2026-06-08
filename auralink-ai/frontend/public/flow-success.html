@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
-  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <meta name="synclyst-publishing-url" content="http://localhost:8001" />
   <title>SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -74,9 +74,9 @@
 </head>
 <body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
   <div id="synclyst-flow-shell" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
-    <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 grid grid-cols-3 items-center">
+    <header class="shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
       <div></div>
-      <a href="/list" class="inline-flex items-center justify-self-center no-underline text-[#111]"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+      <a href="/list" class="text-sm font-semibold tracking-tight text-[#0a0a0a] underline underline-offset-[3px] decoration-zinc-700 hover:decoration-[#0a0a0a] hover:text-black justify-self-center py-2 leading-none">Synclyst<sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></a>
       <div></div>
     </header>
 
@@ -129,8 +129,8 @@
           <span class="synclyst-success-tick text-2xl font-bold text-zinc-900 leading-none">✓</span>
         </div>
 
-        <h1 class="text-2xl font-bold text-zinc-900 mb-1" id="success-heading">You're live!</h1>
-        <p class="text-sm text-zinc-500 mb-8" id="success-count-text">Listed on 1 store in 2.4 seconds</p>
+        <h1 class="text-2xl font-bold text-zinc-900 mb-1" id="success-heading">Saved to Shopify</h1>
+        <p class="text-sm text-zinc-500 mb-8" id="success-count-text">Synced to 1 store as a draft</p>
 
         <div class="w-full space-y-3 mb-6" id="success-stores-list"></div>
 
@@ -143,7 +143,7 @@
           <a href="/dashboard/home" class="flex-1 py-3.5 rounded-xl bg-zinc-900 text-white font-semibold text-[15px] border border-zinc-800 text-center no-underline hover:bg-zinc-800 transition-colors">
             View listings
           </a>
-          <a href="/scan" class="flex-1 py-3.5 rounded-xl bg-white border border-zinc-200 text-zinc-600 font-semibold text-[15px] text-center no-underline hover:bg-zinc-50 transition-colors">
+          <a href="/list" class="flex-1 py-3.5 rounded-xl bg-white border border-zinc-200 text-zinc-600 font-semibold text-[15px] text-center no-underline hover:bg-zinc-50 transition-colors">
             List another
           </a>
         </div>
@@ -243,7 +243,11 @@
                 pubBtn.disabled = false;
                 pubBtn.textContent = orig;
                 var code = e && e.code;
-                if (code === 'NO_TOKEN' || code === 'SHOPIFY_NOT_CONNECTED') {
+                if (code === 'NO_TOKEN') {
+                  window.location.href = '/sign-in?redirect_url=' + encodeURIComponent('/review?publish=1');
+                  return;
+                }
+                if (code === 'SHOPIFY_NOT_CONNECTED') {
                   window.location.href = '/connect-store?return=review';
                   return;
                 }
@@ -259,7 +263,7 @@
         return;
       }
 
-      document.title = "You're live! | SyncLyst";
+      document.title = 'Saved to Shopify | SyncLyst';
 
       var STORAGE_KEY = 'auralink_selected_marketplaces';
       var meta = {
@@ -298,7 +302,7 @@
       if (selected.length === 0) selected = ['shopify'];
       var n = selected.length;
       var countEl = document.getElementById('success-count-text');
-      if (countEl) countEl.textContent = n === 1 ? 'Listed on 1 store in 2.4 seconds' : 'Listed on ' + n + ' stores in 2.4 seconds';
+      if (countEl) countEl.textContent = n === 1 ? 'Synced to 1 store as a draft' : 'Synced to ' + n + ' stores as drafts';
       var container = document.getElementById('success-stores-list');
       if (container) {
         container.innerHTML = '';
@@ -306,8 +310,10 @@
           var m = meta[id];
           if (!m) return;
           var logoUrl = m.logoUrl || ('https://www.google.com/s2/favicons?domain=' + m.domain + '&sz=128');
-          var badges = '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Live</span>';
-          if (id === 'tiktok_shop') badges = '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Live</span><span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Trending</span>';
+          var badges = id === 'shopify'
+            ? '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800">Draft</span>'
+            : '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Synced</span>';
+          if (id === 'tiktok_shop') badges = '<span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Synced</span><span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">Trending</span>';
           var row = document.createElement('div');
           row.className = 'rounded-xl bg-white border border-zinc-200 p-4 flex items-center justify-between';
           row.innerHTML = '<div class="flex items-center gap-3">' +
@@ -325,7 +331,7 @@
           var shop = sessionStorage.getItem(LAST_PUBLISH_SHOP_KEY);
           if (shop) {
             sessionStorage.removeItem(LAST_PUBLISH_SHOP_KEY);
-            shopHint.textContent = 'Published to ' + shop + '. Your product is in Shopify Admin → Products → Drafts for that store. Open it there and click Publish to make it live.';
+            shopHint.textContent = 'Saved to ' + shop + ' as a draft. Open Shopify Admin → Products → Drafts, review the listing, then click Publish when you are ready to go live.';
           }
         } catch (e) {}
       }

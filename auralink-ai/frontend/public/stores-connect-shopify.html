@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="view-transition" content="same-origin" />
-  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <meta name="synclyst-publishing-url" content="http://localhost:8001" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
   <title>Connect Shopify | SyncLyst</title>
@@ -26,13 +26,27 @@
       },
     };
   </script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    .vercel-headline { font-weight: 700; color: #0a0a0a; letter-spacing: -0.025em; }
+    .vercel-body { font-weight: 400; color: #525252; }
+    .vercel-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .smart-suggest-banner { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%); border-radius: 14px; border: 1px solid #e4e4e7; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .smart-suggest-banner .smart-suggest-icon-wrap {
+      flex-shrink: 0; width: 52px; height: 52px; border-radius: 12px; background: #fff;
+      border: 1px solid #e4e4e7; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .smart-suggest-banner .smart-suggest-icon-wrap img { display: block; }
+    .smart-suggest-banner .smart-suggest-text { flex: 1; min-width: 0; }
+    .smart-suggest-banner .smart-suggest-title { font-size: 13px; font-weight: 600; color: #18181b; display: block; margin-bottom: 2px; }
+    .smart-suggest-banner .smart-suggest-desc { font-size: 12px; font-weight: 400; color: #52525b; line-height: 1.4; }
+  </style>
 </head>
 <body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
   <script>
-    (function synclystProdShopifyConnectSkip() {
+    (function synclystShopifyConnectAutoOAuth() {
       try {
-        var h = location.hostname;
-        if (h !== "synclyst.app" && h !== "www.synclyst.app") return;
         var sp = new URLSearchParams(location.search);
         if (sp.get("error") || sp.get("message")) return;
         if ((sp.get("mode") || "").toLowerCase() === "token" || sp.get("token") === "1") return;
@@ -70,75 +84,48 @@
     })();
   </script>
   <div id="synclyst-flow-shell" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
-    <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 flex items-center justify-center">
-      <a href="/list" class="inline-flex items-center no-underline text-[#111]"><span class="text-lg font-semibold tracking-tight">Synclyst <sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span></a>
+    <header class="shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+      <div></div>
+      <a href="/list" class="text-sm font-semibold tracking-tight text-[#0a0a0a] underline underline-offset-[3px] decoration-zinc-700 hover:decoration-[#0a0a0a] hover:text-black justify-self-center py-2 leading-none">Synclyst<sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></a>
+      <div class="justify-self-end"></div>
     </header>
     <main class="flex-1 px-5 pt-6 pb-6 overflow-auto flex flex-col" id="connect-main">
-      <div class="flex flex-col items-center mb-6">
-        <div class="flex items-center justify-center gap-2 mb-1 w-full flex-wrap">
-          <img src="https://cdn.simpleicons.org/shopify/95BF47" alt="" class="w-5 h-5 object-contain shrink-0" width="20" height="20" onerror="this.onerror=null;this.src='https://www.google.com/s2/favicons?domain=shopify.com&amp;sz=64';" />
-          <h1 class="text-xl font-bold tracking-tight text-[#0a0a0a] text-center">Connect Shopify</h1>
+      <h1 class="vercel-headline text-xl font-bold text-[#0a0a0a] mb-1 text-center">Connect Shopify</h1>
+      <p class="text-center text-sm text-[#525252] mb-6 vercel-body">Enter your store, sign in on Shopify, and approve SyncLyst</p>
+
+      <div class="smart-suggest-banner mb-6 w-full text-left">
+        <div class="smart-suggest-icon-wrap">
+          <img src="/assets/shopify-logo.png" alt="" class="w-9 h-9 object-contain" width="36" height="36" />
         </div>
-        <p class="text-center text-sm text-[#525252] max-w-sm">Authorise SyncLyst to list and manage products in your store</p>
+        <div class="smart-suggest-text">
+          <span class="smart-suggest-title">Standard Shopify OAuth</span>
+          <span class="smart-suggest-desc">Same sign-in flow as any App Store app. You review every listing before it goes live.</span>
+        </div>
       </div>
 
-      <!-- Option A: open Shopify admin in a new tab (helper only) -->
-      <div class="rounded-xl border border-[#e5e5e5] bg-[#fafafa] p-4 mb-5">
-        <p class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Need help finding your store?</p>
-        <p class="text-sm text-[#525252] mb-3">
-          Open Shopify admin in a new tab to copy your store name, then use "Connect this Store" below.
-        </p>
-        <a
-          href="https://admin.shopify.com/apps"
-          target="_blank"
-          rel="noopener noreferrer"
-          id="shopify-open-admin"
-          class="block w-full py-3.5 rounded-xl bg-white text-[#0a0a0a] font-semibold text-[15px] border border-[#0a0a0a] hover:bg-[#f5f5f5] text-center transition-colors no-underline"
-        >
-          Open Shopify admin
-        </a>
+      <div id="shopify-app-store-install-panel" class="hidden mb-5 rounded-xl border border-[#95BF47]/40 bg-[#f4faf0] px-4 py-4" role="region" aria-label="Install from Shopify">
+        <p class="text-sm font-semibold text-[#0a0a0a] mb-2">Installed from the Shopify App Store?</p>
+        <p class="text-sm text-[#525252] leading-relaxed mb-0">Open SyncLyst from <strong>Shopify Admin → Apps</strong>. We’ll connect your store automatically — no store name needed.</p>
       </div>
 
-      <div id="shop-dev-bypass-panel" class="hidden mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3" role="region" aria-label="Local development shortcut">
-        <p class="text-sm font-semibold text-emerald-950 mb-1">Local dev: admin token already configured</p>
-        <p class="text-sm text-emerald-900/95 leading-relaxed mb-3">Your publishing service has <code class="text-[11px] bg-emerald-100/90 px-1 rounded">SHOPIFY_DEV_ACCESS_TOKEN</code> and <code class="text-[11px] bg-emerald-100/90 px-1 rounded">SHOPIFY_DEV_SHOP_DOMAIN</code> set, so you can skip OAuth. Use this when <strong>Client ID / secret</strong> are not in <code class="text-[11px] bg-emerald-100/90 px-1 rounded">.env</code> yet.</p>
-        <button type="button" id="shop-dev-bypass-btn" class="w-full py-3 rounded-xl bg-emerald-800 text-white font-semibold text-sm border border-emerald-900 hover:bg-emerald-900 text-center transition-colors">
-          Continue without OAuth (local dev)
+      <div id="shopify-setup-required-panel" class="hidden mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4" role="alert">
+        <p class="text-sm font-semibold text-amber-950 mb-2">Shopify OAuth is not configured on the server</p>
+        <p class="text-sm text-amber-900/95 leading-relaxed mb-2">Add your Partners app credentials to <code class="text-[11px] bg-amber-100/90 px-1 rounded">auralink-ai/publishing/.env</code>, then restart publishing:</p>
+        <pre class="text-[11px] bg-amber-100/80 rounded-lg p-3 overflow-x-auto mb-2 m-0 text-amber-950">SHOPIFY_API_KEY=your_client_id
+SHOPIFY_API_SECRET=your_client_secret</pre>
+        <p class="text-xs text-amber-900/95 m-0">In Partners → App setup → Redirect URL, add: <code class="bg-amber-100/90 px-1 rounded" id="setup-redirect-uri-hint">http://localhost:8001/auth/shopify/callback</code></p>
+      </div>
+
+      <div id="shopify-oauth-form" class="vercel-card p-5 mb-4">
+        <label for="shop-input" class="block text-sm font-medium text-zinc-700 mb-2">Shopify store</label>
+        <input type="text" id="shop-input" placeholder="your-store or your-store.myshopify.com" class="w-full text-sm font-medium text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" autocomplete="organization" />
+        <p class="text-xs text-[#525252] mt-2 leading-relaxed">Use the store handle from your admin URL: <code class="text-[12px] bg-zinc-100 px-1 rounded">admin.shopify.com/store/<strong>your-store</strong></code>. Custom domains (e.g. mybrand.com) also work.</p>
+        <p id="shop-login-hint" class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2 hidden"></p>
+        <button type="button" id="connect-btn" class="block w-full py-3.5 px-6 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[15px] hover:bg-[#262626] active:bg-[#7c3aed] transition-colors text-center mt-4 flex items-center justify-center gap-2">
+          <span>Continue to Shopify</span>
+          <img src="/assets/shopify-logo.png" alt="" class="w-5 h-5 shrink-0 object-contain brightness-0 invert opacity-90" width="20" height="20" />
         </button>
       </div>
-
-      <div class="flex items-center gap-3 py-2 mb-4" role="separator" aria-label="Or choose another option">
-        <div class="flex-1 h-px bg-[#e5e5e5]" aria-hidden="true"></div>
-        <span class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 shrink-0">or</span>
-        <div class="flex-1 h-px bg-[#e5e5e5]" aria-hidden="true"></div>
-      </div>
-
-      <!-- Option B: store URL input (for users who know it) -->
-      <details class="rounded-xl bg-white border border-[#e5e5e5] p-4 mb-4 shadow-sm" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04);" open>
-        <summary class="cursor-pointer select-none list-none">
-          <span class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">I know my store URL</span>
-          <span class="block text-sm text-[#525252] mt-1">Enter your website domain — we’ll find the Shopify store automatically.</span>
-        </summary>
-        <div class="mt-4">
-          <label for="shop-input" class="block text-sm font-medium text-zinc-700 mb-2">Website domain or Shopify URL</label>
-          <input type="text" id="shop-input" placeholder="e.g. mystore.com, your-store.myshopify.com, or admin.shopify.com/store/your-store" class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" />
-          <p class="text-xs text-[#525252] mt-2 leading-relaxed">Paste your <strong>website domain</strong> (recommended). If you only have Shopify Admin, paste that URL and we’ll extract the store.</p>
-          <button type="button" id="shopify-help-toggle" class="mt-3 text-xs font-semibold text-[#0a0a0a] underline underline-offset-4 text-left">
-            Where do I find my store name?
-          </button>
-          <div id="shopify-help-panel" class="hidden mt-3 text-sm text-[#525252] leading-relaxed border-t border-[#e5e5e5] pt-3">
-            <ol class="list-decimal pl-5 space-y-1">
-              <li>Use <strong class="font-medium text-[#0a0a0a]">Continue to Shopify</strong> above (or go to admin.shopify.com) and sign in.</li>
-              <li>Open your store’s admin. The URL looks like <code class="bg-zinc-200/60 px-1 rounded text-[12px]">admin.shopify.com/store/your-store</code>.</li>
-              <li>Copy <code class="bg-zinc-200/60 px-1 rounded text-[12px]">your-store</code> and paste it in the field above.</li>
-            </ol>
-          </div>
-          <p id="shop-login-hint" class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2 hidden"></p>
-          <button type="button" id="connect-btn" class="block w-full py-3.5 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[15px] border border-[#0a0a0a] hover:bg-[#262626] text-center mt-4 transition-colors">
-            Connect this Store
-          </button>
-        </div>
-      </details>
 
       <div id="shop-error-panel" class="hidden mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3" role="alert">
         <div id="shop-error-user" class="text-sm text-red-900 leading-relaxed"></div>
@@ -146,8 +133,8 @@
         <div id="shop-error-dev" class="hidden mt-2 text-xs text-red-950/90 font-mono whitespace-pre-wrap break-words border-t border-red-200/80 pt-2"></div>
       </div>
 
-      <!-- Option C: custom-app token path — hidden on synclyst.app (public app / App Store OAuth only) -->
-      <details id="shopify-custom-token-details" class="rounded-xl bg-white border border-[#e5e5e5] p-4 mb-4 shadow-sm" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+      <!-- Dev-only token path (?mode=dev) — not shown to App Store merchants -->
+      <details id="shopify-custom-token-details" class="hidden rounded-xl bg-white border border-[#e5e5e5] p-4 mb-4 shadow-sm" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04);" aria-hidden="true">
         <summary class="cursor-pointer select-none list-none">
           <span class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Fastest connect (recommended)</span>
           <span class="block text-sm text-[#525252] mt-1">No Shopify app approval needed. Paste one token.</span>
@@ -176,8 +163,8 @@
             <label for="admin-token-input" class="block text-sm font-medium text-zinc-700 mb-2">Admin API access token</label>
             <input type="password" id="admin-token-input" placeholder="shpat_..." class="w-full text-sm text-[#111] bg-white border border-[#eaeaea] rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent" />
             <p class="text-xs text-[#525252] mt-2 leading-relaxed">We verify the token against your store automatically.</p>
-            <button type="button" id="connect-token-btn" class="block w-full py-3.5 rounded-xl bg-white text-[#0a0a0a] font-semibold text-[15px] border border-[#0a0a0a] hover:bg-[#f5f5f5] text-center mt-3 transition-colors">
-              Verify & connect token
+            <button type="button" id="connect-token-btn" class="block w-full py-3.5 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[15px] border border-[#0a0a0a] hover:bg-[#262626] text-center mt-3 transition-colors">
+              Connect store
             </button>
 
             <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">
@@ -207,21 +194,17 @@
         </div>
       </div>
 
-      <div class="rounded-xl bg-[#fafafa] border border-[#e5e5e5] p-4 mb-2">
-        <p class="text-sm text-[#525252]">You’ll be sent to Shopify to sign in and approve access. SyncLyst can then create and update product listings. You approve every listing before it goes live.</p>
-      </div>
-
-      <div class="mt-auto pt-4 pb-2 shrink-0 border-t border-[#e5e5e5]">
-        <a
-          id="connect-footer-nav"
-          href="/dashboard/home"
-          class="block w-full py-4 rounded-xl bg-white text-[#0a0a0a] font-semibold text-[17px] border-2 border-[#0a0a0a] text-center no-underline hover:bg-[#f5f5f5] active:bg-[#ebebeb] transition-colors"
-        >
-          Back to dashboard
-        </a>
-      </div>
-
     </main>
+    <div class="p-4 pt-3 border-t border-[#e5e5e5] shrink-0 bg-white">
+      <a
+        id="connect-footer-nav"
+        href="/dashboard/home"
+        class="block w-full py-3.5 px-6 rounded-xl bg-white text-[#0a0a0a] font-semibold text-[15px] border border-[#e5e5e5] text-center no-underline hover:bg-[#fafafa] active:bg-[#f4f4f5] transition-colors"
+      >
+        Back to dashboard
+      </a>
+      <p class="text-center text-xs text-zinc-400 leading-snug mt-2 mb-0">You’ll approve SyncLyst on Shopify’s sign-in page</p>
+    </div>
   </div>
   <script>
     (function() {
@@ -414,9 +397,12 @@
       (function setupConnectFooterNav() {
         var el = document.getElementById('connect-footer-nav');
         if (!el) return;
-        var href = '/dashboard/home';
-        var label = 'Back to dashboard';
-        if (returnTo === 'flow-marketplaces') {
+        var href = '/list';
+        var label = 'Back to scan';
+        if (returnTo === 'list' || returnTo === 'scan') {
+          href = '/list';
+          label = 'Back to scan';
+        } else if (returnTo === 'flow-marketplaces') {
           href = '/flow-marketplaces.html';
           label = 'Back to marketplaces';
         } else if (returnTo === 'flow-connect') {
@@ -434,6 +420,9 @@
         } else if (returnTo === 'dashboard-home') {
           href = '/dashboard/home';
           label = 'Back to dashboard';
+        } else if (returnTo === 'billing' || (returnTo && returnTo.indexOf('billing') === 0)) {
+          href = returnTo.indexOf('billing') === 0 && returnTo.indexOf('?') !== -1 ? '/' + returnTo : '/billing';
+          label = 'Back to billing';
         }
         el.setAttribute('href', href);
         el.textContent = label;
@@ -473,7 +462,36 @@
       var errFromUrl = decodeQueryParam('error');
       var msgFromUrl = decodeQueryParam('message');
       var combinedUrlError = (msgFromUrl || errFromUrl || '').trim();
+      function showOAuthSetupRequired(status) {
+        var panel = document.getElementById('shopify-setup-required-panel');
+        var hint = document.getElementById('setup-redirect-uri-hint');
+        if (hint && status && status.redirect_uri) hint.textContent = status.redirect_uri;
+        else if (hint && status && status.recommended_redirect_uris && status.recommended_redirect_uris[0]) {
+          hint.textContent = status.recommended_redirect_uris[0];
+        }
+        if (panel) panel.classList.remove('hidden');
+        var btn = document.getElementById('connect-btn');
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+      }
+      function applyOAuthConnectUi() {
+        var tokenDetails = document.getElementById('shopify-custom-token-details');
+        var devMode = forceTokenMode || (params.get('mode') || '').toLowerCase() === 'dev';
+        if (tokenDetails) {
+          if (devMode) {
+            tokenDetails.classList.remove('hidden');
+            tokenDetails.removeAttribute('aria-hidden');
+            tokenDetails.open = true;
+          } else {
+            tokenDetails.classList.add('hidden');
+            tokenDetails.setAttribute('aria-hidden', 'true');
+          }
+        }
+      }
+      applyOAuthConnectUi();
       if (combinedUrlError) {
+        if (/shopify app not configured|shopify_api_key|shopify_api_secret/i.test(combinedUrlError)) {
+          showOAuthSetupRequired(null);
+        } else {
         var c0 = classifyConnectError(combinedUrlError);
         showConnectError(c0.userHtml, c0.devText);
         if (c0.showRedirectGuide || shouldShowRedirectGuide(combinedUrlError)) {
@@ -487,6 +505,7 @@
             } catch (e) {}
           }, 150);
         }
+        }
       } else if (document.referrer && document.referrer.indexOf('admin.shopify.com') !== -1) {
         if (redirectUserGuide) redirectUserGuide.classList.remove('hidden');
       }
@@ -498,20 +517,22 @@
         if (returnTo === 'flow-batch-review') return 'flow-batch-review.html';
         if (returnTo === 'stores-list') return 'stores-list.html';
         if (returnTo === 'dashboard-home') return 'dashboard/home';
-        return '';
+        if (returnTo === 'list') return 'list';
+        if (returnTo === 'scan') return 'scan';
+        if (returnTo === 'billing' || (returnTo && returnTo.indexOf('billing') === 0)) {
+          return returnTo.indexOf('?') !== -1 ? returnTo : 'billing';
+        }
+        return 'list';
       }
 
       function isProductionSynclystHost() {
         var h = window.location.hostname || '';
-        return h === 'synclyst.app' || h === 'www.synclyst.app';
+        return h === 'app.synclyst.app' || h === 'synclyst.app' || h === 'www.synclyst.app';
       }
       (function applyProductionConnectStoreUi() {
         if (!isProductionSynclystHost()) return;
-        var alt = document.getElementById('shopify-custom-token-details');
-        if (alt) {
-          alt.classList.add('hidden');
-          alt.setAttribute('aria-hidden', 'true');
-        }
+        var installPanel = document.getElementById('shopify-app-store-install-panel');
+        if (installPanel) installPanel.classList.remove('hidden');
       })();
 
       var shopInput = document.getElementById('shop-input');
@@ -580,7 +601,8 @@
             return;
           }
           if (!publicInstallEnabled) {
-            showConnectError('<p class="mb-0"><strong>Public Shopify install is not enabled yet.</strong> Use the token-based connect option below.</p>', null);
+            showOAuthSetupRequired(null);
+            showConnectError('<p class="mb-0"><strong>Shopify OAuth is not ready on this server.</strong> A developer must add <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">SHOPIFY_API_KEY</code> and <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">SHOPIFY_API_SECRET</code> to the publishing service, then restart it.</p>', null);
             return;
           }
           var shop = (shopInput.value || '').trim();
@@ -603,16 +625,29 @@
           var resolverStarted = false;
           var connectAbort = new AbortController();
           var timeoutId = setTimeout(function() { connectAbort.abort(); }, 15000);
-          fetch('/api/publishing/token', { signal: connectAbort.signal })
-            .then(function(r) {
-              if (!r.ok) {
-                if (r.status === 401) throw new Error('unauthorized');
-                if (r.status === 404) throw new Error('updating');
-                if (r.status === 502 || r.status === 503 || r.status === 504) throw new Error('unreachable');
-                return null;
-              }
-              return r.json();
-            })
+          function fetchPublishingTokenWithRetry(attempts, signal) {
+            var left = attempts || 10;
+            function tryOnce() {
+              return fetch('/api/publishing/token', { credentials: 'same-origin', cache: 'no-store', signal: signal })
+                .then(function(r) {
+                  if (r.status === 401 && left > 1) {
+                    left -= 1;
+                    return new Promise(function(resolve) {
+                      setTimeout(resolve, Math.min(350 + (10 - left) * 200, 2000));
+                    }).then(tryOnce);
+                  }
+                  if (!r.ok) {
+                    if (r.status === 401) throw new Error('unauthorized');
+                    if (r.status === 404) throw new Error('updating');
+                    if (r.status === 502 || r.status === 503 || r.status === 504) throw new Error('unreachable');
+                    return null;
+                  }
+                  return r.json();
+                });
+            }
+            return tryOnce();
+          }
+          fetchPublishingTokenWithRetry(10, connectAbort.signal)
             .then(function(data) {
               clearTimeout(timeoutId);
               if (data && data.user_id) {
@@ -648,7 +683,7 @@
                     var dev = err && err.message ? String(err.message) : null;
                     showConnectError('<p class="mb-0">' + msg + '</p>', dev);
                   })
-                  .finally(function() { connectBtn.disabled = false; connectBtn.textContent = 'Connect store'; });
+                  .finally(function() { connectBtn.disabled = false; connectBtn.textContent = 'Connect with Shopify'; });
               } else {
                 var c1 = classifyConnectError(PUBLISH_UNREACHABLE_MSG);
                 showConnectError(c1.userHtml, PUBLISH_UNREACHABLE_MSG);
@@ -658,7 +693,10 @@
               clearTimeout(timeoutId);
               var msg = PUBLISH_UNREACHABLE_MSG;
               if (err && String(err.message || '') === 'unauthorized') {
-                try { window.location.href = '/sign-up?redirect_url=' + encodeURIComponent('/connect-store'); } catch (e) {}
+                try {
+                  var resume = '/connect-store' + (window.location.search || '');
+                  window.location.href = '/sign-in?redirect_url=' + encodeURIComponent(resume);
+                } catch (e) {}
                 return;
               }
               if (err && String(err.message || '') === 'updating') {
@@ -678,7 +716,7 @@
               // Redirect flows will navigate away; resolver flow handles its own reset.
               if (!resolverStarted) {
                 connectBtn.disabled = false;
-                connectBtn.textContent = 'Connect store';
+                connectBtn.textContent = 'Continue to Shopify';
               }
             });
         });
@@ -766,14 +804,17 @@
             .catch(function(err) {
               var msg = String(err && err.message ? err.message : err);
               if (msg === 'unauthorized') {
-                try { window.location.href = '/sign-up?redirect_url=' + encodeURIComponent('/connect-store'); } catch (e) {}
+                try {
+                  var resume2 = '/connect-store' + (window.location.search || '');
+                  window.location.href = '/sign-in?redirect_url=' + encodeURIComponent(resume2);
+                } catch (e) {}
                 return;
               }
               showConnectError('<p class="mb-0">Couldn’t verify that token for this store. Double-check you copied the <strong>Admin API access token</strong> from a custom app installed on this store, with products/inventory access.</p>', msg);
             })
             .finally(function() {
               connectTokenBtn.disabled = false;
-              connectTokenBtn.textContent = 'Verify & connect token';
+              connectTokenBtn.textContent = 'Connect store';
             });
         });
       }
@@ -848,72 +889,15 @@
         });
       }
 
-      function devBypassRedirectUrl(shopDomain) {
-        var q = 'shopify=connected&shop=' + encodeURIComponent(shopDomain);
-        var rt = getReturnToPath();
-        if (rt === 'review') return '/review?' + q;
-        if (rt === 'flow-batch-review.html') return '/flow-batch-review.html?' + q;
-        if (rt === 'flow-connect-done.html') return '/flow-connect-done.html?' + q;
-        if (rt === 'stores-list.html') return '/stores-list.html?' + q;
-        return '/listing/published?' + q;
-      }
-      var devBypassPanel = document.getElementById('shop-dev-bypass-panel');
-      var devBypassBtn = document.getElementById('shop-dev-bypass-btn');
-      if (devBypassPanel && devBypassBtn) {
-        var pubBaseForStatus = getPublishingBase();
-        fetch(pubBaseForStatus + '/auth/shopify/status')
-          .then(function(r) { return r.json(); })
-          .then(function(status) {
-            publicInstallEnabled = status && status.public_install_enabled === true;
-            // Never show dev bypass on production; only when publishing advertises it (local / demo).
-            if (isProductionSynclystHost() || !status.dev_shopify_bypass || !status.dev_shop_domain) return;
-            devBypassPanel.classList.remove('hidden');
-            if (typeof hideConnectError === 'function') hideConnectError();
-            setTimeout(function() {
-              try { devBypassPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
-            }, 100);
-            devBypassBtn.addEventListener('click', function() {
-              devBypassBtn.disabled = true;
-              var shopDomain = status.dev_shop_domain;
-              var pubBase = getPublishingBase().replace(/\/$/, '');
-
-              function storeJwtAndRedirect(d) {
-                if (!d || !d.token) {
-                  showConnectError(
-                    '<p class="mb-0"><strong>No session token returned.</strong> On <strong>localhost</strong>, start publishing: <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">npm run dev:all</code> (or <code class="text-red-950 bg-red-100/70 px-1 rounded text-[11px]">cd auralink-ai/publishing && npm run dev</code>). On <strong>production</strong>, sign in first, then try again.</p>',
-                    'dev-token and /api/publishing/token both failed or returned no token'
-                  );
-                  devBypassBtn.disabled = false;
-                  return;
-                }
-                try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {}
-                window.location.href = devBypassRedirectUrl(shopDomain);
-              }
-
-              // Prefer publishing /auth/dev-token (same-origin proxy on :3000) — no Clerk required for local demo.
-              fetch(pubBase + '/auth/dev-token', { credentials: 'same-origin' })
-                .then(function(r) {
-                  if (r.ok) return r.json();
-                  return fetch('/api/publishing/token', { credentials: 'same-origin' }).then(function(r2) {
-                    return r2.json().then(function(j) {
-                      if (!r2.ok) throw new Error((j && j.error) || ('HTTP ' + r2.status));
-                      return j;
-                    });
-                  });
-                })
-                .then(storeJwtAndRedirect)
-                .catch(function(err) {
-                  var msg = String(err && err.message ? err.message : err);
-                  showConnectError(
-                    '<p class="mb-0"><strong>Could not start demo session.</strong> Confirm the publishing API is running (local: port <strong>8001</strong>) and refresh. If you are on the live site, <a href="/sign-up?redirect_url=' + encodeURIComponent('/connect-store') + '" class="font-semibold underline">create an account or sign in</a> and try again.</p>',
-                    msg
-                  );
-                  devBypassBtn.disabled = false;
-                });
-            });
-          })
-          .catch(function() {});
-      }
+      fetch(getPublishingBase() + '/auth/shopify/status')
+        .then(function(r) { return r.json(); })
+        .then(function(status) {
+          publicInstallEnabled = status && status.public_install_enabled === true;
+          if (status && status.shopify_configured === false) {
+            showOAuthSetupRequired(status);
+          }
+        })
+        .catch(function() {});
 
     })();
   </script>

@@ -37,6 +37,7 @@ shopifyComplianceRouter.post('/', async (req, res) => {
   }
 
   const topic = (req.get('X-Shopify-Topic') || '').trim();
+  const shopHeader = normalizeShopifyDomain(req.get('X-Shopify-Shop-Domain') || '');
 
   // Acknowledge immediately (Shopify ~5s timeout). DB work must not turn a valid webhook into 500.
   res.status(200).end();
@@ -52,13 +53,15 @@ shopifyComplianceRouter.post('/', async (req, res) => {
           await handleCustomerRedact(payload);
           break;
         }
-        case 'shop/redact': {
-          const shop = normalizeShopifyDomain(payload?.shop_domain);
+        case 'shop/redact':
+        case 'app/uninstalled': {
+          const shop =
+            normalizeShopifyDomain(payload?.shop_domain) || shopHeader;
           const result = await redactShopFromDatabase(shop);
           if (!result.ok) {
-            console.error('[compliance] shop/redact failed', shop, result.error);
+            console.error(`[compliance] ${topic} failed`, shop, result.error);
           } else {
-            console.log('[compliance] shop/redact ok', shop, result.mode);
+            console.log(`[compliance] ${topic} ok`, shop, result.mode);
           }
           break;
         }

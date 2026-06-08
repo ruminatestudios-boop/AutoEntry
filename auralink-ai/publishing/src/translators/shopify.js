@@ -239,7 +239,7 @@ function mapMetafields(listing) {
     });
   }
   out.push({
-    namespace: 'auto_entry',
+    namespace: 'synclyst',
     key: 'image_format',
     value: 'webp',
     type: 'single_line_text_field',
@@ -284,7 +284,7 @@ export function toShopify(listing) {
       if (img.attachment || img.src) img.alt = imageAltText(listing, i, totalImages);
       return img;
     }).filter((img) => img.attachment || img.src),
-    status: 'draft',
+    status: listing.status === 'active' ? 'active' : 'draft',
   };
   if (options.length > 0) product.options = options;
 

@@ -14,10 +14,16 @@ const resolvedPublicApiUrl =
  */
 const defaultPublishingProxyForVercel =
   "https://synclyst-publishing-299567386855.us-central1.run.app";
-const publishingProxyTarget =
-  (process.env.PUBLISHING_PROXY_TARGET || "").trim() ||
-  (process.env.VERCEL === "1" ? defaultPublishingProxyForVercel : "") ||
-  "http://127.0.0.1:8001";
+const stalePublishingHost = /110592968788/i;
+function resolvePublishingProxyTarget() {
+  const fromEnv = (process.env.PUBLISHING_PROXY_TARGET || "").trim();
+  const fromPublic = (process.env.NEXT_PUBLIC_PUBLISHING_API_URL || "").trim();
+  const pick = [fromEnv, fromPublic].find((u) => u && !stalePublishingHost.test(u));
+  if (pick) return pick.replace(/\/$/, "");
+  if (process.env.VERCEL === "1") return defaultPublishingProxyForVercel;
+  return fromEnv.replace(/\/$/, "") || "http://127.0.0.1:8001";
+}
+const publishingProxyTarget = resolvePublishingProxyTarget();
 
 /** Root `/` serves the marketing landing page. Scan entry point is /list. */
 
@@ -50,6 +56,13 @@ const nextConfig = {
         source: "/:path*",
         headers: [
           { key: "Permissions-Policy", value: "camera=*, microphone=()" },
+          // Allow Shopify Admin to load the app URL. Safe even when embedded=false
+          // (Shopify may still attempt to frame the app during install/open flows).
+          {
+            key: "Content-Security-Policy",
+            value:
+              "frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com https://*.shopify.com;",
+          },
         ],
       },
     ];
@@ -63,15 +76,33 @@ const nextConfig = {
         destination: "/scan",
         permanent: false,
       },
-      { source: "/shopify/launch", destination: "/api/shopify/oauth-start", permanent: false },
-      { source: "/shopify/launch/", destination: "/api/shopify/oauth-start", permanent: false },
       { source: "/flow-3.html", destination: "/review", permanent: false },
+      // Legacy App URL / bookmarks — App Router route app/home.html/route.ts also handles this
+      {
+        source: "/home.html",
+        has: [{ type: "query", key: "hmac" }],
+        destination: "/shopify/launch",
+        permanent: false,
+      },
+      {
+        source: "/home.html",
+        has: [{ type: "query", key: "shop" }],
+        destination: "/shopify/launch",
+        permanent: false,
+      },
       {
         source: "/home.html",
         has: [{ type: "query", key: "mode", value: "scan" }],
         destination: "/scan",
         permanent: false,
       },
+      {
+        source: "/home.html",
+        has: [{ type: "query", key: "flow", value: "listing" }],
+        destination: "/list",
+        permanent: false,
+      },
+      { source: "/home.html", destination: "/list", permanent: false },
       { source: "/flow-2.html", destination: "/reading-product", permanent: false },
       { source: "/flow-2", destination: "/reading-product", permanent: false },
       { source: "/flow/processing", destination: "/reading-product", permanent: false },

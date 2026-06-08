@@ -104,11 +104,18 @@ export async function redactShopFromDatabase(shopDomain) {
     return { ok: true, mode: 'fallback_memory' };
   }
 
-  const { error } = await db.from('platform_tokens').delete().eq('platform', 'shopify').eq('shop_domain', domain);
-  if (error) {
-    console.error('[compliance] shop/redact DB delete failed', domain, error.message);
-    return { ok: false, error: error.message };
+  const { error: tokenError } = await db.from('platform_tokens').delete().eq('platform', 'shopify').eq('shop_domain', domain);
+  if (tokenError) {
+    console.error('[compliance] shop/redact platform_tokens delete failed', domain, tokenError.message);
+    return { ok: false, error: tokenError.message };
   }
+
+  const { error: storeError } = await db.from('shopify_stores').delete().eq('shop_domain', domain);
+  if (storeError) {
+    console.error('[compliance] shop/redact shopify_stores delete failed', domain, storeError.message);
+    return { ok: false, error: storeError.message };
+  }
+
   return { ok: true, mode: 'supabase' };
 }
 

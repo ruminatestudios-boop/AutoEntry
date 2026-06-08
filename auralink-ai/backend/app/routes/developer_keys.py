@@ -11,6 +11,7 @@ Endpoints:
   DELETE /v1/developers/keys/{id}     — revoke a key
   GET    /v1/developers/usage         — usage stats + 30-day daily graph
   POST   /v1/developers/subscribe     — create Stripe Checkout for developer plan
+  POST   /v1/developers/enable-metered — Stripe Checkout for pay-as-you-go overage billing
 """
 
 from __future__ import annotations
@@ -25,6 +26,13 @@ from pydantic import BaseModel
 
 from app.auth import verify_clerk
 from app.db import get_supabase
+from app.developer_metering import METERED_ENDPOINT_GBP
+from app.developer_plans import (
+    FREE_MONTHLY_CALLS,
+    MAX_ACTIVE_KEYS_PER_DEVELOPER,
+    PAID_PLANS,
+    PLAN_MONTHLY_LIMITS,
+)
 
 router = APIRouter()
 
@@ -34,13 +42,6 @@ _SK_LIVE_PREFIX = "sk_live_"
 _SK_TEST_PREFIX = "sk_test_"
 
 VALID_PLANS = {"free", "starter", "pro", "enterprise"}
-
-# Map plan → Stripe Price ID env var name (set in config.py)
-_PLAN_PRICE_ENV = {
-    "starter": "stripe_price_dev_starter",
-    "pro": "stripe_price_dev_pro",
-    "enterprise": "stripe_price_dev_enterprise",
-}
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -88,9 +89,18 @@ class DevKeyMeta(BaseModel):
 
 
 class SubscribeRequest(BaseModel):
-    plan: str
+    plan: str = "starter"
     success_url: Optional[str] = None
     cancel_url: Optional[str] = None
+
+
+class MeteredBillingRequest(BaseModel):
+    success_url: Optional[str] = None
+    cancel_url: Optional[str] = None
+
+
+class ConfirmCheckoutRequest(BaseModel):
+    session_id: str
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -122,10 +132,11 @@ async def create_developer_key(
             .eq("status", "active")
             .execute()
         )
-        if (existing.count or 0) >= 3:
+        if (existing.count or 0) >= MAX_ACTIVE_KEYS_PER_DEVELOPER:
             raise HTTPException(
                 status_code=400,
-                detail="Maximum of 3 active API keys per account. Revoke an existing key first.",
+                detail=f"Maximum of {MAX_ACTIVE_KEYS_PER_DEVELOPER} active API keys per account. "
+                       "Revoke an existing key first.",
             )
     except HTTPException:
         raise
@@ -228,8 +239,6 @@ async def create_test_key(
 @router.get("", response_model=list[DevKeyMeta])
 async def list_developer_keys(auth: dict = Depends(verify_clerk)):
     """List all active developer API keys for the authenticated user (keys masked)."""
-    from app.routes.public_api import PLAN_MONTHLY_LIMITS
-
     supabase = get_supabase()
     if not supabase:
         return []
@@ -308,8 +317,6 @@ async def get_developer_usage(auth: dict = Depends(verify_clerk)):
     Usage statistics for all developer keys.
     Returns per-key breakdown + 30-day daily usage graph.
     """
-    from app.routes.public_api import PLAN_MONTHLY_LIMITS
-
     supabase = get_supabase()
     if not supabase:
         return {"keys": [], "total_calls_this_month": 0, "daily_usage": {}}
@@ -318,14 +325,31 @@ async def get_developer_usage(auth: dict = Depends(verify_clerk)):
     if not developer_id:
         raise HTTPException(status_code=401, detail="Missing user id")
 
+    select_full = (
+        "id, key_prefix, label, plan, status, calls_used_this_month, overage_calls_this_month, "
+        "month_key, metered_billing_enabled, stripe_customer_id, stripe_subscription_id"
+    )
+    select_base = (
+        "id, key_prefix, label, plan, status, calls_used_this_month, month_key, "
+        "stripe_customer_id, stripe_subscription_id"
+    )
     try:
-        keys_r = (
-            supabase.table(_DEV_KEY_TABLE)
-            .select("id, key_prefix, label, plan, status, calls_used_this_month, month_key")
-            .eq("developer_id", developer_id)
-            .neq("status", "revoked")
-            .execute()
-        )
+        try:
+            keys_r = (
+                supabase.table(_DEV_KEY_TABLE)
+                .select(select_full)
+                .eq("developer_id", developer_id)
+                .neq("status", "revoked")
+                .execute()
+            )
+        except Exception:
+            keys_r = (
+                supabase.table(_DEV_KEY_TABLE)
+                .select(select_base)
+                .eq("developer_id", developer_id)
+                .neq("status", "revoked")
+                .execute()
+            )
         keys = keys_r.data or []
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
@@ -340,8 +364,10 @@ async def get_developer_usage(auth: dict = Depends(verify_clerk)):
         key_id = key["id"]
         plan = (key.get("plan") or "free").lower()
         used = int(key.get("calls_used_this_month") or 0)
+        overage_used = int(key.get("overage_calls_this_month") or 0)
         if key.get("month_key") != current_month:
             used = 0
+            overage_used = 0
         limit = PLAN_MONTHLY_LIMITS.get(plan)
 
         # Per-endpoint breakdown from usage log
@@ -377,17 +403,138 @@ async def get_developer_usage(auth: dict = Depends(verify_clerk)):
                 "status": key.get("status") or "active",
                 "calls_used": used,
                 "calls_limit": limit,
-                "calls_remaining": (limit - used) if limit is not None else None,
+                "calls_remaining": max(0, (limit - used)) if limit is not None else None,
+                "overage_calls_this_month": overage_used,
                 "endpoint_breakdown": endpoint_breakdown,
                 "total_cost_usd": round(total_cost, 4),
             }
         )
 
+    metered_enabled = any(
+        k.get("metered_billing_enabled")
+        or (
+            (k.get("plan") or "free").lower() == "free"
+            and k.get("stripe_subscription_id")
+            and k.get("stripe_customer_id")
+        )
+        for k in keys
+    )
+    total_overage = sum(k["overage_calls_this_month"] for k in key_stats)
+
     return {
         "keys": key_stats,
         "total_calls_this_month": sum(k["calls_used"] for k in key_stats),
+        "total_overage_calls_this_month": total_overage,
+        "metered_billing_enabled": metered_enabled,
+        "free_calls_included": FREE_MONTHLY_CALLS,
+        "metered_rates_gbp": METERED_ENDPOINT_GBP,
         "daily_usage": daily_usage,
     }
+
+
+def _apply_metered_billing(
+    supabase,
+    developer_id: str,
+    *,
+    customer_id: str | None,
+    subscription_id: str | None,
+    enabled: bool,
+) -> None:
+    row: dict = {}
+    if customer_id:
+        row["stripe_customer_id"] = customer_id
+    if subscription_id:
+        row["stripe_subscription_id"] = subscription_id
+    if enabled:
+        row["metered_billing_enabled"] = True
+        if subscription_id:
+            row["stripe_meter_subscription_id"] = subscription_id
+    else:
+        row["metered_billing_enabled"] = False
+        row["stripe_meter_subscription_id"] = None
+
+    try:
+        supabase.table(_DEV_KEY_TABLE).update(row).eq("developer_id", developer_id).eq(
+            "status", "active"
+        ).execute()
+    except Exception:
+        # Before migration: stripe_customer_id + stripe_subscription_id still activate metered fallback.
+        fallback = {k: v for k, v in row.items() if k in ("stripe_customer_id", "stripe_subscription_id")}
+        if fallback:
+            supabase.table(_DEV_KEY_TABLE).update(fallback).eq("developer_id", developer_id).eq(
+                "status", "active"
+            ).execute()
+
+
+@router.post("/enable-metered")
+async def enable_metered_billing(
+    body: MeteredBillingRequest | None = None,
+    auth: dict = Depends(verify_clerk),
+):
+    """
+    Enable pay-as-you-go billing after the free 100 calls/month are used.
+    Creates a Stripe subscription to the metered usage price (STRIPE_PRICE_API_USAGE).
+    """
+    from app.config import get_settings
+    from app.routes.billing import _stripe_http_request
+
+    settings = get_settings()
+    price_id = settings.stripe_api_usage_price_id()
+    if not price_id:
+        raise HTTPException(
+            status_code=503,
+            detail="Metered billing price not configured (STRIPE_PRICE_API_USAGE).",
+        )
+    if not settings.stripe_secret_key:
+        raise HTTPException(status_code=503, detail="Stripe not configured")
+
+    developer_id = auth.get("sub") or ""
+    email = auth.get("email") or auth.get("primary_email_address") or ""
+    if not developer_id:
+        raise HTTPException(status_code=401, detail="Missing user id")
+
+    req = body or MeteredBillingRequest()
+    success_url = (
+        (req.success_url or "").strip()
+        or f"{settings.frontend_url}/developers/dashboard?billing=metered_success"
+    )
+    if "session_id=" not in success_url:
+        sep = "&" if "?" in success_url else "?"
+        success_url = f"{success_url}{sep}session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = (
+        (req.cancel_url or "").strip()
+        or f"{settings.frontend_url}/developers/dashboard?billing=cancel"
+    )
+
+    # Metered prices must not include quantity (Stripe usage_type=metered).
+    data: dict[str, str] = {
+        "mode": "subscription",
+        "line_items[0][price]": price_id,
+        "success_url": success_url,
+        "cancel_url": cancel_url,
+        "subscription_data[metadata][developer_id]": developer_id,
+        "subscription_data[metadata][product]": "developer_api_metered",
+        "metadata[developer_id]": developer_id,
+        "metadata[product]": "developer_api_metered",
+    }
+    if email:
+        data["customer_email"] = email
+
+    resp = _stripe_http_request(
+        method="POST",
+        url="https://api.stripe.com/v1/checkout/sessions",
+        stripe_secret_key=settings.stripe_secret_key,
+        data=data,
+    )
+    if resp.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Stripe error: {resp.text[:200]}")
+
+    body_json = resp.json()
+    url = body_json.get("url")
+    if not url:
+        raise HTTPException(status_code=502, detail="Stripe returned no checkout URL")
+
+    return {"url": url}
 
 
 @router.post("/subscribe")
@@ -408,13 +555,16 @@ async def subscribe_developer_plan(
     if plan not in ("starter", "pro", "enterprise"):
         raise HTTPException(status_code=400, detail="plan must be: starter | pro | enterprise")
 
-    price_attr = _PLAN_PRICE_ENV.get(plan, "")
-    price_id = getattr(settings, price_attr, "") or ""
+    price_id = {
+        "starter": settings.stripe_dev_starter_price_id(),
+        "pro": settings.stripe_dev_pro_price_id(),
+        "enterprise": settings.stripe_dev_enterprise_price_id(),
+    }.get(plan, "")
     if not price_id:
         raise HTTPException(
             status_code=503,
             detail=f"Stripe price not configured for developer {plan} plan. "
-                   f"Set {price_attr.upper()} in backend .env.",
+                   "Set STRIPE_PRICE_DEV_STARTER / STRIPE_PRICE_API_STARTER (or pro) on Cloud Run.",
         )
 
     if not settings.stripe_secret_key:
@@ -427,6 +577,9 @@ async def subscribe_developer_plan(
         (body.success_url or "").strip()
         or f"{settings.frontend_url}/developers/dashboard?billing=success"
     )
+    if "session_id=" not in success_url:
+        sep = "&" if "?" in success_url else "?"
+        success_url = f"{success_url}{sep}session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = (
         (body.cancel_url or "").strip()
         or f"{settings.frontend_url}/developers?billing=cancel"
@@ -463,3 +616,104 @@ async def subscribe_developer_plan(
         raise HTTPException(status_code=502, detail="Stripe returned no checkout URL")
 
     return {"url": url}
+
+
+@router.post("/confirm-checkout")
+async def confirm_developer_checkout(
+    body: ConfirmCheckoutRequest,
+    auth: dict = Depends(verify_clerk),
+):
+    """Confirm Stripe checkout and upgrade developer API keys immediately after redirect."""
+    from app.config import get_settings
+    from app.routes.billing import _fetch_checkout_session_direct
+
+    settings = get_settings()
+    if not settings.stripe_secret_key:
+        raise HTTPException(status_code=503, detail="Stripe not configured")
+
+    session_id = (body.session_id or "").strip()
+    if not session_id:
+        raise HTTPException(status_code=400, detail="Missing session_id")
+
+    developer_id = auth.get("sub") or ""
+    if not developer_id:
+        raise HTTPException(status_code=401, detail="Missing user id")
+
+    supabase = get_supabase()
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    session = _fetch_checkout_session_direct(
+        stripe_secret_key=settings.stripe_secret_key,
+        session_id=session_id,
+    )
+    metadata = session.get("metadata") or {}
+    sub_meta = {}
+    subscription = session.get("subscription")
+    if isinstance(subscription, dict):
+        sub_meta = subscription.get("metadata") or {}
+
+    product = (metadata.get("product") or sub_meta.get("product") or "").strip()
+    if product not in ("developer_api", "developer_api_metered"):
+        raise HTTPException(status_code=400, detail="Not a developer API checkout session")
+
+    md_dev = (metadata.get("developer_id") or sub_meta.get("developer_id") or "").strip()
+    if md_dev and md_dev != developer_id:
+        raise HTTPException(status_code=403, detail="Checkout session does not belong to this user")
+
+    payment_status = (session.get("payment_status") or "").strip().lower()
+    sub_status = ""
+    if isinstance(subscription, dict):
+        sub_status = (subscription.get("status") or "").strip().lower()
+    active = sub_status in ("active", "trialing") or payment_status in ("paid", "no_payment_required")
+
+    customer_id = session.get("customer")
+    subscription_id = subscription.get("id") if isinstance(subscription, dict) else subscription
+    cust = customer_id if isinstance(customer_id, str) else None
+    sub_id = subscription_id if isinstance(subscription_id, str) else None
+
+    if product == "developer_api_metered":
+        try:
+            _apply_metered_billing(
+                supabase,
+                developer_id,
+                customer_id=cust,
+                subscription_id=sub_id,
+                enabled=active,
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Failed to enable metered billing: {exc}")
+        return {
+            "ok": True,
+            "billing_type": "metered",
+            "metered_billing_enabled": active,
+            "free_calls_included": FREE_MONTHLY_CALLS,
+            "metered_rates_gbp": METERED_ENDPOINT_GBP,
+        }
+
+    plan = (metadata.get("plan") or sub_meta.get("plan") or "starter").strip().lower()
+    if plan not in PAID_PLANS:
+        plan = "starter"
+    effective_plan = plan if active else "free"
+
+    update_row: dict = {"plan": effective_plan}
+    if cust:
+        update_row["stripe_customer_id"] = cust
+    if sub_id:
+        update_row["stripe_subscription_id"] = sub_id
+
+    try:
+        supabase.table(_DEV_KEY_TABLE).update(update_row).eq("developer_id", developer_id).eq(
+            "status", "active"
+        ).execute()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to update plan: {exc}")
+
+    calls_limit = PLAN_MONTHLY_LIMITS.get(effective_plan)
+    return {
+        "ok": True,
+        "billing_type": "plan",
+        "plan": effective_plan,
+        "billing_enabled": effective_plan in PAID_PLANS,
+        "calls_limit": calls_limit,
+    }

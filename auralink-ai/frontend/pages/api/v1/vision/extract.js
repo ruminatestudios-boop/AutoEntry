@@ -30,7 +30,7 @@ export default async function handler(req, res) {
   const url = `${BACKEND.replace(/\/$/, "")}/api/v1/vision/extract`;
   try {
     const abort = new AbortController();
-    const timeoutMs = 120_000;
+    const timeoutMs = 180_000;
     const timeoutId = setTimeout(() => abort.abort(), timeoutMs);
 
     const headers = { "Content-Type": "application/json" };

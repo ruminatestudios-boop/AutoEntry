@@ -4,15 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="auralink-publishing-url" content="http://localhost:8001" />
-  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <meta name="synclyst-publishing-url" content="http://localhost:8001" />
   <meta name="auralink-api-url" content="http://localhost:8000" />
-  <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
+  <meta name="synclyst-backend-url" content="http://localhost:8000" />
   <!-- Optional: set content to a Shopify login/lookup URL to send users there instead of the connect form (e.g. from Shopify Identity). Leave empty to use the connect form. -->
   <meta name="auralink-shopify-login-url" content="" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <meta name="view-transition" content="same-origin" />
+  <!-- Review footer: "copy" = copy-only (web listing flow); "publish" = push to Shopify (App Store app). -->
+  <meta name="synclyst-review-cta" content="copy" />
   <!-- Waitlist popup on first "Publish to Shopify": content="true" to show; "false" = publish immediately. -->
   <meta name="synclyst-waitlist-publish-shopify-popup" content="false" />
   <title>Review | Listing Flow | SyncLyst</title>
@@ -148,8 +150,8 @@
     .smart-suggest-banner { display: flex; align-items: center; gap: 14px; padding: 16px 18px; background: linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%); border-radius: 14px; border: 1px solid #e4e4e7; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
     .smart-suggest-banner .smart-suggest-icon-wrap {
       flex-shrink: 0;
-      width: 44px;
-      height: 44px;
+      width: 52px;
+      height: 52px;
       border-radius: 12px;
       background: #fff;
       border: 1px solid #e4e4e7;
@@ -223,7 +225,7 @@
       -->
       <div class="smart-suggest-banner mb-6 w-full text-left">
         <div class="smart-suggest-icon-wrap">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
+          <img src="/assets/shopify-logo.png" alt="" class="w-9 h-9 object-contain" width="36" height="36" />
         </div>
         <div class="smart-suggest-text">
           <span class="smart-suggest-title">Listing ready</span>
@@ -233,11 +235,15 @@
 
       <!-- Shown when user returns from Shopify OAuth -->
       <div id="shopify-connected-banner" class="hidden rounded-xl border border-[#059669] bg-[#ecfdf5] px-4 py-3 mb-6 flex items-center justify-between gap-3">
-        <p class="text-sm font-medium text-[#059669]">Shopify connected. You're ready to publish.</p>
+        <p class="text-sm font-medium text-[#059669]">Shopify connected. Subscribe to a paid plan to publish.</p>
         <button type="button" id="shopify-connected-dismiss" class="text-[#059669] hover:text-[#047857] shrink-0" aria-label="Dismiss">×</button>
       </div>
       <div id="shopify-error-banner" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-6">
         <p class="text-sm font-medium text-red-800">Connection failed. Try again or check your store.</p>
+      </div>
+      <div id="billing-upgrade-banner" class="hidden rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-6 flex items-center justify-between gap-3">
+        <p class="text-sm font-medium text-amber-950">Publishing requires a paid SyncLyst plan (from $9.99/mo, billed via Shopify).</p>
+        <a href="/billing?return=review&tier=pro" class="text-sm font-semibold text-amber-950 underline shrink-0 whitespace-nowrap">View plans</a>
       </div>
 
       <div class="space-y-5">
@@ -454,12 +460,19 @@
       </div>
     </main>
     <div class="p-4 pt-3 border-t border-[#e5e5e5] shrink-0 bg-white">
-      <div class="flex flex-col gap-2">
+      <div id="review-cta-copy" class="flex flex-col gap-2">
         <button type="button" id="copy-listing-btn" onclick="synclystCopyFullListing()" class="block w-full py-3.5 px-6 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[15px] hover:bg-[#262626] active:bg-[#7c3aed] transition-colors text-center flex items-center justify-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
           <span id="copy-listing-label">Copy full listing</span>
         </button>
-        <p class="text-center text-xs text-zinc-400 leading-snug">Paste into Shopify, eBay, Etsy or anywhere &nbsp;·&nbsp; One-click publishing coming soon</p>
+        <p class="text-center text-xs text-zinc-400 leading-snug">Review your listing, then copy and paste into Shopify or any marketplace</p>
+      </div>
+      <div id="review-cta-publish" class="hidden flex-col gap-2">
+        <button type="button" id="review-next-btn" class="block w-full py-3.5 px-6 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[15px] hover:bg-[#262626] active:bg-[#7c3aed] transition-colors text-center flex items-center justify-center gap-2">
+          <span id="review-next-btn-label">Publish to Shopify</span>
+          <img src="/assets/shopify-logo.png" alt="" class="w-7 h-7 shrink-0 object-contain brightness-0 invert opacity-90" width="28" height="28" />
+        </button>
+        <p id="review-publish-hint" class="text-center text-xs text-zinc-400 leading-snug">Paid plan required · saves as a draft in Shopify Admin</p>
       </div>
     </div>
   </div>
@@ -516,6 +529,78 @@
           }
         }
       })();
+      /** "copy" = web listing (clipboard only). "publish" = Shopify App Store app (push live). */
+      function resolveReviewCtaMode() {
+        var meta = document.querySelector('meta[name="synclyst-review-cta"]');
+        var mode = (meta && meta.getAttribute('content')) ? String(meta.getAttribute('content')).trim().toLowerCase() : 'copy';
+        try {
+          var sp = new URLSearchParams(window.location.search || '');
+          if (sp.get('review_cta') === 'publish' || sp.get('publish') === '1' || sp.get('shopify_app') === '1') mode = 'publish';
+          if (sp.get('review_cta') === 'copy') mode = 'copy';
+          if (sp.get('shop')) mode = 'publish';
+          if (sp.get('shopify') === 'connected') mode = 'publish';
+          if (sessionStorage.getItem('synclyst_shopify_app')) mode = 'publish';
+          if (sessionStorage.getItem('synclyst_selected_platform') === 'shopify') mode = 'publish';
+        } catch (e) {}
+        if (mode !== 'publish') mode = 'copy';
+        return mode;
+      }
+      function applyReviewCtaMode() {
+        var mode = resolveReviewCtaMode();
+        var copyEl = document.getElementById('review-cta-copy');
+        var pubEl = document.getElementById('review-cta-publish');
+        if (mode === 'publish') {
+          if (copyEl) copyEl.classList.add('hidden');
+          if (pubEl) { pubEl.classList.remove('hidden'); pubEl.classList.add('flex'); }
+        } else {
+          if (pubEl) pubEl.classList.add('hidden');
+          if (copyEl) { copyEl.classList.remove('hidden'); copyEl.classList.add('flex'); }
+        }
+        return mode;
+      }
+      var reviewCtaMode = applyReviewCtaMode();
+      var synclystCanPublish = true;
+      try {
+        if (reviewCtaMode === 'publish') sessionStorage.setItem('synclyst_shopify_app', '1');
+      } catch (e) {}
+      function applyBillingGateUi(canPublish) {
+        synclystCanPublish = !!canPublish;
+        var billBanner = document.getElementById('billing-upgrade-banner');
+        var pubBtn = document.getElementById('review-next-btn');
+        var pubLbl = document.getElementById('review-next-btn-label');
+        var pubHint = document.getElementById('review-publish-hint');
+        if (billBanner) billBanner.classList.toggle('hidden', canPublish);
+        if (pubLbl) pubLbl.textContent = canPublish ? 'Publish to Shopify' : 'Upgrade to publish';
+        if (pubBtn) {
+          pubBtn.classList.toggle('bg-[#0a0a0a]', canPublish);
+          pubBtn.classList.toggle('hover:bg-[#262626]', canPublish);
+          pubBtn.classList.toggle('bg-[#570EC5]', !canPublish);
+          pubBtn.classList.toggle('hover:bg-[#4609a8]', !canPublish);
+        }
+        if (pubHint && !canPublish) {
+          pubHint.textContent = 'Choose Pro, Growth, or Scale — billed through Shopify on your store';
+        }
+      }
+      function refreshBillingGate() {
+        if (reviewCtaMode !== 'publish') return;
+        fetch('/api/publishing/token')
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(d) {
+            if (!d || !d.token) {
+              applyBillingGateUi(false);
+              return;
+            }
+            try { sessionStorage.setItem('auralink_jwt', d.token); } catch (e) {}
+            var base = getPublishingUrl().replace(/\/$/, '');
+            return fetch(base + '/api/billing/status', {
+              headers: { Authorization: 'Bearer ' + d.token }
+            }).then(function(r) { return r.ok ? r.json() : { can_publish: false }; });
+          })
+          .then(function(st) {
+            if (st) applyBillingGateUi(!!st.can_publish);
+          })
+          .catch(function() { applyBillingGateUi(false); });
+      }
       (function() {
         var params = new URLSearchParams(window.location.search);
         var connected = params.get('shopify') === 'connected';
@@ -683,6 +768,12 @@
             var tags = data.tags || {};
             var sources = data.sources || {};
             var seoTitle = (copy.seo_title || '').trim() || '';
+            var flatDescCheck = (copy.description && String(copy.description).trim()) || '';
+            if (seoTitle.indexOf('Demo Product') !== -1 || flatDescCheck.indexOf('Demo mode:') !== -1) {
+              sessionStorage.removeItem(DRAFT_LISTING_KEY);
+              sessionStorage.removeItem(DRAFT_KEY);
+              return { title: '', description: '', category: '', price: '', compare_at: '', charge_tax: true, inventory_tracked: true, quantity: 1, sku: '', sell_when_out_of_stock: false, physical_product: true, weight_kg: '', product_type: '', vendor: '', status: 'draft', meta_description: '', tags: [], photos: [], variant_options: [{ name: 'Size', values: [] }, { name: 'Color', values: [] }] };
+            }
             var category = (tags.category || att.brand || '').trim();
             if (att.brand && category && category !== att.brand) category = att.brand + ' › ' + category;
             else if (!category && att.brand) category = att.brand;
@@ -845,6 +936,7 @@
         }
         return url;
       }
+      refreshBillingGate();
 
       function isDemoUser() {
         try {
@@ -2310,10 +2402,15 @@
         if (document.visibilityState === 'hidden') persistDraftFromDom();
       });
 
-      document.getElementById('review-next-btn').addEventListener('click', function(e) {
+      var reviewNextBtnEl = document.getElementById('review-next-btn');
+      if (reviewNextBtnEl) reviewNextBtnEl.addEventListener('click', function(e) {
         e.preventDefault();
         if (isDemoUser()) {
           showDemoLimitModal();
+          return;
+        }
+        if (reviewCtaMode === 'publish' && !synclystCanPublish) {
+          window.location.href = '/billing?return=review&tier=pro';
           return;
         }
         var nextBtn = document.getElementById('review-next-btn');
@@ -2368,7 +2465,8 @@
           meta_title: clipSeoPageTitle((seoTitleInput && seoTitleInput.value) ? seoTitleInput.value.trim() : (d.title || '').trim()),
           meta_description: clipMetaDescriptionForSeo((d.meta_description || '').trim(), SEO_META_DESC_MAX) || buildFallbackMetaSnippet(d.title || '', d.description || ''),
           variant_options: Array.isArray(d.variant_options) ? d.variant_options : [],
-          product_type: d.product_type || d.category || ''
+          product_type: d.product_type || d.category || '',
+          status: 'draft'
         };
 
         var metaWaitPub = document.querySelector('meta[name="synclyst-waitlist-publish-shopify-popup"]');
@@ -2381,7 +2479,7 @@
         if (nextBtn) { nextBtn.disabled = true; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publishing…'; nextBtn.style.pointerEvents = 'none'; nextBtn.style.opacity = '0.7'; }
         var publishAbort = new AbortController();
         // Give the connection handoff more time; local dev proxies + cold starts can exceed 15s.
-        var timeoutId = setTimeout(function() { publishAbort.abort(); }, 45000);
+        var timeoutId = setTimeout(function() { publishAbort.abort(); }, 90000);
         /** Parse JSON; on errors, proxies may return HTML (502 pages) — avoid "Unexpected token '<'". */
         function readJsonResponse(r, ctx) {
           return r.text().then(function(text) {
@@ -2395,6 +2493,11 @@
               throw new Error('Invalid response from publishing API.');
             }
             if (!r.ok) {
+              if (r.status === 402 && j && (j.code === 'billing_required' || j.error)) {
+                var billingErr = new Error((j && j.error) ? j.error : 'Subscription required');
+                billingErr.code = 'billing_required';
+                throw billingErr;
+              }
               throw new Error((j && j.error) ? j.error : ('HTTP ' + r.status + ' ' + (r.statusText || '')));
             }
             return j;
@@ -2417,7 +2520,7 @@
           if (!token) {
             clearTimeout(timeoutId);
             if (nextBtn) { nextBtn.disabled = false; var lbl = nextBtn.querySelector('#review-next-btn-label'); if (lbl) lbl.textContent = 'Publish to Shopify'; nextBtn.style.pointerEvents = ''; nextBtn.style.opacity = ''; }
-            window.location.href = '/connect-store?return=review';
+            window.location.href = '/sign-in?redirect_url=' + encodeURIComponent('/review?publish=1');
             return;
           }
           var base = pubUrl.replace(/\/$/, '');
@@ -2434,7 +2537,6 @@
             });
         }).then(function(token) {
           if (!token) return;
-          clearTimeout(timeoutId);
           var base = pubUrl.replace(/\/$/, '');
           return fetch(base + '/api/listings', {
             method: 'POST',
@@ -2480,8 +2582,12 @@
               try { window.location.href = '/sign-in?redirect_url=' + encodeURIComponent('/review'); } catch (e) {}
               return;
             }
+            if (err && err.code === 'billing_required') {
+              window.location.href = '/billing?return=review&tier=pro';
+              return;
+            }
             if (err && err.name === 'AbortError') {
-              msg = 'Publish timed out (45s).\n\n' +
+              msg = 'Publish timed out (90s).\n\n' +
                 'If you are on localhost, confirm the publishing API is up: http://localhost:8001/health\n' +
                 'If it is up, Shopify or your network may be slow—try again.';
             } else if (/failed to fetch|networkerror|load failed|network request failed/i.test(msg)) {

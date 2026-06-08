@@ -4,6 +4,45 @@ import { getEnabledPlatforms } from '../config/platforms.js';
 import { isDevMode, devGetTokenRow, devUpsertToken, devGetConnectedStores, devSetTokenStatus } from './devStore.js';
 
 const DEV_USER_UUID = '00000000-0000-0000-0000-000000000001';
+const clerkUuidCache = new Map();
+
+/** Clerk production IDs (user_…) — mapped to a users-table UUID for platform_tokens FK. */
+export function isClerkUserId(userId) {
+  return typeof userId === 'string' && userId.startsWith('user_');
+}
+
+function clerkPlaceholderEmail(clerkUserId) {
+  const safe = String(clerkUserId).replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 120);
+  return `clerk+${safe}@synclyst.internal`;
+}
+
+/** Map Clerk user id → users.id UUID (creates placeholder user row on first connect). */
+export async function resolveStorageUserId(userId) {
+  if (!isClerkUserId(userId)) return storageUserId(userId);
+  if (clerkUuidCache.has(userId)) return clerkUuidCache.get(userId);
+
+  const db = getSupabase();
+  if (!db || isDevMode()) return userId;
+
+  const email = clerkPlaceholderEmail(userId);
+  const { data: existing } = await db.from('users').select('id').eq('email', email).maybeSingle();
+  if (existing?.id) {
+    clerkUuidCache.set(userId, existing.id);
+    return existing.id;
+  }
+
+  const { data: inserted, error } = await db.from('users').insert({ email }).select('id').single();
+  if (error) {
+    const retry = await db.from('users').select('id').eq('email', email).maybeSingle();
+    if (retry.data?.id) {
+      clerkUuidCache.set(userId, retry.data.id);
+      return retry.data.id;
+    }
+    throw error;
+  }
+  clerkUuidCache.set(userId, inserted.id);
+  return inserted.id;
+}
 
 /** Synthetic Shopify row from SHOPIFY_DEV_* env (local or optional production demo). */
 function shopifyDevEnvRow() {
@@ -20,11 +59,6 @@ function shopifyDevEnvRow() {
   };
 }
 
-/**
- * Use env Admin API token for Shopify when:
- * - in-memory dev (no Supabase), or
- * - SHOPIFY_DEV_TOKEN_APPLIES_IN_PRODUCTION=1 (single-store demo on Cloud Run; disable for real multi-tenant).
- */
 function shopifyUniversalDevTokenEnabled() {
   const tok = (process.env.SHOPIFY_DEV_ACCESS_TOKEN || '').trim();
   const domain = (process.env.SHOPIFY_DEV_SHOP_DOMAIN || '').trim();
@@ -33,7 +67,7 @@ function shopifyUniversalDevTokenEnabled() {
   return /^(1|true|yes)$/i.test(process.env.SHOPIFY_DEV_TOKEN_APPLIES_IN_PRODUCTION || '');
 }
 
-/** When using Supabase, map dev-local to the dev user UUID so FK to users(id) is satisfied. */
+/** Legacy sync helper — prefer resolveStorageUserId for DB writes. */
 export function storageUserId(userId) {
   const db = getSupabase();
   if (!db) return userId;
@@ -43,25 +77,23 @@ export function storageUserId(userId) {
 
 export async function getTokenRow(userId, platform) {
   if (isDevMode()) {
-    // Dev-token bypass: use env Shopify token so publish works without OAuth (survives restarts).
     if (platform === 'shopify' && process.env.SHOPIFY_DEV_ACCESS_TOKEN && process.env.SHOPIFY_DEV_SHOP_DOMAIN) {
       return shopifyDevEnvRow();
     }
     return devGetTokenRow(userId, platform);
   }
-  // Production + Supabase: optional same env token for all users (demo only).
   if (platform === 'shopify' && shopifyUniversalDevTokenEnabled()) {
     return shopifyDevEnvRow();
   }
   const db = getSupabase();
   if (!db) return null;
-  const uid = storageUserId(userId);
+  const uid = await resolveStorageUserId(userId);
   const { data, error } = await db
     .from('platform_tokens')
     .select('*')
     .eq('user_id', uid)
     .eq('platform', platform)
-    .single();
+    .maybeSingle();
   if (error || !data) return null;
   return data;
 }
@@ -78,8 +110,9 @@ export async function upsertToken(row) {
   }
   const access_enc = row.access_token ? encrypt(row.access_token) : null;
   const refresh_enc = row.refresh_token ? encrypt(row.refresh_token) : null;
+  const uid = await resolveStorageUserId(row.user_id);
   const payload = {
-    user_id: storageUserId(row.user_id),
+    user_id: uid,
     platform: row.platform,
     access_token: access_enc ?? row.access_token,
     refresh_token: refresh_enc ?? row.refresh_token,
@@ -90,6 +123,11 @@ export async function upsertToken(row) {
     status: row.status ?? 'connected',
     connected_at: row.connected_at || new Date().toISOString(),
   };
+  if (isClerkUserId(row.user_id)) {
+    payload.clerk_user_id = row.user_id;
+  } else if (row.clerk_user_id) {
+    payload.clerk_user_id = row.clerk_user_id;
+  }
   const { data, error } = await db
     .from('platform_tokens')
     .upsert(payload, { onConflict: 'user_id,platform' })
@@ -100,10 +138,14 @@ export async function upsertToken(row) {
 }
 
 export async function setTokenStatus(userId, platform, status) {
-  if (isDevMode()) { devSetTokenStatus(userId, platform, status); return; }
+  if (isDevMode()) {
+    devSetTokenStatus(userId, platform, status);
+    return;
+  }
   const db = getSupabase();
   if (!db) return;
-  await db.from('platform_tokens').update({ status }).eq('user_id', storageUserId(userId)).eq('platform', platform);
+  const uid = await resolveStorageUserId(userId);
+  await db.from('platform_tokens').update({ status }).eq('user_id', uid).eq('platform', platform);
 }
 
 export function getDecryptedAccessToken(row) {
@@ -136,10 +178,18 @@ export async function getConnectedStores(userId) {
   }
   const db = getSupabase();
   if (!db) return Object.fromEntries(platforms.map((p) => [p, { status: 'not_connected' }]));
-  const { data } = await db.from('platform_tokens').select('platform, status, shop_domain, shop_id, region').eq('user_id', storageUserId(userId));
+
+  const uid = await resolveStorageUserId(userId);
+  const { data } = await db
+    .from('platform_tokens')
+    .select('platform, status, shop_domain, shop_id, region')
+    .eq('user_id', uid);
+
   const out = {};
-  platforms.forEach(p => { out[p] = { status: 'not_connected' }; });
-  (data || []).forEach(r => {
+  platforms.forEach((p) => {
+    out[p] = { status: 'not_connected' };
+  });
+  (data || []).forEach((r) => {
     if (platforms.includes(r.platform)) {
       out[r.platform] = {
         status: r.status,

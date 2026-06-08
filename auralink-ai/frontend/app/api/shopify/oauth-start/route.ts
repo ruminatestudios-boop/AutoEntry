@@ -5,25 +5,15 @@ import {
   normalizeMyshopifyDomain,
   signPublishingJwt,
 } from "@/lib/publishingJwt";
+import { resolveShopFromLaunchSearchParams } from "@/lib/shopifyLaunchParams";
+import { publishingServerBaseUrl } from "@/lib/publishingServerUrl";
 
 export const runtime = "nodejs";
-
-/** Same default host as `next.config.ts` publishing proxy when running on Vercel. */
-const defaultPublishingUrlOnVercel =
-  "https://synclyst-publishing-299567386855.us-central1.run.app";
-
-function publishingBaseUrl(): string {
-  const u =
-    process.env.PUBLISHING_APP_URL?.trim() ||
-    process.env.NEXT_PUBLIC_PUBLISHING_API_URL?.trim() ||
-    (process.env.VERCEL === "1" ? defaultPublishingUrlOnVercel : "");
-  return u.replace(/\/$/, "");
-}
 
 /** Align `/connect-store?return=` keys with publishing `return_to` paths. */
 function normalizeConnectReturnTo(raw: string | undefined | null): string {
   const r = (raw ?? "").trim();
-  if (!r) return "dashboard/home";
+  if (!r) return "list";
   switch (r) {
     case "dashboard-home":
     case "dashboard/home":
@@ -40,6 +30,14 @@ function normalizeConnectReturnTo(raw: string | undefined | null): string {
       return "review";
     case "flow-connect":
       return "flow-connect-done.html";
+    case "billing":
+      return "billing";
+    case "list":
+    case "/list":
+      return "list";
+    case "scan":
+    case "/scan":
+      return "scan";
     default:
       return r;
   }
@@ -59,6 +57,14 @@ function connectStoreReturnParam(returnTo: string): string | null {
       return "flow-connect";
     case "flow-marketplaces":
       return "flow-marketplaces";
+    case "billing":
+      return "billing";
+    case "list":
+    case "/list":
+      return "list";
+    case "scan":
+    case "/scan":
+      return "scan";
     default:
       return null;
   }
@@ -70,23 +76,19 @@ function connectStoreReturnParam(returnTo: string): string | null {
  * App Store "App URL" can point to /shopify/launch which forwards here.
  */
 export async function GET(request: NextRequest) {
-  const shopRaw = request.nextUrl.searchParams.get("shop")?.trim() || "";
+  const shopRaw = resolveShopFromLaunchSearchParams(request.nextUrl.searchParams);
   const returnRaw =
     request.nextUrl.searchParams.get("return_to")?.trim() ||
     request.nextUrl.searchParams.get("return")?.trim() ||
     "";
-  const returnTo = normalizeConnectReturnTo(returnRaw || "dashboard/home");
+  const returnTo = normalizeConnectReturnTo(returnRaw || "list");
 
   if (!shopRaw) {
-    const connect = new URL("/connect-store", request.nextUrl.origin);
-    const rawReturn = request.nextUrl.searchParams.get("return")?.trim();
-    if (rawReturn) {
-      connect.searchParams.set("return", rawReturn);
-    } else {
-      const ret = connectStoreReturnParam(returnTo);
-      if (ret) connect.searchParams.set("return", ret);
-    }
-    return NextResponse.redirect(connect, 307);
+    // App Store open without a resolvable shop — go straight to scan/list.
+    const list = new URL("/list", request.nextUrl.origin);
+    const res = NextResponse.redirect(list, 307);
+    res.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate");
+    return res;
   }
 
   const shopNorm = normalizeMyshopifyDomain(shopRaw);
@@ -97,7 +99,13 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  let { userId } = await auth();
+  let userId: string | null = null;
+  try {
+    const authResult = await auth();
+    userId = authResult.userId;
+  } catch {
+    userId = null;
+  }
   if (!userId && process.env.NODE_ENV !== "production") {
     userId = "dev-local";
   }
@@ -136,7 +144,7 @@ export async function GET(request: NextRequest) {
     secret
   );
 
-  const pub = publishingBaseUrl();
+  const pub = publishingServerBaseUrl();
   if (!pub) {
     return NextResponse.json(
       {

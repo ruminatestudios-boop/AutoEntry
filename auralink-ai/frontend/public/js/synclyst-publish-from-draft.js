@@ -212,33 +212,22 @@
     );
   }
 
-  /** 1×1 PNG — satisfies publishing API when no image survived in sessionStorage (common after OAuth). */
-  var PLACEHOLDER_PHOTO =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
-  /** Minimum price in minor units (e.g. cents) when draft had no price. */
-  var MIN_PRICE_PENCE = 100;
-
-  /**
-   * Ensures POST /api/listings/publish passes server validateListing + checkListingQuality without blocking alerts.
-   */
-  function ensureMinimalUniversalData(ud) {
-    if (!ud || typeof ud !== "object") return ud;
-    if (!Array.isArray(ud.photos) || ud.photos.filter(Boolean).length === 0) {
-      ud.photos = [PLACEHOLDER_PHOTO];
-    }
+  /** Reject incomplete drafts — never publish placeholder photos/prices to Shopify. */
+  function validateUniversalData(ud) {
+    if (!ud || typeof ud !== "object") throw err("No listing data.", "NO_DATA");
+    var photos = Array.isArray(ud.photos) ? ud.photos.filter(Boolean) : [];
+    if (photos.length === 0) throw err("Add at least one photo before publishing.", "NO_PHOTOS");
     if (ud.price == null || typeof ud.price !== "number" || ud.price < 1) {
-      ud.price = MIN_PRICE_PENCE;
+      throw err("Set a price greater than 0 before publishing.", "NO_PRICE");
     }
-    var t0 = (ud.title || "").trim();
-    if (!t0 || /^untitled listing$/i.test(t0)) {
-      ud.title = "SyncLyst product listing";
+    var title = String(ud.title || "").trim();
+    if (!title || /^untitled listing$/i.test(title)) {
+      throw err("Add a product title before publishing.", "NO_TITLE");
     }
     if (!(ud.description || "").trim()) {
-      ud.description = "Details and photos can be updated in Shopify Admin before you go live.";
+      throw err("Add a description before publishing.", "NO_DESCRIPTION");
     }
-    if (!(ud.meta_title || "").trim()) {
-      ud.meta_title = ud.title;
-    }
+    if (!(ud.meta_title || "").trim()) ud.meta_title = title;
     ud.meta_title = String(ud.meta_title || "").trim().slice(0, 60);
     var md = String(ud.meta_description || "").trim();
     if (!md) {
@@ -246,6 +235,7 @@
     } else {
       ud.meta_description = clipMetaDescriptionForSeo(md, SEO_META_DESC_MAX);
     }
+    ud.status = "draft";
     return ud;
   }
 
@@ -288,6 +278,7 @@
       meta_description: clipMetaDescriptionForSeo((d.meta_description || "").trim(), SEO_META_DESC_MAX) || buildFallbackMetaSnippet(d.title, d.description),
       variant_options: Array.isArray(d.variant_options) ? d.variant_options : [],
       product_type: d.product_type || d.category || "",
+      status: "draft",
     };
   }
 
@@ -312,16 +303,23 @@
     }, timeoutMs);
 
     var d = loadDraftFromSession();
-    var universal_data = ensureMinimalUniversalData(buildUniversalData(d));
+    var universal_data;
+    try {
+      universal_data = validateUniversalData(buildUniversalData(d));
+    } catch (validationErr) {
+      clearTimeout(timeoutId);
+      return Promise.reject(validationErr);
+    }
 
     function getToken() {
       try {
         var t = sessionStorage.getItem("auralink_jwt");
         if (t) return Promise.resolve(t);
       } catch (e) {}
-      return fetch(pubUrl.replace(/\/$/, "") + "/auth/dev-token", { signal: publishAbort.signal })
+      return fetch("/api/publishing/token", { signal: publishAbort.signal })
         .then(function (r) {
           if (!r.ok) {
+            if (r.status === 401) throw err("Sign in to publish.", "NO_TOKEN");
             if (r.status === 502 || r.status === 503 || r.status === 504) throw new Error("Failed to fetch");
             return null;
           }

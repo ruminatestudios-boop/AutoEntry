@@ -411,34 +411,77 @@ async def stripe_webhook(request: Request):
 
     try:
         if etype == "checkout.session.completed":
-            # Session contains customer + subscription IDs
             md = obj.get("metadata") or {}
-            clerk_user_id = (md.get("clerk_user_id") or "").strip()
-            tier = (md.get("tier") or "").strip().lower() or "starter"
             customer_id = obj.get("customer")
             subscription_id = obj.get("subscription")
-            if clerk_user_id:
-                upsert_user_billing(
-                    supabase,
-                    clerk_user_id=clerk_user_id,
-                    tier=tier,
-                    status="active",
-                    stripe_customer_id=customer_id,
-                    stripe_subscription_id=subscription_id,
-                )
 
-        # Developer API plan webhooks
+            if md.get("product") == "developer_api_metered":
+                developer_id = (md.get("developer_id") or "").strip()
+                if developer_id and supabase:
+                    try:
+                        from app.routes.developer_keys import _apply_metered_billing
+
+                        _apply_metered_billing(
+                            supabase,
+                            developer_id,
+                            customer_id=customer_id if isinstance(customer_id, str) else None,
+                            subscription_id=subscription_id if isinstance(subscription_id, str) else None,
+                            enabled=True,
+                        )
+                    except Exception:
+                        pass
+            else:
+                clerk_user_id = (md.get("clerk_user_id") or "").strip()
+                tier = (md.get("tier") or "").strip().lower() or "starter"
+                if clerk_user_id:
+                    upsert_user_billing(
+                        supabase,
+                        clerk_user_id=clerk_user_id,
+                        tier=tier,
+                        status="active",
+                        stripe_customer_id=customer_id,
+                        stripe_subscription_id=subscription_id,
+                    )
+
         if etype in ("customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"):
             md = obj.get("metadata") or {}
+            if md.get("product") == "developer_api_metered":
+                developer_id = (md.get("developer_id") or "").strip()
+                status = (obj.get("status") or "").strip().lower() or (
+                    "canceled" if etype.endswith("deleted") else "active"
+                )
+                if developer_id and supabase:
+                    try:
+                        from app.routes.developer_keys import _apply_metered_billing
+
+                        customer_id = obj.get("customer")
+                        subscription_id = obj.get("id")
+                        _apply_metered_billing(
+                            supabase,
+                            developer_id,
+                            customer_id=customer_id if isinstance(customer_id, str) else None,
+                            subscription_id=subscription_id if isinstance(subscription_id, str) else None,
+                            enabled=status in ("active", "trialing"),
+                        )
+                    except Exception:
+                        pass
             if md.get("product") == "developer_api":
                 developer_id = (md.get("developer_id") or "").strip()
                 plan = (md.get("plan") or "free").strip().lower()
                 status = (obj.get("status") or "").strip().lower() or ("canceled" if etype.endswith("deleted") else "active")
                 if developer_id and supabase:
                     try:
-                        supabase.table("developer_api_keys").update(
-                            {"plan": plan if status in ("active", "trialing") else "free"}
-                        ).eq("developer_id", developer_id).eq("status", "active").execute()
+                        effective = plan if status in ("active", "trialing") else "free"
+                        row: dict = {"plan": effective}
+                        customer_id = obj.get("customer")
+                        subscription_id = obj.get("id")
+                        if isinstance(customer_id, str) and customer_id:
+                            row["stripe_customer_id"] = customer_id
+                        if isinstance(subscription_id, str) and subscription_id:
+                            row["stripe_subscription_id"] = subscription_id
+                        supabase.table("developer_api_keys").update(row).eq(
+                            "developer_id", developer_id
+                        ).eq("status", "active").execute()
                     except Exception:
                         pass
 

@@ -4,7 +4,7 @@
  * POST — create developer key
  */
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getClerkServerToken } from "@/lib/clerk-server-token";
 
 export const runtime = "nodejs";
 
@@ -14,17 +14,8 @@ const BACKEND = (
   "https://auralink-api-299567386855.us-central1.run.app"
 ).replace(/\/$/, "");
 
-async function _clerkToken(): Promise<string | null> {
-  try {
-    const { getToken } = await auth();
-    return (await getToken()) ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export async function GET() {
-  const token = await _clerkToken();
+  const token = await getClerkServerToken();
   if (!token) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const upstream = await fetch(`${BACKEND}/v1/developers/keys`, {
@@ -39,7 +30,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const token = await _clerkToken();
+  const token = await getClerkServerToken();
   if (!token) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   let bodyJson: unknown;

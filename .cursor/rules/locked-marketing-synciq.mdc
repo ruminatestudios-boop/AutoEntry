@@ -1,0 +1,59 @@
+---
+description: Do not modify landing page or SyncIQ unless the user explicitly asks
+alwaysApply: true
+---
+
+# Locked — Marketing landing, SyncIQ & Developer API UI
+
+**Default: do not read for edits, do not modify, do not revert, do not deploy changes to these areas** unless the user explicitly says they want to work on the landing page, marketing site, SyncIQ, reseller flows, developer API docs/dashboard, or Stripe extension checkout.
+
+**Source of truth for developer API UI:** `../MCP/auralink-ai/frontend/app/developers/` (not the old inline dark docs in git history). When restoring developers pages, sync from MCP — do not resurrect `page.tsx` with "Build with Synclyst API".
+
+## Locked files & routes
+
+### Landing / marketing
+- `auralink-ai/frontend/public/landing.html`
+- `auralink-ai/frontend/public/landing-old.html`
+- `auralink-ai/frontend/scripts/sync-root-index-from-landing.js`
+- Root `/` rewrite in `middleware.ts` (only change if user asks about landing routing)
+- Stripe checkout links and pricing copy on the landing page
+
+### SyncIQ (reseller / scan product)
+- `auralink-ai/frontend/public/home.html` (serves `/scan`)
+- `auralink-ai/frontend/public/snap.html` (`/snap`)
+- `auralink-ai/frontend/public/reseller-*.html`
+- `auralink-ai/frontend/public/js/synclyst-home-reseller-intel.js`
+- `auralink-ai/frontend/public/js/synclyst-quota-modal.js`
+- `auralink-ai/frontend/pages/api/v1/vision/reseller-scan.js`
+- `/scan`, `/snap`, `/reseller-*` rewrites in `next.config.mjs`
+
+## Forbidden during Shopify / app work
+
+- `git checkout` or `git restore` on any locked file above
+- "Restore locked version" of `landing.html`
+- Adding `landing.html` back to `scripts/inject-api-url.js` targets
+- Replacing Stripe landing checkout with `/billing` (Shopify billing is only for the Shopify app path)
+
+### Developer API (docs + dashboard)
+- `auralink-ai/frontend/app/developers/**`
+- `auralink-ai/frontend/lib/developer-plans.ts`, `synclyst-clerk-appearance.ts`, `clerk-server-token.ts`
+- `auralink-ai/frontend/app/api/developers/**`, `app/api/billing/api-checkout`, `api-usage-setup`
+
+## Safe to change (Shopify / SyncLyst app)
+
+- `flow-2.html`, `flow-3.html`, `stores-connect-shopify.html`, `/list`, `/review`, `/billing` (Shopify billing only)
+- `auralink-ai/publishing/**`, Shopify App Router routes, `/shopify/launch`
+
+## Deploy commands (use the narrowest one)
+
+| Task | Command |
+|------|---------|
+| Publishing API only | `npm run deploy:shopify-api` |
+| Frontend (full Vercel site) | `npm run deploy:frontend` |
+| Both | `npm run deploy:shopify-all` |
+
+`npm run preflight:deploy` blocks `vercel --prod` if locked files changed vs git.
+
+## Override
+
+Only when the user clearly requests landing, SyncIQ, developer API, reseller, or extension Stripe marketing work.

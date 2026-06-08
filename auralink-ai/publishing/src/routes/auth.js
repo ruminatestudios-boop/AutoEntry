@@ -5,9 +5,9 @@ import { upsertToken } from '../db/tokens.js';
 import axios from 'axios';
 import { isDevMode, devInsertConciergeRequest } from '../db/devStore.js';
 import { getSupabase } from '../db/client.js';
+import { frontendBaseUrl } from '../lib/frontendUrl.js';
 
 const authRouter = Router();
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 /** Canonical frontend path after OAuth (Next rewrites to flow-success.html). */
 const LISTING_PUBLISHED_PATH = '/listing/published';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
@@ -143,8 +143,8 @@ if (enabled.includes('shopify')) {
       if (allowLegacy && legacyId) userId = legacyId;
     }
     if (!userId) {
-      const base = FRONTEND_URL.split(',')[0].replace(/\/$/, '');
-      const returnTo = encodeURIComponent((req.query.return_to || req.query.returnTo || 'dashboard/home').toString());
+      const base = frontendBaseUrl();
+      const returnTo = encodeURIComponent((req.query.return_to || req.query.returnTo || 'list').toString());
       const shopEnc = encodeURIComponent(shopRaw);
       const resume = `${base}/api/shopify/oauth-start?shop=${shopEnc}&return_to=${returnTo}`;
       return res.redirect(`${base}/sign-in?redirect_url=${encodeURIComponent(resume)}`);
@@ -154,6 +154,13 @@ if (enabled.includes('shopify')) {
   }
 
   authRouter.post('/shopify/custom-token', requireUser, async (req, res) => {
+    // Public App Store apps must use OAuth — custom Admin tokens are dev-only.
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(404).json({
+        error: 'not_available',
+        hint: 'Install SyncLyst from the Shopify App Store and open it from Shopify Admin to connect.',
+      });
+    }
     try {
       const rawShop = (req.body?.shop_domain || req.body?.shop || '').toString();
       const accessToken = (req.body?.access_token || req.body?.token || '').toString().trim();
@@ -170,7 +177,7 @@ if (enabled.includes('shopify')) {
       const gql = {
         query: `query {\n  shop {\n    name\n    myshopifyDomain\n    primaryDomain { host url }\n  }\n}`,
       };
-      const apiVersion = process.env.SHOPIFY_API_VERSION || '2025-01';
+      const apiVersion = process.env.SHOPIFY_API_VERSION || '2026-01';
       const url = `https://${shopDomain}/admin/api/${apiVersion}/graphql.json`;
       const r = await axios.post(url, gql, {
         timeout: 12000,
@@ -242,7 +249,7 @@ if (enabled.includes('shopify')) {
   authRouter.get('/shopify', requireShopifyOAuthUser, (req, res) => {
     const shop = (req.query.shop || '').trim().toLowerCase();
     const returnTo = req.query.return_to || req.query.returnTo || '';
-    const base = FRONTEND_URL.replace(/\/$/, '');
+    const base = frontendBaseUrl();
     const connectPage = '/connect-store';
     const returnQ = returnTo ? `&return=${encodeURIComponent(returnTo)}` : '';
 
@@ -267,26 +274,29 @@ if (enabled.includes('shopify')) {
   authRouter.get('/shopify/callback', async (req, res) => {
     try {
       const result = await handleShopifyCallback(req.query);
-      const base = FRONTEND_URL.replace(/\/$/, '');
+      const base = frontendBaseUrl();
       // When returning to the listing review publish flow, auto-retry publish after connect.
+      const rt = typeof result?.returnTo === 'string' ? result.returnTo : '';
       const wantsAutoPublish =
-        typeof result?.returnTo === 'string' &&
-        (result.returnTo === 'review' ||
-          result.returnTo === '/review' ||
-          result.returnTo === 'flow-3' ||
-          result.returnTo === 'flow-3.html' ||
-          result.returnTo === '/flow-3' ||
-          result.returnTo === '/flow-3.html');
+        rt === 'review' ||
+        rt === '/review' ||
+        rt === 'flow-3' ||
+        rt === 'flow-3.html' ||
+        rt === '/flow-3' ||
+        rt === '/flow-3.html';
+      const wantsBilling =
+        rt === 'billing' || rt === '/billing' || (rt && rt.startsWith('billing'));
       const qs = `shopify=connected&shop=${encodeURIComponent(result.shop_domain)}${wantsAutoPublish ? '&autopublish=1' : ''}`;
       if (result && result.returnTo) {
-        const path = result.returnTo.startsWith('/') ? result.returnTo : `/${result.returnTo}`;
-        res.redirect(`${base}${path}?${qs}`);
+        const raw = String(result.returnTo);
+        const path = raw.startsWith('/') ? raw : `/${raw}`;
+        const dest = wantsBilling && !raw.includes('?') ? `${base}/billing?${qs}` : `${base}${path}?${qs}`;
+        res.redirect(dest);
       } else {
-        // Default: show a success screen in-app even when return_to is missing.
-        res.redirect(`${base}${LISTING_PUBLISHED_PATH}?${qs}`);
+        res.redirect(`${base}/list?${qs}`);
       }
     } catch (e) {
-      const base = FRONTEND_URL.replace(/\/$/, '');
+      const base = frontendBaseUrl();
       let returnTo = '';
       try {
         const s = parseShopifyState(req.query.state || '{}');
@@ -297,7 +307,7 @@ if (enabled.includes('shopify')) {
         const path = returnTo.startsWith('/') ? returnTo : `/${returnTo}`;
         res.redirect(`${base}${path}?${errQs}`);
       } else {
-        res.redirect(`${base}/dashboard?${errQs}`);
+        res.redirect(`${base}/connect-store?return=list&${errQs}`);
       }
     }
   });
@@ -309,9 +319,9 @@ if (enabled.includes('tiktok')) {
   authRouter.get('/tiktok/callback', async (req, res) => {
     try {
       const result = await handleTikTokCallback(req.query.code, req.query.state);
-      res.redirect(`${FRONTEND_URL}/dashboard?tiktok=connected&shop_id=${encodeURIComponent(result.shop_id || '')}`);
+      res.redirect(`${frontendBaseUrl()}/dashboard/home?tiktok=connected&shop_id=${encodeURIComponent(result.shop_id || '')}`);
     } catch (e) {
-      res.redirect(`${FRONTEND_URL}/dashboard?error=tiktok&message=${encodeURIComponent(e.message)}`);
+      res.redirect(`${frontendBaseUrl()}/dashboard/home?error=tiktok&message=${encodeURIComponent(e.message)}`);
     }
   });
 }
@@ -326,16 +336,16 @@ if (enabled.includes('ebay')) {
   authRouter.get('/ebay/callback', async (req, res) => {
     try {
       const result = await handleEbayCallback(req.query.code, req.query.state);
-      const base = FRONTEND_URL.replace(/\/$/, '');
+      const base = frontendBaseUrl();
       const qs = `ebay=connected&shop_id=${encodeURIComponent(result.shop_id || '')}`;
       if (result.returnTo) {
         const path = result.returnTo.startsWith('/') ? result.returnTo : `/${result.returnTo}`;
         res.redirect(`${base}${path}?${qs}`);
       } else {
-        res.redirect(`${base}/dashboard?${qs}`);
+        res.redirect(`${base}/dashboard/home?${qs}`);
       }
     } catch (e) {
-      const base = FRONTEND_URL.replace(/\/$/, '');
+      const base = frontendBaseUrl();
       let returnTo = '';
       try {
         const s = typeof req.query.state === 'string' && req.query.state.startsWith('{') ? JSON.parse(req.query.state) : null;
@@ -346,7 +356,7 @@ if (enabled.includes('ebay')) {
         const path = returnTo.startsWith('/') ? returnTo : `/${returnTo}`;
         res.redirect(`${base}${path}?${errQs}`);
       } else {
-        res.redirect(`${base}/dashboard?${errQs}`);
+        res.redirect(`${base}/dashboard/home?${errQs}`);
       }
     }
   });
@@ -371,7 +381,7 @@ if (enabled.includes('etsy')) {
   authRouter.get('/etsy', requireUser, (req, res) => {
     /** Temporary: bypass Etsy login and assume connected. Set DEV_BYPASS_ETSY_LOGIN=true in .env to test the full flow without Etsy OAuth. */
     if (process.env.DEV_BYPASS_ETSY_LOGIN === 'true' || process.env.DEV_BYPASS_ETSY_LOGIN === '1') {
-      const base = FRONTEND_URL.replace(/\/$/, '');
+      const base = frontendBaseUrl();
       upsertToken({
         user_id: req.userId,
         platform: 'etsy',
@@ -395,12 +405,12 @@ if (enabled.includes('etsy')) {
   authRouter.get('/etsy/callback', async (req, res) => {
     try {
       const result = await handleEtsyCallback(req.query.code, req.query.state);
-      const base = FRONTEND_URL.replace(/\/$/, '');
+      const base = frontendBaseUrl();
       const qs = `etsy=connected&shop_id=${encodeURIComponent(result.shop_id || '')}`;
       // After connecting Etsy, send user to success page (same flow as Shopify)
       res.redirect(`${base}${LISTING_PUBLISHED_PATH}?${qs}`);
     } catch (e) {
-      const base = FRONTEND_URL.replace(/\/$/, '');
+      const base = frontendBaseUrl();
       let returnTo = '';
       try {
         const s = JSON.parse(req.query.state || '{}');
@@ -411,7 +421,7 @@ if (enabled.includes('etsy')) {
         const path = returnTo.startsWith('/') ? returnTo : `/${returnTo}`;
         res.redirect(`${base}${path}?${errQs}`);
       } else {
-        res.redirect(`${base}/dashboard?${errQs}`);
+        res.redirect(`${base}/dashboard/home?${errQs}`);
       }
     }
   });
@@ -424,9 +434,9 @@ if (enabled.includes('amazon')) {
     try {
       const region = req.query.region || 'uk';
       const result = await handleAmazonCallback(req.query.code, req.query.state, region);
-      res.redirect(`${FRONTEND_URL}/dashboard?amazon=connected&region=${encodeURIComponent(result.region || 'uk')}`);
+      res.redirect(`${frontendBaseUrl()}/dashboard/home?amazon=connected&region=${encodeURIComponent(result.region || 'uk')}`);
     } catch (e) {
-      res.redirect(`${FRONTEND_URL}/dashboard?error=amazon&message=${encodeURIComponent(e.message)}`);
+      res.redirect(`${frontendBaseUrl()}/dashboard/home?error=amazon&message=${encodeURIComponent(e.message)}`);
     }
   });
 }

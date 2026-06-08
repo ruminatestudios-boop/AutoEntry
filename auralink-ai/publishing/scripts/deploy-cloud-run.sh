@@ -17,3 +17,18 @@ gcloud run deploy "${SERVICE}" \
 
 echo "URL:"
 gcloud run services describe "${SERVICE}" --region "${REGION}" --project "${PROJECT_ID}" --format='value(status.url)'
+
+# Remove stale dev-bypass env (legacy typo key included a tab character).
+echo "Cleaning production env: removing SHOPIFY_DEV_TOKEN_APPLIES_IN_PRODUCTION…"
+gcloud run services update "${SERVICE}" \
+  --region "${REGION}" \
+  --project "${PROJECT_ID}" \
+  --remove-env-vars "SHOPIFY_DEV_TOKEN_APPLIES_IN_PRODUCTION,SHOPIFY_DEV_TOKEN_APPLIES_IN_PRODUCTION	" \
+  2>/dev/null || true
+
+echo "Ensuring DISABLE_DEV_SHOPIFY_CONNECT_BYPASS=1 and FRONTEND_URL…"
+gcloud run services update "${SERVICE}" \
+  --region "${REGION}" \
+  --project "${PROJECT_ID}" \
+  --update-env-vars "DISABLE_DEV_SHOPIFY_CONNECT_BYPASS=1,FRONTEND_URL=https://app.synclyst.app,NODE_ENV=production" \
+  --quiet

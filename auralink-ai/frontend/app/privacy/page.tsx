@@ -57,8 +57,9 @@ export default function PrivacyPage() {
                 accessed to improve app performance.
               </li>
               <li>
-                <strong>Payment:</strong> Billing is handled via Shopify&apos;s Billing API or a secure third-party
-                processor. We do not store your credit card details.
+                <strong>Payment:</strong> SyncLyst is free to install; publishing to Shopify requires a paid plan (Pro,
+                Growth, or Scale). Charges are billed through the <strong>Shopify Billing API</strong> on your connected
+                store (appears on your Shopify invoice). We do not store your credit card details.
               </li>
             </ul>
           </section>

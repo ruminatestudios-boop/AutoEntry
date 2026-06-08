@@ -7,11 +7,11 @@
     "deploy": "npm run deploy --prefix auto-entry",
     "dev:backend": "cd auralink-ai/backend && (.venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 || python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)",
     "dev:auralink": "cd auralink-ai/frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 NEXT_PUBLIC_PUBLISHING_API_URL=http://localhost:8001 PUBLISHING_JWT_SECRET=dev-secret-change-in-production JWT_SECRET=dev-secret-change-in-production npm run dev",
-    "dev:synclyst": "concurrently -n backend,frontend -c blue,green \"cd auralink-ai/backend && (.venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 || python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)\" \"cd auralink-ai/frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 NEXT_PUBLIC_PUBLISHING_API_URL=http://localhost:8001 PUBLISHING_JWT_SECRET=dev-secret-change-in-production JWT_SECRET=dev-secret-change-in-production npm run dev\"",
+    "dev:synclyst": "cd auralink-ai/frontend && node scripts/inject-api-url.js && cd ../.. && concurrently -n backend,frontend -c blue,green \"cd auralink-ai/backend && (.venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 || python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)\" \"cd auralink-ai/frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 NEXT_PUBLIC_PUBLISHING_API_URL=http://localhost:8001 PUBLISHING_JWT_SECRET=dev-secret-change-in-production JWT_SECRET=dev-secret-change-in-production npm run dev:no-open\"",
     "dev:publishing": "cd auralink-ai/publishing && npm start",
-    "dev:all": "concurrently -n backend,frontend,publishing -c blue,green,magenta \"cd auralink-ai/backend && (.venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 || python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)\" \"cd auralink-ai/frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 NEXT_PUBLIC_PUBLISHING_API_URL=http://localhost:8001 PUBLISHING_JWT_SECRET=dev-secret-change-in-production JWT_SECRET=dev-secret-change-in-production npm run dev\" \"cd auralink-ai/publishing && npm run dev:serve\"",
+    "dev:all": "cd auralink-ai/frontend && node scripts/inject-api-url.js && cd ../.. && concurrently -n backend,frontend,publishing -c blue,green,magenta \"cd auralink-ai/backend && (.venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 || python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)\" \"cd auralink-ai/frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 NEXT_PUBLIC_PUBLISHING_API_URL=http://localhost:8001 PUBLISHING_JWT_SECRET=dev-secret-change-in-production JWT_SECRET=dev-secret-change-in-production npm run dev:no-open\" \"cd auralink-ai/publishing && BILLING_SKIP=1 JWT_SECRET=dev-secret-change-in-production FRONTEND_URL=http://localhost:3000 npm run dev:serve\"",
     "dev:all:https": "concurrently -n backend,frontend,publishing -c blue,green,magenta \"cd auralink-ai/backend && (.venv/bin/python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 || python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)\" \"cd auralink-ai/frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 NEXT_PUBLIC_PUBLISHING_API_URL=http://localhost:8001 PUBLISHING_JWT_SECRET=dev-secret-change-in-production JWT_SECRET=dev-secret-change-in-production npm run dev:https:no-open\" \"cd auralink-ai/publishing && npm run dev:serve\"",
-    "dev:all:clean": "sh -c 'for port in 8000 8001 3000 3001; do for p in $(lsof -ti :$port 2>/dev/null); do kill -9 $p 2>/dev/null; done; done' && npm run dev:all",
+    "dev:all:clean": "sh -c 'for port in 8000 8001 3000 3001; do for p in $(lsof -ti :$port 2>/dev/null); do kill -9 $p 2>/dev/null; done; done' && rm -rf auralink-ai/frontend/.next && npm run dev:all",
     "extension:manifest": "node extension/build-manifest.mjs && node extension/verify-store-manifest.mjs",
     "extension:manifest:dev": "node extension/build-manifest.mjs --dev && node extension/verify-dev-manifest.mjs",
     "extension:package": "MANIFEST_MODE=prod bash scripts/build-extension.sh",
@@ -19,7 +19,13 @@
     "extension:qa": "node scripts/extension-tier2-qa.mjs prod",
     "extension:qa:dev": "node scripts/extension-tier2-qa.mjs dev",
     "local:synclyst:ready": "npm run extension:manifest:dev && node scripts/ready-local-synclyst.mjs",
-    "local:synclyst:stack": "npm run dev:synclyst"
+    "local:synclyst:stack": "npm run dev:synclyst",
+    "preflight:deploy": "node scripts/preflight-deploy.mjs frontend",
+    "preflight:shopify-api": "node scripts/preflight-deploy.mjs shopify-api",
+    "deploy:shopify-api": "npm run preflight:shopify-api && npm run deploy:cloud-run --prefix auralink-ai/publishing",
+    "deploy:frontend": "npm run preflight:deploy && npx vercel --prod",
+    "deploy:shopify-all": "npm run deploy:shopify-api && npm run deploy:vision-api && npm run deploy:frontend",
+    "deploy:vision-api": "cd auralink-ai/backend && gcloud run deploy auralink-api --source . --region us-central1 --allow-unauthenticated --project intrepid-axle-489519-u6"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

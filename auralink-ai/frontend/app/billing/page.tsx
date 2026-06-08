@@ -2,354 +2,762 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton, useUser, useAuth } from "@clerk/nextjs";
-import { Suspense, useState } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const PLANS: {
   id: "starter" | "pro" | "growth" | "scale";
   name: string;
   price: string;
   blurb: string;
-  cta: string;
   paid: boolean;
 }[] = [
   {
     id: "starter",
     name: "Starter",
-    price: "£0/mo",
-    blurb: "Try it free. No credit card needed.",
-    cta: "Start for Free",
+    price: "Install free",
+    blurb: "Limited scans only. Paid plan required to publish to Shopify.",
     paid: false,
   },
   {
     id: "pro",
     name: "Pro",
-    price: "£9/mo",
-    blurb: "For sellers just getting started on Shopify.",
-    cta: "Upgrade now",
+    price: "$9.99/mo",
+    blurb: "100 scans/month · publish to Shopify.",
     paid: true,
   },
   {
     id: "growth",
     name: "Growth",
-    price: "£29/mo",
-    blurb: "For active sellers listing regularly.",
-    cta: "Upgrade now",
+    price: "$29.99/mo",
+    blurb: "500 scans/month · for active sellers.",
     paid: true,
   },
   {
     id: "scale",
     name: "Scale",
-    price: "£79/mo",
-    blurb: "For high volume sellers and growing stores.",
-    cta: "Upgrade now",
+    price: "$79.99/mo",
+    blurb: "Unlimited scans (fair use) · high volume.",
     paid: true,
   },
 ];
 
-const CLERK_JWT_TEMPLATE = process.env.NEXT_PUBLIC_CLERK_JWT_TEMPLATE?.trim();
+type BillingStatus = {
+  tier?: string;
+  status?: string;
+  can_publish?: boolean;
+  shopify_connected?: boolean;
+  shopify_subscription_id?: string | null;
+  shop_domain?: string | null;
+  billing_provider?: string;
+};
+
+function shopifyAdminAppsUrl(shop?: string | null): string {
+  const domain = (shop || "").trim().toLowerCase();
+  if (!domain) return "https://admin.shopify.com/settings/apps";
+  const handle = domain.replace(/\.myshopify\.com$/i, "");
+  if (!handle) return "https://admin.shopify.com/settings/apps";
+  return `https://admin.shopify.com/store/${encodeURIComponent(handle)}/settings/apps`;
+}
+
+type BillingAuthIssue = "sign_in" | "jwt_misconfigured" | "service_error";
+
+type BillingStatusResult =
+  | { ok: true; status: BillingStatus }
+  | { ok: false; authIssue: BillingAuthIssue };
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function fetchBillingStatusOnce(): Promise<BillingStatusResult> {
+  const res = await fetch("/api/billing/status", {
+    cache: "no-store",
+    credentials: "same-origin",
+  });
+  if (res.status === 401) {
+    let reason = "";
+    try {
+      const body = (await res.json()) as { reason?: string; error?: string };
+      reason = body.reason || body.error || "";
+    } catch {
+      reason = "";
+    }
+    if (reason === "jwt_secret_misconfigured" || reason === "publishing_jwt_rejected") {
+      return { ok: false, authIssue: "jwt_misconfigured" };
+    }
+    return { ok: false, authIssue: "sign_in" };
+  }
+  if (!res.ok) return { ok: false, authIssue: "service_error" };
+  return { ok: true, status: (await res.json()) as BillingStatus };
+}
+
+/** Clerk client session often appears before server cookies are readable — retry like extension-return. */
+async function fetchBillingStatus(clientSignedIn: boolean): Promise<BillingStatusResult> {
+  const attempts = clientSignedIn ? 12 : 1;
+  let last: BillingStatusResult = { ok: false, authIssue: "sign_in" };
+  for (let i = 0; i < attempts; i++) {
+    if (i > 0) await wait(Math.min(350 + i * 200, 2200));
+    last = await fetchBillingStatusOnce();
+    if (last.ok) return last;
+    if (last.authIssue === "jwt_misconfigured" || last.authIssue === "service_error") {
+      return last;
+    }
+  }
+  return last;
+}
+
+function buildBillingPath(sp: URLSearchParams | null): string {
+  const q = sp?.toString();
+  return q ? `/billing?${q}` : "/billing";
+}
+
+function PlanCard({
+  name,
+  price,
+  blurb,
+  highlight,
+  selected,
+  children,
+}: {
+  name: string;
+  price: string;
+  blurb: string;
+  highlight?: boolean;
+  selected?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <article
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        padding: "16px",
+        borderRadius: "14px",
+        border: selected || highlight ? "2px solid #0a0a0a" : "1px solid #e5e5e5",
+        background: "#fff",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+      }}
+    >
+      {highlight ? (
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <span
+            style={{
+              fontSize: "10px",
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              background: "#0a0a0a",
+              color: "#fff",
+              padding: "4px 10px",
+              borderRadius: "6px",
+            }}
+          >
+            Most popular
+          </span>
+        </div>
+      ) : null}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+        <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0a0a0a" }}>{name}</h2>
+        <p style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0a0a0a", whiteSpace: "nowrap" }}>
+          {price}
+        </p>
+      </div>
+      <p style={{ margin: 0, fontSize: "13px", lineHeight: 1.5, color: "#525252" }}>{blurb}</p>
+      <div style={{ marginTop: "4px" }}>{children}</div>
+    </article>
+  );
+}
+
+function PrimaryBtn({
+  children,
+  onClick,
+  disabled,
+  variant = "primary",
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  variant?: "primary" | "current" | "muted";
+}) {
+  const styles: Record<string, React.CSSProperties> = {
+    primary: {
+      background: "#0a0a0a",
+      color: "#fff",
+      border: "1px solid #0a0a0a",
+    },
+    current: {
+      background: "#ecfdf5",
+      color: "#065f46",
+      border: "1px solid rgba(5,150,105,0.3)",
+    },
+    muted: {
+      background: "#f4f4f5",
+      color: "#525252",
+      border: "1px solid #e5e5e5",
+    },
+  };
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      style={{
+        width: "100%",
+        padding: "12px 16px",
+        borderRadius: "12px",
+        fontWeight: 600,
+        fontSize: "14px",
+        cursor: disabled ? "default" : "pointer",
+        opacity: disabled ? 0.6 : 1,
+        ...styles[variant],
+      }}
+    >
+      {children}
+    </button>
+  );
+}
 
 function BillingInner() {
   const sp = useSearchParams();
   const canceled = sp?.get("canceled") === "1";
+  const billingSuccess = sp?.get("shopify_billing") === "success";
+  const shopifyJustConnected = sp?.get("shopify") === "connected";
+  const returnTo = (sp?.get("return") || "").toLowerCase();
   const preselect = ((sp && sp.get("tier")) || "").toLowerCase();
+  const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
-  const { getToken } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [portalLoading, setPortalLoading] = useState(false);
+  const [status, setStatus] = useState<BillingStatus | null>(null);
+  const [shopifyConnected, setShopifyConnected] = useState<boolean | null>(null);
+  const [serverAuth, setServerAuth] = useState<"unknown" | "ok" | "required" | "jwt_error">("unknown");
+  const [statusLoading, setStatusLoading] = useState(true);
+  const errRef = useRef<HTMLDivElement | null>(null);
 
-  async function startCheckout(tier: "pro" | "growth" | "scale") {
+  const billingReturnPath = useMemo(() => buildBillingPath(sp), [sp]);
+  const signInHref = `/sign-in?redirect_url=${encodeURIComponent(billingReturnPath)}`;
+  const signUpHref = `/sign-up?redirect_url=${encodeURIComponent(billingReturnPath)}&after_sign_up_url=${encodeURIComponent(billingReturnPath)}`;
+
+  const backHref = returnTo === "review" ? "/review?publish=1" : "/list";
+  const backLabel = returnTo === "review" ? "Review" : "Scan";
+  const connectHref = useMemo(() => {
+    const billingQ = sp?.toString();
+    const back = billingQ ? `billing?${billingQ}` : "billing";
+    return `/connect-store?return=${encodeURIComponent(back)}`;
+  }, [sp]);
+
+  const needsShopifyConnect =
+    isLoaded && isSignedIn && serverAuth === "ok" && shopifyConnected === false;
+  const canSubscribe =
+    isLoaded && isSignedIn && serverAuth === "ok" && shopifyConnected === true;
+
+  const refreshBilling = useCallback(async () => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setServerAuth("required");
+      setStatus(null);
+      setShopifyConnected(null);
+      setStatusLoading(false);
+      return;
+    }
+    setStatusLoading(true);
+    const result = await fetchBillingStatus(true);
+    if (!result.ok) {
+      if (result.authIssue === "sign_in") {
+        setServerAuth("required");
+        setStatus(null);
+        setShopifyConnected(null);
+      } else if (result.authIssue === "jwt_misconfigured") {
+        setServerAuth("jwt_error");
+      } else {
+        setServerAuth("unknown");
+      }
+      setStatusLoading(false);
+      return;
+    }
+    setServerAuth("ok");
+    setStatus(result.status);
+    if (typeof result.status.shopify_connected === "boolean") {
+      setShopifyConnected(result.status.shopify_connected);
+    }
+    setStatusLoading(false);
+  }, [isLoaded, isSignedIn]);
+
+  useEffect(() => {
+    refreshBilling().catch(() => setStatusLoading(false));
+  }, [refreshBilling, billingSuccess, sp?.get("shopify")]);
+
+  useEffect(() => {
+    if (!billingSuccess || returnTo !== "review") return;
+    let cancelled = false;
+    (async () => {
+      const result = await fetchBillingStatus(true);
+      if (cancelled || !result.ok) return;
+      setStatus(result.status);
+      setServerAuth("ok");
+      if (typeof result.status.shopify_connected === "boolean") {
+        setShopifyConnected(result.status.shopify_connected);
+      }
+      if (result.status.can_publish) window.location.href = "/review?publish=1";
+    })().catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [billingSuccess, returnTo]);
+
+  function goToSignIn() {
+    window.location.href = signInHref;
+  }
+
+  function goToConnectShopify() {
+    window.location.href = connectHref;
+  }
+
+  function showError(message: string) {
+    setErr(message);
+    requestAnimationFrame(() => {
+      errRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }
+
+  async function startShopifySubscribe(tier: "pro" | "growth" | "scale") {
     setErr(null);
+    if (!isLoaded) return;
+    if (!isSignedIn || serverAuth === "required") {
+      goToSignIn();
+      return;
+    }
+    if (shopifyConnected === false) {
+      goToConnectShopify();
+      return;
+    }
+
     setLoading(tier);
     try {
-      const token = await (async () => { if (CLERK_JWT_TEMPLATE) { try { const t = await getToken({ template: CLERK_JWT_TEMPLATE }); if (t) return t; } catch {} } return getToken(); })();
-      if (!token) {
-        setErr("Could not get auth token. Please sign in again.");
-        setLoading(null);
-        return;
-      }
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const res = await fetch("/api/v1/billing/checkout-session", {
+      const origin = window.location.origin;
+      const returnQ = returnTo === "review" ? "&return=review" : "";
+      const res = await fetch("/api/billing/subscribe", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
           tier,
-          success_url: `${origin}/dashboard?billing=success&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${origin}/billing?tier=${encodeURIComponent(tier)}&canceled=1`,
+          return_url: `${origin}/billing?shopify_billing=success&tier=${encodeURIComponent(tier)}${returnQ}`,
         }),
       });
-      const data = (await res.json()) as { url?: string; error?: string; detail?: string; message?: string };
+
+      const text = await res.text();
+      let data: {
+        confirmationUrl?: string;
+        error?: string;
+        message?: string;
+        hint?: string;
+      } = {};
+      try {
+        data = text ? (JSON.parse(text) as typeof data) : {};
+      } catch {
+        showError(`Subscription failed (HTTP ${res.status}).`);
+        return;
+      }
+
+      if (res.status === 401) {
+        setServerAuth("required");
+        goToSignIn();
+        return;
+      }
+
       if (!res.ok) {
-        if (res.status === 503) {
-          setErr("Payments are not yet configured. Please try again later.");
-        } else if (res.status === 401 || res.status === 403) {
-          setErr("Please sign in to upgrade.");
-        } else if (res.status >= 500) {
-          setErr("Payment service error. Please try again in a moment.");
+        if (data.error === "shopify_not_connected") {
+          setShopifyConnected(false);
+          showError("Connect your Shopify store first, then return here to subscribe.");
         } else {
-          setErr(data.detail || data.message || data.error || "Checkout failed. Please try again.");
+          showError(data.message || data.hint || data.error || "Subscription failed.");
         }
-        setLoading(null);
         return;
       }
-      if (data.url) {
-        window.location.href = data.url;
+
+      if (data.confirmationUrl) {
+        window.location.assign(data.confirmationUrl);
         return;
       }
-      setErr("No checkout URL returned. Please try again.");
+
+      showError("Shopify did not return a confirmation URL.");
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Network error");
+      showError(e instanceof Error ? e.message : "Network error — could not reach billing API.");
     } finally {
       setLoading(null);
     }
   }
 
-  async function openPortal() {
-    setErr(null);
-    setPortalLoading(true);
-    try {
-      const res = await fetch("/api/billing/portal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const data = (await res.json()) as { url?: string; error?: string; message?: string; detail?: string };
-      if (!res.ok) {
-        if (res.status === 404 || data.error === "no_subscription") {
-          setErr("No active subscription found. Subscribe to a plan to manage billing.");
-        } else if (res.status === 401) {
-          setErr("Please sign in to manage billing.");
-        } else if (res.status >= 500) {
-          setErr("Billing service unavailable. Please try again in a moment.");
-        } else {
-          setErr(data.message || data.detail || data.error || "Could not open billing portal. Please try again.");
-        }
-        return;
-      }
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      setErr("No portal URL returned. Please contact support.");
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Network error");
-    } finally {
-      setPortalLoading(false);
-    }
-  }
+  const currentTier = (status?.tier || "starter").toLowerCase();
+
+  const shell: React.CSSProperties = {
+    minHeight: "100vh",
+    background: "#f5f5f5",
+    fontFamily: "Inter, system-ui, -apple-system, sans-serif",
+    color: "#0a0a0a",
+    WebkitFontSmoothing: "antialiased",
+  };
+
+  const card: React.CSSProperties = {
+    maxWidth: "28rem",
+    margin: "0 auto",
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    background: "#fff",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+  };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#fafafa", fontFamily: "Inter, system-ui, sans-serif" }}>
-      <header
-        style={{
-          padding: "1rem 1.5rem",
-          borderBottom: "1px solid #e5e7eb",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          background: "#fff",
-        }}
-      >
-        <Link href="/landing.html" style={{ fontWeight: 700, color: "#111", textDecoration: "none" }}>
-          SyncLyst<sup style={{ fontSize: "0.6em" }}>®</sup>
-        </Link>
-        <Link href="/dashboard" style={{ fontSize: "0.875rem", color: "#6b7280" }}>
-          ← Dashboard
-        </Link>
-      </header>
-
-      <main style={{ maxWidth: 960, margin: "0 auto", padding: "2rem 1rem 4rem" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111", marginBottom: "0.35rem" }}>Plans & billing</h1>
-        <p style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
-          Same credits model as our marketing site. Sign in to upgrade; Starter stays free.
-        </p>
-
-        {canceled && (
-          <p style={{ padding: "0.75rem 1rem", background: "#fef3c7", color: "#92400e", borderRadius: 10, marginBottom: "1rem", fontSize: "0.875rem" }}>
-            Checkout canceled — pick a plan when you&apos;re ready.
-          </p>
-        )}
-        {err && (
-          <p style={{ padding: "0.75rem 1rem", background: "#fef2f2", color: "#991b1b", borderRadius: 10, marginBottom: "1rem", fontSize: "0.875rem" }}>
-            {err}
-          </p>
-        )}
-
-        <SignedOut>
-          <div style={{ padding: "1.5rem", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, marginBottom: "1.5rem" }}>
-            <p style={{ margin: "0 0 1rem", color: "#374151" }}>Sign in to subscribe to a paid plan.</p>
-            <SignInButton mode="modal">
-              <button
-                type="button"
-                style={{
-                  padding: "0.65rem 1.25rem",
-                  background: "#111827",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 10,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Sign in
-              </button>
-            </SignInButton>
-          </div>
-        </SignedOut>
-
-        <SignedIn>
-          <p style={{ fontSize: "0.8125rem", color: "#6b7280", marginBottom: "1rem" }}>
-            Signed in as <strong style={{ color: "#111" }}>{user?.primaryEmailAddress?.emailAddress}</strong>
-          </p>
-          <div style={{ marginBottom: "1.25rem", display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-            <button
-              type="button"
-              onClick={openPortal}
-              disabled={portalLoading || loading !== null}
-              style={{
-                padding: "0.55rem 0.9rem",
-                borderRadius: 10,
-                fontWeight: 600,
-                fontSize: "0.8125rem",
-                border: "1px solid #e5e7eb",
-                background: "#fff",
-                color: "#111",
-                cursor: portalLoading ? "wait" : "pointer",
-              }}
-            >
-              {portalLoading ? "Opening billing…" : "Manage billing"}
-            </button>
-          </div>
-        </SignedIn>
-
-        <div
+    <div style={shell}>
+      <div style={card}>
+        <header
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "1rem",
+            gridTemplateColumns: "1fr auto 1fr",
+            alignItems: "center",
+            padding: "12px 16px",
+            borderBottom: "1px solid #e5e5e5",
+            paddingTop: "max(12px, env(safe-area-inset-top))",
           }}
         >
-          {PLANS.map((p) => {
-            const highlight = p.id === "growth";
-            const selected = preselect === p.id;
-            return (
+          <Link
+            href={backHref}
+            style={{
+              fontSize: "12px",
+              color: "#525252",
+              textDecoration: "none",
+              justifySelf: "start",
+            }}
+          >
+            ← {backLabel}
+          </Link>
+          <Link
+            href="/list"
+            style={{
+              fontSize: "14px",
+              fontWeight: 600,
+              color: "#0a0a0a",
+              textDecoration: "underline",
+              textUnderlineOffset: "3px",
+              justifySelf: "center",
+            }}
+          >
+            Synclyst<sup style={{ fontSize: "0.55em", fontWeight: 400 }}>®</sup>
+          </Link>
+          <span style={{ justifySelf: "end", width: "1px" }} />
+        </header>
+
+        <main style={{ flex: 1, padding: "24px 20px 32px", overflow: "auto" }}>
+          <h1
+            style={{
+              margin: "0 0 8px",
+              fontSize: "20px",
+              fontWeight: 700,
+              textAlign: "center",
+              letterSpacing: "-0.025em",
+            }}
+          >
+            Plans &amp; billing
+          </h1>
+          <p
+            style={{
+              margin: "0 0 20px",
+              fontSize: "14px",
+              lineHeight: 1.55,
+              color: "#525252",
+              textAlign: "center",
+            }}
+          >
+            Billed through <strong style={{ color: "#0a0a0a" }}>Shopify App Billing</strong> on your connected store.
+          </p>
+
+          {shopifyJustConnected ? (
+            <div
+              style={{
+                marginBottom: "16px",
+                padding: "12px 14px",
+                borderRadius: "12px",
+                border: "1px solid #059669",
+                background: "#ecfdf5",
+                color: "#065f46",
+                fontSize: "14px",
+              }}
+            >
+              Shopify connected — you can subscribe below.
+            </div>
+          ) : null}
+          {billingSuccess ? (
+            <div
+              style={{
+                marginBottom: "16px",
+                padding: "12px 14px",
+                borderRadius: "12px",
+                border: "1px solid #059669",
+                background: "#ecfdf5",
+                color: "#065f46",
+                fontSize: "14px",
+              }}
+            >
+              Subscription updated. Refresh if your plan hasn&apos;t changed yet.
+            </div>
+          ) : null}
+          {canceled ? (
+            <div
+              style={{
+                marginBottom: "16px",
+                padding: "12px 14px",
+                borderRadius: "12px",
+                border: "1px solid #fcd34d",
+                background: "#fffbeb",
+                color: "#92400e",
+                fontSize: "14px",
+              }}
+            >
+              Subscription canceled — pick a plan when you&apos;re ready.
+            </div>
+          ) : null}
+          {err ? (
+            <div
+              ref={errRef}
+              role="alert"
+              style={{
+                marginBottom: "16px",
+                padding: "12px 14px",
+                borderRadius: "12px",
+                border: "1px solid #fecaca",
+                background: "#fef2f2",
+                color: "#991b1b",
+                fontSize: "14px",
+                lineHeight: 1.45,
+              }}
+            >
+              {err}
+            </div>
+          ) : null}
+
+          <div style={{ marginBottom: "20px" }}>
+            {!isLoaded || statusLoading ? (
+              <p style={{ margin: 0, fontSize: "13px", color: "#71717a", textAlign: "center" }}>
+                Checking your account…
+              </p>
+            ) : !isSignedIn ? (
               <div
-                key={p.id}
                 style={{
-                  border: selected ? "2px solid #5d56e1" : highlight ? "2px solid #111" : "1px solid #e5e7eb",
-                  borderRadius: 14,
-                  padding: "1.25rem",
-                  background: "#fff",
-                  boxShadow: "0 1px 3px rgba(0,0,0,.06)",
-                  position: "relative",
-                  opacity: p.id === "starter" ? 0.95 : 1,
+                  padding: "16px",
+                  borderRadius: "14px",
+                  border: "1px solid #e5e5e5",
+                  background: "#fafafa",
                 }}
               >
-                {highlight && (
-                  <span
+                <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: 600, color: "#0a0a0a" }}>
+                  Sign in to subscribe
+                </p>
+                <p style={{ margin: "0 0 14px", fontSize: "13px", lineHeight: 1.5, color: "#525252" }}>
+                  Use the same email you use in Shopify Admin. You&apos;ll return here after sign-in.
+                </p>
+                <PrimaryBtn onClick={goToSignIn}>Continue to sign in</PrimaryBtn>
+                <p style={{ margin: "12px 0 0", fontSize: "12px", color: "#71717a", textAlign: "center" }}>
+                  New here?{" "}
+                  <Link href={signUpHref} style={{ color: "#0a0a0a", fontWeight: 600 }}>
+                    Create account
+                  </Link>
+                </p>
+              </div>
+            ) : serverAuth === "jwt_error" ? (
+              <div
+                style={{
+                  padding: "16px",
+                  borderRadius: "14px",
+                  border: "1px solid #fecaca",
+                  background: "#fef2f2",
+                }}
+              >
+                <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: 600, color: "#991b1b" }}>
+                  Billing connection issue
+                </p>
+                <p style={{ margin: "0 0 14px", fontSize: "13px", lineHeight: 1.5, color: "#7f1d1d" }}>
+                  You&apos;re signed in, but the app can&apos;t reach billing yet. Refresh in a minute — if this
+                  persists, contact support.
+                </p>
+                <PrimaryBtn onClick={() => window.location.reload()}>Refresh</PrimaryBtn>
+              </div>
+            ) : serverAuth === "required" ? (
+              <div
+                style={{
+                  padding: "16px",
+                  borderRadius: "14px",
+                  border: "1px solid #fcd34d",
+                  background: "#fffbeb",
+                }}
+              >
+                <p style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: 600, color: "#92400e" }}>
+                  Session expired
+                </p>
+                <p style={{ margin: "0 0 14px", fontSize: "13px", lineHeight: 1.5, color: "#78350f" }}>
+                  {user?.primaryEmailAddress?.emailAddress
+                    ? `Sign in again as ${user.primaryEmailAddress.emailAddress} to continue.`
+                    : "Sign in again to subscribe — you'll return to this page."}
+                </p>
+                <PrimaryBtn onClick={goToSignIn}>Sign in again</PrimaryBtn>
+              </div>
+            ) : (
+              <>
+                <p style={{ margin: "0 0 8px", fontSize: "12px", color: "#525252", textAlign: "center" }}>
+                  Signed in as{" "}
+                  <strong style={{ color: "#0a0a0a" }}>
+                    {user?.primaryEmailAddress?.emailAddress || "your account"}
+                  </strong>
+                </p>
+                {status ? (
+                  <p style={{ margin: "0 0 16px", fontSize: "12px", color: "#525252", textAlign: "center" }}>
+                    Plan: <strong style={{ color: "#0a0a0a", textTransform: "capitalize" }}>{currentTier}</strong>
+                    {status.can_publish ? " · publish enabled" : " · upgrade to publish"}
+                  </p>
+                ) : null}
+                {shopifyConnected === false ? (
+                  <div
                     style={{
-                      position: "absolute",
-                      top: -10,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      fontSize: "0.65rem",
-                      fontWeight: 700,
-                      letterSpacing: "0.06em",
-                      background: "#111",
-                      color: "#fff",
-                      padding: "0.2rem 0.5rem",
-                      borderRadius: 6,
+                      padding: "12px 14px",
+                      borderRadius: "12px",
+                      border: "1px solid rgba(149,191,71,0.4)",
+                      background: "#f4faf0",
+                      fontSize: "14px",
                     }}
                   >
-                    MOST POPULAR
-                  </span>
-                )}
-                <h2 style={{ fontSize: "1.125rem", fontWeight: 700, margin: "0 0 0.25rem", color: "#111" }}>{p.name}</h2>
-                <p style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 0.35rem", color: "#111" }}>{p.price}</p>
-                <p style={{ fontSize: "0.8125rem", color: "#6b7280", margin: "0 0 1rem", minHeight: 40 }}>{p.blurb}</p>
+                    <Link href={connectHref} style={{ fontWeight: 600, color: "#0a0a0a" }}>
+                      Connect Shopify
+                    </Link>{" "}
+                    before subscribing — billing runs on your store.
+                  </div>
+                ) : null}
+              </>
+            )}
+          </div>
 
-                {p.paid ? (
-                  <SignedIn>
-                    <button
-                      type="button"
-                      disabled={loading !== null}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {PLANS.map((p) => {
+              const highlight = p.id === "growth";
+              const selected = preselect === p.id;
+              const isCurrent = currentTier === p.id && p.id !== "starter";
+              const isStarterCurrent = p.id === "starter" && currentTier === "starter";
+
+              return (
+                <PlanCard
+                  key={p.id}
+                  name={p.name}
+                  price={p.price}
+                  blurb={p.blurb}
+                  highlight={highlight}
+                  selected={selected}
+                >
+                  {p.paid ? (
+                    <PrimaryBtn
+                      disabled={!isLoaded || loading !== null || isCurrent}
+                      variant={
+                        isCurrent ? "current" : canSubscribe || needsShopifyConnect ? "primary" : "muted"
+                      }
                       onClick={() => {
-                        if (p.id === "pro" || p.id === "growth" || p.id === "scale") startCheckout(p.id);
-                      }}
-                      style={{
-                        width: "100%",
-                        padding: "0.65rem",
-                        borderRadius: 10,
-                        fontWeight: 600,
-                        fontSize: "0.875rem",
-                        border: highlight ? "none" : "1px solid #e5e7eb",
-                        background: highlight ? "#111" : "#fff",
-                        color: highlight ? "#fff" : "#111",
-                        cursor: loading ? "wait" : "pointer",
+                        if (isCurrent) return;
+                        if (!isLoaded || statusLoading) return;
+                        if (!isSignedIn || serverAuth === "required") {
+                          goToSignIn();
+                          return;
+                        }
+                        if (shopifyConnected === false) {
+                          goToConnectShopify();
+                          return;
+                        }
+                        if (p.id === "pro" || p.id === "growth" || p.id === "scale") {
+                          startShopifySubscribe(p.id);
+                        }
                       }}
                     >
-                      {loading === p.id ? "Redirecting…" : p.cta}
-                    </button>
-                  </SignedIn>
-                ) : (
-                  <Link
-                    href="/sign-up?redirect_url=/dashboard/home"
-                    style={{
-                      display: "block",
-                      textAlign: "center",
-                      width: "100%",
-                      padding: "0.65rem",
-                      borderRadius: 10,
-                      fontWeight: 600,
-                      fontSize: "0.875rem",
-                      border: "1px solid #e5e7eb",
-                      background: "#fff",
-                      color: "#111",
-                      textDecoration: "none",
-                    }}
-                  >
-                    {p.cta}
-                  </Link>
-                )}
-                {p.paid && (
-                  <SignedOut>
-                    <SignInButton mode="modal">
-                      <button
-                        type="button"
-                        style={{
-                          width: "100%",
-                          padding: "0.65rem",
-                          borderRadius: 10,
-                          fontWeight: 600,
-                          fontSize: "0.875rem",
-                          border: "1px solid #e5e7eb",
-                          background: "#f9fafb",
-                          color: "#6b7280",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Sign in to upgrade
-                      </button>
-                    </SignInButton>
-                  </SignedOut>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                      {isCurrent
+                        ? "Current plan"
+                        : loading === p.id
+                          ? "Opening Shopify…"
+                          : !isLoaded || statusLoading
+                            ? "Loading…"
+                            : canSubscribe
+                              ? "Subscribe via Shopify"
+                              : needsShopifyConnect
+                                ? "Connect Shopify"
+                                : "Sign in to subscribe"}
+                    </PrimaryBtn>
+                  ) : (
+                    <PrimaryBtn variant={isStarterCurrent ? "muted" : "muted"} disabled>
+                      {isStarterCurrent ? "Your plan" : "Install free"}
+                    </PrimaryBtn>
+                  )}
+                </PlanCard>
+              );
+            })}
+          </div>
 
-        <p style={{ marginTop: "2rem", fontSize: "0.75rem", color: "#9ca3af", textAlign: "center" }}>
-          Scans / month: Starter 3 · Pro 100 · Growth 500 · Scale unlimited (fair use). Payments processed by Stripe.
-        </p>
-      </main>
+          {isSignedIn && shopifyConnected !== false && status?.shop_domain ? (
+            <p
+              style={{
+                marginTop: "20px",
+                fontSize: "13px",
+                lineHeight: 1.55,
+                color: "#525252",
+                textAlign: "center",
+              }}
+            >
+              Change or cancel your plan anytime in{" "}
+              <a
+                href={shopifyAdminAppsUrl(status.shop_domain)}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#0a0a0a", fontWeight: 600 }}
+              >
+                Shopify Admin → Settings → Apps
+              </a>
+              . Upgrades apply immediately; downgrades follow Shopify&apos;s billing cycle.
+            </p>
+          ) : null}
+          <p
+            style={{
+              marginTop: "16px",
+              fontSize: "11px",
+              lineHeight: 1.5,
+              color: "#a1a1aa",
+              textAlign: "center",
+            }}
+          >
+            Pro 100 scans/mo · Growth 500/mo · Scale unlimited (fair use). Charges on your Shopify invoice.
+          </p>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function BillingLoading() {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f5f5f5",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "14px",
+        color: "#525252",
+      }}
+    >
+      Loading…
     </div>
   );
 }
 
 export default function BillingPage() {
   return (
-    <Suspense fallback={<div style={{ padding: "2rem", fontFamily: "system-ui" }}>Loading…</div>}>
+    <Suspense fallback={<BillingLoading />}>
       <BillingInner />
     </Suspense>
   );

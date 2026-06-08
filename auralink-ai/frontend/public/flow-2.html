@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="view-transition" content="same-origin" />
-  <meta name="auralink-api-url" content="https://auralink-api-299567386855.us-central1.run.app" />
-  <meta name="synclyst-backend-url" content="https://auralink-api-299567386855.us-central1.run.app" />
+  <meta name="auralink-api-url" content="http://localhost:8000" />
+  <meta name="synclyst-backend-url" content="http://localhost:8000" />
   <meta name="synclyst-chrome-extension-url" content="https://chromewebstore.google.com/detail/SyncLyst:%20Listing%20autopilot%20for%20resellers/copjkijolfpmhjgiggafngmdeibnmfnm" />
-  <meta name="synclyst-publishing-url" content="https://synclyst-publishing-299567386855.us-central1.run.app" />
+  <meta name="synclyst-publishing-url" content="http://localhost:8001" />
   <title>Processing | Listing Flow | SyncLyst</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -86,10 +86,12 @@
 <body class="min-h-screen bg-[#f5f5f5] font-sans text-[#0a0a0a] antialiased">
   <div id="synclyst-flow-shell" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-sm">
     <!-- Header: logo swaps based on flow (reseller → SyncIQ®, listing → Synclyst®) -->
-    <header class="shrink-0 border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 h-14 flex items-center justify-center">
-      <a id="proc-brand-link" href="/list" class="text-sm font-semibold tracking-tight text-[#0a0a0a] underline underline-offset-[3px] decoration-zinc-700 hover:decoration-[#0a0a0a] hover:text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a0a0a]/20 focus-visible:rounded-sm ri-icon-btn py-2" title="SyncIQ® — scanning" aria-label="SyncIQ">
+    <header class="shrink-0 w-full box-border border-b border-[#e5e5e5] bg-white/95 backdrop-blur-sm px-4 grid grid-cols-3 items-center min-h-14 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+      <div></div>
+      <a id="proc-brand-link" href="/list" class="text-sm font-semibold tracking-tight text-[#0a0a0a] underline underline-offset-[3px] decoration-zinc-700 hover:decoration-[#0a0a0a] hover:text-black justify-self-center py-2 leading-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a0a0a]/20 focus-visible:rounded-sm" title="SyncIQ® — scanning" aria-label="SyncIQ">
         <span id="proc-brand-text">SyncIQ<sup class="text-[0.55em] font-normal opacity-90 relative -top-[0.15em]">®</sup></span>
       </a>
+      <div></div>
     </header>
     <p id="dev-api-hint" class="hidden shrink-0 px-4 py-1.5 text-center text-[11px] text-zinc-500 bg-zinc-50 border-b border-zinc-100" aria-live="polite"></p>
     <main class="flex-1 px-5 pt-6 pb-6 overflow-auto">
@@ -278,7 +280,8 @@
       }
       function redirectToFlow3() {
         try { sessionStorage.removeItem(PENDING_SCAN_KEY); } catch (e) {}
-        var next = '/review';
+        try { sessionStorage.setItem('synclyst_shopify_app', '1'); } catch (e) {}
+        var next = '/review?publish=1';
         if (typeof window.synclystPageNavigate === 'function') window.synclystPageNavigate(next);
         else window.location.href = next;
       }
@@ -455,10 +458,23 @@
         var raw = sessionStorage.getItem(PENDING_SCAN_KEY);
         if (raw) pending = JSON.parse(raw);
       } catch (e) {}
+      function isDemoDraftPayload(raw) {
+        try {
+          var d = typeof raw === 'string' ? JSON.parse(raw) : raw;
+          var copy = (d && d.extraction && d.extraction.extraction_copy) ? d.extraction.extraction_copy : {};
+          var title = String(copy.seo_title || '');
+          var desc = String(copy.description || '');
+          return title.indexOf('Demo Product') !== -1 || desc.indexOf('Demo mode:') !== -1;
+        } catch (e) { return false; }
+      }
       var draftOnly = false;
       if (!pending || !pending.base64) {
         try {
           var draftRaw = sessionStorage.getItem(DRAFT_LISTING_KEY);
+          if (draftRaw && isDemoDraftPayload(draftRaw)) {
+            sessionStorage.removeItem(DRAFT_LISTING_KEY);
+            draftRaw = null;
+          }
           if (draftRaw && JSON.parse(draftRaw).extraction) draftOnly = true;
         } catch (e) {}
         if (!draftOnly) {
@@ -474,6 +490,9 @@
       var host = window.location.hostname;
       var prodBackend = document.querySelector('meta[name="synclyst-backend-url"]');
       var fallbackApiUrl = (prodBackend && prodBackend.getAttribute('content')) ? prodBackend.getAttribute('content').trim().replace(/\/$/, '') : '';
+      if (fallbackApiUrl && /localhost|127\.0\.0\.1/i.test(fallbackApiUrl) && host !== 'localhost' && host !== '127.0.0.1') {
+        fallbackApiUrl = (metaApi && !/localhost|127\.0\.0\.1/i.test(metaApi)) ? metaApi : '';
+      }
       // Hosts without a working same-origin /api/v1 proxy — call Cloud Run directly (CORS allowed).
       // app.synclyst.app: Clerk can block /api/v1/vision/* until middleware is deployed; Cloud Run is reliable.
       // scan.synclyst.app is a separate Vercel project with no API proxy.
@@ -482,7 +501,10 @@
       // Same-origin /api/v1/vision/* (Next route → backend): works on Vercel, avoids CORS.
       // On known no-proxy hosts, skip straight to Cloud Run (fallbackApiUrl).
       var apiUrl = '';
-      if (skipProxy && fallbackApiUrl) {
+      if (host === 'localhost' || host === '127.0.0.1') {
+        // Local dev: call FastAPI directly on :8000 (CORS allowed in backend/.env).
+        apiUrl = metaApi || 'http://localhost:8000';
+      } else if (skipProxy && fallbackApiUrl) {
         apiUrl = fallbackApiUrl;
       } else {
         try {
@@ -492,8 +514,21 @@
         if (!apiUrl) apiUrl = metaApi || 'http://localhost:8000';
       }
 
-      // If you're on localhost but want Cloud Run, we can auto-fallback on network failure.
-      var triedFallback = false;
+      // Local dev fallback chain when :8000 is down: same-origin Next proxy → Cloud Run.
+      var fallbackStep = 0;
+      function nextFallbackApiUrl() {
+        var originTry = '';
+        try { originTry = String(window.location.origin || '').replace(/\/$/, ''); } catch (eO) {}
+        if (fallbackStep === 0 && (host === 'localhost' || host === '127.0.0.1') && originTry && apiUrl.indexOf('localhost:8000') !== -1) {
+          fallbackStep = 1;
+          return originTry;
+        }
+        if (fallbackStep <= 1 && fallbackApiUrl && apiUrl !== fallbackApiUrl) {
+          fallbackStep = 2;
+          return fallbackApiUrl;
+        }
+        return '';
+      }
 
       // ---- Flow-aware labels ----
       var pendingFlow = 'listing';
@@ -595,10 +630,10 @@
       var start = Date.now();
       /** Reseller-scan runs vision + eBay comps; listing extract is faster (~30s).
        *  Use a generous timeout so slow backends don't silently kill the scan. */
-      var EXTRACTION_TIMEOUT_MS = isResellerFlow ? 75000 : 55000;
+      var EXTRACTION_TIMEOUT_MS = isResellerFlow ? 120000 : 180000;
       var DRAFT_INTRO_MS = 4000;
       /** Linear progress: bar fills at a steady pace over this window, then holds at PENDING_CAP. */
-      var EXPECTED_DURATION_MS = isResellerFlow ? 38000 : 22000;
+      var EXPECTED_DURATION_MS = isResellerFlow ? 38000 : 90000;
       /** Cap well below 90 so it's obvious we're still working — not "almost done but frozen". */
       var PENDING_CAP = 82;
       /** When extraction returns: smooth glide from current % to 100 (no snap). */
@@ -733,7 +768,7 @@
           body: JSON.stringify({
             image_base64: pending.base64,
             mime_type: (pending && pending.mime_type) ? String(pending.mime_type) : 'image/jpeg',
-            include_ocr: true,
+            include_ocr: false,
             skip_web_enrichment: true
           })
         })
@@ -788,18 +823,30 @@
         var proxyMiss = raw.indexOf('404') !== -1 || raw.indexOf('Server error (404)') !== -1 || raw.indexOf('NOT_FOUND') !== -1;
         var authBlock = raw.indexOf('PROXY_AUTH_BLOCK') !== -1 || rawLower.indexOf('did not match the expected pattern') !== -1;
 
-        var originTry = '';
-        try { originTry = String(window.location.origin || '').replace(/\/$/, ''); } catch (eOg) {}
-        var usingDirect8000 = apiUrl.indexOf('localhost:8000') !== -1;
-        var usingNextProxy = originTry && apiUrl === originTry;
-        if (!triedFallback && fallbackApiUrl && canUseDirectBackendFallback() && (usingDirect8000 || usingNextProxy || proxyMiss || authBlock)) {
-          triedFallback = true;
-          apiUrl = fallbackApiUrl;
+        var networkFail = err && (err.name === 'TypeError' || raw === 'Failed to fetch' || raw === 'fetch failed' || rawLower.indexOf('networkerror') !== -1);
+        var fb = '';
+        if (canUseDirectBackendFallback() && (networkFail || proxyMiss || authBlock)) {
+          fb = nextFallbackApiUrl();
+        }
+        if (fb) {
+          apiUrl = fb;
           setWaiting(true);
           return runExtract().catch(function(err2) {
             if (extractionDone) return;
             setWaiting(false);
-            showError(humanizeExtractError(err2, (err2 && err2.message) ? String(err2.message) : ''));
+            var raw2 = (err2 && err2.message) ? String(err2.message) : '';
+            var fb2 = '';
+            if (canUseDirectBackendFallback()) fb2 = nextFallbackApiUrl();
+            if (fb2) {
+              apiUrl = fb2;
+              setWaiting(true);
+              return runExtract().catch(function(err3) {
+                if (extractionDone) return;
+                setWaiting(false);
+                showError(humanizeExtractError(err3, (err3 && err3.message) ? String(err3.message) : ''));
+              });
+            }
+            showError(humanizeExtractError(err2, raw2));
           });
         }
 

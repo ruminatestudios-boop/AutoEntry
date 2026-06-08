@@ -44,19 +44,8 @@ sandbox_router = APIRouter()
 
 # ─── Plan configuration ───────────────────────────────────────────────────────
 
-PLAN_MONTHLY_LIMITS: dict[str, Optional[int]] = {
-    "free": 100,
-    "starter": 1_000,
-    "pro": 10_000,
-    "enterprise": None,   # unlimited
-}
-
-PLAN_MINUTE_LIMITS: dict[str, int] = {
-    "free": 10,
-    "starter": 30,
-    "pro": 100,
-    "enterprise": 500,
-}
+from app.developer_metering import developer_metered_billing, report_meter_event
+from app.developer_plans import FREE_MONTHLY_CALLS, PLAN_MINUTE_LIMITS, PLAN_MONTHLY_LIMITS
 
 ENDPOINT_COSTS_USD: dict[str, float] = {
     "extract": 0.05,
@@ -122,14 +111,28 @@ def _lookup_key_sync(raw_key: str) -> dict:
     if not supabase:
         raise _err(503, "SERVER_ERROR", "Service temporarily unavailable. Try again in a few seconds.")
     h = _hash_key(raw_key)
+    select_full = (
+        "id, developer_id, plan, status, calls_used_this_month, overage_calls_this_month, "
+        "month_key, metered_billing_enabled, stripe_customer_id"
+    )
+    select_base = "id, developer_id, plan, status, calls_used_this_month, month_key"
     try:
-        r = (
-            supabase.table(_DEV_KEY_TABLE)
-            .select("id, developer_id, plan, status, calls_used_this_month, month_key")
-            .eq("key_hash", h)
-            .limit(1)
-            .execute()
-        )
+        try:
+            r = (
+                supabase.table(_DEV_KEY_TABLE)
+                .select(select_full)
+                .eq("key_hash", h)
+                .limit(1)
+                .execute()
+            )
+        except Exception:
+            r = (
+                supabase.table(_DEV_KEY_TABLE)
+                .select(select_base)
+                .eq("key_hash", h)
+                .limit(1)
+                .execute()
+            )
         if not r.data:
             raise _err(401, "INVALID_API_KEY", "API key not found or revoked")
         return r.data[0]
@@ -144,7 +147,11 @@ def _reset_monthly_count_sync(key_id: str, month_key: str) -> None:
         supabase = get_supabase()
         if supabase:
             supabase.table(_DEV_KEY_TABLE).update(
-                {"calls_used_this_month": 0, "month_key": month_key}
+                {
+                    "calls_used_this_month": 0,
+                    "overage_calls_this_month": 0,
+                    "month_key": month_key,
+                }
             ).eq("id", key_id).execute()
     except Exception:
         pass
@@ -214,16 +221,40 @@ async def _authenticate(request: Request) -> tuple[dict, bool]:
         row["month_key"] = current_month
 
     monthly_limit = PLAN_MONTHLY_LIMITS.get(plan)
-    if monthly_limit is not None and calls_used >= monthly_limit:
-        raise PublicAPIError(
-            429,
-            "QUOTA_EXCEEDED",
-            f"Monthly call limit of {monthly_limit:,} reached. Upgrade your plan to continue.",
-            extra={
-                "upgrade_url": "https://synclyst.app/pricing",
-                "docs": "https://synclyst.app/developers/pricing",
-            },
-        )
+    at_or_over_limit = monthly_limit is not None and calls_used >= monthly_limit
+
+    if at_or_over_limit:
+        if plan == "free":
+            supabase = get_supabase()
+            developer_id = (row.get("developer_id") or "").strip()
+            metered_enabled, stripe_customer_id = developer_metered_billing(supabase, developer_id)
+            if metered_enabled and stripe_customer_id:
+                row["_is_overage"] = True
+                row["_stripe_customer_id"] = stripe_customer_id
+            else:
+                raise PublicAPIError(
+                    429,
+                    "QUOTA_EXCEEDED",
+                    f"Free tier includes {FREE_MONTHLY_CALLS:,} calls/month. "
+                    "Enable pay-as-you-go billing on your dashboard to continue, "
+                    "or upgrade to a higher plan.",
+                    extra={
+                        "free_calls_included": FREE_MONTHLY_CALLS,
+                        "enable_metered_url": "https://app.synclyst.app/developers/dashboard",
+                        "upgrade_url": "https://app.synclyst.app/developers/dashboard",
+                        "docs": "https://app.synclyst.app/developers",
+                    },
+                )
+        else:
+            raise PublicAPIError(
+                429,
+                "QUOTA_EXCEEDED",
+                f"Monthly call limit of {monthly_limit:,} reached. Upgrade your plan to continue.",
+                extra={
+                    "upgrade_url": "https://app.synclyst.app/developers/dashboard",
+                    "docs": "https://app.synclyst.app/developers",
+                },
+            )
 
     # Per-minute rate limit (sliding window)
     minute_limit = PLAN_MINUTE_LIMITS.get(plan, 10)
@@ -254,6 +285,9 @@ def _log_usage_sync(
     response_time_ms: int,
     success: bool,
     error_code: Optional[str] = None,
+    *,
+    is_overage: bool = False,
+    stripe_customer_id: Optional[str] = None,
 ) -> None:
     """Log one API call and increment monthly counter. Non-blocking."""
     try:
@@ -276,7 +310,7 @@ def _log_usage_sync(
             try:
                 r = (
                     supabase.table(_DEV_KEY_TABLE)
-                    .select("calls_used_this_month")
+                    .select("calls_used_this_month, overage_calls_this_month")
                     .eq("id", key_id)
                     .limit(1)
                     .execute()
@@ -284,12 +318,18 @@ def _log_usage_sync(
                 cur = int(
                     (r.data[0].get("calls_used_this_month") or 0) if r.data else 0
                 )
-                supabase.table(_DEV_KEY_TABLE).update(
-                    {
-                        "calls_used_this_month": cur + 1,
-                        "last_used_at": datetime.now(timezone.utc).isoformat(),
-                    }
-                ).eq("id", key_id).execute()
+                overage_cur = int(
+                    (r.data[0].get("overage_calls_this_month") or 0) if r.data else 0
+                )
+                update_row: dict = {
+                    "calls_used_this_month": cur + 1,
+                    "last_used_at": datetime.now(timezone.utc).isoformat(),
+                }
+                if is_overage:
+                    update_row["overage_calls_this_month"] = overage_cur + 1
+                supabase.table(_DEV_KEY_TABLE).update(update_row).eq("id", key_id).execute()
+                if is_overage and stripe_customer_id:
+                    report_meter_event(stripe_customer_id, endpoint)
             except Exception:
                 pass
     except Exception as exc:
@@ -298,14 +338,23 @@ def _log_usage_sync(
 
 def _log(
     bg: BackgroundTasks,
-    key_id: str,
+    key_row: dict,
     endpoint: str,
     start: float,
     success: bool,
     error_code: Optional[str] = None,
 ) -> None:
     ms = int((time.monotonic() - start) * 1000)
-    bg.add_task(_log_usage_sync, key_id, endpoint, ms, success, error_code)
+    bg.add_task(
+        _log_usage_sync,
+        str(key_row["id"]),
+        endpoint,
+        ms,
+        success,
+        error_code,
+        is_overage=bool(key_row.get("_is_overage")),
+        stripe_customer_id=key_row.get("_stripe_customer_id"),
+    )
 
 
 def _usage_summary(row: dict) -> dict:
@@ -661,10 +710,10 @@ async def extract_product(
     try:
         extraction = await _run_vision(clean_b64, mime, timeout=60.0)
     except PublicAPIError as exc:
-        _log(background_tasks, key_row["id"], "extract", t0, False, exc.code)
+        _log(background_tasks, key_row, "extract", t0, False, exc.code)
         raise
 
-    _log(background_tasks, key_row["id"], "extract", t0, True)
+    _log(background_tasks, key_row, "extract", t0, True)
     return {"success": True, "data": _apply_format(extraction, fmt), "usage": _usage_summary(key_row)}
 
 
@@ -777,7 +826,7 @@ async def market_value(
         logger.info("eBay market lookup unavailable, using heuristic fallback: %s", exc)
         data = _infer_market_value(category, brand, condition)
 
-    _log(background_tasks, key_row["id"], "market_value", t0, True)
+    _log(background_tasks, key_row, "market_value", t0, True)
     return {"success": True, "data": data, "usage": _usage_summary(key_row)}
 
 
@@ -844,7 +893,7 @@ async def classify_product(
     try:
         extraction = await _run_vision(clean_b64, mime, timeout=30.0)
     except PublicAPIError as exc:
-        _log(background_tasks, key_row["id"], "classify", t0, False, exc.code)
+        _log(background_tasks, key_row, "classify", t0, False, exc.code)
         raise
 
     tags = extraction.get("tags") or {}
@@ -859,7 +908,7 @@ async def classify_product(
     elif att.get("product_type") and att["product_type"] != category:
         subcategory = att["product_type"]
 
-    _log(background_tasks, key_row["id"], "classify", t0, True)
+    _log(background_tasks, key_row, "classify", t0, True)
     return {
         "success": True,
         "data": {
@@ -903,7 +952,7 @@ async def get_value(
     try:
         extraction = await _run_vision(clean_b64, mime, timeout=30.0)
     except PublicAPIError as exc:
-        _log(background_tasks, key_row["id"], "value", t0, False, exc.code)
+        _log(background_tasks, key_row, "value", t0, False, exc.code)
         raise
 
     att = extraction.get("attributes") or {}
@@ -929,7 +978,7 @@ async def get_value(
 
     confidence = "High" if conf_score >= 0.85 else ("Medium" if conf_score >= 0.6 else "Low")
 
-    _log(background_tasks, key_row["id"], "value", t0, True)
+    _log(background_tasks, key_row, "value", t0, True)
     return {
         "success": True,
         "data": {

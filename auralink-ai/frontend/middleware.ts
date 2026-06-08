@@ -24,6 +24,15 @@ const clerk = clerkMiddleware();
 
 export default function middleware(request: NextRequest, event: NextFetchEvent) {
   const p = request.nextUrl.pathname;
+  const host = (request.headers.get("host") || "").toLowerCase().split(":")[0];
+
+  // Apex/www may point at a legacy static deploy; canonical app host is app.synclyst.app
+  if (host === "synclyst.app" || host === "www.synclyst.app") {
+    const canonical = new URL(request.url);
+    canonical.protocol = "https:";
+    canonical.host = "app.synclyst.app";
+    return NextResponse.redirect(canonical, 308);
+  }
 
   // Serve marketing landing page at root without a URL change.
   // beforeFiles rewrites can't override the App Router root, so we do it here.

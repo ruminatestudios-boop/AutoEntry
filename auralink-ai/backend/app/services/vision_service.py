@@ -511,6 +511,22 @@ def _extract_balanced_json_objects(s: str) -> list:
     return res
 
 
+def _repair_json_candidate(s: str) -> str:
+    """Best-effort fixes for common model JSON mistakes (trailing commas, smart quotes)."""
+    t = (s or "").strip()
+    if not t:
+        return t
+    t = (
+        t.replace("\u201c", '"')
+        .replace("\u201d", '"')
+        .replace("\u2018", "'")
+        .replace("\u2019", "'")
+    )
+    t = re.sub(r",\s*}", "}", t)
+    t = re.sub(r",\s*]", "]", t)
+    return t
+
+
 def _json_string_candidates(text: str) -> list:
     """
     All strings worth trying with json.loads (longest / most likely object first).
@@ -542,7 +558,13 @@ def _json_string_candidates(text: str) -> list:
 
 def _json_loads_salvage(text: str) -> dict:
     last_err = None
+    candidates = []
     for candidate in _json_string_candidates(text):
+        candidates.append(candidate)
+        repaired = _repair_json_candidate(candidate)
+        if repaired != candidate:
+            candidates.append(repaired)
+    for candidate in candidates:
         try:
             data = json.loads(candidate)
             if isinstance(data, dict):
@@ -551,7 +573,7 @@ def _json_loads_salvage(text: str) -> dict:
             last_err = e
             continue
     if last_err:
-        logger.debug("JSON salvage failed: %s", last_err)
+        logger.warning("JSON salvage failed after %d candidates: %s", len(candidates), last_err)
     raise VisionServiceError("Vision model returned invalid JSON")
 
 
@@ -944,6 +966,7 @@ def _gemini_extract_sync(
             pass  # older SDK version — no ThinkingConfig, just use faster model
 
     last_err = None
+    parse_err = None
     for model_name in model_list:
         for use_structured in (True, False):
             try:
@@ -971,6 +994,14 @@ def _gemini_extract_sync(
                     raise VisionServiceError("Vision model returned empty output")
                 return _parse_extraction_response(text)
             except VisionServiceError as e:
+                last_err = e
+                err_lower = str(e).lower()
+                parse_like = (
+                    "invalid json" in err_lower
+                    or "non-json" in err_lower
+                    or "invalid extraction" in err_lower
+                    or "empty output" in err_lower
+                )
                 if use_structured:
                     logger.info(
                         "Gemini structured pass failed on %s (%s); trying free-form output",
@@ -978,6 +1009,14 @@ def _gemini_extract_sync(
                         e,
                     )
                     continue
+                if parse_like:
+                    parse_err = e
+                    logger.info(
+                        "Gemini free-form parse failed on %s (%s); trying next model",
+                        model_name,
+                        e,
+                    )
+                    break
                 raise
             except Exception as e:
                 last_err = e
@@ -1002,6 +1041,8 @@ def _gemini_extract_sync(
                     logger.info("Gemini model %s not available, trying next: %s", model_name, e)
                     break
                 raise
+    if parse_err:
+        raise parse_err
     raise VisionServiceError(f"No available Gemini model for extraction: {last_err}")
 
 

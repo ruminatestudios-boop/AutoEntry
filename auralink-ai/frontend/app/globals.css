@@ -505,3 +505,22 @@ a:hover {
 .legal-prose a:hover {
   color: var(--accent-dim);
 }
+
+/* Clerk UserButton dropdown — popover is portaled outside page layout */
+.cl-userButtonPopoverActionButton,
+.cl-userButtonPopoverActionButtonText,
+.cl-userButtonPopoverActionButtonIcon,
+.synclyst-clerk-user-menu-action,
+.synclyst-clerk-user-menu-action-text,
+.synclyst-clerk-user-menu-action-icon,
+.cl-userButtonPopoverActions button,
+.cl-userButtonPopoverActions button span,
+.cl-userButtonPopoverActions button svg {
+  color: #111827 !important;
+  opacity: 1 !important;
+}
+
+.synclyst-clerk-user-menu-action:hover,
+.cl-userButtonPopoverActionButton:hover {
+  background-color: #f4f4f5 !important;
+}

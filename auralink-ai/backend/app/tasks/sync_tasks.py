@@ -68,7 +68,7 @@ def sync_to_shopify(self, product_id: str, shop_domain: str, access_token: str, 
       }
     }
     """
-    url = f"https://{shop_domain}/admin/api/2024-01/graphql.json"
+    url = f"https://{shop_domain}/admin/api/2026-01/graphql.json"
     with httpx.Client() as client:
         r = client.post(
             url,

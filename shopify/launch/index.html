@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SyncLyst</title>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var q = params.toString();
+      var dest = "https://app.synclyst.app/shopify/launch" + (q ? "?" + q : "");
+      window.location.replace(dest);
+    })();
+  </script>
+</head>
+<body>
+  <p>Redirecting to SyncLyst… <a href="https://app.synclyst.app/shopify/launch">Continue</a></p>
+</body>
+</html>

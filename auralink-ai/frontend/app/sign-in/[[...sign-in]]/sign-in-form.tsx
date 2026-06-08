@@ -102,6 +102,14 @@ export function SignInForm({
     return () => window.clearTimeout(t);
   }, [isLoaded, isSignedIn]);
 
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    const t = window.setTimeout(() => {
+      window.location.replace(forceRedirectUrl);
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [isLoaded, isSignedIn, forceRedirectUrl]);
+
   if (!clerkPublishableKey) {
     return (
       <div style={{ maxWidth: "28rem", textAlign: "center", padding: "0 1rem" }}>
@@ -157,7 +165,11 @@ export function SignInForm({
           <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: "#18181b" }}>
             You&apos;re signed in ✓
           </p>
-          <p style={{ margin: 0, fontSize: "0.875rem", color: "#6b7280" }}>Open the SyncLyst extension to continue.</p>
+          <p style={{ margin: 0, fontSize: "0.875rem", color: "#6b7280" }}>
+            {forceRedirectUrl.startsWith("/extension-return")
+              ? "Returning to the extension…"
+              : "Taking you back…"}
+          </p>
         </div>
       </>
     );

@@ -10,13 +10,13 @@ import { publishRouter } from './routes/publish.js';
 import { storesRouter } from './routes/stores.js';
 import { exportRouter } from './routes/export.js';
 import { shopifyComplianceRouter } from './routes/shopifyComplianceWebhooks.js';
+import { shopifyBillingWebhookRouter } from './routes/shopifyBillingWebhooks.js';
+import { billingRouter } from './routes/billing.js';
 
 const app = express();
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+import { frontendAllowedOrigins } from './lib/frontendUrl.js';
 
-const allowedOrigins = FRONTEND_URL.includes(',')
-  ? FRONTEND_URL.split(',').map((u) => u.trim()).filter(Boolean)
-  : [FRONTEND_URL];
+const allowedOrigins = frontendAllowedOrigins();
 // In dev, allow common local origins (different ports/hostnames)
 if (process.env.NODE_ENV !== 'production') {
   ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:8080', 'http://127.0.0.1:8080'].forEach(function(o) {
@@ -26,14 +26,26 @@ if (process.env.NODE_ENV !== 'production') {
 // Ensure production frontend is allowed when running on Cloud Run (in case FRONTEND_URL is unset)
 const isCloudRun = /\.run\.app$/i.test(process.env.APP_URL || '');
 if (isCloudRun) {
-  const prod = ['https://synclyst.app', 'https://www.synclyst.app'];
+  const prod = [
+    'https://synclyst.app',
+    'https://www.synclyst.app',
+    'https://app.synclyst.app',
+    'https://scan.synclyst.app',
+  ];
   prod.forEach((o) => { if (!allowedOrigins.includes(o)) allowedOrigins.push(o); });
 }
+
+const SYNCLYST_PROD_ORIGINS = new Set([
+  'https://synclyst.app',
+  'https://www.synclyst.app',
+  'https://app.synclyst.app',
+  'https://scan.synclyst.app',
+]);
 const allowAllOrigins = process.env.NODE_ENV !== 'production';
 
 function corsHeaders(req, res, next) {
   const origin = req.headers.origin;
-  const isSynclystProd = origin === 'https://synclyst.app' || origin === 'https://www.synclyst.app';
+  const isSynclystProd = origin && SYNCLYST_PROD_ORIGINS.has(origin);
   const isLocalDev = process.env.NODE_ENV !== 'production' && origin && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
   const allowOrigin = origin && (isSynclystProd || allowAllOrigins || allowedOrigins.includes(origin) || isLocalDev) ? origin : null;
   if (allowOrigin) {
@@ -52,7 +64,7 @@ app.use(corsHeaders);
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
-    if (origin === 'https://synclyst.app' || origin === 'https://www.synclyst.app') return cb(null, origin);
+    if (SYNCLYST_PROD_ORIGINS.has(origin)) return cb(null, origin);
     if (allowedOrigins[0] === true) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, origin);
     // In dev, allow any localhost / 127.0.0.1 (any port) to avoid "fetch failed" from CORS
@@ -72,6 +84,14 @@ app.use(
     limit: '256kb',
   }),
   shopifyComplianceRouter
+);
+app.use(
+  '/webhooks/shopify/billing',
+  express.raw({
+    type: '*/*',
+    limit: '256kb',
+  }),
+  shopifyBillingWebhookRouter
 );
 // Large universal_data payloads (base64 photos) exceed express.json default (~100kb). Cloud Run max request ~32 MiB.
 // If JSON_BODY_LIMIT is set in Cloud Run, keep it ≤ 31mb or you will still get PayloadTooLargeError from raw-body.
@@ -104,7 +124,7 @@ app.get('/auth/shopify/status', (req, res) => {
     : null;
   res.json({
     shopify_configured: configured,
-    public_install_enabled: publicInstallEnabled,
+    public_install_enabled: configured && publicInstallEnabled,
     redirect_uri: redirectUri,
     recommended_redirect_uris: recommendedRedirectUris,
     dev_shopify_bypass,
@@ -114,6 +134,7 @@ app.get('/auth/shopify/status', (req, res) => {
 app.use('/auth', authRouter);
 app.use('/api/listings', publishRouter);
 app.use('/api/user', storesRouter);
+app.use('/api/billing', billingRouter);
 app.use('/api/listings', exportRouter);
 
 app.get('/', (req, res) => {
@@ -128,6 +149,8 @@ app.get('/', (req, res) => {
       createListing: 'POST /api/listings (body: universal_data)',
       publish: 'POST /api/listings/publish',
       connectedStores: 'GET /api/user/connected-stores',
+      billingStatus: 'GET /api/billing/status (JWT)',
+      billingSubscribe: 'POST /api/billing/subscribe (JWT, body: tier, return_url)',
       shopifyAuth: 'GET /auth/shopify?shop=your-store.myshopify.com',
       shopifyComplianceWebhooks: 'POST /webhooks/shopify/compliance (mandatory for App Store)',
     },

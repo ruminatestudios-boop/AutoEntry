@@ -1,6 +1,6 @@
 /** Proxy DELETE /api/developers/keys/[id] → FastAPI /v1/developers/keys/{id} */
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getClerkServerToken } from "@/lib/clerk-server-token";
 
 export const runtime = "nodejs";
 
@@ -15,8 +15,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { getToken } = await auth();
-    const token = await getToken();
+    const token = await getClerkServerToken();
     if (!token) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
     const { id } = await params;

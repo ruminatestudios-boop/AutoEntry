@@ -41,7 +41,7 @@ export async function publishToShopify(listing, accessToken, row) {
   let data;
   try {
     const res = await axios.post(
-      `https://${shop}/admin/api/2024-01/products.json`,
+      `https://${shop}/admin/api/${process.env.SHOPIFY_API_VERSION || '2026-01'}/products.json`,
       createBody,
       { headers: { 'X-Shopify-Access-Token': accessToken, 'Content-Type': 'application/json' } }
     );
@@ -57,7 +57,7 @@ export async function publishToShopify(listing, accessToken, row) {
   if (id && Array.isArray(metafields) && metafields.length > 0) {
     for (const m of metafields) {
       await axios.post(
-        `https://${shop}/admin/api/2024-01/products/${id}/metafields.json`,
+        `https://${shop}/admin/api/${process.env.SHOPIFY_API_VERSION || '2026-01'}/products/${id}/metafields.json`,
         { metafield: m },
         { headers: { 'X-Shopify-Access-Token': accessToken, 'Content-Type': 'application/json' } }
       ).catch(() => {});

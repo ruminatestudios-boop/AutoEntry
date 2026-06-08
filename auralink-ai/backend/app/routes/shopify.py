@@ -4,11 +4,13 @@ Stores credentials in shopify_stores for sync_to_shopify.
 """
 import hashlib
 import hmac
+import os
 import secrets
 import urllib.parse
 from urllib.parse import urlencode
 
 import httpx
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.config import get_settings
@@ -17,7 +19,34 @@ from app.auth import verify_clerk
 
 router = APIRouter()
 
-SHOPIFY_SCOPES = "read_products,write_products,read_inventory,write_inventory,read_orders"
+_SHOPIFY_LEGACY_DISABLED = os.getenv("DISABLE_LEGACY_SHOPIFY_BACKEND_OAUTH", "").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+)
+
+
+def _legacy_oauth_disabled():
+    if _SHOPIFY_LEGACY_DISABLED:
+        raise HTTPException(
+            status_code=410,
+            detail=(
+                "Legacy backend Shopify OAuth is disabled. "
+                "Install SyncLyst from the Shopify App Store and connect via /shopify/launch."
+            ),
+        )
+    settings = get_settings()
+    base = (settings.app_base_url or "").lower()
+    if "localhost" not in base and "127.0.0.1" not in base:
+        raise HTTPException(
+            status_code=410,
+            detail=(
+                "Legacy backend Shopify OAuth is disabled in production. "
+                "Use the SyncLyst publishing OAuth flow (/shopify/launch)."
+            ),
+        )
+
+SHOPIFY_SCOPES = "read_products,write_products,write_inventory"
 
 _SHOPIFY_CONFIG_HINT = (
     "Set SHOPIFY_CLIENT_ID and SHOPIFY_CLIENT_SECRET in the backend .env (from Shopify Partner Dashboard → App → API credentials). "
@@ -63,6 +92,7 @@ async def shopify_install(shop: str = Query(..., description="Shop domain (e.g. 
     """
     Start OAuth: redirect to Shopify admin OAuth authorize.
     """
+    _legacy_oauth_disabled()
     settings = get_settings()
     if not settings.shopify_client_id or not settings.shopify_client_secret:
         raise HTTPException(
@@ -107,6 +137,7 @@ async def shopify_callback(
     """
     OAuth callback: exchange code for access_token, store in shopify_stores.
     """
+    _legacy_oauth_disabled()
     settings = get_settings()
     if not settings.shopify_client_id or not settings.shopify_client_secret:
         raise HTTPException(
