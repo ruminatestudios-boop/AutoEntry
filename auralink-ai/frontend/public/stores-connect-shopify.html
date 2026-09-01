@@ -73,10 +73,18 @@
         var shop = normShop(rawShop);
         if (!shop || shop === "admin.myshopify.com" || shop === "admin") return;
         var ret = (sp.get("return_to") || sp.get("return") || "").trim();
+        var extra = "";
+        if (ret === "billing") {
+          var br = sp.get("billing_return") || "";
+          var tier = sp.get("tier") || "";
+          if (br) extra += "&billing_return=" + encodeURIComponent(br);
+          if (tier) extra += "&tier=" + encodeURIComponent(tier);
+        }
         var qs =
           "?shop=" +
           encodeURIComponent(shop) +
-          (ret ? "&return=" + encodeURIComponent(ret) : "");
+          (ret ? "&return_to=" + encodeURIComponent(ret === "billing" ? "billing" : ret) : "") +
+          extra;
         location.replace(
           location.origin.replace(/\/$/, "") + "/api/shopify/oauth-start" + qs
         );
@@ -421,7 +429,12 @@ SHOPIFY_API_SECRET=your_client_secret</pre>
           href = '/dashboard/home';
           label = 'Back to dashboard';
         } else if (returnTo === 'billing' || (returnTo && returnTo.indexOf('billing') === 0)) {
-          href = returnTo.indexOf('billing') === 0 && returnTo.indexOf('?') !== -1 ? '/' + returnTo : '/billing';
+          var bq = new URLSearchParams();
+          var brNav = params.get('billing_return');
+          var tierNav = params.get('tier');
+          if (brNav) bq.set('return', brNav);
+          if (tierNav) bq.set('tier', tierNav);
+          href = '/billing' + (bq.toString() ? '?' + bq.toString() : '');
           label = 'Back to billing';
         }
         el.setAttribute('href', href);
@@ -520,9 +533,20 @@ SHOPIFY_API_SECRET=your_client_secret</pre>
         if (returnTo === 'list') return 'list';
         if (returnTo === 'scan') return 'scan';
         if (returnTo === 'billing' || (returnTo && returnTo.indexOf('billing') === 0)) {
-          return returnTo.indexOf('?') !== -1 ? returnTo : 'billing';
+          return 'billing';
         }
         return 'list';
+      }
+
+      function oauthStartExtraQuery() {
+        var extra = '';
+        if (returnTo === 'billing') {
+          var br = params.get('billing_return') || '';
+          var tier = params.get('tier') || '';
+          if (br) extra += '&billing_return=' + encodeURIComponent(br);
+          if (tier) extra += '&tier=' + encodeURIComponent(tier);
+        }
+        return extra;
       }
 
       function isProductionSynclystHost() {
@@ -585,6 +609,12 @@ SHOPIFY_API_SECRET=your_client_secret</pre>
         if (loginHintEl) { loginHintEl.classList.add('hidden'); loginHintEl.innerHTML = ''; }
       }
       if (shopInput) { shopInput.addEventListener('input', updateLoginHint); shopInput.addEventListener('blur', updateLoginHint); }
+      (function prefillShopFromQuery() {
+        var rawShop = (params.get('shop') || '').trim();
+        if (!rawShop || !shopInput) return;
+        shopInput.value = rawShop;
+        updateLoginHint();
+      })();
       if (connectBtn && shopInput) {
         connectBtn.addEventListener('click', function() {
           // If user already pasted an Admin API token, do the token-connect flow
@@ -654,7 +684,7 @@ SHOPIFY_API_SECRET=your_client_secret</pre>
                 if (data.token) try { sessionStorage.setItem('auralink_jwt', data.token); } catch (e) {}
                 var goAuth = function(shopParamOrDomain) {
                   var appOrigin = window.location.origin.replace(/\/$/, '');
-                  var authUrl = appOrigin + '/api/shopify/oauth-start?shop=' + encodeURIComponent(shopParamOrDomain) + '&return_to=' + encodeURIComponent(returnToPath);
+                  var authUrl = appOrigin + '/api/shopify/oauth-start?shop=' + encodeURIComponent(shopParamOrDomain) + '&return_to=' + encodeURIComponent(returnToPath) + oauthStartExtraQuery();
                   window.location.href = authUrl;
                 };
                 // If user typed a direct shop handle or myshopify domain, skip resolver.
@@ -796,7 +826,14 @@ SHOPIFY_API_SECRET=your_client_secret</pre>
                       var rt = getReturnToPath();
                       var q = 'shopify=connected&shop=' + encodeURIComponent(connected);
                       if (rt === 'review') window.location.href = '/review?' + q;
-                      else if (rt) window.location.href = '/' + rt + '?' + q;
+                      else if (rt === 'billing') {
+                        var bq = q;
+                        var brTok = params.get('billing_return') || '';
+                        var tierTok = params.get('tier') || '';
+                        if (brTok) bq += '&return=' + encodeURIComponent(brTok);
+                        if (tierTok) bq += '&tier=' + encodeURIComponent(tierTok);
+                        window.location.href = '/billing?' + bq;
+                      } else if (rt) window.location.href = '/' + rt + '?' + q;
                       else window.location.href = '/listing/published?' + q;
                     });
                 });

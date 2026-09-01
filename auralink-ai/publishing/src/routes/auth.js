@@ -144,9 +144,12 @@ if (enabled.includes('shopify')) {
     }
     if (!userId) {
       const base = frontendBaseUrl();
-      const returnTo = encodeURIComponent((req.query.return_to || req.query.returnTo || 'list').toString());
-      const shopEnc = encodeURIComponent(shopRaw);
-      const resume = `${base}/api/shopify/oauth-start?shop=${shopEnc}&return_to=${returnTo}`;
+      const resumeQs = new URLSearchParams();
+      if (shopRaw) resumeQs.set('shop', shopRaw);
+      resumeQs.set('return_to', String(req.query.return_to || req.query.returnTo || 'list'));
+      if (req.query.billing_return) resumeQs.set('billing_return', String(req.query.billing_return));
+      if (req.query.tier) resumeQs.set('tier', String(req.query.tier));
+      const resume = `${base}/api/shopify/oauth-start?${resumeQs.toString()}`;
       return res.redirect(`${base}/sign-in?redirect_url=${encodeURIComponent(resume)}`);
     }
     req.userId = userId;
@@ -246,28 +249,51 @@ if (enabled.includes('shopify')) {
     }
   });
 
+  const { buildFrontendRedirect } = await import('../lib/frontendRedirect.js');
+
   authRouter.get('/shopify', requireShopifyOAuthUser, (req, res) => {
     const shop = (req.query.shop || '').trim().toLowerCase();
     const returnTo = req.query.return_to || req.query.returnTo || '';
+    const billingReturn = (req.query.billing_return || '').toString().trim();
+    const tier = (req.query.tier || '').toString().trim();
     const base = frontendBaseUrl();
     const connectPage = '/connect-store';
-    const returnQ = returnTo ? `&return=${encodeURIComponent(returnTo)}` : '';
+    const connectQs = new URLSearchParams();
+    if (returnTo) connectQs.set('return', String(returnTo));
+    if (billingReturn) connectQs.set('billing_return', billingReturn);
+    if (tier) connectQs.set('tier', tier);
+    const returnQ = connectQs.toString() ? `&${connectQs.toString()}` : '';
 
     if (!shop) {
-      return res.redirect(`${base}${connectPage}?error=${encodeURIComponent('Enter your store name (e.g. your-store)')}${returnQ}`);
+      return res.redirect(
+        `${base}${connectPage}?error=${encodeURIComponent('Enter your store name (e.g. your-store)')}${returnQ}`
+      );
     }
     if (shop === 'admin' || shop === 'admin.myshopify.com' || /\/|\\\\/.test(req.query.shop || '')) {
-      return res.redirect(`${base}${connectPage}?error=${encodeURIComponent('Use your store name only (e.g. your-store), not "admin" or a URL path.')}${returnQ}`);
+      return res.redirect(
+        `${base}${connectPage}?error=${encodeURIComponent('Use your store name only (e.g. your-store), not "admin" or a URL path.')}${returnQ}`
+      );
     }
     let stateStr = '';
     try {
-      stateStr = signShopifyState({ userId: req.userId, shop, returnTo, iat: Date.now() });
+      stateStr = signShopifyState({
+        userId: req.userId,
+        shop,
+        returnTo,
+        billingReturn: billingReturn || undefined,
+        tier: tier || undefined,
+        iat: Date.now(),
+      });
     } catch (e) {
-      return res.redirect(`${base}${connectPage}?error=${encodeURIComponent(e.message || 'Shopify app not configured')}${returnQ}`);
+      return res.redirect(
+        `${base}${connectPage}?error=${encodeURIComponent(e.message || 'Shopify app not configured')}${returnQ}`
+      );
     }
     const authUrl = getShopifyAuthUrl(shop, stateStr);
     if (!authUrl || authUrl.includes('client_id=undefined') || !authUrl.includes('.myshopify.com')) {
-      return res.redirect(`${base}${connectPage}?error=${encodeURIComponent('Shopify app not configured. Set SHOPIFY_API_KEY and SHOPIFY_API_SECRET in auralink-ai/publishing/.env and restart the publishing service.')}${returnQ}`);
+      return res.redirect(
+        `${base}${connectPage}?error=${encodeURIComponent('Shopify app not configured. Set SHOPIFY_API_KEY and SHOPIFY_API_SECRET in auralink-ai/publishing/.env and restart the publishing service.')}${returnQ}`
+      );
     }
     res.redirect(authUrl);
   });
@@ -275,7 +301,6 @@ if (enabled.includes('shopify')) {
     try {
       const result = await handleShopifyCallback(req.query);
       const base = frontendBaseUrl();
-      // When returning to the listing review publish flow, auto-retry publish after connect.
       const rt = typeof result?.returnTo === 'string' ? result.returnTo : '';
       const wantsAutoPublish =
         rt === 'review' ||
@@ -286,29 +311,59 @@ if (enabled.includes('shopify')) {
         rt === '/flow-3.html';
       const wantsBilling =
         rt === 'billing' || rt === '/billing' || (rt && rt.startsWith('billing'));
-      const qs = `shopify=connected&shop=${encodeURIComponent(result.shop_domain)}${wantsAutoPublish ? '&autopublish=1' : ''}`;
+
+      if (wantsBilling) {
+        const params = {
+          shopify: 'connected',
+          shop: result.shop_domain,
+        };
+        if (result.billingReturn) params.return = result.billingReturn;
+        if (result.tier) params.tier = result.tier;
+        return res.redirect(buildFrontendRedirect(base, '/billing', params));
+      }
+
       if (result && result.returnTo) {
         const raw = String(result.returnTo);
+        if (raw.includes('?')) {
+          const u = new URL(raw.startsWith('/') ? raw : `/${raw}`, base);
+          u.searchParams.set('shopify', 'connected');
+          u.searchParams.set('shop', result.shop_domain);
+          if (wantsAutoPublish) u.searchParams.set('autopublish', '1');
+          return res.redirect(u.toString());
+        }
         const path = raw.startsWith('/') ? raw : `/${raw}`;
-        const dest = wantsBilling && !raw.includes('?') ? `${base}/billing?${qs}` : `${base}${path}?${qs}`;
-        res.redirect(dest);
-      } else {
-        res.redirect(`${base}/list?${qs}`);
+        const params = { shopify: 'connected', shop: result.shop_domain };
+        if (wantsAutoPublish) params.autopublish = '1';
+        return res.redirect(buildFrontendRedirect(base, path, params));
       }
+
+      res.redirect(
+        buildFrontendRedirect(base, '/list', { shopify: 'connected', shop: result.shop_domain })
+      );
     } catch (e) {
       const base = frontendBaseUrl();
       let returnTo = '';
+      let billingReturn = '';
+      let tier = '';
       try {
         const s = parseShopifyState(req.query.state || '{}');
         returnTo = s.returnTo || s.return_to || '';
+        billingReturn = s.billingReturn || s.billing_return || '';
+        tier = s.tier || '';
       } catch (_) {}
-      const errQs = `error=shopify&message=${encodeURIComponent(e.message)}`;
+      const errParams = { error: 'shopify', message: e.message || 'OAuth failed' };
+      if (returnTo === 'billing' || returnTo === '/billing') {
+        const billingParams = { ...errParams };
+        if (billingReturn) billingParams.billing_return = billingReturn;
+        if (tier) billingParams.tier = tier;
+        billingParams.return = 'billing';
+        return res.redirect(buildFrontendRedirect(base, '/billing', billingParams));
+      }
       if (returnTo) {
         const path = returnTo.startsWith('/') ? returnTo : `/${returnTo}`;
-        res.redirect(`${base}${path}?${errQs}`);
-      } else {
-        res.redirect(`${base}/connect-store?return=list&${errQs}`);
+        return res.redirect(buildFrontendRedirect(base, path, errParams));
       }
+      res.redirect(buildFrontendRedirect(base, '/connect-store', { return: 'list', ...errParams }));
     }
   });
 }

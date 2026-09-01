@@ -364,10 +364,14 @@ export async function handleShopifyCallback(query) {
 
   let userId = null;
   let returnTo = null;
+  let billingReturn = null;
+  let tier = null;
   try {
     const state = parseShopifyState(stateStr);
     userId = state?.userId || state?.sub || state;
     returnTo = state?.returnTo || state?.return_to;
+    billingReturn = state?.billingReturn || state?.billing_return || null;
+    tier = state?.tier || null;
   } catch (_) {
     userId = stateStr;
   }
@@ -396,7 +400,7 @@ export async function handleShopifyCallback(query) {
     const { syncShopifyBillingForUser } = await import('../db/billingSync.js');
     await syncShopifyBillingForUser(userId);
   } catch (_) {}
-  return { shop_domain: cleanShop, returnTo };
+  return { shop_domain: cleanShop, returnTo, billingReturn, tier };
 }
 
 /** Refresh an expiring offline Shopify access token (public apps require expiring tokens). */

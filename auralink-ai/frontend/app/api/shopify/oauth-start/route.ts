@@ -81,6 +81,8 @@ export async function GET(request: NextRequest) {
     request.nextUrl.searchParams.get("return_to")?.trim() ||
     request.nextUrl.searchParams.get("return")?.trim() ||
     "";
+  const billingReturn = request.nextUrl.searchParams.get("billing_return")?.trim() || "";
+  const tierHint = request.nextUrl.searchParams.get("tier")?.trim() || "";
   const returnTo = normalizeConnectReturnTo(returnRaw || "list");
 
   if (!shopRaw) {
@@ -114,6 +116,8 @@ export async function GET(request: NextRequest) {
     const resume = new URL("/api/shopify/oauth-start", origin);
     resume.searchParams.set("shop", shopNorm);
     resume.searchParams.set("return_to", returnTo);
+    if (billingReturn) resume.searchParams.set("billing_return", billingReturn);
+    if (tierHint) resume.searchParams.set("tier", tierHint);
     resume.searchParams.delete("return");
     // New merchants hit this path first; Sign-in + unknown email shows "Couldn't find your account".
     // Sign-up preserves the same redirect so OAuth runs after account creation.
@@ -138,6 +142,8 @@ export async function GET(request: NextRequest) {
       purpose: "shopify_oauth_start",
       shop: shopNorm,
       return_to: returnTo,
+      ...(billingReturn ? { billing_return: billingReturn } : {}),
+      ...(tierHint ? { tier: tierHint } : {}),
       iat: now,
       exp: now + 600,
     },
@@ -159,6 +165,8 @@ export async function GET(request: NextRequest) {
   target.searchParams.set("shop", shopNorm);
   target.searchParams.set("start_token", startToken);
   target.searchParams.set("return_to", returnTo);
+  if (billingReturn) target.searchParams.set("billing_return", billingReturn);
+  if (tierHint) target.searchParams.set("tier", tierHint);
 
   return NextResponse.redirect(target.toString());
 }

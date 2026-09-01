@@ -243,10 +243,14 @@ function BillingInner() {
   const backHref = returnTo === "review" ? "/review?publish=1" : "/list";
   const backLabel = returnTo === "review" ? "Review" : "Scan";
   const connectHref = useMemo(() => {
-    const billingQ = sp?.toString();
-    const back = billingQ ? `billing?${billingQ}` : "billing";
-    return `/connect-store?return=${encodeURIComponent(back)}`;
-  }, [sp]);
+    const q = new URLSearchParams();
+    q.set("return", "billing");
+    if (returnTo === "review") q.set("billing_return", "review");
+    if (preselect && ["pro", "growth", "scale"].includes(preselect)) {
+      q.set("tier", preselect);
+    }
+    return `/connect-store?${q.toString()}`;
+  }, [returnTo, preselect]);
 
   const needsShopifyConnect =
     isLoaded && isSignedIn && serverAuth === "ok" && shopifyConnected === false;
@@ -286,8 +290,9 @@ function BillingInner() {
   }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
+    if (shopifyJustConnected) setShopifyConnected(true);
     refreshBilling().catch(() => setStatusLoading(false));
-  }, [refreshBilling, billingSuccess, sp?.get("shopify")]);
+  }, [refreshBilling, billingSuccess, shopifyJustConnected, sp?.get("shopify")]);
 
   useEffect(() => {
     if (!billingSuccess || returnTo !== "review") return;

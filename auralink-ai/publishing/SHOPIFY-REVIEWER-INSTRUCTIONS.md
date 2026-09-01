@@ -54,6 +54,8 @@ Merchants photograph inventory; SyncLyst drafts a Shopify product listing (title
 
 - App is **standalone** (`embedded=false`): after install, merchants may use **https://app.synclyst.app** directly (not only inside Shopify Admin iframe).
 - If Admin shows a configuration toast, open **https://app.synclyst.app/list** in a new tab — full flow works there.
+- **Use the same dev store you installed the app on** when connecting Shopify (do not enter a different `.myshopify.com` on Connect Shopify).
+- If **Connect Shopify** appears on `/billing`, approve OAuth once — you’ll return to billing with **Subscribe** enabled.
 - Chrome extension and marketing site use **Stripe** for non-Shopify subscribers; the **Shopify App Store app** uses **Shopify Billing only**.
 
 ## Test credentials (fill before submit)
