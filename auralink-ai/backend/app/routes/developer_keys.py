@@ -468,7 +468,7 @@ def _apply_metered_billing(
 
 @router.post("/enable-metered")
 async def enable_metered_billing(
-    body: MeteredBillingRequest | None = None,
+    body: Optional[MeteredBillingRequest] = None,
     auth: dict = Depends(verify_clerk),
 ):
     """
